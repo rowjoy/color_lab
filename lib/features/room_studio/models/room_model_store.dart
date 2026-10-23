@@ -80,12 +80,12 @@ final class RoomModelDownloadException implements Exception {
 }
 
 final class _Load {
-  final result = Completer<RoomModelBytes>();
+  final result = Completer<List<File>>();
   HttpClient? client;
   bool cancelled = false;
 }
 
-/// No I/O occurs until load(). Files live in persistent app-private support
+/// No I/O occurs until prepare()/load(). Files live in persistent app-private support
 /// storage, never temporary cache. Only pinned, complete bytes reach inference.
 final class RoomModelStore {
   RoomModelStore({
@@ -127,7 +127,31 @@ final class RoomModelStore {
   Stream<RoomModelDownloadProgress> get changes => _changes.stream;
   int get cancellationGeneration => _cancellationGeneration;
 
-  Future<RoomModelBytes> load() {
+  /// Verifies/downloads files without allocating inference buffers at startup.
+  Future<void> prepare() async {
+    await _prepareFiles();
+  }
+
+  Future<RoomModelBytes> load() async {
+    final generation = _cancellationGeneration;
+    final files = await _prepareFiles();
+    try {
+      final semantic = await files[0].readAsBytes();
+      final depth = await files[1].readAsBytes();
+      if (_closed || generation != _cancellationGeneration) {
+        throw const RoomModelDownloadException(cancelled: true);
+      }
+      return RoomModelBytes(semantic: semantic, depth: depth);
+    } on RoomModelDownloadException {
+      rethrow;
+    } catch (_) {
+      throw RoomModelDownloadException(
+        cancelled: _closed || generation != _cancellationGeneration,
+      );
+    }
+  }
+
+  Future<List<File>> _prepareFiles() {
     if (_closed) {
       return Future.error(const RoomModelDownloadException(cancelled: true));
     }
@@ -136,13 +160,13 @@ final class RoomModelStore {
       if (!previous.cancelled) return previous.result.future;
       // A retry waits for old I/O/partial cleanup; it never inherits cancellation.
       final generation = _cancellationGeneration;
-      Future<RoomModelBytes> retryIfCurrent() {
+      Future<List<File>> retryIfCurrent() {
         if (generation != _cancellationGeneration) {
           return Future.error(
             const RoomModelDownloadException(cancelled: true),
           );
         }
-        return load();
+        return _prepareFiles();
       }
 
       return previous.result.future.then(
@@ -200,13 +224,9 @@ final class RoomModelStore {
         completed += artifact.bytes;
         files.add(file);
       }
-      final semantic = await files[0].readAsBytes();
-      final depth = await files[1].readAsBytes();
       _check(operation);
       _emit(RoomModelDownloadStage.ready, completed);
-      operation.result.complete(
-        RoomModelBytes(semantic: semantic, depth: depth),
-      );
+      operation.result.complete(files);
     } catch (error, stack) {
       final cancelled = _closed || operation.cancelled;
       _emit(

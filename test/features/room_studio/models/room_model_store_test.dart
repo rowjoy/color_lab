@@ -79,6 +79,49 @@ void main() {
   ];
 
   test(
+    'preparation downloads verified files before inference loads bytes',
+    () async {
+      final subject = store();
+      await subject.prepare();
+      expect(subject.progress.stage, RoomModelDownloadStage.ready);
+      expect(requests, ['/seg', '/depth']);
+      final bytes = await subject.load();
+      expect(utf8.decode(bytes.semantic), 'hello');
+      expect(utf8.decode(bytes.depth), 'world');
+      expect(requests, ['/seg', '/depth']);
+    },
+  );
+
+  test(
+    'fresh startup preparation verifies cache offline and rejects corruption',
+    () async {
+      await store().prepare();
+      final offline = RoomModelStore(
+        directory: () async => root,
+        artifacts: artifacts,
+        clientFactory: () => throw const SocketException('offline'),
+      );
+      stores.add(offline);
+      await offline.prepare();
+      expect(offline.progress.stage, RoomModelDownloadStage.ready);
+      await cached('room_depth.tflite', _worldSha).writeAsString('wrong');
+      await expectLater(
+        offline.prepare(),
+        throwsA(isA<RoomModelDownloadException>()),
+      );
+      expect(offline.progress.stage, RoomModelDownloadStage.failed);
+      expect(requests, ['/seg', '/depth']);
+    },
+  );
+
+  test('preparation and inference share one download operation', () async {
+    final subject = store();
+    await Future.wait([subject.prepare(), subject.load()]);
+    expect(requests, ['/seg', '/depth']);
+    expect(await partials(), isEmpty);
+  });
+
+  test(
     'downloads verified models and reports real aggregate progress',
     () async {
       final subject = store();
