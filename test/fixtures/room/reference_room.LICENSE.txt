@@ -1,0 +1,17 @@
+Living Room - Vizcaya Museum and Gardens - Miami, Florida - DSC08325
+Photographer: Daderot. Photograph taken 13 March 2017.
+License/dedication: CC0 1.0 Universal (public domain dedication).
+https://creativecommons.org/publicdomain/zero/1.0/
+Source page (fixed revision):
+https://commons.wikimedia.org/w/index.php?title=File:Living_Room_-_Vizcaya_Museum_and_Gardens_-_Miami,_Florida_-_DSC08325.jpg&oldid=1176476079
+
+Original retained 1280 x 853 JPEG SHA-256:
+0960579a54bd33a54bd9f310b41028bdbf9e6c83e50e27a5555f6461902275b1
+Original location: docs/superpowers/evidence/room-model-spike/reference-room.jpg
+
+reference_room.png is a lossless PNG encoding of that JPEG's decoded RGB using
+Dart image 4.12.0 (the exact resolved package version).
+reference_input.bin is a derived RGB reference: upper-left aspect fit to
+512 x 341, aligned-corner bilinear, channel truncation, then bottom padding to
+512 x 512 with RGB 123/115/103. No JPEG re-encode. See model_reference.json and
+the production validation report for exact checksums and numerical limits.

@@ -1,0 +1,33 @@
+# Capture module independent review
+
+Date: 2026-10-21
+
+Scope: read-only review of the Camera/Gallery/photo palette/detail implementation against `2026-10-21-capture-photo.md` and the supplied Color Lab build specification. Reviewed processing, frame conversion, preview/gesture coordinate transforms, resource ownership, asynchronous navigation, detail actions, native permission declarations and relevant test coverage. Production files were not edited by this reviewer. Whole-project test/build verification belongs to the integrating agent; no duplicate full-suite run was started.
+
+## Findings and source recheck
+
+1. **P2 — late photo recovery could interrupt a different preserved tab.** Capture is inside a `StatefulShellRoute.indexedStack`, so its branch `ModalRoute.isCurrent` alone does not establish that Capture is the visible tab. A delayed recovery/picker result could otherwise push `/photo` after the user switched to Palette or Lab. Reported with `capture_screen.dart` evidence. **Addressed in source:** `_isCaptureCurrent` additionally checks the current router URI; late results are retained for explicit continuation. A regression test now completes recovery after switching to Palette and verifies no unsolicited photo route.
+
+2. **P2 — transitive CameraX declarations expanded Android capabilities and device filtering.** The installed `camera_android_camerax 0.7.2` manifest declares `RECORD_AUDIO`, legacy `WRITE_EXTERNAL_STORAGE` and required `android.hardware.camera.any`. The application's earlier optional `android.hardware.camera` declaration did not override `.any`. This conflicted with photo-only access/no audio intent and excluded camera-less devices that can use gallery/manual tools. **Addressed in source:** the application manifest removes unused audio/storage declarations with manifest-merger directives and makes camera/any/autofocus features optional. **Delivery check:** inspect the freshly merged manifest or APK, not a stale previous-module manifest.
+
+3. **P2 — photo populations initially lacked the requested percentage bar.** Numeric swatch percentages existed, but the build specification explicitly calls for percentage bars. **Addressed in source:** the photo screen now includes the shared `PaletteBar` weighted by actual extracted populations, with gallery-source detail actions. A dedicated regression test is present.
+
+4. **P2 — permission-dialog inactivity can trigger an immediate second camera prompt.** Corroborated by the camera backend reviewer: Android system dialogs can generate the same inactive/resumed lifecycle pair used by camera teardown. The screen originally invalidated/disposed a still-pending initialization on every inactive event; the disposed backend then suppressed its permission-denied result, and resumed initialization requested permission again. **Addressed at final source recheck:** `_openingSession` preserves the pending decision identity, resumed handling waits for it, typed denial is retained until explicit Retry, and Settings return permits explicit recovery. The backend reports typed permission failures even after disposal but checks cancellation before native allocation on grant. Existing serialized resource release remains intact.
+
+### Final disposition evidence
+
+- Read the camera-screen regressions for denial completing **before** and **after** resume. Both assert exactly one automatic session creation, the denied recovery UI, zero stream starts on the canceled session, and a second session only after tapping Try again.
+- Read the hidden/paused pending-grant screen regression and the backend pending-grant/pending-denial tests. They assert no start on the disposed session; canceled native permission grant allocates no device, while denied permission still completes with its typed failure.
+- Camera implementer reports the final combined scoped camera run passed **33 tests**, with scoped analysis clean. This reviewer inspected those exact source assertions rather than duplicating the integration agent's running full suite.
+- Rechecked the generated merged Android debug manifest: CAMERA is present, RECORD_AUDIO/READ_EXTERNAL_STORAGE/WRITE_EXTERNAL_STORAGE are absent, and camera/any/autofocus features each have `required="false"`. The integrating agent additionally verified the APK with AAPT.
+- Rechecked the visual correction for tall camera chrome: shared GlassBar now accepts a radius while retaining its pill default for existing consumers; camera explicitly selects `AppRadii.large`. The 360px/2× text camera regression asserts the actual rendered ClipRRect radius is 28 rather than the clipped pill value 999.
+
+## Reviewed behavior
+
+- Pure camera geometry reverses centered cover crop, horizontal mirroring and 0/90/180/270-degree buffer rotation consistently. Sampling uses clipped 5×5 regions and stride-aware BGRA, planar YUV420 and NV21 access. Session ownership serializes native operations, admits one conversion worker, drops stale sample-point/generation results, and releases resources on failure/background/disposal.
+- Installed AVFoundation source rotates capture-video output according to the locked portrait orientation and mirrors front-camera output before forwarding CVPixelBuffer bytes. The adapter's iOS rotation-zero/no-extra-mirror choice matches that implementation. CameraX forwards raw plane dimensions/bytes; Android sensor rotation is applied in sampling.
+- Photo preparation gates encoded/header dimensions, bounds decoder pixel budgets, decodes frame zero, bakes orientation, composites transparency over white, and emits matching preview/sample dimensions. Animated WebP's nested first-frame bitstream receives a bounded still-image header check. Palette extraction is downscaled and runs behind the isolate adapter. Preview RGB interpretation and the documented wide-gamut limitation are internally consistent.
+- One photo viewport transform drives display and sampling. Letterboxed regions do not produce samples; pinch/pan and the magnifier use the same geometry. Cancellation and typed acquisition failures leave the entry UI usable.
+- Detail harmony navigation replaces completed detail routes rather than accumulating sheets. Per-route color/Hero values are captured, Room selection routes to the honestly labeled illustration, and sharing provides a nonzero popover anchor and visible recoverable failure feedback.
+
+All four findings are addressed at final source recheck; no must-fix findings remain. Physical-device camera color calibration/alignment, manufacturer-specific streams and actual iOS picker/share presentation remain device verification boundaries, not outcomes established by synthetic tests or Android compilation.

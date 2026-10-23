@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "sourceRevision": "404e4c284d01b1c9e415b09d7cf8aa0648c4015d",
+  "sha256": "da8b3822a22fde45ecaf0ff32022287eff58b500096971b04f3c1b292da66a3c",
+  "requiredOperators": ["CONV_2D:1", "DEPTHWISE_CONV_2D:2", "ADD:1", "AVERAGE_POOL_2D:1", "SPLIT:1", "CONCATENATION:1", "QUANTIZE:1", "RESIZE_BILINEAR:1", "ARG_MAX:1"],
+  "inputShape": [1, 512, 512, 3],
+  "outputShape": [1, 512, 512],
+  "inputType": "uint8",
+  "outputType": "int32",
+  "inputEncoding": "rgbUint8",
+  "channelMeans": [0, 0, 0],
+  "channelStdDevs": [1, 1, 1],
+  "inputScale": 0.007843137718737125,
+  "inputZeroPoint": 128,
+  "classCount": 32,
+  "ignoredLabel": 0,
+  "labelsById": {
+    "0": "unscored", "1": "wall", "2": "building", "3": "sky", "4": "floor", "5": "tree", "6": "ceiling", "7": "road", "8": "bed", "9": "windowpane", "10": "grass", "11": "cabinet", "12": "sidewalk", "13": "person", "14": "earth", "15": "door", "16": "table", "17": "mountain", "18": "plant", "19": "curtain", "20": "chair", "21": "car", "22": "water", "23": "painting", "24": "sofa", "25": "shelf", "26": "house", "27": "sea", "28": "mirror", "29": "rug", "30": "field", "31": "armchair"
+  }
+}

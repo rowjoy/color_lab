@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "modelSha256": "da8b3822a22fde45ecaf0ff32022287eff58b500096971b04f3c1b292da66a3c",
+  "sourceJpegSha256": "0960579a54bd33a54bd9f310b41028bdbf9e6c83e50e27a5555f6461902275b1",
+  "pngSha256": "94023747b626de08cf3daf14695dfe5810efac833cae74f34792a9ac4005bad1",
+  "decodedRgbSha256": "b017ad00a827778f9e194f8a8a08787c71aaafc9f1913ad95e77a1bec132d113",
+  "inputSha256": "b1853a64f7bf077e61e208f7c2756c21f8cf4f55f520bc0c59d0ffd668b7415a",
+  "inputBytes": 786432,
+  "sourceSize": [1280, 853],
+  "contentSize": [512, 341],
+  "inputSize": [512, 512],
+  "paddingLeftTop": [0, 0],
+  "paddingRgb": [123, 115, 103],
+  "decoder": "Dart image 4.12.0; bakeOrientation; RGB; lossless PNG of decoded original JPEG",
+  "resize": "floor top-left aspect fit, aligned-corner bilinear in double precision; clamp and truncate channels to uint8; no JPEG re-encode; not bit-exact TensorFlow benchmark preprocessing",
+  "interpolationExpression": "((a + (b - a) * dx) * (1 - dy) + (c + (d - c) * dx) * dy).toInt().clamp(0, 255), where a/b/c/d are top-left/top-right/bottom-left/bottom-right source channel values; preserve this operation order for full-byte comparison",
+  "independentReferenceOrigin": "Pre-Task-2 comparison input /private/tmp/color-lab-public-api.CQKdyz/photo-output/input.rgb; preserved verbatim. Output anchors frozen from separate actual MOSAIC UINT8 comparison, not production runner.",
+  "inputAnchors": [
+    {"x": 0, "y": 0, "rgb": [218, 199, 153], "sourceX": 0, "sourceY": 0},
+    {"x": 511, "y": 0, "rgb": [98, 57, 13], "sourceX": 1279, "sourceY": 0},
+    {"x": 0, "y": 340, "rgb": [189, 220, 226], "sourceX": 0, "sourceY": 852},
+    {"x": 511, "y": 340, "rgb": [33, 27, 17], "sourceX": 1279, "sourceY": 852},
+    {"x": 0, "y": 341, "rgb": [123, 115, 103]},
+    {"x": 511, "y": 511, "rgb": [123, 115, 103]}
+  ],
+  "comparisonRuntime": "TFLite 2.11.0 macOS arm64, one thread",
+  "comparisonOutputInt32leSha256": "ba08e82509cf6cc97ef9d150d649c1a045b7baf432e6c5a7eeb17364b5c66bb9",
+  "comparisonHistogramAll512": [0,105441,28234,177,9434,12338,14180,197,0,5907,0,4135,119,2660,0,2740,38388,344,0,512,4877,0,0,14851,9290,12,0,0,1059,0,0,7249],
+  "comparisonLayerPixelsValidRegion": {"wall": 84942, "ceiling": 14180, "floor": 7427, "furniture": 34970},
+  "outputAnchors": [
+    {"name": "ceiling", "sourceX": 300, "sourceY": 45, "x": 120, "y": 17, "id": 6},
+    {"name": "sofa", "sourceX": 900, "sourceY": 800, "x": 360, "y": 319, "id": 24},
+    {"name": "table", "sourceX": 400, "sourceY": 730, "x": 160, "y": 291, "id": 16},
+    {"name": "person misclassified as chair", "sourceX": 150, "sourceY": 600, "x": 60, "y": 239, "id": 20},
+    {"name": "floor", "sourceX": 30, "sourceY": 780, "x": 12, "y": 311, "id": 4}
+  ],
+  "limitations": "Sparse anchors are sanity checks, not dense ground truth. Visible person/furniture, ornate surface, floor and pillow errors remain. Histogram/hash are fixed host reference diagnostics, not promises of bit-exact cross-device inference."
+}

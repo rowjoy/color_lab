@@ -1,0 +1,163 @@
+{
+  "diagnosticOnly": true,
+  "model": "/private/tmp/color-lab-room-gate.8SIEoz/artifact-probe.ZpL6Fy/deeplabv3_mnv2_ade20k_int8.tflite",
+  "fixture": "/private/tmp/color-lab-room-fixture.cVSCVU/vizcaya-room-1280.jpg",
+  "runtimeVersion": "2.11.0",
+  "inputType": "uint8",
+  "inputShape": [
+    1,
+    512,
+    512,
+    3
+  ],
+  "outputType": "int32",
+  "outputShape": [
+    1,
+    512,
+    512
+  ],
+  "sourceDimensions": [
+    1280,
+    853
+  ],
+  "resizedDimensions": [
+    512,
+    341
+  ],
+  "paddingBottomRight": [
+    171,
+    0
+  ],
+  "paddingRgb": [
+    123,
+    115,
+    103
+  ],
+  "transform": "RGB; aspect-preserving longest-side512; floor dimensions; bilinear align_corners=true; bottom/right padding; uint8 truncation; no normalization; no JPEG re-encode",
+  "numericalLimit": "Dart double bilinear and Dart JPEG decoding; TensorFlow pipeline uses float32 and its JPEG decoder; not a bit-exact preprocessing equivalence claim",
+  "invokeMs": 126,
+  "histogramAll512": [
+    0,
+    152166,
+    0,
+    0,
+    24626,
+    0,
+    16765,
+    0,
+    0,
+    9884,
+    0,
+    4886,
+    0,
+    1409,
+    0,
+    1410,
+    12703,
+    0,
+    0,
+    51,
+    11231,
+    0,
+    0,
+    10461,
+    10245,
+    1205,
+    0,
+    0,
+    4077,
+    0,
+    0,
+    1025
+  ],
+  "histogramPhotoRegion": [
+    0,
+    79983,
+    0,
+    0,
+    11482,
+    0,
+    16765,
+    0,
+    0,
+    9884,
+    0,
+    4886,
+    0,
+    1409,
+    0,
+    1410,
+    12381,
+    0,
+    0,
+    51,
+    11231,
+    0,
+    0,
+    10461,
+    8342,
+    1205,
+    0,
+    0,
+    4077,
+    0,
+    0,
+    1025
+  ],
+  "categoryIds": {
+    "wall": [
+      1
+    ],
+    "ceiling": [
+      6
+    ],
+    "floor": [
+      4
+    ],
+    "furniture": [
+      8,
+      11,
+      16,
+      20,
+      24
+    ]
+  },
+  "categoryPixelCountsPhotoRegion": {
+    "wall": 79983,
+    "ceiling": 16765,
+    "floor": 11482,
+    "furniture": 36840
+  },
+  "legendRgb": {
+    "wall": [
+      235,
+      45,
+      190
+    ],
+    "ceiling": [
+      255,
+      210,
+      25
+    ],
+    "floor": [
+      20,
+      210,
+      240
+    ],
+    "furniture": [
+      50,
+      235,
+      85
+    ]
+  },
+  "mappingStatus": "Historical MLCommons DeepLab benchmark uses31 scored classes with original ADE IDs1..31; zero excluded/ignored. Exact training/checkpoint chain unverified.",
+  "primarySources": {
+    "historicalBenchmark31Classes": "https://raw.githubusercontent.com/mlcommons/mobile_models/9c7b31ce63ff0331bd659ac2609c4e68b6b4ec0f/v1_0/assets/tasks_v2.pbtxt",
+    "directAdeIds": "https://raw.githubusercontent.com/mlcommons/mobile_app_open/b957f961907dc3dda5e5e9d7bb183b5913ee5677/android/cpp/datasets/ade20k.cc",
+    "adeLabels": "https://raw.githubusercontent.com/CSAILVision/sceneparsing/4ce20bd9115d415d545b26eaa0387a0740838ba5/objectInfo150.txt",
+    "resizeAndPad": "https://raw.githubusercontent.com/tensorflow/models/db2fab9906b8fcfe44948e6a300ff4ecc25853f1/research/deeplab/input_preprocess.py",
+    "bilinearAlignCorners": "https://raw.githubusercontent.com/tensorflow/models/db2fab9906b8fcfe44948e6a300ff4ecc25853f1/research/deeplab/core/preprocess_utils.py",
+    "uint8NoNormalization": "https://raw.githubusercontent.com/tensorflow/tensorflow/v2.6.0/tensorflow/lite/tools/evaluation/stages/image_preprocessing_stage.h",
+    "fixtureLicenseCc0": "https://commons.wikimedia.org/wiki/File:Living_Room_-_Vizcaya_Museum_and_Gardens_-_Miami,_Florida_-_DSC08325.jpg"
+  }
+}

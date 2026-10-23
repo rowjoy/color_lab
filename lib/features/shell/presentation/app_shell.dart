@@ -1,0 +1,101 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../core/theme/theme.dart';
+import '../../../core/widgets/widgets.dart';
+import '../../picker/presentation/acquisition_recovery_scope.dart';
+
+class AppShell extends StatelessWidget {
+  const AppShell({super.key, required this.navigationShell});
+
+  final StatefulNavigationShell navigationShell;
+
+  static const _destinations = [
+    (label: 'Capture', icon: Icons.center_focus_strong_rounded),
+    (label: 'Palette', icon: Icons.palette_outlined),
+    (label: 'Lab', icon: Icons.science_outlined),
+    (label: 'Room', icon: Icons.chair_outlined),
+  ];
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    body: AcquisitionRecoveryScope(child: navigationShell),
+    bottomNavigationBar: SafeArea(
+      top: false,
+      minimum: const EdgeInsets.fromLTRB(
+        AppSpacing.xl,
+        AppSpacing.sm,
+        AppSpacing.xl,
+        AppSpacing.lg,
+      ),
+      child: GlassBar(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: List.generate(_destinations.length, (index) {
+              final item = _destinations[index];
+              final selected = index == navigationShell.currentIndex;
+              return Expanded(
+                child: Semantics(
+                  selected: selected,
+                  button: true,
+                  label: '${item.label} tab',
+                  child: InkWell(
+                    key: ValueKey('nav-${item.label}'),
+                    borderRadius: BorderRadius.circular(AppRadii.medium),
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      navigationShell.goBranch(index);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppSpacing.sm,
+                      ),
+                      child: ExcludeSemantics(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              item.icon,
+                              color: selected
+                                  ? context.appColors.textPrimary
+                                  : context.appColors.textSecondary,
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                            Text(
+                              item.label,
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(
+                                    color: selected
+                                        ? context.appColors.textPrimary
+                                        : context.appColors.textSecondary,
+                                  ),
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                            Container(
+                              width: AppSpacing.xs,
+                              height: AppSpacing.xs,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: selected
+                                    ? context.appColors.accentGradient
+                                    : null,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
+        ),
+      ),
+    ),
+  );
+}

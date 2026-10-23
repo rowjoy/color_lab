@@ -1,0 +1,17 @@
+MOSAIC R4 UINT8 room segmentation model
+Copyright 2020 MLCommons Association
+
+The unmodified model is distributed under the complete MLCOMMONS ASSOCIATION
+LICENSE reproduced in room-model-LICENSE.txt. The upstream license states that
+it reproduces Apache License 2.0 terms. No separate NOTICE file was present in
+the inspected model source tree. This provenance notice was added by Color Lab;
+it does not replace the original license.
+
+Source repository: https://github.com/mlcommons/mobile_open
+Revision: 404e4c284d01b1c9e415b09d7cf8aa0648c4015d
+Original path: vision/mosaic/models_and_checkpoints/R4/mobile_segmenter_r4_quant_argmax_uint8.tflite
+License path: vision/mosaic/LICENCE.md
+Bundled filename: assets/models/room_seg.tflite
+SHA-256: da8b3822a22fde45ecaf0ff32022287eff58b500096971b04f3c1b292da66a3c
+Size: 1,978,000 bytes
+Changes: filename only; model bytes are unmodified.

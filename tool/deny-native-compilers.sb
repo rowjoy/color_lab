@@ -1,0 +1,4 @@
+(version 1)
+(allow default)
+(deny process-exec
+  (regex #"/(clang[^/]*|cc|c[+][+]|gcc[^/]*|g[+][+][^/]*|ld[^/]*|swift[^/]*|gen_snapshot[^/]*|xcodebuild|ninja|make|cmake|gradle|gradlew|metal|metallib)$"))
