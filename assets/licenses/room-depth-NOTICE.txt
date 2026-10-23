@@ -19,7 +19,7 @@ from automatic Wall ownership. Whole-photo bilinear resizing to 256x256 is a
 Color Lab preprocessing choice, unlike the upstream Android demo's center crop.
 RGB normalization follows the upstream mobile demo: (channel - 115) / 58.
 Distribution: https://github.com/rowjoy/color_lab/releases/tag/room-models-v1
-On first room analysis, Color Lab downloads this unchanged model over HTTPS,
+During startup setup, Color Lab downloads this unchanged model over HTTPS if needed,
 checks its exact size and SHA-256, and saves it in app-private support storage.
 The binary is not bundled in the APK. Saved models support offline inference.
 Room photos, depth, masks, and processing remain on-device.

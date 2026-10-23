@@ -304,7 +304,7 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
           ),
           const SizedBox(height: AppSpacing.xl),
           const Text(
-            'First use downloads about 65 MiB of AI models. After setup, room analysis works offline.',
+            'AI models are verified during app startup. After setup, room analysis works offline.',
           ),
           const SizedBox(height: AppSpacing.md),
           if (receipt != null) ...[

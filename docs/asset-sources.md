@@ -88,8 +88,8 @@ not an object detector or a metric distance measurement.
 
 Both unchanged model binaries and all four license/notice files are distributed
 in the fixed [Color Lab room-models-v1 Release](https://github.com/rowjoy/color_lab/releases/tag/room-models-v1).
-Only the small descriptor and licenses are bundled. Initial room analysis streams
-the two public HTTPS assets into app-private support storage, verifies exact size
+Only the small descriptor and licenses are bundled. App startup checks saved files
+and streams missing or corrupt public HTTPS assets into app-private support storage, verifies exact size
 and pinned SHA-256, then promotes complete files. Cached files are verified before
 reuse and support offline analysis. Partial, oversized, corrupt and failed
 downloads are not promoted; retries preserve already verified peer models. The
