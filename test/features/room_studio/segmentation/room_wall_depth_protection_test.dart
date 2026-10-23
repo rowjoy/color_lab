@@ -87,6 +87,32 @@ void main() {
     expect(result.labels.where((label) => label == 0).length, 72);
   });
 
+  for (final size in [2, 4]) {
+    test('protects a coherent $size by $size object below five percent', () {
+      final baseline = walls(32, 24);
+      final result = protectRoomWallsWithDepth(
+        baseline,
+        scene(left: 3, top: 2, right: 3 + size, bottom: 2 + size),
+      );
+      expect(result.labels[2 * 32 + 3], 0);
+      expect(result.labels.where((label) => label == 0).length, size * size);
+      expect(result.labels[18 * 32 + 20], 1);
+      expect(baseline.labels.every((label) => label == 1), isTrue);
+    });
+  }
+
+  test('isolated depth outliers do not masquerade as supported foreground', () {
+    final values = Float32List(32 * 24)..fillRange(0, 32 * 24, 100);
+    values[2 * 32 + 3] = 1000;
+    values[15 * 32 + 27] = 500;
+    final baseline = walls(32, 24);
+    final result = protectRoomWallsWithDepth(
+      baseline,
+      RoomDepthFrame(width: 32, height: 24, inverseDepth: values),
+    );
+    expect(result, same(baseline));
+  });
+
   test('maps a non-square depth frame into source mask geometry', () {
     final result = protectRoomWallsWithDepth(
       walls(96, 48),

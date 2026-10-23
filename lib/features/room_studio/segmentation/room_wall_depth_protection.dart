@@ -41,8 +41,14 @@ MaskBitmap protectRoomWallsWithDepth(MaskBitmap masks, RoomDepthFrame depth) {
     return masks;
   }
   final sorted = depth.inverseDepth.toList()..sort();
-  final span = _percentile(sorted, .95) - _percentile(sorted, .05);
-  if (span <= math.max(1e-5, sorted.last * 1e-6)) return masks;
+  var span = _percentile(sorted, .95) - _percentile(sorted, .05);
+  final minimumSpan = math.max(1e-5, _percentile(sorted, .5) * 1e-6);
+  if (span <= minimumSpan) {
+    // A small object can disappear from both trimmed percentiles. Recover only
+    // variation supported by a full 2×2 block, not isolated depth spikes.
+    span = _supportedDepthSpan(depth);
+    if (span <= minimumSpan) return masks;
+  }
 
   final candidates = <_DepthSample>[];
   for (var y = 0; y < depth.height; y++) {
@@ -162,6 +168,22 @@ double _percentile(List<double> values, double quantile) {
   final low = position.floor();
   final high = position.ceil();
   return values[low] + (values[high] - values[low]) * (position - low);
+}
+
+double _supportedDepthSpan(RoomDepthFrame depth) {
+  var low = double.infinity;
+  var high = double.negativeInfinity;
+  final values = depth.inverseDepth;
+  for (var y = 0; y < depth.height - 1; y++) {
+    for (var x = 0; x < depth.width - 1; x++) {
+      final i = y * depth.width + x;
+      final a = values[i], b = values[i + 1];
+      final c = values[i + depth.width], d = values[i + depth.width + 1];
+      low = math.min(low, math.max(math.max(a, b), math.max(c, d)));
+      high = math.max(high, math.min(math.min(a, b), math.min(c, d)));
+    }
+  }
+  return math.max(0, high - low);
 }
 
 final class _DepthSample {
