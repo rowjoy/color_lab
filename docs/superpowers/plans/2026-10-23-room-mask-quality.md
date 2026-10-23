@@ -46,4 +46,6 @@
 - [x] RED hand-derived confusion counts, perfect/empty coverage, ignored255, invalid shapes/domains and high-background false-pass tests.
 - [x] Add CLI reading raw ownership/truth bytes with explicit width/height; nonzero exit if95% per-layer gate is unmet; no prediction-as-truth shortcut.
 - [x] GREEN focused tests; real-model private/reference smoke; full suite, analyze/format and debug build; record actual evidence and unresolved95% validation.
-- [ ] One fresh review, fix Important findings with RED/GREEN; commit locally, no push.
+- [x] One fresh review, fix Important findings with RED/GREEN; commit locally, no push.
+
+**Remaining user target:**95% auto masking is NOT achieved. New real-gallery evidence exposes an existing multi-wall/global-consensus limitation. Retained the safety guard instead of erasing a real second wall; further spatial wall modeling and independently verified dense annotations are required.
