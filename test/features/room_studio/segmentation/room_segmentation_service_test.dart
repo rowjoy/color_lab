@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:color_lab/features/picker/domain/prepared_photo.dart';
 import 'package:color_lab/features/room_studio/domain/mask_bitmap.dart';
+import 'package:color_lab/features/room_studio/models/room_model_store.dart';
 import 'package:color_lab/features/room_studio/segmentation/raw_segmentation.dart';
 import 'package:color_lab/features/room_studio/segmentation/room_depth_runner.dart';
 import 'package:color_lab/features/room_studio/segmentation/room_wall_depth_protection.dart';
@@ -222,6 +223,48 @@ void main() {
         throwsA(failure(RoomSegmentationFailureKind.processing)),
       );
       await service.close();
+    },
+  );
+
+  test(
+    'factory maps file download failure without requesting bundled models',
+    () async {
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      final requested = <String>[];
+      final json = File(
+        'assets/models/room_seg_descriptor.json',
+      ).readAsBytesSync();
+      final root = Directory.systemTemp.createTempSync(
+        'room-factory-store-test-',
+      );
+      final store = RoomModelStore(
+        directory: () async => root,
+        clientFactory: () => throw const SocketException('offline'),
+      );
+      addTearDown(() async {
+        await store.close();
+        root.deleteSync(recursive: true);
+        messenger.setMockMessageHandler('flutter/assets', null);
+        rootBundle.clear();
+      });
+      rootBundle.clear();
+      messenger.setMockMessageHandler('flutter/assets', (message) async {
+        final key = utf8.decode(
+          message!.buffer.asUint8List(
+            message.offsetInBytes,
+            message.lengthInBytes,
+          ),
+        );
+        requested.add(key);
+        return key.endsWith('.json') ? ByteData.sublistView(json) : null;
+      });
+      await expectLater(
+        createRoomSegmentationWorker(modelStore: store),
+        throwsA(failure(RoomSegmentationFailureKind.modelUnavailable)),
+      );
+      expect(requested, ['assets/models/room_seg_descriptor.json']);
+      expect(store.progress.stage, RoomModelDownloadStage.failed);
     },
   );
 

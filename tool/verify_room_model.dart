@@ -7,6 +7,7 @@ import 'dart:typed_data';
 import 'package:color_lab/core/image/photo_processing.dart';
 import 'package:color_lab/features/picker/domain/prepared_photo.dart';
 import 'package:color_lab/features/room_studio/domain/room_layer.dart';
+import 'package:color_lab/features/room_studio/models/room_model_store.dart';
 import 'package:color_lab/features/room_studio/segmentation/raw_segmentation.dart';
 import 'package:color_lab/features/room_studio/segmentation/room_depth_runner.dart';
 import 'package:color_lab/features/room_studio/segmentation/room_mask_processing.dart';
@@ -158,6 +159,7 @@ Future<Map<String, Object?>?> verifyAdditionalPhoto(
 Future<void> main() async {
   TfliteRoomModelRunner? runner;
   IsolateRoomSegmentationService? service;
+  RoomModelStore? modelStore;
   try {
     WidgetsFlutterBinding.ensureInitialized();
     final descriptor = RoomModelDescriptor.fromMap(
@@ -241,8 +243,31 @@ Future<void> main() async {
       previewBytes: png,
       palette: const [],
     );
-    // The acceptance gate deliberately supplies NO workerFactory override.
-    service = IsolateRoomSegmentationService();
+    // The CLI has no platform path_provider plugin. Seed a private temporary
+    // cache with fixture bytes, then exercise the same verified-file factory
+    // used by the app. No model asset is required in a production APK.
+    final modelCache = Directory.systemTemp.createTempSync(
+      'color-lab-model-cache.',
+    );
+    for (final artifact in roomModelArtifacts) {
+      final data = await rootBundle.load('assets/models/${artifact.name}');
+      final file = File(
+        '${modelCache.path}/room_models/${artifact.sha256}/${artifact.name}',
+      );
+      await file.parent.create(recursive: true);
+      await file.writeAsBytes(
+        data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+      );
+    }
+    final cacheStore = RoomModelStore(
+      directory: () async => modelCache,
+      clientFactory: () =>
+          throw StateError('Smoke must use verified offline fixtures'),
+    );
+    modelStore = cacheStore;
+    service = IsolateRoomSegmentationService(
+      workerFactory: () => createRoomSegmentationWorker(modelStore: cacheStore),
+    );
     var heartbeatTicks = 0;
     final heartbeat = Timer.periodic(const Duration(milliseconds: 1), (_) {
       heartbeatTicks++;
@@ -362,7 +387,7 @@ Future<void> main() async {
     final serviceEvidence = <String, Object?>{
       'status': 'PASS',
       'factory':
-          'IsolateRoomSegmentationService() default createRoomSegmentationWorker',
+          'createRoomSegmentationWorker with verified offline model files',
       'runtime': tfl.version,
       'modelAsset': 'assets/models/room_seg.tflite',
       'descriptorAsset': 'assets/models/room_seg_descriptor.json',
@@ -452,7 +477,7 @@ Future<void> main() async {
           'snapshot',
           'idempotent close',
           'closed use',
-          'default service factory and bundled rootBundle assets',
+          'production factory and verified offline model files',
           'real isolate production pipeline',
           'non-square dense aligned-corner inverse',
           'depth protection changes Wall to unselected only',
@@ -468,6 +493,7 @@ Future<void> main() async {
     exitCode = 1;
   } finally {
     await service?.close();
+    await modelStore?.close();
     runner?.close();
   }
   await stderr.flush();

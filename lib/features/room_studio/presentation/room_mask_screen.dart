@@ -11,6 +11,7 @@ import '../../mixer/presentation/mixer_color_picker.dart';
 import '../../shell/presentation/studio_page.dart';
 import '../application/room_image_export_service.dart';
 import '../application/room_mask_controller.dart';
+import '../application/room_model_download_providers.dart';
 import '../application/room_recolor_provider.dart';
 import '../domain/room_layer.dart';
 import '../domain/room_mask_state.dart';
@@ -19,6 +20,8 @@ import 'room_layer_color_controls.dart';
 import 'room_mask_dialogs.dart';
 import 'room_mask_fullscreen_editor.dart';
 import 'room_mask_viewport.dart';
+import 'room_model_download_status.dart';
+import '../models/room_model_store.dart';
 import 'room_recolor_viewport.dart';
 
 class RoomMaskScreen extends ConsumerStatefulWidget {
@@ -99,6 +102,7 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
     // Logical cancellation releases the action before physical inference ends.
     // The old future's finally cannot clear a subsequent action's guard.
     setState(() => _importOperation = null);
+    ref.read(roomModelStoreProvider).cancel();
     ref.read(roomMaskProvider.notifier).cancelCandidate();
   }
 
@@ -220,6 +224,9 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(roomMaskProvider);
+    final modelProgress =
+        ref.watch(roomModelDownloadProgressProvider).value ??
+        ref.read(roomModelStoreProvider).progress;
     final controller = ref.read(roomMaskProvider.notifier);
     final acquisition = ref.watch(photoAcquisitionProvider);
     final receipt = acquisition.pendingReceipt;
@@ -296,6 +303,10 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
                 : null,
           ),
           const SizedBox(height: AppSpacing.xl),
+          const Text(
+            'First use downloads about 65 MiB of AI models. After setup, room analysis works offline.',
+          ),
+          const SizedBox(height: AppSpacing.md),
           if (receipt != null) ...[
             Text(
               receipt.destination == null
@@ -343,18 +354,21 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
               ),
               const SizedBox(height: AppSpacing.md),
             ],
-            Semantics(
-              liveRegion: true,
-              child: Text(
-                analyzing
-                    ? refreshing
-                          ? 'Refreshing AI masks…'
-                          : 'Finding room surfaces on this device…'
-                    : state.candidate == null
-                    ? 'Waiting for your room photo…'
-                    : 'Your photo is ready to analyze.',
+            if (analyzing && modelProgress.busy)
+              RoomModelDownloadStatus(progress: modelProgress)
+            else
+              Semantics(
+                liveRegion: true,
+                child: Text(
+                  analyzing
+                      ? refreshing
+                            ? 'Refreshing AI masks…'
+                            : 'Finding room surfaces on this device…'
+                      : state.candidate == null
+                      ? 'Waiting for your room photo…'
+                      : 'Your photo is ready to analyze.',
+                ),
               ),
-            ),
             const SizedBox(height: AppSpacing.md),
             if (acquiring && state.candidate != null)
               PrimaryButton(
@@ -365,15 +379,21 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
                 },
               ),
             SecondaryButton(
-              label: analyzing ? 'Cancel analysis' : 'Cancel import',
+              label: analyzing && modelProgress.busy
+                  ? 'Cancel download'
+                  : analyzing
+                  ? 'Cancel analysis'
+                  : 'Cancel import',
               onPressed: _cancelCandidate,
             ),
           ],
           if (state.stage == RoomMaskStage.error) ...[
             Semantics(
               liveRegion: true,
-              child: const Text(
-                'Room analysis could not finish. Try again or choose another photo.',
+              child: Text(
+                modelProgress.stage == RoomModelDownloadStage.failed
+                    ? 'AI models could not be downloaded or verified. Check your connection and free space, then retry. Your photo is safe.'
+                    : 'Room analysis could not finish. Try again or choose another photo.',
               ),
             ),
             const SizedBox(height: AppSpacing.md),

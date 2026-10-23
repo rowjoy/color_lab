@@ -5,8 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../picker/domain/prepared_photo.dart';
+import '../application/room_model_download_providers.dart';
 import '../domain/mask_bitmap.dart';
-import 'room_depth_runner.dart';
+import '../models/room_model_store.dart';
 import 'room_model_descriptor.dart';
 import 'room_segmentation_worker.dart';
 
@@ -32,13 +33,11 @@ typedef RoomSegmentationWorkerFactory =
     Future<RoomSegmentationWorker> Function();
 
 /// Asset access stays on the root isolate; native handles and pixels do not.
-Future<RoomSegmentationWorker> createRoomSegmentationWorker() async {
-  late ByteData model;
-  late ByteData depthModel;
+Future<RoomSegmentationWorker> createRoomSegmentationWorker({
+  RoomModelStore? modelStore,
+}) async {
   late String json;
   try {
-    model = await rootBundle.load('assets/models/room_seg.tflite');
-    depthModel = await rootBundle.load(roomDepthModelAsset);
     json = await rootBundle.loadString(
       'assets/models/room_seg_descriptor.json',
     );
@@ -57,17 +56,21 @@ Future<RoomSegmentationWorker> createRoomSegmentationWorker() async {
       RoomSegmentationFailureKind.incompatibleModel,
     );
   }
-  return IsolateRoomSegmentationWorker.start(
-    modelBytes: model.buffer.asUint8List(
-      model.offsetInBytes,
-      model.lengthInBytes,
-    ),
-    descriptor: descriptor,
-    depthModelBytes: depthModel.buffer.asUint8List(
-      depthModel.offsetInBytes,
-      depthModel.lengthInBytes,
-    ),
-  );
+  final store = modelStore ?? RoomModelStore();
+  try {
+    final models = await store.load();
+    return await IsolateRoomSegmentationWorker.start(
+      modelBytes: models.semantic,
+      descriptor: descriptor,
+      depthModelBytes: models.depth,
+    );
+  } on RoomModelDownloadException {
+    throw const RoomSegmentationException(
+      RoomSegmentationFailureKind.modelUnavailable,
+    );
+  } finally {
+    if (modelStore == null) await store.close();
+  }
 }
 
 /// One active request, one replaceable waiting request, one cached photo.
@@ -192,7 +195,10 @@ final class _Request {
 final roomSegmentationServiceProvider = Provider<RoomSegmentationService>((
   ref,
 ) {
-  final service = IsolateRoomSegmentationService();
+  final store = ref.watch(roomModelStoreProvider);
+  final service = IsolateRoomSegmentationService(
+    workerFactory: () => createRoomSegmentationWorker(modelStore: store),
+  );
   ref.onDispose(() {
     unawaited(service.close().catchError((Object _) {}));
   });
