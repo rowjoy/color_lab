@@ -27,23 +27,23 @@
 
 **Files:** `lib/features/room_studio/segmentation/room_wall_depth_protection.dart`, its existing test.
 **Interface:** Unchanged `protectRoomWallsWithDepth(MaskBitmap, RoomDepthFrame)`.
-- [ ] RED tests: 4×4 near patch over flat32×24 wall is excluded; 2×2 supported patch works; isolated depth spikes do not trigger removal.
-- [ ] If trimmed span collapses, use the range supported by complete2×2 depth blocks; retain existing plane consensus/thresholds and safe no-op for unsupported variation.
-- [ ] GREEN depth/segmentation tests; commit scoped files.
+- [x] RED tests: 4×4 near patch over flat32×24 wall is excluded; 2×2 supported patch works; isolated depth spikes do not trigger removal.
+- [x] If trimmed span collapses, use the range supported by complete2×2 depth blocks; retain existing plane consensus/thresholds and safe no-op for unsupported variation.
+- [x] GREEN depth/segmentation tests; commit scoped files.
 
 ### Task 2: Ownership-faithful preview
 
 **Files:** `lib/features/room_studio/application/mask_overlay_service.dart`, `test/features/room_studio/presentation/mask_overlay_service_test.dart`.
 **Interface:** Existing overlay render API unchanged; shared binomial-alpha math unchanged.
-- [ ] RED PNG tests: all nonselected labels including erased0 remain alpha0 for radii1/2, selected edge still feathered.
-- [ ] Clip encoded alpha to the selected label; update old outward-preview fixture to the new ownership contract.
-- [ ] GREEN overlay/recolor/viewport tests; commit scoped files.
+- [x] RED PNG tests: all nonselected labels including erased0 remain alpha0 for radii1/2, selected edge still feathered.
+- [x] Clip encoded alpha to the selected label; update old outward-preview fixture to the new ownership contract.
+- [x] GREEN overlay/recolor/viewport tests; commit scoped files.
 
 ### Task 3: Truth-based quality check and evidence
 
 **Files:** `tool/room_mask/quality_metrics.dart`, `tool/verify_room_mask_quality.dart`, `test/tool/room_mask_quality_test.dart`, README.
 **Interface:** Pure `evaluateRoomMaskQuality(predicted, truth, width, height)` returns JSON-ready per-class support/IoU/precision/recall/Dice, pixel accuracy, ignored count and a95% per-layer gate. Raw masks use0..4; truth255 means ignored. Missing truth coverage fails the all-four-layer gate.
-- [ ] RED hand-derived confusion counts, perfect/empty coverage, ignored255, invalid shapes/domains and high-background false-pass tests.
-- [ ] Add CLI reading raw ownership/truth bytes with explicit width/height; nonzero exit if95% per-layer gate is unmet; no prediction-as-truth shortcut.
-- [ ] GREEN focused tests; real-model private/reference smoke; full suite, analyze/format and debug build; record actual evidence and unresolved95% validation.
+- [x] RED hand-derived confusion counts, perfect/empty coverage, ignored255, invalid shapes/domains and high-background false-pass tests.
+- [x] Add CLI reading raw ownership/truth bytes with explicit width/height; nonzero exit if95% per-layer gate is unmet; no prediction-as-truth shortcut.
+- [x] GREEN focused tests; real-model private/reference smoke; full suite, analyze/format and debug build; record actual evidence and unresolved95% validation.
 - [ ] One fresh review, fix Important findings with RED/GREEN; commit locally, no push.
