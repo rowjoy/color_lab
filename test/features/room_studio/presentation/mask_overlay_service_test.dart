@@ -8,6 +8,36 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
 
 void main() {
+  for (final radius in [1, 2]) {
+    test(
+      'preview radius$radius never tints another owner or an erased pixel',
+      () async {
+        final labels = Uint8List.fromList([
+          for (var y = 0; y < 7; y++)
+            for (var x = 0; x < 9; x++) x < 5 ? 1 : (y % 5),
+        ]);
+        final png = await const IsolateMaskOverlayService().render(
+          masks: MaskBitmap(width: 9, height: 7, labels: labels),
+          layer: RoomLayer.wall,
+          tint: RgbColor(17, 99, 201),
+          featherRadius: radius,
+        );
+        final decoded = img.decodePng(png)!;
+        for (var i = 0; i < labels.length; i++) {
+          if (labels[i] != 1) {
+            expect(
+              decoded.getPixel(i % 9, i ~/ 9).a,
+              0,
+              reason: 'non-Wall pixel$i',
+            );
+          }
+        }
+        expect(decoded.getPixel(4, 2).a, inExclusiveRange(0, 255));
+        expect(decoded.getPixel(2, 3).a, 255);
+      },
+    );
+  }
+
   test(
     'worker PNG preserves tint and binomial alpha at known pixels',
     () async {
@@ -31,7 +61,7 @@ void main() {
       final center = decoded.getPixel(3, 3);
       expect([center.r, center.g, center.b, center.a], [17, 99, 201, 255]);
       expect(decoded.getPixel(0, 0).a, 0);
-      expect(decoded.getPixel(1, 3).a, 64);
+      expect(decoded.getPixel(1, 3).a, 0);
       expect(decoded.getPixel(2, 2).a, 143);
       expect(masks.labels, before);
     },
