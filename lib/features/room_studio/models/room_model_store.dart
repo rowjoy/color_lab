@@ -120,10 +120,12 @@ final class RoomModelStore {
   late RoomModelDownloadProgress _progress;
   _Load? _active;
   bool _closed = false;
+  int _cancellationGeneration = 0;
 
   int get _totalBytes => _artifacts.fold(0, (sum, a) => sum + a.bytes);
   RoomModelDownloadProgress get progress => _progress;
   Stream<RoomModelDownloadProgress> get changes => _changes.stream;
+  int get cancellationGeneration => _cancellationGeneration;
 
   Future<RoomModelBytes> load() {
     if (_closed) {
@@ -133,9 +135,19 @@ final class RoomModelStore {
     if (previous != null) {
       if (!previous.cancelled) return previous.result.future;
       // A retry waits for old I/O/partial cleanup; it never inherits cancellation.
+      final generation = _cancellationGeneration;
+      Future<RoomModelBytes> retryIfCurrent() {
+        if (generation != _cancellationGeneration) {
+          return Future.error(
+            const RoomModelDownloadException(cancelled: true),
+          );
+        }
+        return load();
+      }
+
       return previous.result.future.then(
-        (_) => load(),
-        onError: (Object _, StackTrace _) => load(),
+        (_) => retryIfCurrent(),
+        onError: (Object _, StackTrace _) => retryIfCurrent(),
       );
     }
     final operation = _Load();
@@ -284,6 +296,9 @@ final class RoomModelStore {
   }
 
   void cancel() {
+    // Also invalidate setup that is still awaiting the bundled descriptor and
+    // has not reached load() yet. A subsequent explicit request gets a new epoch.
+    _cancellationGeneration++;
     final operation = _active;
     if (operation == null || operation.cancelled) return;
     operation.cancelled = true;

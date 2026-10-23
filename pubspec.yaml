@@ -67,7 +67,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/data/color_names.json
-    - assets/models/
+    - assets/models/room_seg_descriptor.json
     - assets/licenses/
   fonts:
     - family: PlusJakartaSans

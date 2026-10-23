@@ -18,4 +18,8 @@ meters. Color Lab uses robust wall-plane estimation to exclude nearer objects
 from automatic Wall ownership. Whole-photo bilinear resizing to 256x256 is a
 Color Lab preprocessing choice, unlike the upstream Android demo's center crop.
 RGB normalization follows the upstream mobile demo: (channel - 115) / 58.
-Depth, masks, and processing remain on-device. No runtime model download occurs.
+Distribution: https://github.com/rowjoy/color_lab/releases/tag/room-models-v1
+On first room analysis, Color Lab downloads this unchanged model over HTTPS,
+checks its exact size and SHA-256, and saves it in app-private support storage.
+The binary is not bundled in the APK. Saved models support offline inference.
+Room photos, depth, masks, and processing remain on-device.

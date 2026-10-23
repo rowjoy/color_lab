@@ -36,38 +36,46 @@ typedef RoomSegmentationWorkerFactory =
 Future<RoomSegmentationWorker> createRoomSegmentationWorker({
   RoomModelStore? modelStore,
 }) async {
-  late String json;
-  try {
-    json = await rootBundle.loadString(
-      'assets/models/room_seg_descriptor.json',
-    );
-  } catch (_) {
-    throw const RoomSegmentationException(
-      RoomSegmentationFailureKind.modelUnavailable,
-    );
-  }
-  late RoomModelDescriptor descriptor;
-  try {
-    descriptor = RoomModelDescriptor.fromMap(
-      (jsonDecode(json) as Map).cast<String, Object?>(),
-    );
-  } catch (_) {
-    throw const RoomSegmentationException(
-      RoomSegmentationFailureKind.incompatibleModel,
-    );
-  }
   final store = modelStore ?? RoomModelStore();
+  final generation = store.cancellationGeneration;
   try {
-    final models = await store.load();
-    return await IsolateRoomSegmentationWorker.start(
-      modelBytes: models.semantic,
-      descriptor: descriptor,
-      depthModelBytes: models.depth,
-    );
-  } on RoomModelDownloadException {
-    throw const RoomSegmentationException(
-      RoomSegmentationFailureKind.modelUnavailable,
-    );
+    late String json;
+    try {
+      json = await rootBundle.loadString(
+        'assets/models/room_seg_descriptor.json',
+      );
+    } catch (_) {
+      throw const RoomSegmentationException(
+        RoomSegmentationFailureKind.modelUnavailable,
+      );
+    }
+    late RoomModelDescriptor descriptor;
+    try {
+      descriptor = RoomModelDescriptor.fromMap(
+        (jsonDecode(json) as Map).cast<String, Object?>(),
+      );
+    } catch (_) {
+      throw const RoomSegmentationException(
+        RoomSegmentationFailureKind.incompatibleModel,
+      );
+    }
+    if (generation != store.cancellationGeneration) {
+      throw const RoomSegmentationException(
+        RoomSegmentationFailureKind.modelUnavailable,
+      );
+    }
+    try {
+      final models = await store.load();
+      return await IsolateRoomSegmentationWorker.start(
+        modelBytes: models.semantic,
+        descriptor: descriptor,
+        depthModelBytes: models.depth,
+      );
+    } on RoomModelDownloadException {
+      throw const RoomSegmentationException(
+        RoomSegmentationFailureKind.modelUnavailable,
+      );
+    }
   } finally {
     if (modelStore == null) await store.close();
   }
@@ -76,10 +84,14 @@ Future<RoomSegmentationWorker> createRoomSegmentationWorker({
 /// One active request, one replaceable waiting request, one cached photo.
 /// Identity refers to the immutable PreparedPhoto object, not a caller revision.
 final class IsolateRoomSegmentationService implements RoomSegmentationService {
-  IsolateRoomSegmentationService({RoomSegmentationWorkerFactory? workerFactory})
-    : _workerFactory = workerFactory ?? createRoomSegmentationWorker;
+  IsolateRoomSegmentationService({
+    RoomSegmentationWorkerFactory? workerFactory,
+    int Function()? cancellationGeneration,
+  }) : _workerFactory = workerFactory ?? createRoomSegmentationWorker,
+       _cancellationGeneration = cancellationGeneration;
 
   final RoomSegmentationWorkerFactory _workerFactory;
+  final int Function()? _cancellationGeneration;
   RoomSegmentationWorker? _worker;
   _Request? _active;
   _Request? _waiting;
@@ -94,7 +106,7 @@ final class IsolateRoomSegmentationService implements RoomSegmentationService {
     required PreparedPhoto photo,
   }) {
     if (_closed) return Future.error(_cancelled);
-    final request = _Request(photoId, photo);
+    final request = _Request(photoId, photo, _cancellationGeneration?.call());
     if (_active == null) {
       _start(request);
     } else {
@@ -111,6 +123,9 @@ final class IsolateRoomSegmentationService implements RoomSegmentationService {
 
   Future<void> _run(_Request request) async {
     try {
+      if (request.generation != _cancellationGeneration?.call()) {
+        throw _cancelled;
+      }
       final cached = identical(_cachedPhoto, request.photo)
           ? _cachedMasks
           : null;
@@ -185,9 +200,10 @@ final class IsolateRoomSegmentationService implements RoomSegmentationService {
 }
 
 final class _Request {
-  _Request(this.photoId, this.photo);
+  _Request(this.photoId, this.photo, this.generation);
   final String photoId;
   final PreparedPhoto photo;
+  final int? generation;
   final result = Completer<RoomSegmentationResult>();
   final finished = Completer<void>();
 }
@@ -198,6 +214,7 @@ final roomSegmentationServiceProvider = Provider<RoomSegmentationService>((
   final store = ref.watch(roomModelStoreProvider);
   final service = IsolateRoomSegmentationService(
     workerFactory: () => createRoomSegmentationWorker(modelStore: store),
+    cancellationGeneration: () => store.cancellationGeneration,
   );
   ref.onDispose(() {
     unawaited(service.close().catchError((Object _) {}));

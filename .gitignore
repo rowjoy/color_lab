@@ -43,3 +43,18 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Models are distributed as GitHub Release assets, not Git objects or APK assets.
+/assets/models/*.tflite
+/dist/
+/.superpowers/
+
+# Local credentials and signing material must not be published.
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
+*.p12
+*.pfx
+key.properties

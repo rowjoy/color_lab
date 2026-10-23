@@ -249,7 +249,10 @@ Future<void> main() async {
     final modelCache = Directory.systemTemp.createTempSync(
       'color-lab-model-cache.',
     );
-    for (final artifact in roomModelArtifacts) {
+    final verifyDownloads =
+        Platform.environment['COLOR_LAB_VERIFY_MODEL_DOWNLOADS'] == '1';
+    for (final artifact
+        in verifyDownloads ? <RoomModelArtifact>[] : roomModelArtifacts) {
       final data = await rootBundle.load('assets/models/${artifact.name}');
       final file = File(
         '${modelCache.path}/room_models/${artifact.sha256}/${artifact.name}',
@@ -261,8 +264,9 @@ Future<void> main() async {
     }
     final cacheStore = RoomModelStore(
       directory: () async => modelCache,
-      clientFactory: () =>
-          throw StateError('Smoke must use verified offline fixtures'),
+      clientFactory: verifyDownloads
+          ? null
+          : () => throw StateError('Smoke must use verified offline fixtures'),
     );
     modelStore = cacheStore;
     service = IsolateRoomSegmentationService(
@@ -361,6 +365,26 @@ Future<void> main() async {
       cached.photoId == 'new-caller-revision' && identical(cached.masks, masks),
       'Production service cache changed caller revision or masks',
     );
+    final offlineStore = RoomModelStore(
+      directory: () async => modelCache,
+      clientFactory: () =>
+          throw const SocketException('Cold cache must work offline'),
+    );
+    try {
+      final offline = await offlineStore.load();
+      check(
+        sha256.convert(offline.semantic).toString() ==
+            roomModelArtifacts[0].sha256,
+        'Offline segmentation cache',
+      );
+      check(
+        sha256.convert(offline.depth).toString() ==
+            roomModelArtifacts[1].sha256,
+        'Offline depth cache',
+      );
+    } finally {
+      await offlineStore.close();
+    }
     final additionalPhoto = await verifyAdditionalPhoto(
       service,
       model,
@@ -389,7 +413,10 @@ Future<void> main() async {
       'factory':
           'createRoomSegmentationWorker with verified offline model files',
       'runtime': tfl.version,
-      'modelAsset': 'assets/models/room_seg.tflite',
+      'modelSource': verifyDownloads
+          ? 'public fixed GitHub Release'
+          : 'temporary seeded model cache',
+      'coldOfflineCacheVerified': true,
       'descriptorAsset': 'assets/models/room_seg_descriptor.json',
       'modelSha256': descriptor.sha256,
       'depthModelSha256': roomDepthModelSha256,
@@ -467,7 +494,7 @@ Future<void> main() async {
         'additionalPhoto': ?additionalPhoto,
         'diagnostics': evidenceFile.path,
         'checks': [
-          'bundled assets',
+          'staged reference fixtures and verified model files',
           'actual production runner',
           'corrupt model',
           'input length',

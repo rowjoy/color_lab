@@ -301,6 +301,37 @@ void main() {
     expect(requests, isEmpty);
   });
 
+  test('a second cancel invalidates a retry waiting for old cleanup', () async {
+    final gate = Completer<Directory>();
+    var directoryCalls = 0;
+    final subject = RoomModelStore(
+      directory: () {
+        directoryCalls++;
+        return directoryCalls == 1 ? gate.future : Future.value(root);
+      },
+      artifacts: artifacts,
+    );
+    stores.add(subject);
+    final first = subject.load();
+    final firstCancelled = expectLater(
+      first,
+      throwsA(isA<RoomModelDownloadException>()),
+    );
+    subject.cancel();
+    final waitingRetry = subject.load();
+    final retryCancelled = expectLater(
+      waitingRetry,
+      throwsA(isA<RoomModelDownloadException>()),
+    );
+    subject.cancel();
+    gate.complete(root);
+    await firstCancelled;
+    await retryCancelled;
+    expect(directoryCalls, 1);
+    expect(requests, isEmpty);
+    expect(utf8.decode((await subject.load()).depth), 'world');
+  });
+
   test(
     'stalled response body fails with bounded timeout and cleans partial',
     () async {
