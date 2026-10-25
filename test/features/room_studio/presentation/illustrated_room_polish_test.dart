@@ -357,6 +357,32 @@ void main() {
       decorationAnchor: (274, 226),
       decorationHex: '#F3D27A',
     ),
+    (
+      template: IllustratedRoomCatalog.kitchen,
+      contract: const IllustratedRoomPolishContract(
+        requiredGroupIds: [
+          'kitchen-architecture-depth',
+          'kitchen-daylight',
+          'kitchen-undercabinet-light',
+          'kitchen-contact-shadows',
+          'kitchen-counter-details',
+        ],
+        editableObjectGroupIds: [
+          'kitchen-editable-left-cabinetry',
+          'kitchen-editable-right-cabinetry',
+          'kitchen-editable-island',
+        ],
+        toneSample: (
+          highlight: (600, 560),
+          base: (600, 610),
+          shade: (600, 695),
+        ),
+        contactShadowAnchor: (950, 585),
+        clearFloorAnchor: (1100, 760),
+      ),
+      decorationAnchor: (850, 532),
+      decorationHex: '#C6CFD0',
+    ),
   ]) {
     test(
       '${fixture.template.title} satisfies the polish structure contract',

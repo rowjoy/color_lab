@@ -1,129 +1,192 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
-  <!-- Original Color Lab kitchen scene. Cabinet planes are editable; fixed
-       counters and appliances remain neutral for realistic comparison. -->
+  <!-- Original Color Lab galley kitchen with framed cabinetry and a stone island. -->
   <defs>
-    <linearGradient id="kitchen-window" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#9BD7E7"/>
-      <stop offset="1" stop-color="#E7F2ED"/>
+    <linearGradient id="kitchen-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#A9D3DC"/><stop offset="1" stop-color="#E8EEE2"/>
+    </linearGradient>
+    <linearGradient id="kitchen-daylight-fade" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity=".25"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="kitchen-task-fade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFF5DD" stop-opacity=".48"/><stop offset="1" stop-color="#FFF5DD" stop-opacity="0"/>
     </linearGradient>
     <linearGradient id="kitchen-steel" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#AAB3B5"/>
-      <stop offset=".5" stop-color="#EEF0EE"/>
-      <stop offset="1" stop-color="#8F999C"/>
+      <stop offset="0" stop-color="#929D9F"/><stop offset=".28" stop-color="#DAE0DF"/><stop offset=".51" stop-color="#B6C0C0"/><stop offset="1" stop-color="#879294"/>
+    </linearGradient>
+    <linearGradient id="kitchen-stone" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F1EFE7"/><stop offset="1" stop-color="#D4D5CE"/>
     </linearGradient>
   </defs>
 
-  <g id="kitchen-shell">
-    <g id="surface-ceiling">
-      <path d="M0 0H1200V106L1118 140H82L0 106Z" fill="#00E5FF"/>
+  <g id="kitchen-architecture-depth">
+    <g id="surface-ceiling"><path d="M0 0H1200V112L1090 145H98L0 116Z" fill="#00E5FF"/></g>
+    <path d="M0 78H1200V101H0Z" fill="#FFFFFF" fill-opacity=".12"/>
+    <path d="M0 101H1200V119L1090 151H98L0 122Z" fill="#EAEAE1"/>
+    <path d="M0 101H1200" stroke="#FFFFFF" stroke-opacity=".62" stroke-width="4"/>
+    <g id="surface-wall"><path d="M0 122L98 151H1090L1200 119V555H0Z" fill="#FF00A1"/></g>
+    <path d="M0 122L98 151V555H0Z" fill="#000000" fill-opacity=".07"/>
+    <path d="M1090 151L1200 119V555H1090Z" fill="#000000" fill-opacity=".12"/>
+    <path d="M98 151H1090" stroke="#000000" stroke-opacity=".16" stroke-width="4"/>
+    <path d="M105 156H1083" stroke="#FFFFFF" stroke-opacity=".2" stroke-width="3"/>
+    <g id="surface-floor"><path d="M0 555H1200V800H0Z" fill="#B7FF00"/></g>
+    <path d="M0 542H1200V558H0Z" fill="#E9E6DC"/>
+    <path d="M0 559H1200" stroke="#000000" stroke-opacity=".26" stroke-width="4"/>
+    <g fill="none" stroke="#000000" stroke-opacity=".12" stroke-width="2">
+      <path d="M466 555L0 800M523 555L239 800M580 555L472 800M637 555L709 800M694 555L947 800M751 555L1184 800"/>
+      <path d="M0 608H1200M0 681H1200M0 784H1200M246 608L202 628M1051 681L1076 699M100 784L88 791"/>
     </g>
-    <path d="M48 82H1152L1118 124H82Z" fill="#FFFFFF" fill-opacity=".18"/>
-    <path d="M82 124H1118" stroke="#FFFFFF" stroke-opacity=".70" stroke-width="13"/>
-    <path d="M84 138H1116" stroke="#27363D" stroke-opacity=".20" stroke-width="4"/>
-
-    <g id="surface-wall">
-      <path d="M0 106L82 140H1118L1200 106V552H0Z" fill="#FF00A1"/>
-    </g>
-    <path d="M0 106L82 140V552H0Z" fill="#000000" fill-opacity=".11"/>
-    <path d="M1200 106L1118 140V552H1200Z" fill="#000000" fill-opacity=".07"/>
-
-    <g id="surface-floor">
-      <path d="M0 552H1200V800H0Z" fill="#B7FF00"/>
-    </g>
-    <path d="M0 542H1200V565H0Z" fill="#F6F2EA"/>
-    <path d="M0 565H1200" stroke="#312B27" stroke-opacity=".30" stroke-width="5"/>
-    <g fill="none" stroke="#55483F" stroke-opacity=".17" stroke-width="2">
-      <path d="M600 552L70 800M600 552L300 800M600 552L480 800M600 552L720 800M600 552L900 800M600 552L1130 800"/>
-      <path d="M0 618C334 608 866 608 1200 618"/>
-      <path d="M0 684C334 668 866 668 1200 684"/>
-      <path d="M0 748C334 729 866 729 1200 748"/>
-    </g>
+    <path d="M426 407H772V539H426Z" fill="#DADCD4"/>
+    <path d="M426 440H772M426 474H772M426 508H772M482 407V440M550 440V474M618 407V440M686 440V474M482 474V508M618 474V508" stroke="#A3AAA3" stroke-opacity=".34" stroke-width="2"/>
   </g>
 
-  <g id="kitchen-center-window">
-    <rect x="458" y="270" width="284" height="211" fill="#223138" fill-opacity=".24"/>
-    <rect x="469" y="279" width="262" height="193" fill="#F4F0E7"/>
-    <rect x="484" y="294" width="232" height="163" fill="url(#kitchen-window)"/>
-    <path d="M484 397L535 354L576 390L626 338L716 401V457H484Z" fill="#78998A"/>
-    <path d="M600 294V457M484 374H716" stroke="#F4F0E7" stroke-width="9"/>
-    <path d="M474 284L484 294V457L474 466Z" fill="#FFFFFF" fill-opacity=".40"/>
-    <path d="M726 284L716 294V457L726 466Z" fill="#000000" fill-opacity=".10"/>
+  <g id="kitchen-daylight">
+    <path d="M453 282H699L849 541H542Z" fill="url(#kitchen-daylight-fade)"/>
+    <path d="M444 560L527 560L717 754L605 767ZM541 560H624L837 738L738 754Z" fill="#FFFFFF" fill-opacity=".15"/>
+  </g>
+  <g id="kitchen-window-depth">
+    <rect x="438" y="257" width="300" height="150" fill="#000000" fill-opacity=".23"/>
+    <rect x="445" y="262" width="284" height="136" fill="#F3F1E8"/>
+    <rect x="458" y="276" width="258" height="107" fill="url(#kitchen-sky)"/>
+    <path d="M458 345L501 316L537 337L578 304L634 341L670 318L716 347V383H458Z" fill="#88A494"/>
+    <path d="M458 367L506 345L552 366L617 339L666 365L716 350V383H458Z" fill="#5F7F70"/>
+    <path d="M542 276V383M631 276V383" stroke="#F3F1E8" stroke-width="8"/>
+    <path d="M451 269L458 276V383L451 391Z" fill="#FFFFFF" fill-opacity=".62"/>
+    <path d="M723 269L716 276V383L723 390Z" fill="#000000" fill-opacity=".16"/>
+    <path d="M436 393H733L752 405H423Z" fill="#F4F0E5"/>
+    <path d="M423 405H752V414H423Z" fill="#C1C6BD"/>
+    <path d="M432 415H752L766 423H445Z" fill="#000000" fill-opacity=".12"/>
   </g>
 
-  <path d="M470 286H730L858 552H350Z" fill="#DCEFF4" fill-opacity=".10"/>
+  <g id="kitchen-contact-shadows">
+    <path d="M65 550H410L451 594H100Z" fill="#000000" fill-opacity=".19"/>
+    <path d="M786 550H1140L1196 598H827Z" fill="#000000" fill-opacity=".21"/>
+    <path d="M83 562H401L420 576H96ZM800 562H1124L1145 580H818Z" fill="#000000" fill-opacity=".25"/>
+    <path d="M325 702L817 682L922 737L400 778L325 743Z" fill="#000000" fill-opacity=".17"/>
+    <path d="M332 719L817 696L860 720L371 748Z" fill="#000000" fill-opacity=".27"/>
+  </g>
 
   <g id="surface-furniture">
-    <!-- Left upper and lower cabinetry. -->
-    <rect x="70" y="172" width="338" height="216" rx="5" fill="#7A00FF"/>
-    <path d="M70 172H89V388H70Z" fill="#FFFFFF" fill-opacity=".14"/>
-    <path d="M389 172H408V388H389Z" fill="#000000" fill-opacity=".16"/>
-    <path d="M183 172V388M296 172V388" stroke="#FFFFFF" stroke-opacity=".18" stroke-width="3"/>
-    <rect x="64" y="413" width="350" height="164" rx="5" fill="#7A00FF"/>
-    <path d="M64 413H414V425H64Z" fill="#FFFFFF" fill-opacity=".12"/>
-    <path d="M64 558H414V577H64Z" fill="#000000" fill-opacity=".17"/>
-    <path d="M177 432V558M291 432V558" stroke="#FFFFFF" stroke-opacity=".16" stroke-width="3"/>
-
-    <!-- Right upper and lower cabinetry. -->
-    <rect x="792" y="172" width="338" height="216" rx="5" fill="#7A00FF"/>
-    <path d="M792 172H811V388H792Z" fill="#FFFFFF" fill-opacity=".14"/>
-    <path d="M1111 172H1130V388H1111Z" fill="#000000" fill-opacity=".16"/>
-    <path d="M905 172V388M1018 172V388" stroke="#FFFFFF" stroke-opacity=".18" stroke-width="3"/>
-    <rect x="786" y="413" width="350" height="164" rx="5" fill="#7A00FF"/>
-    <path d="M786 413H1136V425H786Z" fill="#FFFFFF" fill-opacity=".12"/>
-    <path d="M786 558H1136V577H786Z" fill="#000000" fill-opacity=".17"/>
-    <path d="M899 432V558M1013 432V558" stroke="#FFFFFF" stroke-opacity=".16" stroke-width="3"/>
-
-    <!-- Central island cabinetry. -->
-    <path d="M345 548H855L902 704H298Z" fill="#7A00FF"/>
-    <path d="M356 548H844L860 570H340Z" fill="#FFFFFF" fill-opacity=".13"/>
-    <path d="M298 684H902L892 704H308Z" fill="#000000" fill-opacity=".17"/>
-    <path d="M450 570V684M750 570V684" stroke="#FFFFFF" stroke-opacity=".17" stroke-width="3"/>
-    <path d="M325 700H365V764H333ZM835 700H875L867 764H835Z" fill="#7A00FF"/>
-  </g>
-
-  <!-- Neutral worktops, appliances and fittings stay fixed. -->
-  <g id="kitchen-fixed-surfaces">
-    <path d="M48 390H430L414 417H64Z" fill="#E7E3DA"/>
-    <path d="M770 390H1152L1136 417H786Z" fill="#E7E3DA"/>
-    <path d="M319 523H881L855 554H345Z" fill="#E8E4DC"/>
-    <path d="M334 523H866L851 537H349Z" fill="#FFFFFF" fill-opacity=".56"/>
-    <rect x="449" y="425" width="302" height="95" fill="#E7E2D8"/>
-    <path d="M449 455H751M500 425V520M550 425V520M650 425V520M700 425V520" stroke="#B9B1A5" stroke-opacity=".55" stroke-width="2"/>
-    <rect x="807" y="432" width="87" height="126" rx="4" fill="#273339"/>
-    <rect x="820" y="445" width="61" height="67" rx="3" fill="#151D21"/>
-    <circle cx="828" cy="532" r="5" fill="#C6CFD0"/>
-    <circle cx="850" cy="532" r="5" fill="#C6CFD0"/>
-    <circle cx="872" cy="532" r="5" fill="#C6CFD0"/>
-    <rect x="1025" y="432" width="92" height="126" rx="4" fill="url(#kitchen-steel)"/>
-    <path d="M1071 432V558" stroke="#7B8688" stroke-width="3"/>
-    <rect x="1064" y="467" width="14" height="53" rx="7" fill="#59676B"/>
-    <ellipse cx="600" cy="544" rx="78" ry="12" fill="#BAC4C3"/>
-    <ellipse cx="600" cy="542" rx="58" ry="8" fill="#8C999A"/>
-    <path d="M600 539V493C600 474 620 466 637 475" fill="none" stroke="#69787C" stroke-width="8" stroke-linecap="round"/>
-    <path d="M637 475V493" stroke="#69787C" stroke-width="8" stroke-linecap="round"/>
-  </g>
-
-  <g id="kitchen-hardware-decor">
-    <g stroke="#D8C69C" stroke-width="5" stroke-linecap="round">
-      <path d="M125 270H147M238 270H260M351 270H373M850 270H872M963 270H985M1076 270H1098"/>
-      <path d="M118 485H140M232 485H254M346 485H368M840 485H862M954 485H976M1068 485H1090"/>
+    <g id="kitchen-editable-left-cabinetry">
+      <path d="M65 180L87 167H413V344L391 361H65Z" fill="#7A00FF"/>
+      <path d="M65 180L87 167H413L391 180Z" fill="#FFFFFF" fill-opacity=".23"/>
+      <path d="M391 180L413 167V344L391 361Z" fill="#000000" fill-opacity=".25"/>
+      <rect x="73" y="188" width="310" height="165" fill="#000000" fill-opacity=".27"/>
+      <path d="M78 193H173V347H78ZM181 193H276V347H181ZM284 193H378V347H284Z" fill="#7A00FF"/>
+      <path d="M78 193H173V198H83V347H78ZM181 193H276V198H186V347H181ZM284 193H378V198H289V347H284Z" fill="#FFFFFF" fill-opacity=".24"/>
+      <path d="M94 209H157V331H94ZM197 209H260V331H197ZM300 209H362V331H300Z" fill="#000000" fill-opacity=".12"/>
+      <path d="M98 213H157V331H98ZM201 213H260V331H201ZM304 213H362V331H304Z" fill="#7A00FF"/>
+      <path d="M98 213H157M201 213H260M304 213H362" stroke="#FFFFFF" stroke-opacity=".15" stroke-width="2"/>
+      <path d="M65 354H391V365H65Z" fill="#000000" fill-opacity=".19"/>
+      <path d="M65 416H409V554L391 572H65Z" fill="#7A00FF"/>
+      <path d="M391 416H409V554L391 572Z" fill="#000000" fill-opacity=".22"/>
+      <path d="M72 417H386V423H72Z" fill="#FFFFFF" fill-opacity=".18"/>
+      <path d="M72 447H386V451H72ZM172 424H177V549H172ZM280 424H285V549H280Z" fill="#000000" fill-opacity=".28"/>
+      <path d="M77 456H164V541H77ZM185 456H272V541H185ZM293 456H378V541H293Z" fill="#000000" fill-opacity=".15"/>
+      <path d="M81 460H164V541H81ZM189 460H272V541H189ZM297 460H378V541H297Z" fill="#7A00FF"/>
+      <path d="M81 460H164M189 460H272M297 460H378" stroke="#FFFFFF" stroke-opacity=".16" stroke-width="2"/>
+      <path d="M65 550H391V572H65Z" fill="#000000" fill-opacity=".38"/>
+      <path d="M77 553H381" stroke="#FFFFFF" stroke-opacity=".09" stroke-width="2"/>
     </g>
-    <rect x="97" y="358" width="72" height="26" rx="3" fill="#C9775C"/>
-    <rect x="176" y="345" width="28" height="39" rx="3" fill="#587A88"/>
-    <path d="M277 384C251 351 262 318 289 332C298 302 332 312 323 346C352 338 363 372 334 386Z" fill="#50755A"/>
-    <path d="M294 384V326M294 359L271 343M295 351L317 335" stroke="#355441" stroke-width="4"/>
-    <rect x="270" y="378" width="53" height="17" rx="3" fill="#D8C9AF"/>
-    <rect x="936" y="357" width="83" height="27" rx="3" fill="#E6DED1"/>
-    <rect x="946" y="339" width="73" height="18" rx="3" fill="#C9785D"/>
+    <g id="kitchen-editable-right-cabinetry">
+      <path d="M789 179H1117L1140 192V361H789Z" fill="#7A00FF"/>
+      <path d="M789 179H1117L1140 192H810Z" fill="#FFFFFF" fill-opacity=".17"/>
+      <path d="M1117 192H1140V361H1117Z" fill="#000000" fill-opacity=".27"/>
+      <rect x="797" y="199" width="312" height="154" fill="#000000" fill-opacity=".28"/>
+      <path d="M802 204H899V347H802ZM907 204H1004V347H907ZM1012 204H1104V347H1012Z" fill="#7A00FF"/>
+      <path d="M802 204H899V209H807V347H802ZM907 204H1004V209H912V347H907ZM1012 204H1104V209H1017V347H1012Z" fill="#FFFFFF" fill-opacity=".19"/>
+      <path d="M818 220H883V331H818ZM923 220H988V331H923ZM1028 220H1088V331H1028Z" fill="#000000" fill-opacity=".14"/>
+      <path d="M822 224H883V331H822ZM927 224H988V331H927ZM1032 224H1088V331H1032Z" fill="#7A00FF"/>
+      <path d="M822 224H883M927 224H988M1032 224H1088" stroke="#FFFFFF" stroke-opacity=".13" stroke-width="2"/>
+      <path d="M789 354H1140V365H789Z" fill="#000000" fill-opacity=".25"/>
+      <path d="M786 416H1138V572H786Z" fill="#7A00FF"/>
+      <path d="M1120 416H1138V572H1120Z" fill="#000000" fill-opacity=".25"/>
+      <path d="M793 417H1115V423H793Z" fill="#FFFFFF" fill-opacity=".13"/>
+      <path d="M905 448H1012V452H905ZM1013 424H1018V548H1013Z" fill="#000000" fill-opacity=".28"/>
+      <path d="M915 459H1003V541H915Z" fill="#000000" fill-opacity=".16"/>
+      <path d="M919 463H1003V541H919Z" fill="#7A00FF"/>
+      <path d="M919 463H1003" stroke="#FFFFFF" stroke-opacity=".13" stroke-width="2"/>
+      <path d="M786 550H1138V572H786Z" fill="#000000" fill-opacity=".4"/>
+    </g>
+    <g id="kitchen-fixed-appliances">
+      <rect x="807" y="432" width="87" height="126" rx="3" fill="#364247"/>
+      <rect x="813" y="438" width="75" height="79" rx="2" fill="#172328"/>
+      <rect x="821" y="447" width="59" height="54" rx="2" fill="#243237"/>
+      <path d="M824 450H875L824 475Z" fill="#FFFFFF" fill-opacity=".07"/>
+      <path d="M817 511H884" stroke="#B6BFC0" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="828" cy="532" r="5" fill="#C6CFD0"/>
+      <circle cx="850" cy="532" r="5" fill="#C6CFD0"/>
+      <circle cx="872" cy="532" r="5" fill="#C6CFD0"/>
+      <path d="M817 548H885" stroke="#000000" stroke-opacity=".3" stroke-width="2"/>
+      <rect x="1025" y="432" width="86" height="118" rx="2" fill="url(#kitchen-steel)"/>
+      <path d="M1030 437H1106M1034 546H1104" stroke="#FFFFFF" stroke-opacity=".36" stroke-width="2"/>
+      <path d="M1036 448H1100" stroke="#5A686B" stroke-width="5" stroke-linecap="round"/>
+      <path d="M1034 461H1104" stroke="#899698" stroke-width="2"/>
+    </g>
+    <g id="kitchen-editable-island">
+      <path d="M315 537L330 562V723L315 692Z" fill="#7A00FF"/>
+      <path d="M315 537L330 562V723L315 692Z" fill="#FFFFFF" fill-opacity=".14"/>
+      <path d="M330 546L817 525V700L330 723Z" fill="#7A00FF"/>
+      <path d="M330 546L817 525V553L330 575Z" fill="#FFFFFF" fill-opacity=".21"/>
+      <path d="M330 575L345 574V709L330 723Z" fill="#FFFFFF" fill-opacity=".1"/>
+      <path d="M802 554L817 553V700L802 701Z" fill="#000000" fill-opacity=".22"/>
+      <path d="M351 643L792 623V627L351 647ZM491 581L496 580V701L491 701ZM675 572L680 572V692L675 692Z" fill="#000000" fill-opacity=".24"/>
+      <path d="M352 649L485 643V698L352 704ZM504 642L668 635V690L504 698ZM688 634L791 629V686L688 691Z" fill="#000000" fill-opacity=".13"/>
+      <path d="M357 653L485 647V698L357 704ZM509 646L668 639V690L509 698ZM693 638L791 633V686L693 691Z" fill="#7A00FF"/>
+      <path d="M357 653L485 647M509 646L668 639M693 638L791 633" stroke="#FFFFFF" stroke-opacity=".13" stroke-width="2"/>
+      <path d="M330 691L817 670V700L330 723Z" fill="#000000" fill-opacity=".35"/>
+      <path d="M344 714L805 693" stroke="#FFFFFF" stroke-opacity=".1" stroke-width="2"/>
+    </g>
   </g>
 
-  <g id="kitchen-pendants">
-    <path d="M488 0V57M712 0V57" stroke="#344148" stroke-width="5"/>
-    <path d="M448 91L474 56H502L528 91Z" fill="#F3E7CF"/>
-    <ellipse cx="488" cy="91" rx="42" ry="9" fill="#DDB45E"/>
-    <path d="M672 91L698 56H726L752 91Z" fill="#F3E7CF"/>
-    <ellipse cx="712" cy="91" rx="42" ry="9" fill="#DDB45E"/>
-    <path d="M488 101V140M712 101V140" stroke="#F3D17B" stroke-opacity=".20" stroke-width="66"/>
+  <g id="kitchen-undercabinet-light">
+    <path d="M72 365H391L417 398H54ZM799 365H1125L1147 398H779Z" fill="url(#kitchen-task-fade)"/>
+    <path d="M81 365H380M807 365H1116" stroke="#FFF4DA" stroke-width="4"/>
+    <path d="M65 398H409M789 398H1138" stroke="#FFFFFF" stroke-opacity=".3" stroke-width="3"/>
+  </g>
+  <g id="kitchen-counter-details">
+    <path d="M64 382H393L425 401H47ZM789 382H1121L1158 401H771Z" fill="url(#kitchen-stone)"/>
+    <path d="M47 401H425V416H47ZM771 401H1158V416H771Z" fill="#BFC4BF"/>
+    <path d="M47 401H425M771 401H1158" stroke="#FFFFFF" stroke-opacity=".65" stroke-width="3"/>
+    <path d="M51 417H420M775 417H1152" stroke="#000000" stroke-opacity=".21" stroke-width="3"/>
+    <path d="M305 510L724 491L829 529L320 553Z" fill="url(#kitchen-stone)"/>
+    <path d="M320 553L829 529V545L320 570Z" fill="#C8CCC5"/>
+    <path d="M305 510L320 553V570L305 526Z" fill="#E4E6DE"/>
+    <path d="M305 510L724 491M320 553L829 529" stroke="#FFFFFF" stroke-opacity=".72" stroke-width="3"/>
+    <path d="M320 571L829 546" stroke="#000000" stroke-opacity=".22" stroke-width="3"/>
+    <g fill="none" stroke="#929E95" stroke-opacity=".25" stroke-width="1.5">
+      <path d="M71 389L125 394L147 390L186 394M278 384L294 390L351 395L365 400M830 386L871 393L899 390L951 396M1026 385L1050 392L1103 396"/>
+      <path d="M331 519L376 524L411 517L443 521M660 501L678 512L723 516L749 529L784 532M377 544L406 537L451 540M584 535L625 531L650 538"/>
+    </g>
+    <path d="M332 528L359 529M751 520L767 523M176 401H189M1096 401H1111" stroke="#FFFFFF" stroke-opacity=".5" stroke-width="2"/>
+  </g>
+  <g id="kitchen-sink">
+    <path d="M809 388H882L902 398H797Z" fill="#344247"/>
+    <path d="M818 389L836 395L849 389M855 390L873 396L883 390" fill="none" stroke="#9AA7A7" stroke-width="2"/>
+    <path d="M473 516L571 512L598 522L495 528Z" fill="#879696"/>
+    <path d="M481 517L568 514L588 521L497 525Z" fill="#596C6E"/>
+    <path d="M491 518L569 516L577 520L500 523Z" fill="#B8C5C2"/>
+    <path d="M556 511V476C556 461 579 461 583 474V486" fill="none" stroke="#5D7074" stroke-width="8" stroke-linecap="round"/>
+    <path d="M554 479V475C554 463 576 463 580 474" fill="none" stroke="#E2E8E3" stroke-width="2"/>
+    <path d="M556 507L564 510L556 513L548 510Z" fill="#B3BEBB"/>
+  </g>
+  <g id="kitchen-hardware-decor">
+    <g fill="none" stroke="#617071" stroke-width="4" stroke-linecap="round">
+      <path d="M157 260V284M259 260V284M361 260V284M882 269V293M987 269V293M1087 269V293"/>
+      <path d="M111 437H140M219 437H248M326 437H355M945 437H976"/>
+      <path d="M402 598L431 597M555 622L606 620M725 585L754 584"/>
+    </g>
+    <path d="M158 260V281M260 260V281M362 260V281M883 269V290M988 269V290M1088 269V290" stroke="#D7DFDA" stroke-width="1.5"/>
+    <rect x="104" y="362" width="43" height="27" rx="3" fill="#D0CBBE"/>
+    <path d="M111 366H140M112 373H139" stroke="#FFFFFF" stroke-opacity=".3" stroke-width="2"/>
+    <path d="M190 387V358Q213 343 232 359V387Z" fill="#A59378"/>
+    <path d="M196 359V384M205 356V384" stroke="#FFFFFF" stroke-opacity=".17" stroke-width="2"/>
+    <path d="M294 380C272 361 281 345 294 353C289 330 313 327 317 348C330 334 342 351 326 366C344 366 336 383 319 383Z" fill="#607D67"/>
+    <path d="M307 382V350M307 366L292 356M308 369L324 354" stroke="#415F50" stroke-width="3"/>
+    <path d="M289 378H326L322 396H293Z" fill="#D2CABA"/>
+    <path d="M958 388L963 355H997L1002 388Z" fill="#D6D9CF"/>
+    <path d="M970 356V342H990V356M976 343V333H984V343" fill="none" stroke="#637771" stroke-width="4"/>
+    <path d="M661 515L692 513L707 520L674 522Z" fill="#CDC5B4"/>
+    <path d="M670 513C662 499 677 495 683 504C689 494 704 502 697 513Z" fill="#93A181"/>
   </g>
 </svg>
