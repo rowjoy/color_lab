@@ -383,6 +383,31 @@ void main() {
       decorationAnchor: (850, 532),
       decorationHex: '#C6CFD0',
     ),
+    (
+      template: IllustratedRoomCatalog.bathroom,
+      contract: const IllustratedRoomPolishContract(
+        requiredGroupIds: [
+          'bathroom-architecture-depth',
+          'bathroom-reflected-light',
+          'bathroom-contact-shadows',
+          'bathroom-tile-details',
+          'bathroom-glass-metal-details',
+        ],
+        editableObjectGroupIds: [
+          'bathroom-editable-vanity',
+          'bathroom-editable-storage',
+        ],
+        toneSample: (
+          highlight: (400, 528),
+          base: (400, 590),
+          shade: (400, 652),
+        ),
+        contactShadowAnchor: (170, 575),
+        clearFloorAnchor: (1100, 760),
+      ),
+      decorationAnchor: (245, 165),
+      decorationHex: '#334248',
+    ),
   ]) {
     test(
       '${fixture.template.title} satisfies the polish structure contract',
