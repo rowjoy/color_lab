@@ -1,159 +1,198 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
-  <!-- Original Color Lab living-room scene with layered vector materials. -->
+  <!-- Original angled lounge. Upper-left daylight rounds fabric and casts
+       fitted shadows lower right; warm lamplight remains local. -->
   <defs>
-    <linearGradient id="living-window" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#94D2E5"/>
-      <stop offset="1" stop-color="#E3F1EC"/>
+    <linearGradient id="living-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#94D2E5"/><stop offset="1" stop-color="#E3F1EC"/>
     </linearGradient>
     <linearGradient id="living-rug" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#C4B193"/>
-      <stop offset="1" stop-color="#8B765E"/>
+      <stop offset="0" stop-color="#CCBEA5"/><stop offset="1" stop-color="#998972"/>
     </linearGradient>
     <linearGradient id="living-screen" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#304955"/>
-      <stop offset="1" stop-color="#111A1F"/>
+      <stop offset="0" stop-color="#344F59"/><stop offset="1" stop-color="#101B23"/>
+    </linearGradient>
+    <linearGradient id="living-daylight-fade" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E4F4F8" stop-opacity=".26"/><stop offset="1" stop-color="#E4F4F8" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="living-fabric-roll" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity=".26"/><stop offset=".28" stop-color="#FFFFFF" stop-opacity=".08"/>
+      <stop offset=".7" stop-color="#000000" stop-opacity=".04"/><stop offset="1" stop-color="#000000" stop-opacity=".24"/>
+    </linearGradient>
+    <linearGradient id="living-curtain-folds" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#000000" stop-opacity=".22"/><stop offset=".4" stop-color="#FFFFFF" stop-opacity=".20"/><stop offset="1" stop-color="#000000" stop-opacity=".12"/>
     </linearGradient>
   </defs>
-
-  <g id="living-shell">
-    <g id="surface-ceiling">
-      <path d="M0 0H1200V106L1118 140H82L0 106Z" fill="#00E5FF"/>
-    </g>
-    <path d="M48 82H1152L1118 124H82Z" fill="#FFFFFF" fill-opacity=".18"/>
-    <path d="M82 124H1118" stroke="#FFFFFF" stroke-opacity=".70" stroke-width="13"/>
-    <path d="M84 138H1116" stroke="#26363D" stroke-opacity=".20" stroke-width="4"/>
-
-    <g id="surface-wall">
-      <path d="M0 106L82 140H1118L1200 106V552H0Z" fill="#FF00A1"/>
-    </g>
-    <path d="M0 106L82 140V552H0Z" fill="#000000" fill-opacity=".11"/>
-    <path d="M1200 106L1118 140V552H1200Z" fill="#000000" fill-opacity=".07"/>
-
-    <g id="surface-floor">
-      <path d="M0 552H1200V800H0Z" fill="#B7FF00"/>
-    </g>
-    <path d="M0 542H1200V565H0Z" fill="#F6F1E7"/>
-    <path d="M0 565H1200" stroke="#302A27" stroke-opacity=".30" stroke-width="5"/>
-    <g fill="none" stroke="#55483F" stroke-opacity=".17" stroke-width="2">
-      <path d="M600 552L70 800M600 552L300 800M600 552L480 800M600 552L720 800M600 552L900 800M600 552L1130 800"/>
-      <path d="M0 618C334 608 866 608 1200 618"/>
-      <path d="M0 684C334 668 866 668 1200 684"/>
-      <path d="M0 748C334 729 866 729 1200 748"/>
+  <g id="living-architecture-depth">
+    <g id="surface-ceiling"><path d="M0 0H1200V92L1028 136H80L0 104Z" fill="#00E5FF"/></g>
+    <path d="M35 79H1152L1028 120H80Z" fill="#FFFFFF" fill-opacity=".20"/>
+    <path d="M80 122H1028L1189 82" fill="none" stroke="#FFFFFF" stroke-opacity=".65" stroke-width="11"/>
+    <path d="M80 136H1028L1200 92" fill="none" stroke="#000000" stroke-opacity=".22" stroke-width="4"/>
+    <g id="surface-wall"><path d="M0 104L80 136H1028L1200 92V588L1028 540H0Z" fill="#FF00A1"/></g>
+    <path d="M0 104L80 136V540H0ZM1028 136L1200 92V588L1028 540Z" fill="#000000" fill-opacity=".10"/>
+    <path d="M1028 139V538" stroke="#FFFFFF" stroke-opacity=".18" stroke-width="3"/>
+    <g id="surface-floor"><path d="M0 540H1028L1200 588V800H0Z" fill="#B7FF00"/></g>
+    <path d="M0 531H1028L1200 579V594L1028 548H0Z" fill="#F0EAE0"/>
+    <path d="M0 548H1028L1200 594" fill="none" stroke="#000000" stroke-opacity=".24" stroke-width="4"/>
+    <path d="M0 533H1028L1200 581" fill="none" stroke="#FFFFFF" stroke-opacity=".5" stroke-width="3"/>
+    <g fill="none" stroke="#000000" stroke-opacity=".12" stroke-width="2">
+      <path d="M786 548L112 800M870 548L402 800M950 548L718 800M1028 548L997 800M1090 566L1193 800"/>
+      <path d="M0 606L1200 653M0 673L1200 720M0 746L997 785"/>
+      <path d="M160 614L138 639M1026 647L1027 674M865 707L857 734"/>
     </g>
   </g>
-
-  <path d="M67 161H379L514 552H212Z" fill="#DDF1F5" fill-opacity=".16"/>
-  <path d="M88 446L406 552L310 800H21Z" fill="#D5EBF1" fill-opacity=".08"/>
-
+  <g id="living-daylight">
+    <path d="M80 169H367L568 531H223Z" fill="url(#living-daylight-fade)"/>
+    <path d="M97 453H347L560 596L283 590Z" fill="#FFFFFF" fill-opacity=".11"/>
+    <path d="M86 551L183 551L391 729L265 720ZM203 551L322 551L554 740L416 731Z" fill="#E2F2F7" fill-opacity=".20"/>
+    <path d="M252 743L388 754L444 800H313ZM418 758L556 769L598 800H470Z" fill="#FFFFFF" fill-opacity=".11"/>
+  </g>
   <g id="living-window-depth">
-    <rect x="50" y="148" width="346" height="344" fill="#223138" fill-opacity=".26"/>
-    <rect x="61" y="156" width="324" height="326" fill="#F4F0E7"/>
-    <rect x="79" y="174" width="288" height="290" fill="url(#living-window)"/>
+    <path d="M49 153H397V480H49Z" fill="#1B2A31" fill-opacity=".25"/>
+    <path d="M61 157H385V473H61Z" fill="#F6F1E7"/>
+    <path d="M79 174H367V455H79Z" fill="url(#living-sky)"/>
     <circle cx="301" cy="226" r="30" fill="#F4D27B"/>
-    <path d="M79 373L139 323L184 362L243 297L367 383V464H79Z" fill="#789A89"/>
-    <path d="M79 400L145 358L199 395L264 338L367 402V464H79Z" fill="#426D5C"/>
-    <path d="M223 174V464M79 318H367" stroke="#F4F0E7" stroke-width="11"/>
-    <path d="M66 162L79 174V464L66 476Z" fill="#FFFFFF" fill-opacity=".44"/>
-    <path d="M380 162L367 174V464L380 476Z" fill="#000000" fill-opacity=".11"/>
-    <path d="M31 143H415" stroke="#29363C" stroke-width="9" stroke-linecap="round"/>
-    <path d="M31 143C71 194 69 278 55 345S43 437 79 500H12V143Z" fill="#566E76"/>
-    <path d="M415 143C375 194 377 278 391 345S403 437 367 500H434V143Z" fill="#566E76"/>
-    <path d="M36 159C58 232 45 318 36 389M410 159C388 232 401 318 410 389" fill="none" stroke="#FFFFFF" stroke-opacity=".17" stroke-width="8"/>
+    <path d="M79 359L144 309L190 353L250 300L367 369V455H79Z" fill="#819C86"/>
+    <path d="M79 392L148 351L208 395L277 346L367 399V455H79Z" fill="#456D5B"/>
+    <path d="M223 174V455M79 315H367" stroke="#F4F0E7" stroke-width="10"/>
+    <path d="M66 162L79 174V455L66 468Z" fill="#FFFFFF" fill-opacity=".46"/>
+    <path d="M380 162L367 174V455L380 468Z" fill="#000000" fill-opacity=".14"/>
+    <path d="M64 468H383L411 482H40Z" fill="#FAF7EF"/>
+    <path d="M40 482H411V491H40Z" fill="#C5C4BD"/>
+    <path d="M40 491H411L424 501H53Z" fill="#000000" fill-opacity=".13"/>
+    <path d="M26 146H420" stroke="#2F3E43" stroke-width="8" stroke-linecap="round"/>
+    <path d="M27 146H80C90 251 39 367 75 501H15C-4 368 56 254 27 146ZM365 146H417C394 252 451 365 432 501H373C409 366 356 251 365 146Z" fill="#637A7C"/>
+    <path d="M28 151H46C72 256 17 375 40 501H22C-1 375 55 253 28 151ZM53 151H72C83 255 36 376 66 501H47C18 373 70 254 53 151ZM375 151H393C379 254 428 377 404 501H385C414 374 365 255 375 151ZM400 151H414C394 255 445 377 428 501H409C429 377 382 253 400 151Z" fill="url(#living-curtain-folds)"/>
+    <path d="M31 151V165M60 151V165M384 151V165M407 151V165" stroke="#D3D9D3" stroke-opacity=".65" stroke-width="4"/>
   </g>
-
-  <g id="living-wall-details">
-    <rect x="464" y="164" width="123" height="108" rx="5" fill="#222B2F"/>
-    <rect x="475" y="175" width="101" height="86" fill="#F1EDE4"/>
-    <circle cx="520" cy="214" r="24" fill="#D89A70"/>
-    <path d="M487 248L518 199L548 232L564 210V251H487Z" fill="#587968"/>
-    <rect x="690" y="164" width="123" height="108" rx="5" fill="#222B2F"/>
-    <rect x="701" y="175" width="101" height="86" fill="#F1EDE4"/>
-    <path d="M714 248L751 193L790 248Z" fill="#54788A"/>
-    <circle cx="776" cy="199" r="13" fill="#E2B45B"/>
-    <path d="M464 273H587M690 273H813" stroke="#000000" stroke-opacity=".13" stroke-width="7"/>
+  <g id="living-wall-art">
+    <path d="M495 296H794V444H495Z" fill="#000000" fill-opacity=".12"/>
+    <rect x="488" y="289" width="299" height="148" rx="3" fill="#574C40"/>
+    <rect x="497" y="298" width="281" height="130" fill="#F0E9DB"/>
+    <path d="M515 405L559 350L600 379L660 324L755 405Z" fill="#A4AE9D"/>
+    <path d="M515 405L581 371L623 400L683 360L755 405Z" fill="#687D70"/>
+    <circle cx="716" cy="329" r="16" fill="#D9AD72"/>
+    <path d="M491 292H783" stroke="#FFFFFF" stroke-opacity=".25" stroke-width="2"/>
   </g>
-
   <g id="living-media">
-    <rect x="902" y="271" width="246" height="154" rx="9" fill="#26343A"/>
-    <rect x="916" y="285" width="218" height="126" rx="4" fill="url(#living-screen)"/>
-    <path d="M932 388L974 341L1012 372L1067 316L1118 388Z" fill="#4F8790" fill-opacity=".65"/>
-    <circle cx="1081" cy="324" r="17" fill="#EBC66A"/>
-    <rect x="1010" y="425" width="30" height="17" fill="#313C42"/>
+    <path d="M926 280L1148 304V432L926 415Z" fill="#000000" fill-opacity=".16"/>
+    <path d="M917 273L1140 296V424L917 407Z" fill="#25343A"/>
+    <path d="M929 286L1128 306V410L929 395Z" fill="url(#living-screen)"/>
+    <path d="M942 380L984 340L1021 372L1072 327L1116 398Z" fill="#557D84" fill-opacity=".64"/>
+    <path d="M932 290L998 297L1108 408L1070 405Z" fill="#FFFFFF" fill-opacity=".07"/>
+    <path d="M1016 417L1037 419V446H1016ZM990 443L1065 450L1072 456L985 449Z" fill="#26353C"/>
   </g>
-
-  <!-- The rug is below every editable chair, sofa, console and table plane. -->
+  <g id="living-practical-light">
+    <path d="M856 327L827 525H943L888 327Z" fill="#F6CC7E" fill-opacity=".085"/>
+    <path d="M864 333V542" stroke="#48504C" stroke-width="6"/>
+    <path d="M836 541Q865 533 891 543L897 551H828Z" fill="#3B4646"/>
+    <path d="M838 278H886L907 325Q869 338 819 324Z" fill="#D5B27A"/>
+    <path d="M840 279H854L842 326L823 324Z" fill="#FFFFFF" fill-opacity=".26"/>
+    <path d="M884 280L905 324L887 328L875 280Z" fill="#000000" fill-opacity=".13"/>
+    <path d="M820 324Q864 337 907 325" fill="none" stroke="#F9E3AD" stroke-width="5"/>
+  </g>
   <g id="living-rug-underlay">
-    <path d="M267 636H936L1041 800H151Z" fill="#1D282D" fill-opacity=".14"/>
-    <path d="M292 642H910L991 800H205Z" fill="url(#living-rug)"/>
-    <path d="M329 674H891M304 715H918M277 758H948" stroke="#FFFFFF" stroke-opacity=".14" stroke-width="4"/>
-    <path d="M450 642L414 800M601 642V800M751 642L789 800" stroke="#FFFFFF" stroke-opacity=".09" stroke-width="3"/>
-    <ellipse cx="608" cy="733" rx="337" ry="55" fill="#182126" fill-opacity=".17"/>
-    <ellipse cx="189" cy="738" rx="128" ry="29" fill="#182126" fill-opacity=".18"/>
+    <path d="M276 636L889 651L1009 796L181 780Z" fill="#000000" fill-opacity=".14"/>
+    <path d="M294 642L880 657L986 786L205 773Z" fill="url(#living-rug)"/>
+    <path d="M310 655L868 669L956 773L231 762Z" fill="none" stroke="#EDE1C9" stroke-opacity=".5" stroke-width="3"/>
+    <path d="M302 682L895 697M274 716L924 731M246 749L950 762" stroke="#FFFFFF" stroke-opacity=".16" stroke-width="2"/>
+    <path d="M423 646L372 775M574 650L558 778M724 654L761 782" stroke="#000000" stroke-opacity=".05" stroke-width="3"/>
   </g>
-
+  <g id="living-contact-shadows">
+    <path d="M903 551L1149 568L1177 602L935 582Z" fill="#000000" fill-opacity=".18"/>
+    <path d="M937 563L1146 575L1162 588L957 576Z" fill="#000000" fill-opacity=".19"/>
+    <path d="M312 693L902 704L959 754L364 742L291 718Z" fill="#000000" fill-opacity=".18"/>
+    <path d="M338 727L358 727L391 750L361 749ZM865 737L885 738L920 760L888 758Z" fill="#000000" fill-opacity=".28"/>
+    <path d="M92 701L275 713L327 761L152 777L66 741Z" fill="#000000" fill-opacity=".15"/>
+    <path d="M96 747L112 745L144 770L124 775ZM257 750L274 753L306 773L283 776Z" fill="#000000" fill-opacity=".28"/>
+    <path d="M444 722L737 729L788 767L481 763L421 744Z" fill="#000000" fill-opacity=".13"/>
+    <path d="M459 750L481 750L507 769L478 768ZM710 755L729 756L758 775L731 773Z" fill="#000000" fill-opacity=".27"/>
+  </g>
   <g id="surface-furniture">
-    <!-- Media console. -->
-    <rect x="883" y="451" width="278" height="113" rx="7" fill="#7A00FF"/>
-    <path d="M883 451H1161V466H883Z" fill="#FFFFFF" fill-opacity=".16"/>
-    <path d="M883 548H1161V564H883Z" fill="#000000" fill-opacity=".18"/>
-    <rect x="902" y="478" width="70" height="52" rx="3" fill="#000000" fill-opacity=".15"/>
-    <rect x="984" y="478" width="70" height="52" rx="3" fill="#000000" fill-opacity=".15"/>
-    <rect x="1066" y="478" width="75" height="52" rx="3" fill="#000000" fill-opacity=".15"/>
-
-    <!-- Main sofa: large uninterrupted central patches preserve comparison. -->
-    <path d="M315 590C315 544 350 515 397 515H824C871 515 906 545 906 590V700H315Z" fill="#7A00FF"/>
-    <path d="M338 576C347 546 371 534 405 535H814C846 534 872 548 881 576L876 590H343Z" fill="#FFFFFF" fill-opacity=".12"/>
-    <path d="M315 672H906V700H315Z" fill="#000000" fill-opacity=".16"/>
-    <path d="M294 575L325 555V692H286V612ZM927 575L896 555V692H935V612Z" fill="#7A00FF"/>
-    <path d="M405 523V579M814 523V579" stroke="#000000" stroke-opacity=".15" stroke-width="4"/>
-    <path d="M339 626C466 616 754 616 881 626" fill="none" stroke="#FFFFFF" stroke-opacity=".18" stroke-width="4"/>
-    <path d="M593 626V671" stroke="#000000" stroke-opacity=".13" stroke-width="3"/>
-
-    <!-- Accent chair. -->
-    <path d="M81 624C81 576 116 544 164 544H218C267 544 300 580 292 630L279 708H99Z" fill="#7A00FF"/>
-    <path d="M113 605C125 574 150 562 181 563H218C249 564 270 582 272 614L263 642H110Z" fill="#FFFFFF" fill-opacity=".13"/>
-    <path d="M99 681H279L271 708H108Z" fill="#000000" fill-opacity=".17"/>
-    <path d="M96 620L74 647V695H103L119 628ZM278 620L301 647V695H272L256 628Z" fill="#7A00FF"/>
-
-    <!-- Coffee table is above the rug and sofa shadow. -->
-    <path d="M414 666H776L739 710H448Z" fill="#7A00FF"/>
-    <path d="M426 666H765L751 679H438Z" fill="#FFFFFF" fill-opacity=".18"/>
-    <path d="M448 710H739L729 722H458Z" fill="#000000" fill-opacity=".16"/>
-    <path d="M468 706H496V763H475ZM693 706H721L714 763H693Z" fill="#7A00FF"/>
+    <g id="living-editable-console">
+      <path d="M900 445L1137 461L1157 478V570L900 550Z" fill="#7A00FF"/>
+      <path d="M900 445L1137 461L1157 478L921 462Z" fill="#FFFFFF" fill-opacity=".24"/>
+      <path d="M1137 461L1157 478V570L1137 552Z" fill="#000000" fill-opacity=".23"/>
+      <path d="M916 472L1125 487V540L916 525Z" fill="#000000" fill-opacity=".26"/>
+      <path d="M918 477L978 481V526L918 522ZM987 482L1047 487V531L987 527ZM1056 488L1123 493V537L1056 532Z" fill="#7A00FF"/>
+      <path d="M918 477L978 481V526L918 522ZM1056 488L1123 493V537L1056 532Z" fill="#000000" fill-opacity=".08"/>
+      <path d="M987 482L1047 487V496L987 492Z" fill="#000000" fill-opacity=".20"/>
+      <path d="M916 529L1125 544V551L916 536Z" fill="#FFFFFF" fill-opacity=".09"/>
+      <path d="M910 549L929 551V565L914 564ZM1110 564L1126 565V579L1113 578Z" fill="#7A00FF"/>
+      <path d="M910 549L929 551V565L914 564ZM1110 564L1126 565V579L1113 578Z" fill="#000000" fill-opacity=".35"/>
+      <path d="M933 465L997 470M1007 471L1035 473M1061 474L1114 478" stroke="#FFFFFF" stroke-opacity=".13" stroke-width="1.5"/>
+    </g>
+    <g id="living-editable-sofa">
+      <path d="M325 602L332 553Q339 502 391 498L821 508Q871 511 890 554L910 610V699L323 687Z" fill="#7A00FF"/>
+      <path d="M345 568L350 550Q360 521 394 519L812 528Q846 530 866 560L866 580L346 574Z" fill="#FFFFFF" fill-opacity=".19"/>
+      <path d="M359 534Q375 518 399 520L811 529Q835 532 850 548" fill="none" stroke="#FFFFFF" stroke-opacity=".16" stroke-width="3"/>
+      <path d="M365 577Q596 567 866 583L886 618L342 611Z" fill="#000000" fill-opacity=".20"/>
+      <path d="M346 590Q593 580 872 597L882 644Q610 649 339 634Z" fill="#7A00FF"/>
+      <path d="M339 634Q598 648 882 644L896 680Q601 688 333 672Z" fill="#000000" fill-opacity=".12"/>
+      <path d="M334 670Q607 687 897 679L900 699L329 687Z" fill="#000000" fill-opacity=".22"/>
+      <path d="M316 575Q294 566 290 591L288 648Q289 676 315 682L349 684L354 602Q350 581 333 577ZM884 584Q903 570 919 592L937 651Q944 679 920 691L885 690L871 616Q869 596 884 584Z" fill="#7A00FF"/>
+      <path d="M316 575Q294 566 290 591L288 648Q289 676 315 682L349 684L354 602Q350 581 333 577ZM884 584Q903 570 919 592L937 651Q944 679 920 691L885 690L871 616Q869 596 884 584Z" fill="url(#living-fabric-roll)"/>
+      <path d="M296 595Q310 578 334 592M880 607Q893 588 914 600" fill="none" stroke="#FFFFFF" stroke-opacity=".24" stroke-width="3" stroke-linecap="round"/>
+      <path d="M342 687L361 688L356 733L341 731ZM861 697L880 697L886 744L871 742Z" fill="#7A00FF"/>
+      <path d="M342 687L361 688L356 733L341 731ZM861 697L880 697L886 744L871 742Z" fill="#000000" fill-opacity=".40"/>
+      <g id="living-upholstery-details" fill="none">
+        <path d="M371 581Q602 574 854 588M348 638Q593 650 872 647" stroke="#FFFFFF" stroke-opacity=".22" stroke-width="2"/>
+        <path d="M573 523Q566 547 572 571M583 598Q577 619 581 637M330 599Q337 635 330 669M891 615L905 680" stroke="#000000" stroke-opacity=".20" stroke-width="2.5"/>
+        <path d="M373 591L385 597M379 587L397 594M835 598L849 594M843 603L856 599M353 648L367 652M851 655L868 651" stroke="#000000" stroke-opacity=".16" stroke-width="2" stroke-linecap="round"/>
+        <path d="M408 540L435 541M466 542L485 543M643 544L675 545M715 547L738 548M409 658L431 659M744 663L767 663" stroke="#FFFFFF" stroke-opacity=".09" stroke-width="1.5"/>
+      </g>
+    </g>
+    <g id="living-editable-accent-chair">
+      <path d="M78 615L85 560Q89 525 124 526L231 544Q270 552 285 586L297 650L278 709L109 706Z" fill="#7A00FF"/>
+      <path d="M100 565Q105 545 131 548L223 563Q249 570 263 591L269 612L102 593Z" fill="#FFFFFF" fill-opacity=".21"/>
+      <path d="M106 597L265 615L277 641L108 623Z" fill="#000000" fill-opacity=".24"/>
+      <path d="M108 623Q178 627 269 642L263 677L104 659Z" fill="#7A00FF"/>
+      <path d="M104 659L263 677L278 709L109 694Z" fill="#000000" fill-opacity=".17"/>
+      <path d="M83 602Q66 596 64 615L68 667Q70 686 94 692L120 695L125 629Q117 609 100 607ZM267 621Q280 612 293 629L306 678Q308 699 286 710L262 705L254 647Q253 631 267 621Z" fill="#7A00FF"/>
+      <path d="M83 602Q66 596 64 615L68 667Q70 686 94 692L120 695L125 629Q117 609 100 607ZM267 621Q280 612 293 629L306 678Q308 699 286 710L262 705L254 647Q253 631 267 621Z" fill="url(#living-fabric-roll)"/>
+      <path d="M107 663L250 681M109 570L215 585" fill="none" stroke="#FFFFFF" stroke-opacity=".19" stroke-width="2"/>
+      <path d="M117 585L127 597M218 599L233 606M99 627L105 682M276 648L286 694" stroke="#000000" stroke-opacity=".18" stroke-width="2"/>
+      <path d="M104 695L120 697L107 753L94 751ZM251 705L267 707L278 759L264 756Z" fill="#7A00FF"/>
+      <path d="M104 695L120 697L107 753L94 751ZM251 705L267 707L278 759L264 756Z" fill="#000000" fill-opacity=".39"/>
+    </g>
+    <g id="living-editable-coffee-table">
+      <path d="M451 656L741 663L788 680L745 716L442 709L408 689Z" fill="#7A00FF"/>
+      <path d="M451 656L741 663L788 680L748 685L427 677Z" fill="#FFFFFF" fill-opacity=".23"/>
+      <path d="M427 677L748 680L788 680L779 687L422 686L408 689Z" fill="#000000" fill-opacity=".26"/>
+      <path d="M408 689L442 709L745 716L779 687L748 697L444 690Z" fill="#000000" fill-opacity=".17"/>
+      <path d="M444 685L748 692L745 706L442 699Z" fill="#7A00FF"/>
+      <path d="M442 709L745 716L739 722L447 715Z" fill="#000000" fill-opacity=".24"/>
+      <path d="M460 711L483 712L479 759L462 758ZM706 718L729 719L734 765L717 764Z" fill="#7A00FF"/>
+      <path d="M460 711L471 712L471 758L462 758ZM717 719L729 719L734 765L725 764Z" fill="#000000" fill-opacity=".27"/>
+      <path d="M454 661L509 662M526 663L559 664M691 668L734 669" stroke="#FFFFFF" stroke-opacity=".19" stroke-width="1.5"/>
+      <path d="M451 701L513 703M675 706L729 708" stroke="#000000" stroke-opacity=".11" stroke-width="1.5"/>
+    </g>
   </g>
-
-  <g id="living-hardware">
-    <circle cx="963" cy="503" r="4" fill="#D8C49A"/>
-    <circle cx="1045" cy="503" r="4" fill="#D8C49A"/>
-    <circle cx="1127" cy="503" r="4" fill="#D8C49A"/>
-    <path d="M127 705L109 769M256 705L275 769M347 696L337 752M874 696L885 752" stroke="#50382F" stroke-width="13" stroke-linecap="round"/>
-    <rect x="552" y="673" width="80" height="13" rx="4" fill="#E7E0D2"/>
-    <ellipse cx="654" cy="681" rx="18" ry="9" fill="#314047"/>
-  </g>
-
   <g id="living-soft-decor">
-    <path d="M397 550C421 534 457 537 474 558L465 608H388Z" fill="#D3A36F"/>
-    <path d="M746 550C770 534 806 537 823 558L814 608H737Z" fill="#5E8276"/>
-    <path d="M424 568L448 591M785 564L762 594" stroke="#FFFFFF" stroke-opacity=".28" stroke-width="4"/>
-    <rect x="534" y="649" width="95" height="14" rx="4" fill="#E8E1D4"/>
-    <rect x="544" y="635" width="85" height="14" rx="4" fill="#C8785E"/>
+    <path d="M389 536Q417 524 451 547L445 597L382 590Z" fill="#D3A678"/>
+    <path d="M388 540Q416 533 447 548L441 588L390 585Z" fill="#FFFFFF" fill-opacity=".11"/>
+    <path d="M401 544L410 552M431 578L441 586" stroke="#000000" stroke-opacity=".14" stroke-width="2"/>
+    <path d="M766 547Q793 536 823 557L818 607L756 600Z" fill="#5D8279"/>
+    <path d="M774 549L785 563M801 591L813 598" stroke="#FFFFFF" stroke-opacity=".2" stroke-width="2"/>
+    <path d="M487 656L543 658L557 665L501 665Z" fill="#273A3D" fill-opacity=".18"/>
+    <path d="M485 647L540 650L553 658L499 656Z" fill="#CC876B"/>
+    <path d="M499 656L553 658V664L499 662Z" fill="#EAE0CC"/>
+    <path d="M485 647L499 656V662L485 653Z" fill="#A96D55"/>
+    <path d="M675 662Q693 657 706 665L714 671Q691 677 674 670Z" fill="#000000" fill-opacity=".16"/>
+    <path d="M678 643Q693 639 706 646L703 665Q691 673 678 663Z" fill="#EFE7D7"/>
+    <ellipse cx="692" cy="645" rx="14" ry="5" fill="#FAF4E8"/>
+    <ellipse cx="692" cy="645" rx="10" ry="3" fill="#69513D"/>
+    <path d="M706 648Q719 647 715 657Q713 662 705 660" fill="none" stroke="#E2D8C5" stroke-width="4"/>
   </g>
-
-  <g id="living-lamps-plants">
-    <path d="M1088 432V232" stroke="#344148" stroke-width="7"/>
-    <path d="M1048 231H1128L1112 274H1064Z" fill="#E4B35A"/>
-    <path d="M1061 274H1115" stroke="#F8E8B9" stroke-width="8" stroke-linecap="round"/>
-    <path d="M1063 280L1016 451H1156L1115 280Z" fill="#FFD98A" fill-opacity=".07"/>
-    <path d="M73 563C39 527 51 485 82 502C92 468 131 480 120 518C155 508 167 549 132 568Z" fill="#477153"/>
-    <path d="M97 565V496M97 536L66 516M98 526L124 506" stroke="#31513D" stroke-width="5"/>
-    <path d="M63 563H136L126 607H75Z" fill="#D8C9AF"/>
-  </g>
-
-  <g id="living-pendant">
-    <path d="M610 0V55" stroke="#344148" stroke-width="5"/>
-    <path d="M563 90L594 54H626L657 90Z" fill="#F4E8CF"/>
-    <ellipse cx="610" cy="90" rx="49" ry="10" fill="#DDB45D"/>
-    <path d="M610 100V130" stroke="#F3D17B" stroke-opacity=".22" stroke-width="76"/>
+  <g id="living-fixed-accessories">
+    <path d="M957 498L969 499M1102 509L1114 510" stroke="#CFBC94" stroke-width="3" stroke-linecap="round"/>
+    <path d="M1000 504L1034 506V522L1000 520Z" fill="#27343B"/>
+    <circle cx="1028" cy="513" r="2" fill="#A9C5BE"/>
+    <path d="M16 581L59 583L87 610L37 604Z" fill="#000000" fill-opacity=".13"/>
+    <path d="M37 558C4 540 2 513 12 501C33 506 44 526 41 548C30 513 37 484 52 479C65 503 56 529 45 548C63 516 85 512 97 522C91 545 66 559 45 565Z" fill="#527B5B"/>
+    <path d="M39 562L14 508M42 561L51 487M45 560L88 527" stroke="#335840" stroke-width="3"/>
+    <path d="M15 558Q40 551 68 562L61 605Q40 614 22 602Z" fill="#D6C6AA"/>
+    <path d="M15 558Q39 566 68 562L67 570Q40 575 17 567Z" fill="#EEE1C8"/>
+    <path d="M55 575L66 572L61 605L51 607Z" fill="#000000" fill-opacity=".12"/>
   </g>
 </svg>

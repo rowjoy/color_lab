@@ -1,163 +1,171 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
-  <!-- Original Color Lab bedroom scene with layered textiles and joinery. -->
+  <!-- Original Color Lab bedroom: a quiet bed alcove with layered cloth and timber. -->
   <defs>
-    <linearGradient id="bedroom-window" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#99D4E6"/>
-      <stop offset="1" stop-color="#E7F2EE"/>
+    <linearGradient id="bedroom-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#A6D5DF"/><stop offset="1" stop-color="#ECF1E7"/>
     </linearGradient>
-    <linearGradient id="bedroom-rug" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#6E7887"/>
-      <stop offset="1" stop-color="#414B5A"/>
+    <linearGradient id="bedroom-daylight-fade" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity=".25"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
     </linearGradient>
-    <linearGradient id="bedroom-mirror" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#D9ECEF"/>
-      <stop offset="1" stop-color="#AFC8CE"/>
+    <linearGradient id="bedroom-cloth-roll" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity=".25"/><stop offset=".35" stop-color="#FFFFFF" stop-opacity=".08"/><stop offset="1" stop-color="#000000" stop-opacity=".24"/>
+    </linearGradient>
+    <linearGradient id="bedroom-curtain-fold" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#000000" stop-opacity=".20"/><stop offset=".45" stop-color="#FFFFFF" stop-opacity=".20"/><stop offset="1" stop-color="#000000" stop-opacity=".12"/>
+    </linearGradient>
+    <linearGradient id="bedroom-rug" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#B1AA9B"/><stop offset="1" stop-color="#8F8C80"/>
     </linearGradient>
   </defs>
-
-  <g id="bedroom-shell">
-    <g id="surface-ceiling">
-      <path d="M0 0H1200V106L1118 140H82L0 106Z" fill="#00E5FF"/>
-    </g>
-    <path d="M48 82H1152L1118 124H82Z" fill="#FFFFFF" fill-opacity=".18"/>
-    <path d="M82 124H1118" stroke="#FFFFFF" stroke-opacity=".70" stroke-width="13"/>
-    <path d="M84 138H1116" stroke="#2B3740" stroke-opacity=".20" stroke-width="4"/>
-
-    <g id="surface-wall">
-      <path d="M0 106L82 140H1118L1200 106V552H0Z" fill="#FF00A1"/>
-    </g>
-    <path d="M0 106L82 140V552H0Z" fill="#000000" fill-opacity=".11"/>
-    <path d="M1200 106L1118 140V552H1200Z" fill="#000000" fill-opacity=".07"/>
-
-    <g id="surface-floor">
-      <path d="M0 552H1200V800H0Z" fill="#B7FF00"/>
-    </g>
-    <path d="M0 542H1200V565H0Z" fill="#F7F2E8"/>
-    <path d="M0 565H1200" stroke="#332C28" stroke-opacity=".30" stroke-width="5"/>
-    <g fill="none" stroke="#55483F" stroke-opacity=".17" stroke-width="2">
-      <path d="M600 552L70 800M600 552L300 800M600 552L480 800M600 552L720 800M600 552L900 800M600 552L1130 800"/>
-      <path d="M0 618C334 608 866 608 1200 618"/>
-      <path d="M0 684C334 668 866 668 1200 684"/>
-      <path d="M0 748C334 729 866 729 1200 748"/>
+  <g id="bedroom-architecture-depth">
+    <g id="surface-ceiling"><path d="M0 0H1200V104L1083 142H117L0 104Z" fill="#00E5FF"/></g>
+    <path d="M34 82H1166L1083 126H117Z" fill="#FFFFFF" fill-opacity=".20"/>
+    <path d="M117 131H1083" stroke="#FFFFFF" stroke-opacity=".64" stroke-width="10"/>
+    <path d="M117 144H1083" stroke="#000000" stroke-opacity=".20" stroke-width="4"/>
+    <g id="surface-wall"><path d="M0 104L117 142H1083L1200 104V564L1083 547H117L0 564Z" fill="#FF00A1"/></g>
+    <path d="M0 104L117 142V547L0 564ZM1083 142L1200 104V564L1083 547Z" fill="#000000" fill-opacity=".09"/>
+    <path d="M385 148V337M858 148V337" stroke="#000000" stroke-opacity=".07" stroke-width="3"/>
+    <path d="M389 149V337M862 149V337" stroke="#FFFFFF" stroke-opacity=".18" stroke-width="2"/>
+    <g id="surface-floor"><path d="M0 564L117 547H1083L1200 564V800H0Z" fill="#B7FF00"/></g>
+    <path d="M0 551L117 535H1083L1200 551V566L1083 551H117L0 567Z" fill="#EEE7DB"/>
+    <path d="M0 567L117 551H1083L1200 566" fill="none" stroke="#000000" stroke-opacity=".25" stroke-width="4"/>
+    <path d="M0 554L117 538H1083L1200 554" fill="none" stroke="#FFFFFF" stroke-opacity=".50" stroke-width="2"/>
+    <g fill="none" stroke="#000000" stroke-opacity=".11" stroke-width="2">
+      <path d="M503 552L20 800M541 552L271 800M581 552L490 800M623 552L722 800M661 552L936 800M704 552L1180 800"/>
+      <path d="M0 624H1200M0 710H1200M104 624L74 642M1017 710L1041 730"/>
     </g>
   </g>
-
-  <path d="M54 157H326L466 552H190Z" fill="#DCEFF4" fill-opacity=".15"/>
-  <path d="M75 444L382 552L291 800H18Z" fill="#D5EBF1" fill-opacity=".08"/>
-
+  <g id="bedroom-daylight">
+    <path d="M64 171H320L490 536H219Z" fill="url(#bedroom-daylight-fade)"/>
+    <path d="M63 455H320L459 549L203 548Z" fill="#FFFFFF" fill-opacity=".14"/>
+    <path d="M90 569L183 558L383 736L268 752ZM198 557H309L515 727L399 739Z" fill="#FFFFFF" fill-opacity=".18"/>
+    <path d="M276 763L387 749L443 800H316Z" fill="#FFFFFF" fill-opacity=".10"/>
+  </g>
   <g id="bedroom-window-depth">
-    <rect x="42" y="151" width="306" height="334" fill="#223138" fill-opacity=".25"/>
-    <rect x="53" y="159" width="284" height="316" fill="#F4F0E7"/>
-    <rect x="70" y="176" width="250" height="282" fill="url(#bedroom-window)"/>
+    <path d="M42 153H342V480H42Z" fill="#000000" fill-opacity=".22"/>
+    <path d="M52 158H332V472H52Z" fill="#F3EFE5"/>
+    <path d="M69 175H315V453H69Z" fill="url(#bedroom-sky)"/>
     <circle cx="262" cy="225" r="27" fill="#F3D37D"/>
-    <path d="M70 371L120 329L162 361L218 301L320 378V458H70Z" fill="#78998A"/>
-    <path d="M70 399L126 360L176 393L238 340L320 401V458H70Z" fill="#456E5E"/>
-    <path d="M195 176V458M70 317H320" stroke="#F4F0E7" stroke-width="10"/>
-    <path d="M57 165L70 176V458L57 469Z" fill="#FFFFFF" fill-opacity=".44"/>
-    <path d="M333 165L320 176V458L333 469Z" fill="#000000" fill-opacity=".11"/>
-    <path d="M25 146H365" stroke="#2A373D" stroke-width="9" stroke-linecap="round"/>
-    <path d="M25 146C58 196 58 276 45 342S35 431 68 493H8V146Z" fill="#6A6475"/>
-    <path d="M365 146C332 196 332 276 345 342S355 431 322 493H382V146Z" fill="#6A6475"/>
-    <path d="M30 160C49 230 39 314 30 382M360 160C341 230 351 314 360 382" fill="none" stroke="#FFFFFF" stroke-opacity=".16" stroke-width="8"/>
+    <path d="M69 361L117 323L158 355L216 306L315 372V453H69Z" fill="#91A68C"/>
+    <path d="M69 396L124 357L182 394L248 345L315 402V453H69Z" fill="#527865"/>
+    <path d="M193 175V453M69 317H315" stroke="#F3EFE5" stroke-width="10"/>
+    <path d="M57 163L69 175V453L57 466Z" fill="#FFFFFF" fill-opacity=".45"/>
+    <path d="M327 163L315 175V453L327 466Z" fill="#000000" fill-opacity=".14"/>
+    <path d="M49 468H335L359 481H28Z" fill="#F8F3E8"/>
+    <path d="M28 481H359V490H28Z" fill="#C7C4B8"/>
+    <path d="M29 490H360L376 500H45Z" fill="#000000" fill-opacity=".13"/>
+    <path d="M21 146H365" stroke="#42463F" stroke-width="8" stroke-linecap="round"/>
+    <path d="M22 147H73C87 255 31 376 66 505H7C-6 377 44 257 22 147ZM316 147H363C342 253 396 378 382 505H326C357 378 304 252 316 147Z" fill="#A3AA97"/>
+    <path d="M22 151H39C58 255 4 379 29 504H12C-5 375 43 254 22 151ZM49 151H68C83 255 26 380 59 504H41C15 379 68 253 49 151ZM319 151H335C322 256 376 381 352 504H334C355 380 304 254 319 151ZM345 151H360C342 255 393 379 377 504H361C378 377 329 255 345 151Z" fill="url(#bedroom-curtain-fold)"/>
   </g>
-
   <g id="bedroom-wall-art">
-    <rect x="414" y="165" width="122" height="108" rx="5" fill="#222A2F"/>
-    <rect x="425" y="176" width="100" height="86" fill="#F1EDE5"/>
-    <circle cx="473" cy="215" r="24" fill="#D79A72"/>
-    <path d="M439 249L469 204L498 236L513 213V251H439Z" fill="#5C7B6B"/>
-    <rect x="666" y="165" width="122" height="108" rx="5" fill="#222A2F"/>
-    <rect x="677" y="176" width="100" height="86" fill="#F1EDE5"/>
-    <path d="M690 249L728 194L765 249Z" fill="#5B7C8B"/>
-    <circle cx="751" cy="201" r="13" fill="#E2B45C"/>
-    <path d="M414 274H536M666 274H788" stroke="#000000" stroke-opacity=".13" stroke-width="7"/>
+    <path d="M436 173H544V290H436ZM686 173H794V290H686Z" fill="#000000" fill-opacity=".13"/>
+    <path d="M431 168H539V283H431ZM681 168H789V283H681Z" fill="#635B4F"/>
+    <path d="M440 177H530V274H440ZM690 177H780V274H690Z" fill="#EDE8DB"/>
+    <path d="M454 256Q452 208 487 195Q517 222 514 256Z" fill="#C6AD85"/>
+    <path d="M466 256Q483 229 513 223" fill="none" stroke="#858E77" stroke-width="7"/>
+    <path d="M702 257L739 197L769 257Z" fill="#A1AA95"/>
+    <path d="M702 257L735 229L769 257Z" fill="#6E8475"/>
+    <circle cx="760" cy="200" r="10" fill="#C6AD85"/>
   </g>
-
-  <!-- Textile rug and bed shadow sit below all editable furniture. -->
   <g id="bedroom-rug-underlay">
-    <path d="M227 621H928L1044 800H126Z" fill="#1C252B" fill-opacity=".14"/>
-    <path d="M255 629H903L991 800H181Z" fill="url(#bedroom-rug)"/>
-    <path d="M293 664H884M268 707H914M239 754H947" stroke="#FFFFFF" stroke-opacity=".12" stroke-width="4"/>
-    <path d="M430 629L395 800M590 629V800M751 629L788 800" stroke="#FFFFFF" stroke-opacity=".08" stroke-width="3"/>
-    <ellipse cx="605" cy="735" rx="360" ry="56" fill="#182126" fill-opacity=".17"/>
+    <path d="M269 613H906L1022 792H151Z" fill="#000000" fill-opacity=".12"/>
+    <path d="M279 619H897L1001 790H172Z" fill="url(#bedroom-rug)"/>
+    <path d="M288 634H890L981 777H195Z" fill="none" stroke="#E4DECE" stroke-opacity=".52" stroke-width="3"/>
+    <path d="M248 687H930M220 735H960M360 625L308 786M487 625L465 786M737 625L772 786M858 625L931 786" stroke="#FFFFFF" stroke-opacity=".10" stroke-width="2"/>
+    <path d="M173 790L168 799M187 790L184 799M201 790L198 799M969 790L975 799M982 790L990 799M995 790L1003 799" stroke="#AAA795" stroke-width="3"/>
   </g>
-
+  <g id="bedroom-contact-shadows">
+    <path d="M927 550L1147 563L1184 605L961 589Z" fill="#000000" fill-opacity=".20"/>
+    <path d="M944 563H1141L1160 585L967 579Z" fill="#000000" fill-opacity=".18"/>
+    <path d="M296 696L914 699L984 765L339 774L275 730Z" fill="#000000" fill-opacity=".20"/>
+    <path d="M332 741H357L392 771L360 774ZM845 745H870L906 773L875 774Z" fill="#000000" fill-opacity=".28"/>
+    <path d="M195 612L305 610L348 657L232 669L186 637ZM890 609H992L1033 649L930 659Z" fill="#000000" fill-opacity=".18"/>
+    <path d="M205 645L220 647L245 665H226ZM962 638L976 638L1002 655L984 656Z" fill="#000000" fill-opacity=".25"/>
+  </g>
   <g id="surface-furniture">
-    <!-- Wardrobe panels and reveals. -->
-    <rect x="916" y="163" width="234" height="407" rx="4" fill="#7A00FF"/>
-    <path d="M916 163H936V570H916Z" fill="#FFFFFF" fill-opacity=".15"/>
-    <path d="M1130 163H1150V570H1130Z" fill="#000000" fill-opacity=".17"/>
-    <path d="M936 181H1004V552H936ZM1099 181H1130V552H1099Z" fill="#000000" fill-opacity=".09"/>
-    <path d="M1009 181V552M1092 181V552" stroke="#FFFFFF" stroke-opacity=".17" stroke-width="3"/>
-
-    <!-- Upholstered headboard. -->
-    <rect x="330" y="354" width="552" height="209" rx="18" fill="#7A00FF"/>
-    <path d="M330 354H882V378H330Z" fill="#FFFFFF" fill-opacity=".14"/>
-    <path d="M330 541H882V563H330Z" fill="#000000" fill-opacity=".16"/>
-    <path d="M471 378V541M741 378V541" stroke="#000000" stroke-opacity=".14" stroke-width="4"/>
-    <circle cx="410" cy="421" r="5" fill="#FFFFFF" fill-opacity=".28"/>
-    <circle cx="802" cy="421" r="5" fill="#FFFFFF" fill-opacity=".28"/>
-
-    <!-- Bed textile, valance and frame share the editable material. -->
-    <path d="M281 513H929L895 671H316Z" fill="#7A00FF"/>
-    <path d="M300 513H910L891 548H320Z" fill="#FFFFFF" fill-opacity=".15"/>
-    <path d="M316 653H895V683H316Z" fill="#000000" fill-opacity=".14"/>
-    <rect x="315" y="620" width="580" height="100" rx="8" fill="#7A00FF"/>
-    <path d="M315 700H895V720H315Z" fill="#000000" fill-opacity=".18"/>
-    <path d="M315 620H895V638H315Z" fill="#FFFFFF" fill-opacity=".10"/>
-    <path d="M353 718H392V768H360ZM817 718H856L849 768H817Z" fill="#7A00FF"/>
-    <path d="M332 558C436 548 773 548 878 558M326 594C442 583 763 583 884 594" fill="none" stroke="#FFFFFF" stroke-opacity=".18" stroke-width="4"/>
-
-    <!-- Side tables. -->
-    <rect x="183" y="493" width="128" height="123" rx="6" fill="#7A00FF"/>
-    <path d="M183 493H311V509H183Z" fill="#FFFFFF" fill-opacity=".15"/>
-    <path d="M183 600H311V616H183Z" fill="#000000" fill-opacity=".17"/>
-    <rect x="204" y="527" width="86" height="50" rx="3" fill="#000000" fill-opacity=".14"/>
-    <rect x="888" y="493" width="116" height="123" rx="6" fill="#7A00FF"/>
-    <path d="M888 493H1004V509H888Z" fill="#FFFFFF" fill-opacity=".15"/>
-    <path d="M888 600H1004V616H888Z" fill="#000000" fill-opacity=".17"/>
-    <rect x="907" y="527" width="78" height="50" rx="3" fill="#000000" fill-opacity=".14"/>
+    <g id="bedroom-editable-wardrobe">
+      <path d="M927 169L1123 155L1151 171V566H927Z" fill="#7A00FF"/>
+      <path d="M927 169L1123 155L1151 171L951 184Z" fill="#FFFFFF" fill-opacity=".22"/>
+      <path d="M1123 176L1151 171V566L1123 554Z" fill="#000000" fill-opacity=".27"/>
+      <path d="M940 189H1115V546H940Z" fill="#000000" fill-opacity=".25"/>
+      <path d="M947 196H1039V538H947ZM1045 196H1108V538H1045Z" fill="#7A00FF"/>
+      <path d="M947 196H1039V206H947ZM1045 196H1108V206H1045Z" fill="#FFFFFF" fill-opacity=".10"/>
+      <path d="M947 196H953V538H947ZM1045 196H1050V538H1045Z" fill="#FFFFFF" fill-opacity=".12"/>
+      <path d="M927 549H1123V566H927Z" fill="#000000" fill-opacity=".32"/>
+      <path d="M931 178V545" stroke="#FFFFFF" stroke-opacity=".16" stroke-width="2"/>
+      <g id="bedroom-timber-details" fill="none" stroke-width="1.5">
+        <path d="M964 219Q970 267 964 304M973 338Q967 366 973 393M988 465Q995 493 990 522M1086 232Q1081 269 1087 298M1091 453V510" stroke="#000000" stroke-opacity=".10"/>
+        <path d="M980 216V247M961 463V504M1094 324V367M1084 473V514M1135 219V308M1135 413V487" stroke="#FFFFFF" stroke-opacity=".10"/>
+      </g>
+    </g>
+    <g id="bedroom-editable-side-tables">
+      <path d="M183 490L286 484L312 499V609L183 616ZM886 490L978 484L1001 499V609L886 616Z" fill="#7A00FF"/>
+      <path d="M183 490L286 484L312 499L208 506ZM886 490L978 484L1001 499L910 506Z" fill="#FFFFFF" fill-opacity=".25"/>
+      <path d="M286 504L312 499V609L286 605ZM978 504L1001 499V609L978 605Z" fill="#000000" fill-opacity=".25"/>
+      <path d="M193 521L279 516V588L193 593ZM897 521L971 516V588L897 593Z" fill="#000000" fill-opacity=".24"/>
+      <path d="M197 526L275 522V566L197 571ZM901 526L967 522V566L901 571Z" fill="#7A00FF"/>
+      <path d="M197 571L275 566V586L197 590ZM901 571L967 566V586L901 590Z" fill="#000000" fill-opacity=".12"/>
+      <path d="M201 535L271 531M905 535L962 531" stroke="#FFFFFF" stroke-opacity=".10" stroke-width="2"/>
+      <path d="M195 614H211L218 650L204 649ZM276 610L290 608L299 644L284 646ZM895 615H910L918 649L904 649ZM965 610L980 608L988 644L974 646Z" fill="#7A00FF"/>
+      <path d="M195 614H211L218 650L204 649ZM276 610L290 608L299 644L284 646ZM895 615H910L918 649L904 649ZM965 610L980 608L988 644L974 646Z" fill="#000000" fill-opacity=".31"/>
+    </g>
+    <g id="bedroom-editable-bed">
+      <path d="M335 354Q335 335 355 335H850Q870 335 882 351V554H335Z" fill="#7A00FF"/>
+      <path d="M335 354Q335 335 355 335H850Q870 335 882 351L866 362Q862 350 848 350H355Q349 350 349 361V544H335Z" fill="#FFFFFF" fill-opacity=".23"/>
+      <path d="M866 362L882 351V554H866Z" fill="#000000" fill-opacity=".25"/>
+      <path d="M355 365H847V386H355Z" fill="#FFFFFF" fill-opacity=".10"/>
+      <path d="M570 390V429M632 390V429M389 390V521M814 390V521" stroke="#000000" stroke-opacity=".16" stroke-width="2.5"/>
+      <path d="M335 533H866V553H335Z" fill="#000000" fill-opacity=".20"/>
+      <!-- Headboard, duvet top and valance retain broad unblended material fields. -->
+      <path d="M344 505H855L916 617V660H284V617Z" fill="#7A00FF"/>
+      <path d="M344 505H855L912 611H289Z" fill="#FFFFFF" fill-opacity=".37"/>
+      <path d="M289 611H912V640H289Z" fill="#FFFFFF" fill-opacity=".18"/>
+      <path d="M291 633H912V655H291Z" fill="#000000" fill-opacity=".17"/>
+      <path d="M304 648H899L912 663V723H291V663Z" fill="#7A00FF"/>
+      <path d="M291 693H912V723H291Z" fill="#000000" fill-opacity=".28"/>
+      <path d="M291 718H912V730H291Z" fill="#000000" fill-opacity=".25"/>
+      <path d="M328 728H353V752H333ZM841 728H867L863 752H841Z" fill="#7A00FF"/>
+      <path d="M328 728H353V752H333ZM841 728H867L863 752H841Z" fill="#000000" fill-opacity=".38"/>
+      <!-- Compressed pillows use the same material beneath neutral light. -->
+      <path d="M361 486Q347 457 374 444Q426 428 511 443Q547 447 555 482L563 524Q469 538 365 521Z" fill="#7A00FF"/>
+      <path d="M361 486Q347 457 374 444Q426 428 511 443Q547 447 555 482L563 524Q469 538 365 521Z" fill="#FFFFFF" fill-opacity=".55"/>
+      <path d="M644 486Q638 454 663 444Q716 430 803 445Q836 452 841 480L851 524Q752 540 647 522Z" fill="#7A00FF"/>
+      <path d="M644 486Q638 454 663 444Q716 430 803 445Q836 452 841 480L851 524Q752 540 647 522Z" fill="#FFFFFF" fill-opacity=".44"/>
+      <path d="M365 501Q460 516 558 507L563 524Q467 539 365 521ZM647 505Q748 520 847 508L851 524Q752 540 647 522Z" fill="#000000" fill-opacity=".13"/>
+      <!-- Duvet turns over the mattress edge before dropping over the valance. -->
+      <path d="M338 551Q461 542 584 549Q733 548 865 552L905 626Q911 650 896 681Q746 690 599 679Q434 690 304 681Q287 657 297 626Z" fill="#7A00FF"/>
+      <path d="M338 551Q463 541 584 549Q735 548 865 552L874 568Q738 559 584 563Q457 556 328 569Z" fill="#FFFFFF" fill-opacity=".16"/>
+      <path d="M309 610Q450 619 596 617Q750 623 895 610L905 626Q910 635 908 640Q752 649 596 640Q444 647 295 639Q294 631 297 626Z" fill="#FFFFFF" fill-opacity=".24"/>
+      <path d="M304 665Q450 676 599 667Q750 678 904 662L896 681Q746 690 599 679Q434 690 304 681Z" fill="#000000" fill-opacity=".14"/>
+      <path d="M328 570Q316 604 309 630Q305 650 315 674L338 679Q326 650 332 632L349 570ZM846 567Q865 600 873 630Q876 655 866 681L896 681Q909 652 905 626L874 568Z" fill="url(#bedroom-cloth-roll)"/>
+      <g id="bedroom-textile-details" fill="none" stroke-linecap="round">
+        <path d="M376 463Q431 445 511 461M662 463Q722 448 801 463M367 513Q461 530 552 517M654 515Q753 530 841 516" stroke="#FFFFFF" stroke-opacity=".25" stroke-width="2"/>
+        <path d="M371 482L388 491M526 474L539 489M658 484L675 494M813 480L831 492M323 580Q336 598 324 619M853 581Q839 607 864 629M404 555Q414 567 406 579M785 555Q778 569 790 580" stroke="#000000" stroke-opacity=".17" stroke-width="3"/>
+        <path d="M347 616Q357 633 347 661M841 616Q831 639 846 666M440 630L458 633M743 634L762 630M382 669L402 671M797 672L817 670" stroke="#FFFFFF" stroke-opacity=".17" stroke-width="2"/>
+        <path d="M388 692L414 693M451 693L472 694M727 695L752 694M790 694L811 693" stroke="#FFFFFF" stroke-opacity=".09" stroke-width="1.5"/>
+      </g>
+    </g>
   </g>
-
-  <g id="bedroom-textiles">
-    <path d="M351 484C351 452 380 432 417 437H525C559 432 584 454 579 486L569 528H351Z" fill="#ECE8E0"/>
-    <path d="M632 484C632 452 658 432 694 437H802C839 432 866 454 861 486V528H642Z" fill="#F4F0E9"/>
-    <path d="M370 458C412 446 504 446 548 460M652 458C696 446 786 446 835 460" fill="none" stroke="#C9C2B7" stroke-width="4"/>
-    <path d="M443 526C463 500 505 497 530 519L521 572H430Z" fill="#6C8B7D"/>
-    <path d="M698 526C718 500 760 497 785 519L777 572H686Z" fill="#C99572"/>
-    <path d="M461 532L506 562M716 532L762 562" stroke="#FFFFFF" stroke-opacity=".25" stroke-width="4"/>
-    <path d="M385 590C476 576 734 576 828 590" fill="none" stroke="#000000" stroke-opacity=".12" stroke-width="3"/>
+  <g id="bedroom-practical-light">
+    <path d="M217 448L190 491H299L268 448ZM917 448L894 491H990L963 448Z" fill="#F4D29A" fill-opacity=".11"/>
+    <path d="M245 493V442M940 493V442" stroke="#5B5D50" stroke-width="5"/>
+    <path d="M227 494H265M923 494H957" stroke="#555B50" stroke-width="5" stroke-linecap="round"/>
+    <path d="M222 401H266L280 444Q246 454 208 444ZM920 401H960L974 444Q942 454 906 444Z" fill="#E0C69C"/>
+    <path d="M223 402H236L226 447L211 443ZM921 402H934L924 448L909 443Z" fill="#FFFFFF" fill-opacity=".29"/>
+    <path d="M258 402H265L278 443L265 447ZM952 402H959L971 443L960 448Z" fill="#000000" fill-opacity=".13"/>
+    <path d="M209 444Q245 454 280 444M907 444Q941 454 973 444" fill="none" stroke="#F6E4BD" stroke-width="4"/>
   </g>
-
-  <g id="bedroom-hardware">
-    <circle cx="279" cy="552" r="4" fill="#D7C398"/>
-    <circle cx="972" cy="552" r="4" fill="#D7C398"/>
-    <rect x="998" y="356" width="6" height="53" rx="3" fill="#D4C19C"/>
-    <rect x="1078" y="356" width="6" height="53" rx="3" fill="#D4C19C"/>
-    <path d="M214 615L205 663M282 615L290 663M907 615L900 663M984 615L992 663" stroke="#50382F" stroke-width="11" stroke-linecap="round"/>
-  </g>
-
-  <g id="bedroom-lamps-decor">
-    <path d="M247 491V429" stroke="#344148" stroke-width="7"/>
-    <path d="M213 429H281L270 461H224Z" fill="#E3B25A"/>
-    <path d="M222 461H272" stroke="#F8E8B7" stroke-width="7" stroke-linecap="round"/>
-    <path d="M946 491V429" stroke="#344148" stroke-width="7"/>
-    <path d="M912 429H980L969 461H923Z" fill="#E3B25A"/>
-    <path d="M921 461H971" stroke="#F8E8B7" stroke-width="7" stroke-linecap="round"/>
-    <path d="M221 467L190 493H304L273 467Z" fill="#FFD98B" fill-opacity=".07"/>
-    <path d="M920 467L890 493H1002L972 467Z" fill="#FFD98B" fill-opacity=".07"/>
-    <rect x="1042" y="204" width="65" height="112" rx="5" fill="url(#bedroom-mirror)"/>
-    <path d="M1049 214L1099 264" stroke="#FFFFFF" stroke-opacity=".44" stroke-width="9"/>
-    <path d="M1040 202H1109V318H1040Z" fill="none" stroke="#40332D" stroke-width="8"/>
-    <rect x="929" y="469" width="54" height="18" rx="3" fill="#E8E0D2"/>
-    <rect x="935" y="452" width="48" height="17" rx="3" fill="#C9785E"/>
-  </g>
-
-  <g id="bedroom-pendant">
-    <path d="M606 0V55" stroke="#344148" stroke-width="5"/>
-    <path d="M559 90L590 54H622L653 90Z" fill="#F3E7CE"/>
-    <ellipse cx="606" cy="90" rx="49" ry="10" fill="#DDB45E"/>
-    <path d="M606 100V130" stroke="#F3D17C" stroke-opacity=".22" stroke-width="76"/>
+  <g id="bedroom-fixed-accessories">
+    <path d="M259 544L269 543M952 544L961 543" stroke="#D5C39B" stroke-width="3" stroke-linecap="round"/>
+    <path d="M1027 350V394M1060 350V394" stroke="#C6B18B" stroke-width="5" stroke-linecap="round"/>
+    <path d="M208 482L239 480L251 487L219 489Z" fill="#8F9B8A"/>
+    <path d="M219 489L251 487V493L219 495Z" fill="#E4DDCC"/>
+    <path d="M916 482L946 480L954 487L925 490Z" fill="#B69D7F"/>
+    <path d="M925 490L954 487V493L925 496Z" fill="#EDE6D7"/>
+    <path d="M589 0V58" stroke="#5B5D50" stroke-width="4"/>
+    <path d="M556 89L574 56H605L625 89Q591 103 556 89Z" fill="#E8DDC5"/>
+    <path d="M558 89Q591 103 624 89" fill="none" stroke="#C5B28E" stroke-width="5"/>
   </g>
 </svg>

@@ -55,6 +55,68 @@ void main() {
     validateIllustratedRoomSvg(_minimalSvg(), IllustratedRoomCatalog.study);
   });
 
+  test('shared validator ignores commented tags and token leakage', () {
+    validateIllustratedRoomSvg(
+      '<!-- <svg viewBox="0 0 1 1"></svg> -->'
+      '${_minimalSvg(additions: '''<!--
+        <g id="surface-wall"><path fill="#FF00A1"/></g>
+        <defs><path fill="#7A00FF"/></defs>
+        <image href="https://example.com/image.png"/>
+      -->''')}',
+      IllustratedRoomCatalog.study,
+    );
+  });
+
+  for (final surface in <(String, String)>[
+    ('wall', '#FF00A1'),
+    ('ceiling', '#00E5FF'),
+    ('floor', '#B7FF00'),
+    ('furniture', '#7A00FF'),
+  ]) {
+    final geometry = '<rect width="20" height="20" fill="${surface.$2}"/>';
+    final group = '<g id="surface-${surface.$1}">$geometry</g>';
+    for (final mutation in <String, String>{
+      'group': _minimalSvg().replaceFirst(group, '<!--$group-->'),
+      'token geometry': _minimalSvg().replaceFirst(
+        geometry,
+        '<!--$geometry-->',
+      ),
+    }.entries) {
+      test(
+        'shared validator rejects commented ${surface.$1} ${mutation.key}',
+        () {
+          expect(
+            () => validateIllustratedRoomSvg(
+              mutation.value,
+              IllustratedRoomCatalog.study,
+            ),
+            throwsA(isA<TestFailure>()),
+          );
+        },
+      );
+    }
+  }
+
+  test('shared validator rejects a root supplied only by a comment', () {
+    expect(
+      () => validateIllustratedRoomSvg(
+        '<!--${_minimalSvg()}-->',
+        IllustratedRoomCatalog.study,
+      ),
+      throwsA(isA<TestFailure>()),
+    );
+  });
+
+  test('watermark rule still inspects comments in the raw source', () {
+    expect(
+      () => validateIllustratedRoomSvg(
+        _minimalSvg(additions: '<!-- WaterMark -->'),
+        IllustratedRoomCatalog.study,
+      ),
+      throwsA(isA<TestFailure>()),
+    );
+  });
+
   test('Study asset satisfies the shared structural contract', () {
     final source = File('assets/rooms/study_room.svg').readAsStringSync();
     validateIllustratedRoomSvg(source, IllustratedRoomCatalog.study);
@@ -86,6 +148,16 @@ void main() {
     ('filter', _minimalSvg(additions: '<filter id="blur"></filter>')),
     ('script', _minimalSvg(additions: '<script>alert(1)</script>')),
     ('animation', _minimalSvg(additions: '<animate attributeName="x"/>')),
+    for (final element in [
+      'mask',
+      'style',
+      'foreignObject',
+      'img',
+      'object',
+      'embed',
+      'iframe',
+    ])
+      (element, _minimalSvg(additions: '<$element/>')),
     (
       'external href',
       _minimalSvg(additions: '<use href="https://example.com/shape.svg#x"/>'),

@@ -8,24 +8,33 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as image;
 
 void main() {
-  testWidgets('encodes the complete colored Study artwork at 2400 x 1600', (
-    tester,
-  ) async {
-    final png = await tester.runAsync(
-      () => SvgIllustratedRoomArtworkEncoder().encodePng(_distinctDraft()),
-    );
+  for (final template in IllustratedRoomCatalog.all) {
+    testWidgets(
+      'encodes the complete colored ${template.title} artwork at 2400 x 1600',
+      (tester) async {
+        final png = await tester.runAsync(
+          () => SvgIllustratedRoomArtworkEncoder().encodePng(
+            _distinctDraft(template),
+          ),
+        );
 
-    expect(png, isNotNull);
-    expect(png!.take(8), [137, 80, 78, 71, 13, 10, 26, 10]);
-    final decoded = image.decodePng(png);
-    expect(decoded, isNotNull);
-    expect((decoded!.width, decoded.height), (2400, 1600));
-    _expectRgb(decoded, (1200, 440), '#D11111');
-    _expectRgb(decoded, (1200, 80), '#11D111');
-    _expectRgb(decoded, (2200, 1520), '#1111D1');
-    _expectRgb(decoded, (1200, 1180), '#D1A111');
-    _expectRgb(decoded, (360, 500), '#9FD7EA');
-  });
+        expect(png, isNotNull);
+        expect(png!.take(8), [137, 80, 78, 71, 13, 10, 26, 10]);
+        final decoded = image.decodePng(png);
+        expect(decoded, isNotNull);
+        expect((decoded!.width, decoded.height), (2400, 1600));
+        _expectRgb(decoded, (1200, 440), '#D11111');
+        _expectRgb(decoded, (1200, 80), '#11D111');
+        _expectRgb(decoded, (2200, 1520), '#1111D1');
+        _expectRgb(decoded, (1200, 1180), '#D1A111');
+        final anchors = _exportAnchors[template.id]!;
+        for (final anchor in anchors.furniture) {
+          _expectRgb(decoded, anchor, '#D1A111');
+        }
+        _expectRgb(decoded, anchors.decoration, anchors.decorationHex);
+      },
+    );
+  }
 
   testWidgets('rejects grayscale before loading any picture', (tester) async {
     var loads = 0;
@@ -146,8 +155,49 @@ void main() {
   });
 }
 
-IllustratedRoomDraft _distinctDraft() {
-  var draft = IllustratedRoomDraft.grayscale(IllustratedRoomCatalog.study);
+typedef _ExportAnchors = ({
+  List<(int, int)> furniture,
+  (int, int) decoration,
+  String decorationHex,
+});
+
+const _exportAnchors = <String, _ExportAnchors>{
+  'living': (
+    furniture: [(1200, 1220), (380, 1300), (1180, 1380)],
+    decoration: (602, 452),
+    decorationHex: '#F4D27B',
+  ),
+  'bedroom': (
+    furniture: [(1200, 910), (1200, 1300), (2060, 840)],
+    decoration: (524, 450),
+    decorationHex: '#F3D37D',
+  ),
+  'study': (
+    furniture: [(1200, 1076), (1220, 1330), (360, 1300), (760, 1340)],
+    decoration: (360, 500),
+    decorationHex: '#9FD7EA',
+  ),
+  'dining': (
+    furniture: [(1200, 1220), (700, 1240), (2000, 1120)],
+    decoration: (548, 452),
+    decorationHex: '#F3D27A',
+  ),
+  'kitchen': (
+    furniture: [(1200, 1220), (500, 860), (1900, 860)],
+    decoration: (1700, 1064),
+    decorationHex: '#C6CFD0',
+  ),
+  'bathroom': (
+    furniture: [(800, 1180), (1960, 960)],
+    decoration: (490, 330),
+    decorationHex: '#334248',
+  ),
+};
+
+IllustratedRoomDraft _distinctDraft([IllustratedRoomTemplate? template]) {
+  var draft = IllustratedRoomDraft.grayscale(
+    template ?? IllustratedRoomCatalog.study,
+  );
   for (final entry in <IllustratedRoomSurface, String>{
     IllustratedRoomSurface.wall: '#D11111',
     IllustratedRoomSurface.ceiling: '#11D111',

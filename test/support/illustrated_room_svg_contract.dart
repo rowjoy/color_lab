@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -19,16 +20,246 @@ const illustratedRoomSurfaceTokens = <String, String>{
   '#7A00FF': 'surface-furniture',
 };
 
+typedef IllustratedRoomSvgMetrics = ({
+  int utf8Bytes,
+  int geometryCount,
+  int gradientCount,
+  int clipPathCount,
+});
+
+typedef IllustratedRoomToneSample = ({
+  (int, int) highlight,
+  (int, int) base,
+  (int, int) shade,
+});
+
+final class IllustratedRoomPolishContract {
+  const IllustratedRoomPolishContract({
+    required this.requiredGroupIds,
+    required this.editableObjectGroupIds,
+    required this.toneSample,
+    required this.contactShadowAnchor,
+    required this.clearFloorAnchor,
+    this.complexityJustification,
+  });
+
+  final List<String> requiredGroupIds;
+  final List<String> editableObjectGroupIds;
+  final IllustratedRoomToneSample toneSample;
+  final (int, int) contactShadowAnchor;
+  final (int, int) clearFloorAnchor;
+  final String? complexityJustification;
+}
+
+const _simpleGeometry = <String>{
+  'path',
+  'rect',
+  'circle',
+  'ellipse',
+  'polygon',
+  'polyline',
+  'line',
+};
+
+String _withoutXmlComments(String source) =>
+    source.replaceAll(RegExp(r'<!--.*?-->', dotAll: true), '');
+
+IllustratedRoomSvgMetrics illustratedRoomSvgMetrics(String source) {
+  final elements = RegExp(r'<\s*([A-Za-z][\w:.-]*)\b')
+      .allMatches(_withoutXmlComments(source))
+      .map((match) => match.group(1)!.split(':').last.toLowerCase());
+  return (
+    utf8Bytes: utf8.encode(source).length,
+    geometryCount: elements.where(_simpleGeometry.contains).length,
+    gradientCount: elements
+        .where((name) => name == 'lineargradient' || name == 'radialgradient')
+        .length,
+    clipPathCount: elements.where((name) => name == 'clippath').length,
+  );
+}
+
+void validatePolishedIllustratedRoomSvg(
+  String source,
+  IllustratedRoomTemplate template,
+  IllustratedRoomPolishContract contract,
+) {
+  validateIllustratedRoomSvg(source, template);
+  final metrics = illustratedRoomSvgMetrics(source);
+  if (metrics.utf8Bytes > 81920 || metrics.geometryCount > 400) {
+    expect(
+      contract.complexityJustification?.trim(),
+      isNot(isIn([null, ''])),
+      reason: '${template.id}: complexity exceedance needs measured evidence',
+    );
+  }
+
+  final groups = <String, _PolishGroup>{
+    for (final id in {
+      ...contract.requiredGroupIds,
+      ...contract.editableObjectGroupIds,
+    })
+      id: _PolishGroup(),
+  };
+  final frames = <({String? id, double opacity})>[];
+  for (final tag in RegExp(
+    r'<\s*(/?)\s*([A-Za-z][\w:.-]*)([^<>]*?)(/?)\s*>',
+  ).allMatches(_withoutXmlComments(source))) {
+    if (tag.group(1) == '/') {
+      frames.removeLast();
+      continue;
+    }
+    final element = tag.group(2)!.split(':').last.toLowerCase();
+    final attributes = tag.group(3)!;
+    final id = _attribute(attributes, 'id');
+    final opacity =
+        (frames.isEmpty ? 1.0 : frames.last.opacity) *
+        (double.tryParse(_attribute(attributes, 'opacity') ?? '1') ?? 1);
+    final group = groups[id];
+    if (group != null) {
+      expect(element, 'g', reason: '${template.id}: $id must be a group');
+      group.count++;
+      if (contract.editableObjectGroupIds.contains(id)) {
+        expect(
+          frames.any((frame) => frame.id == 'surface-furniture'),
+          isTrue,
+          reason: '${template.id}: $id must be below surface-furniture',
+        );
+      }
+    }
+    if (_simpleGeometry.contains(element)) {
+      for (final frame in frames) {
+        final owner = groups[frame.id];
+        if (owner == null) continue;
+        owner.geometry++;
+        owner.hasFittedShadow |= element == 'path' || element == 'polygon';
+        owner.hasEllipse |= element == 'ellipse';
+        for (final paint in ['fill', 'stroke']) {
+          final color = _attribute(attributes, paint)?.toUpperCase();
+          owner.hasBase |= color == '#7A00FF';
+          final alpha =
+              opacity *
+              (double.tryParse(
+                    _attribute(attributes, '$paint-opacity') ?? '1',
+                  ) ??
+                  1);
+          if (alpha > 0 && alpha < 1) {
+            owner.hasWhite |=
+                color == '#FFFFFF' || color == '#FFF' || color == 'WHITE';
+            owner.hasBlack |=
+                color == '#000000' || color == '#000' || color == 'BLACK';
+          }
+        }
+      }
+    }
+    if (tag.group(4) != '/') frames.add((id: id, opacity: opacity));
+  }
+  for (final entry in groups.entries) {
+    final group = entry.value;
+    expect(
+      group.count,
+      1,
+      reason: '${template.id}: exactly one ${entry.key} required',
+    );
+    expect(
+      group.geometry,
+      greaterThan(0),
+      reason: '${template.id}: ${entry.key} must contain geometry',
+    );
+    if (contract.editableObjectGroupIds.contains(entry.key)) {
+      expect(
+        group.hasBase && group.hasWhite && group.hasBlack,
+        isTrue,
+        reason:
+            '${template.id}: ${entry.key} needs token base, translucent white and black geometry',
+      );
+    }
+    if (entry.key.endsWith('-contact-shadows')) {
+      expect(
+        group.hasFittedShadow && !group.hasEllipse,
+        isTrue,
+        reason:
+            '${template.id}: ${entry.key} needs fitted path/polygon shadows, no ellipses',
+      );
+    }
+  }
+}
+
+final class _PolishGroup {
+  int count = 0;
+  int geometry = 0;
+  bool hasBase = false;
+  bool hasWhite = false;
+  bool hasBlack = false;
+  bool hasFittedShadow = false;
+  bool hasEllipse = false;
+}
+
+double illustratedRoomLuma(Uint8List pixels, (int, int) anchor) {
+  final rgb = illustratedRoomRgb(pixels, anchor.$1, anchor.$2);
+  return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+}
+
+void expectIllustratedRoomToneTriple(
+  Uint8List pixels,
+  IllustratedRoomToneSample sample, {
+  double minDelta = 8,
+}) {
+  final base = illustratedRoomLuma(pixels, sample.base);
+  expect(
+    illustratedRoomLuma(pixels, sample.highlight) - base,
+    greaterThanOrEqualTo(minDelta),
+    reason: '${sample.highlight} highlight above ${sample.base} base',
+  );
+  expect(
+    base - illustratedRoomLuma(pixels, sample.shade),
+    greaterThanOrEqualTo(minDelta),
+    reason: '${sample.shade} shade below ${sample.base} base',
+  );
+}
+
+void expectIllustratedRoomContactShadow(
+  Uint8List pixels, {
+  required (int, int) shadow,
+  required (int, int) clearFloor,
+  double minDelta = 6,
+}) {
+  expect(
+    illustratedRoomLuma(pixels, clearFloor) -
+        illustratedRoomLuma(pixels, shadow),
+    greaterThanOrEqualTo(minDelta),
+    reason: '$shadow contact shadow below $clearFloor clear floor',
+  );
+}
+
+void expectIllustratedRoomHueReadable(
+  Uint8List pixels,
+  (int, int) anchor, {
+  int dominantChannel = 0,
+  int minChannelMargin = 20,
+}) {
+  final rgb = illustratedRoomRgb(pixels, anchor.$1, anchor.$2);
+  for (var channel = 0; channel < 3; channel++) {
+    if (channel == dominantChannel) continue;
+    expect(
+      rgb[dominantChannel] - rgb[channel],
+      greaterThanOrEqualTo(minChannelMargin),
+      reason:
+          '$anchor channel $dominantChannel remains readable against $channel',
+    );
+  }
+}
+
 void validateIllustratedRoomSvg(
   String source,
   IllustratedRoomTemplate template,
 ) {
   expect(source.toLowerCase(), isNot(contains('watermark')));
+  final content = _withoutXmlComments(source);
 
   final svg = RegExp(
     r'<svg\b([^>]*)>',
     caseSensitive: false,
-  ).firstMatch(source);
+  ).firstMatch(content);
   expect(svg, isNotNull, reason: '${template.id}: missing <svg> root');
   final viewBox = _attribute(svg!.group(1)!, 'viewBox');
   expect(
@@ -37,14 +268,21 @@ void validateIllustratedRoomSvg(
     reason: '${template.id}: canonical viewBox',
   );
 
-  final forbiddenElements = <String>{
-    'image',
-    'filter',
-    'script',
-    'animate',
-    'animatemotion',
-    'animatetransform',
-    'set',
+  const allowedElements = <String>{
+    'svg',
+    'defs',
+    'g',
+    'path',
+    'rect',
+    'circle',
+    'ellipse',
+    'polygon',
+    'polyline',
+    'line',
+    'lineargradient',
+    'radialgradient',
+    'stop',
+    'clippath',
   };
   final groupCounts = <String, int>{
     for (final id in illustratedRoomSurfaceTokens.values) id: 0,
@@ -64,7 +302,7 @@ void validateIllustratedRoomSvg(
     'line',
   };
 
-  for (final match in tags.allMatches(source)) {
+  for (final match in tags.allMatches(content)) {
     final closing = match.group(1) == '/';
     if (closing) {
       expect(frames, isNotEmpty, reason: '${template.id}: unbalanced SVG');
@@ -76,8 +314,8 @@ void validateIllustratedRoomSvg(
     final element = qualifiedName.split(':').last;
     final attributes = match.group(3)!;
     expect(
-      forbiddenElements,
-      isNot(contains(element)),
+      allowedElements,
+      contains(element),
       reason: '${template.id}: <$element> is forbidden',
     );
 
@@ -227,7 +465,7 @@ Iterable<String> _attributeValues(String attributes, String localName) sync* {
 
 String? _attribute(String attributes, String name) {
   final pattern = RegExp(
-    '''\\b${RegExp.escape(name)}\\s*=\\s*(["'])(.*?)\\1''',
+    '''(?:^|\\s)${RegExp.escape(name)}\\s*=\\s*(["'])(.*?)\\1''',
     caseSensitive: false,
   );
   return pattern.firstMatch(attributes)?.group(2);
