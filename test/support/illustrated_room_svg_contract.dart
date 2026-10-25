@@ -61,9 +61,12 @@ const _simpleGeometry = <String>{
   'line',
 };
 
+String _withoutXmlComments(String source) =>
+    source.replaceAll(RegExp(r'<!--.*?-->', dotAll: true), '');
+
 IllustratedRoomSvgMetrics illustratedRoomSvgMetrics(String source) {
   final elements = RegExp(r'<\s*([A-Za-z][\w:.-]*)\b')
-      .allMatches(source)
+      .allMatches(_withoutXmlComments(source))
       .map((match) => match.group(1)!.split(':').last.toLowerCase());
   return (
     utf8Bytes: utf8.encode(source).length,
@@ -100,7 +103,7 @@ void validatePolishedIllustratedRoomSvg(
   final frames = <({String? id, double opacity})>[];
   for (final tag in RegExp(
     r'<\s*(/?)\s*([A-Za-z][\w:.-]*)([^<>]*?)(/?)\s*>',
-  ).allMatches(source)) {
+  ).allMatches(_withoutXmlComments(source))) {
     if (tag.group(1) == '/') {
       frames.removeLast();
       continue;
@@ -251,11 +254,12 @@ void validateIllustratedRoomSvg(
   IllustratedRoomTemplate template,
 ) {
   expect(source.toLowerCase(), isNot(contains('watermark')));
+  final content = _withoutXmlComments(source);
 
   final svg = RegExp(
     r'<svg\b([^>]*)>',
     caseSensitive: false,
-  ).firstMatch(source);
+  ).firstMatch(content);
   expect(svg, isNotNull, reason: '${template.id}: missing <svg> root');
   final viewBox = _attribute(svg!.group(1)!, 'viewBox');
   expect(
@@ -298,7 +302,7 @@ void validateIllustratedRoomSvg(
     'line',
   };
 
-  for (final match in tags.allMatches(source)) {
+  for (final match in tags.allMatches(content)) {
     final closing = match.group(1) == '/';
     if (closing) {
       expect(frames, isNotEmpty, reason: '${template.id}: unbalanced SVG');

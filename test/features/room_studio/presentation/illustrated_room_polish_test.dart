@@ -75,6 +75,73 @@ void main() {
     },
   );
 
+  test('metrics ignore commented elements but count their UTF-8 bytes', () {
+    expect(
+      illustratedRoomSvgMetrics(
+        'é<rect/><!--\n'
+        '<path/><rect/><circle/><ellipse/><polygon/><polyline/><line/>\n'
+        '<linearGradient/><radialGradient/><clipPath/>\n'
+        '--><linearGradient/><clipPath/>',
+      ),
+      (utf8Bytes: 153, geometryCount: 1, gradientCount: 1, clipPathCount: 1),
+    );
+  });
+
+  test('polish validator ignores commented groups and shadow ellipses', () {
+    _validate(
+      _canonical
+          .replaceFirst('</svg>', '<!--<g id="form"><path/></g>--></svg>')
+          .replaceFirst(
+            '<polygon points="0,0 1,0 1,1"/>',
+            '<polygon points="0,0 1,0 1,1"/><!--<ellipse rx="1" ry="1"/>-->',
+          ),
+    );
+  });
+
+  for (final mutation in <String, String>{
+    'required group': _canonical.replaceFirst(
+      '<g id="form"><line x2="1"/></g>',
+      '<!--<g id="form"><line x2="1"/></g>-->',
+    ),
+    'required group geometry': _canonical.replaceFirst(
+      '<line x2="1"/>',
+      '<!--<line x2="1"/>-->',
+    ),
+    'editable object group': _canonical
+        .replaceFirst('<g id="object">', '<!--<g id="object">')
+        .replaceFirst(
+          '</g></g><g id="form">',
+          '</g>--><path fill="#7A00FF" d="M0 0H1V1Z"/></g><g id="form">',
+        ),
+    'editable token base': _canonical
+        .replaceFirst(
+          '<path fill="#7A00FF" d="M0 0H1V1Z"/>',
+          '<!--<path fill="#7A00FF" d="M0 0H1V1Z"/>-->',
+        )
+        .replaceFirst(
+          '<g id="surface-furniture">',
+          '<g id="surface-furniture"><path fill="#7A00FF" d="M0 0H1V1Z"/>',
+        ),
+    'white form cue': _canonical.replaceFirst(
+      '<path fill="#FFFFFF" fill-opacity=".2" d="M0 0H1V1Z"/>',
+      '<!--<path fill="#FFFFFF" fill-opacity=".2" d="M0 0H1V1Z"/>-->',
+    ),
+    'black form cue': _canonical.replaceFirst(
+      '<path fill="#000000" fill-opacity=".2" d="M0 0H1V1Z"/>',
+      '<!--<path fill="#000000" fill-opacity=".2" d="M0 0H1V1Z"/>-->',
+    ),
+    'fitted contact shadow': _canonical.replaceFirst(
+      '<polygon points="0,0 1,0 1,1"/>',
+      '<line x2="1"/><!--<polygon points="0,0 1,0 1,1"/>-->',
+    ),
+  }.entries) {
+    test('polish validator rejects commented ${mutation.key}', () {
+      // These retain the shared surface contract so only polish can reject them.
+      validateIllustratedRoomSvg(mutation.value, IllustratedRoomCatalog.study);
+      expect(() => _validate(mutation.value), throwsA(isA<TestFailure>()));
+    });
+  }
+
   test('translucent stroke remains a cue when the fill is transparent', () {
     _validate(
       _canonical.replaceFirst(

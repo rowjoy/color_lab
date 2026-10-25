@@ -145,8 +145,9 @@ repeating one complete layout.
 | Bathroom | Upper-right clerestory/reflected light and lower-left fixture casts agree. Tile/grout, glass edges, mirror, chrome and curved sanitary ware separate hard materials while vanity/storage share one editable hue. Orange stress cabinets remain distinct; grayscale retains recesses and contact depth. The central basin/vanity crop identifies a bathroom. Clerestory, shower, large mirror and linen storage are unique in the set. No distorted furniture or card-scale noise observed. |
 
 Phone/tablet gallery cards retain recognizable grayscale rooms. Portrait fill
-and focus show the Study's central desk/chair; whole-room mode exposes both
-side chairs/window/storage with expected letterboxing. The open color rail and
+and focus show the Study's central desk/chair; whole-room mode exposes
+the window and side seating alongside the desk and central chair, with expected
+letterboxing. The open color rail obscures the right shelving. The rail and
 looks flyout remain legible. Landscape and tablet preserve the recommended
 Study's material details. The real 2400×1600 export contains the complete
 artwork with no editor controls or crop loss. This review establishes local
