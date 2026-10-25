@@ -48,6 +48,7 @@ app.*.map.json
 /assets/models/*.tflite
 /dist/
 /.superpowers/
+/.worktrees/
 
 # Local credentials and signing material must not be published.
 .env
