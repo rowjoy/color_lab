@@ -86,6 +86,16 @@ void main() {
     ('filter', _minimalSvg(additions: '<filter id="blur"></filter>')),
     ('script', _minimalSvg(additions: '<script>alert(1)</script>')),
     ('animation', _minimalSvg(additions: '<animate attributeName="x"/>')),
+    for (final element in [
+      'mask',
+      'style',
+      'foreignObject',
+      'img',
+      'object',
+      'embed',
+      'iframe',
+    ])
+      (element, _minimalSvg(additions: '<$element/>')),
     (
       'external href',
       _minimalSvg(additions: '<use href="https://example.com/shape.svg#x"/>'),
