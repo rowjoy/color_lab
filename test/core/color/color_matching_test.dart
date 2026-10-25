@@ -93,6 +93,42 @@ void main() {
         expect(color.toHsl().lightness, closeTo(.75, .002));
       }
     });
+
+    test('explicit generation bounds enforce feasible hue and saturation', () {
+      for (var seed = 0; seed < 50; seed++) {
+        final targets = generateMatchingTargets(
+          random: Random(seed),
+          count: 9,
+          minimumSaturation: .45,
+          minimumHueSeparation: 40,
+        );
+        final hues = targets.map((target) {
+          final hsl = target.toHsl();
+          expect(hsl.saturation, greaterThanOrEqualTo(.44));
+          expect(hsl.lightness, inInclusiveRange(.248, .752));
+          return hsl.hue;
+        }).toList()..sort();
+        for (var index = 0; index < hues.length; index++) {
+          final gap = (hues[(index + 1) % hues.length] - hues[index]) % 360;
+          expect(gap, greaterThanOrEqualTo(38.5));
+        }
+      }
+    });
+
+    test('rejects impossible or invalid explicit target constraints', () {
+      expect(
+        () => generateMatchingTargets(count: 9, minimumHueSeparation: 41),
+        throwsArgumentError,
+      );
+      expect(
+        () => generateMatchingTargets(minimumSaturation: 1.01),
+        throwsArgumentError,
+      );
+      expect(
+        () => generateMatchingTargets(minimumHueSeparation: double.nan),
+        throwsArgumentError,
+      );
+    });
   });
 }
 

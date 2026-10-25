@@ -9,13 +9,31 @@ The starter counter app has been replaced by a four-tab studio with custom Mater
 - **Capture:** live camera sampling, system photo selection, zoomable photo sampling/loupe and dominant palettes, plus manual HEX entry. Common details include all six formats, copy/save/favorite, harmony swatches, system sharing and Use in Room.
 - **Palette:** saved colors, favorites, searchable local history, whole saved palettes and Studio inspiration.
 - **Lab:** HSL study, LAB/RGB mixer, approximate Color Formula search, six-mode Harmonies, a five-round matching game and original procedural vision plates, with independent session state.
-- **Room:** an illustrated wall-color study plus offline AI masks for imported room photos, manual Add/Erase refinement, independent Wall/Ceiling/Floor/Furniture colors, lighting-preserving photo recoloring, Before/After, and PNG sharing.
+- **Room:** a six-room illustrated SVG color gallery (Living, Bedroom, Study, Dining, Kitchen and Bathroom) plus separate offline AI masks for imported room photos, independent Wall/Ceiling/Floor/Furniture colors, manual Add/Erase refinement, lighting-preserving photo recoloring, Before/After, and PNG sharing.
 - **Onboarding:** three illustrated, skippable first-run slides explain discovery, your offline library and permission choices. The tour can be replayed from Appearance settings.
 - **Appearance:** System, Light, or Dark; defaults to System. Theme and tour completion persist locally across launches.
 - **Color engine:** opaque HEX, RGB, HSL, HSV, CMYK, D65 LAB, CIE76 delta-E, cached nearest naming, weighted LAB/RGB blending, approximate base-color formulas, six HSL harmony modes, and deterministic weighted LAB k-means++ with population-conserving merging.
 - **Offline assets:** Plus Jakarta Sans, JetBrains Mono, and the complete 31,943-entry color-name-list, with original licenses. JSON parsing and LAB preparation run in an isolate.
 
-The bottom tabs are **Capture / Palette / Lab / Room**. **Use in Room** selects the illustrated study's wall color and opens Room; the photo editor's four layer colors remain independent.
+The bottom tabs are **Capture / Palette / Lab / Room**. **Use in Room** selects the illustrated Study wall, fills its other surfaces from **Soft Botanical** and opens the full-screen tester; the photo editor's four layer colors remain independent.
+
+## Illustrated room color gallery
+
+Open **Room → Choose an illustrated room** and choose Living room, Bedroom, Study room, Dining room, Kitchen or Bathroom. Gallery cards and a template's first editor draft are black and white. **Warm Natural**, **Soft Botanical** and **Cool Airy** are display-only, market-guided combinations; selecting one colors Wall, Ceiling, Floor and contextual Furniture together. The first custom surface choice seeds that room's complete recommended look before applying the selected color, so previews never become partly colored.
+
+On phones, the color tools start hidden so the room uses the full screen width; tap **Show color tools** to open the overlay rail and **Hide color tools** to close it. On tablets at 720dp or wider, the rail starts visible and can still be hidden or shown. **Fill screen** fills the viewport and may crop illustration edges, while **See whole room** preserves the complete illustration and may leave space around it. **Focus preview** hides the Back button, title, fit controls, flyout and color rail, leaving only the artwork and a safe **Exit focus preview** action; system Back exits focus before leaving the editor.
+
+Rail visibility and Focus Preview are local editor UI state and reset when a different template is opened. The fit choice is also editor-only; none of these controls is stored in a saved design or included in an exported image. Color drafts still remain available for the app session, named designs still persist only through **Designs**, and **Save to Gallery** continues to export the clean complete artwork without any editor controls.
+
+Drafts are retained during the app session. Durable storage is explicit: open **Designs → Save room design** to name and persist a combination in the local `illustrated_room_designs_v1` Hive library. Saved designs can be reopened, updated, renamed, filtered by room or deleted; unavailable future templates remain preserved.
+
+**Save to Gallery** is available only after colors are applied. It renders the complete SVG artwork—not the current screen crop, rail or controls—as a clean 2400 × 1600 PNG and writes it to the system photo library only after the user taps the action. No custom album is created and no room design or photo is uploaded. Gallery export and durable design saving are separate actions.
+
+Recommended looks are guidance, not calibrated predictions or a universal “best” color. Screens, daylight and evening light, surface texture and finish alter appearance; compare a physical paint or material swatch in the real room before purchase. The existing real-photo mask editor remains an independent workflow and does not overwrite illustrated designs.
+
+To register another illustrated room, add an SVG under `assets/rooms/`, use the reserved fills `#FF00A1` (Wall), `#00E5FF` (Ceiling), `#B7FF00` (Floor) and `#7A00FF` (Furniture), then add its template and complete palettes to `IllustratedRoomCatalog.all`. One shared renderer/controller/screen handles every registered template.
+
+`flutter_svg` parses SVG assets into vector graphics in an isolate. The four-color draft stays synchronous because those tiny state updates are cheaper than sending them through `compute`.
 
 ## Room masks and recoloring
 
@@ -178,6 +196,14 @@ hive: ^2.2.3
 path_provider: ^2.1.6
 ```
 
+The illustrated room renderer adds:
+
+```yaml
+flutter_svg: ^2.3.0
+vector_graphics: 1.2.4
+gal: 2.3.2
+```
+
 The camera/photo module adds these constraints (resolved versions are in `pubspec.lock`):
 
 ```yaml
@@ -188,7 +214,7 @@ permission_handler: ^12.0.1 # resolves 12.0.3; Android implementation 13.0.1
 share_plus: ^13.3.1
 ```
 
-The permission-handler 12 line intentionally retains the current AGP 8 toolchain: version 13 resolved an Android implementation that assumes AGP 9/Kotlin built-in support and failed compilation. Android AGP is 8.12.1 (Gradle 8.14, Kotlin 2.2.20, Java 17) for share_plus compatibility. Minimum Android SDK remains 24. Android manifest declares CAMERA with optional camera hardware and explicitly removes CameraX's inherited audio/read/write-storage permissions. No microphone is used. iOS targets 13.0, includes camera/photo usage descriptions, and CocoaPods enables only `PERMISSION_CAMERA=1`. Photo selection uses image_picker's system access with `requestFullMetadata:false`; Room PNG sharing needs no Gallery add-only or broad storage permission.
+The permission-handler 12 line intentionally retains the current AGP 8 toolchain: version 13 resolved an Android implementation that assumes AGP 9/Kotlin built-in support and failed compilation. Android AGP is 8.12.1 (Gradle 8.14, Kotlin 2.2.20, Java 17) for share_plus compatibility. Minimum Android SDK remains 24. Android manifest declares CAMERA with optional camera hardware and removes inherited audio/read permissions. Illustrated-room Gallery export has only `WRITE_EXTERNAL_STORAGE` capped at API 29; it does not declare `READ_MEDIA_*`, `MANAGE_EXTERNAL_STORAGE` or a legacy-storage application flag. No microphone is used. iOS targets 13.0, retains the photo-selection read usage description, adds `NSPhotoLibraryAddUsageDescription`, and CocoaPods enables only `PERMISSION_CAMERA=1`. Photo selection uses image_picker's system access with `requestFullMetadata:false` and no broad photo-library read permission.
 
 Fonts, data, and license assets are registered in `pubspec.yaml`. There is no code generation or runtime network requirement. Restart an already-running app after adding native plugins; hot reload alone cannot register them.
 
@@ -200,12 +226,13 @@ COLOR_LAB_FLUTTER_ROOT=/path/to/flutter
 /usr/bin/sandbox-exec -f tool/deny-native-compilers.sb "$COLOR_LAB_FLUTTER_ROOT/bin/flutter" analyze --no-pub
 /usr/bin/sandbox-exec -f tool/deny-native-compilers.sb "$COLOR_LAB_FLUTTER_ROOT/bin/flutter" test --no-pub --reporter expanded
 /usr/bin/sandbox-exec -f tool/deny-native-compilers.sb "$COLOR_LAB_FLUTTER_ROOT/bin/flutter" test tool/render_previews.dart --no-pub --reporter expanded
+/usr/bin/sandbox-exec -f tool/deny-native-compilers.sb "$COLOR_LAB_FLUTTER_ROOT/bin/flutter" test tool/render_illustrated_room_previews.dart --no-pub --reporter expanded
 /usr/bin/sandbox-exec -f tool/deny-native-compilers.sb "$COLOR_LAB_FLUTTER_ROOT/bin/cache/dart-sdk/bin/dartvm" tool/run_room_model_smoke.dart --flutter-root "$COLOR_LAB_FLUTTER_ROOT"
 ```
 
 These guarded host commands require macOS `sandbox-exec` and already available dependencies/prebuilt native test assets. They allow Dart bytecode and existing prebuilts while denying native compiler/build executables. A fresh clone lacking cached native hook assets may fail closed; this does not authorize bypassing the guard, deleting caches, fetching dependencies or compiling native support libraries during this verification workflow. See [the execution guard](docs/superpowers/plans/room-verification-guard.md). The smoke wrapper deliberately uses direct `dartvm`, avoiding Dartdev build hooks.
 
-The preview command regenerates the 104 existing captures and adds Room empty/import/analysis, four recorded reference layers, Add/Erase, Undo/Restore, original, pending/error and 360×800/2x-text/reduced-motion editor/dialog captures in both themes. Bundled fonts are used throughout. Room uses the actual controller, refinement worker and viewport with real `preparePhoto` output and recorded Task5 segmentation bytes at the service boundary. These mask previews do not execute native inference, measure accuracy, demonstrate paint recoloring or establish hardware compatibility. The earlier vision/matching captures use fixed generators and actual controllers/painters; Formula uses actual precomputed search output, and camera screenshots remain synthetic layout fixtures. PNGs are written to `build/previews/`.
+The main preview command regenerates the existing capture suite, including Room empty/import/analysis, recorded reference layers, refinement and responsive editor states. The illustrated-room command writes exactly 19 deterministic real-font samples: six grayscale artworks, six recommended-color artworks, gallery phone/tablet, editor phone rail closed/open, editor phone Focus Preview, 640×360 landscape and 1024×768 tablet. It uses a fixed clock plus in-memory repository and export fakes, so it never opens a native Gallery channel or writes user documents. Room mask previews use real `preparePhoto` output and recorded segmentation bytes at the service boundary but do not execute native inference or establish hardware compatibility. PNGs are written only to `build/previews/`.
 
 Foundation verification on 2026-10-21: all 47 automated tests passed, static analysis had no issues, all eight screen previews rendered, and the Android debug APK built successfully. iOS device execution has not been verified. The Foundation snapshot remains available at `dist/color-lab-foundation-2026-10-21.zip`; the new module's handoff archive is `dist/color-lab-history-2026-10-21.zip`.
 
@@ -436,8 +463,8 @@ lib/
     color_test/domain/            Immutable matching game, original dots and vision responses
     color_test/application/       Injectable generators and independent retained sessions
     color_test/presentation/      Matching, cached dot plates and non-diagnostic response summary
-    room_studio/                  Photo masking controller, exclusive masks, worker inference,
-                                  manual refinement/undo, derived overlay and recolor editor
+    room_studio/                  Six-room SVG color gallery, saved designs/Gallery export,
+                                  photo masks, worker inference, refinement and recolor editor
     settings/domain/              Versioned appearance/onboarding preferences
     settings/application/         Durable preferences, theme, lifecycle/retry
     settings/presentation/        Startup recovery and Appearance/replay/privacy sheet
@@ -446,6 +473,7 @@ assets/
   fonts/                          Two local variable TTF fonts
   licenses/                       Original MIT/OFL and Room model license/provenance notices
   models/                         Pinned offline MOSAIC model and checked descriptor
+  rooms/                          Six original layered SVG room illustrations
 test/
   core/color/                     Reference conversions, mixing and clustering edge cases
   core/theme/                     Theme application and text contrast
@@ -459,11 +487,14 @@ test/
   features/color_test/            Matching, original dot/mask fixtures, retained responses,
                                   actual painter pixels/semantics and full-app flows
   features/palette/               Snapshot schema, controller retry/disposal and disk restart
+  features/room_studio/           SVG mapping, gallery/editor, persistence and export tests
   support/                        Test-local repository boundary for UI isolation
   fixtures/room/                  CC0 photo, independent model input and actual recorded masks
   widget_test.dart                Navigation, HEX workflow, appearance, tab state,
                                   narrow-screen and large-text layout
 tool/render_previews.dart         Real-font visual inspection utility
+tool/render_illustrated_room_previews.dart
+                                  Deterministic six-room artwork and responsive UI previews
 tool/deny-native-compilers.sb    Fail-closed host verification compiler guard
 tool/run_room_model_smoke.dart   Direct-VM production inference verification wrapper
 android/app/build.gradle.kts      Minimum SDK 24

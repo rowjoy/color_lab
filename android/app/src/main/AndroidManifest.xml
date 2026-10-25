@@ -3,10 +3,14 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <!-- Download verified room models once; photos and inference stay local. -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- CameraX declares video/audio/storage capabilities we do not use. -->
+    <!-- CameraX declares audio and read access that this photo-only app does not use. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" tools:node="remove" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" tools:node="remove" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" tools:node="remove" />
+    <!-- Android 7-10 requires capped legacy write access for saving to Gallery. -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29"
+        tools:replace="android:maxSdkVersion" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.camera.any" android:required="false" tools:replace="android:required" />
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />

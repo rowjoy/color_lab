@@ -4,6 +4,8 @@ import 'dart:typed_data';
 import '../domain/mask_bitmap.dart';
 import '../domain/room_layer.dart';
 
+part 'room_wall_spatial_protection.dart';
+
 /// Relative inverse depth covering the whole prepared photo, without padding.
 /// Larger values indicate nearer surfaces; values are not metric distances.
 final class RoomDepthFrame {
@@ -75,6 +77,8 @@ MaskBitmap protectRoomWallsWithDepth(MaskBitmap masks, RoomDepthFrame depth) {
     }
   }
   if (candidates.length < 64) return masks;
+  final spatial = _protectSpatialRoomWalls(masks, depth, candidates, span);
+  if (spatial != null) return spatial;
   // Bound fitting work independently of photo/depth dimensions. Sampling stays
   // uniform across the entire semantic Wall region and has no position prior.
   final stride = (candidates.length / 4096).ceil();

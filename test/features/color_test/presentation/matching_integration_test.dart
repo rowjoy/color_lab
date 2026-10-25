@@ -4,8 +4,20 @@ import 'package:color_lab/app.dart';
 import 'package:color_lab/core/color/color_engine.dart';
 import 'package:color_lab/core/widgets/widgets.dart';
 import 'package:color_lab/features/color_test/application/matching_game_controller.dart';
+import 'package:color_lab/features/color_test/domain/color_match_level_adapter.dart';
 import 'package:color_lab/features/color_test/domain/matching_game.dart';
+import 'package:color_lab/features/color_test/presentation/matching_screen.dart';
 import 'package:color_lab/features/formula/application/formula_providers.dart';
+import 'package:color_lab/features/games/application/game_adapter_registry.dart';
+import 'package:color_lab/features/games/application/game_profiles_provider.dart';
+import 'package:color_lab/features/games/domain/game_id.dart';
+import 'package:color_lab/features/games/domain/game_launch.dart';
+import 'package:color_lab/features/games/domain/game_level.dart';
+import 'package:color_lab/features/games/domain/game_level_adapter.dart';
+import 'package:color_lab/features/games/domain/game_level_catalog.dart';
+import 'package:color_lab/features/games/domain/game_profiles_state.dart';
+import 'package:color_lab/features/games/domain/game_progression_engine.dart';
+import 'package:color_lab/features/games/domain/player_profile.dart';
 import 'package:color_lab/features/harmonies/application/harmony_controller.dart';
 import 'package:color_lab/features/history/application/history_providers.dart';
 import 'package:color_lab/features/history/domain/saved_color.dart';
@@ -25,6 +37,7 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../../support/in_memory_app_preferences_repository.dart';
 import '../../../support/in_memory_acquisition_intent_store.dart';
 import '../../../support/in_memory_color_history_repository.dart';
+import '../../../support/in_memory_game_profiles_repository.dart';
 import '../../../support/in_memory_saved_palette_repository.dart';
 
 void main() {
@@ -92,6 +105,13 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  Future<void> tapText(WidgetTester tester, String text) async {
+    final finder = find.text(text);
+    await tester.ensureVisible(finder);
+    await tester.tap(finder);
+    await tester.pump();
+  }
+
   // Exercise the real shared sliders: replacing their callback with a wrong
   // coordinate must change the displayed RGB and the frozen attempt.
   Future<void> slide(WidgetTester tester, String key, double value) async {
@@ -113,6 +133,460 @@ void main() {
       await press(tester, 'matching-next');
     }
   }
+
+  testWidgets('practice is retained and never opens profile persistence', (
+    tester,
+  ) async {
+    final repository = InMemoryGameProfilesRepository(
+      initialState: _emptyProfilesState(),
+    );
+    final container = ProviderContainer(
+      overrides: [
+        matchingTargetGeneratorProvider.overrideWithValue(() => targets),
+        gameProfilesRepositoryProvider.overrideWith((ref) async => repository),
+      ],
+    );
+    addTearDown(container.dispose);
+    Future<void> pumpPractice() => tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: MatchingScreen()),
+      ),
+    );
+
+    await pumpPractice();
+    await tester.pump();
+    await completePerfectGame(tester);
+    final completedPractice = container.read(matchingGameProvider);
+
+    expect(completedPractice.won, isTrue);
+    expect(repository.readCount, 0);
+    expect(repository.writeAttempts, 0);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await pumpPractice();
+    await tester.pump();
+    expect(container.read(matchingGameProvider), same(completedPractice));
+    expect(find.text('500 / 500'), findsOneWidget);
+    expect(repository.readCount, 0);
+  });
+
+  testWidgets(
+    'profile win waits for durability, normalizes, and starts persisted next',
+    (tester) async {
+      final adapter = _ControlledColorAdapter();
+      final fixture = _profileFixture(adapter: adapter);
+      var mapOpens = 0;
+      final harness = await _pumpProfile(
+        tester,
+        fixture: fixture,
+        adapter: adapter,
+        onOpenMap: () => mapOpens++,
+      );
+      addTearDown(harness.dispose);
+      final coinsBefore = harness.repository.durableState.activeProfile!.coins;
+
+      expect(find.text('Level 1 · Easy'), findsOneWidget);
+      expect(find.text('Round 1 of 3'), findsOneWidget);
+      await tapText(tester, 'Map');
+      await tester.pump();
+      expect(mapOpens, 1);
+
+      final gate = Completer<void>();
+      harness.repository.writeGate = gate;
+      await _completeProfilePerfect(tester, fixture.launch);
+      await _pumpUntil(tester, () => harness.repository.writeAttempts == 1);
+
+      expect(find.text('Next Level'), findsNothing);
+      expect(find.textContaining('+10 coins'), findsNothing);
+      expect(_profileProgress(harness.repository).currentLevel, 1);
+      expect(adapter.lastOutcome?.averageScore, 100);
+      expect(adapter.lastNormalizedScore, 73);
+
+      gate.complete();
+      harness.repository.writeGate = null;
+      await _pumpUntil(
+        tester,
+        () => find.text('Next Level').evaluate().isNotEmpty,
+      );
+      expect(_profileProgress(harness.repository).currentLevel, 2);
+      expect(_profileProgress(harness.repository).bestScores[1], 73);
+      expect(
+        harness.repository.durableState.activeProfile!.coins,
+        coinsBefore + 10,
+      );
+      expect(find.textContaining('+10 coins'), findsOneWidget);
+
+      await tapText(tester, 'Next Level');
+      await _pumpUntil(
+        tester,
+        () => find.text('Level 2 · Easy').evaluate().isNotEmpty,
+      );
+      expect(_profileProgress(harness.repository).activeAttempt?.level, 2);
+    },
+  );
+
+  testWidgets('profile chrome and results fit 360dp with doubled text', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+    final adapter = _ControlledColorAdapter();
+    final fixture = _profileFixture(adapter: adapter);
+    var mapOpens = 0;
+    final harness = await _pumpProfile(
+      tester,
+      fixture: fixture,
+      adapter: adapter,
+      onOpenMap: () => mapOpens++,
+    );
+    addTearDown(harness.dispose);
+
+    expect(find.text('Level 1 · Easy'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tapText(tester, 'Map');
+    expect(mapOpens, 1);
+    expect(tester.takeException(), isNull);
+
+    await _completeProfilePerfect(tester, fixture.launch);
+    await _pumpUntil(
+      tester,
+      () => find.text('Level complete!').evaluate().isNotEmpty,
+    );
+    await tester.ensureVisible(find.text('Level complete!'));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('profile Restart durably replaces the current attempt', (
+    tester,
+  ) async {
+    final adapter = _ControlledColorAdapter();
+    final fixture = _profileFixture(adapter: adapter);
+    final harness = await _pumpProfile(
+      tester,
+      fixture: fixture,
+      adapter: adapter,
+    );
+    addTearDown(harness.dispose);
+    final originalAttempt = fixture.launch.attemptId;
+
+    await press(tester, 'matching-restart');
+    await press(tester, 'confirm-matching-restart');
+    await _pumpUntil(
+      tester,
+      () =>
+          _profileProgress(harness.repository).activeAttempt?.attemptId !=
+          originalAttempt,
+    );
+
+    final replacement = _profileProgress(harness.repository).activeAttempt!;
+    expect(replacement.level, fixture.launch.descriptor.level);
+    expect(replacement.playKind, GamePlayKind.current);
+    expect(replacement.attemptId, isNot(originalAttempt));
+  });
+
+  testWidgets('profile loss never settles and Try again is a fresh attempt', (
+    tester,
+  ) async {
+    final adapter = _ControlledColorAdapter(winningAverage: 100);
+    final fixture = _profileFixture(adapter: adapter);
+    final harness = await _pumpProfile(
+      tester,
+      fixture: fixture,
+      adapter: adapter,
+    );
+    addTearDown(harness.dispose);
+    final oldAttempt = fixture.launch.attemptId;
+
+    await _completeProfileWithCurrentGuess(tester, fixture.launch);
+    expect(find.text('Keep practicing to win this level.'), findsOneWidget);
+    expect(find.text('Try again'), findsOneWidget);
+    expect(harness.repository.writeAttempts, 0);
+    expect(_profileProgress(harness.repository).currentLevel, 1);
+
+    await tapText(tester, 'Try again');
+    await _pumpUntil(
+      tester,
+      () =>
+          _profileProgress(harness.repository).activeAttempt?.attemptId !=
+          oldAttempt,
+    );
+    expect(_profileProgress(harness.repository).currentLevel, 1);
+    expect(_profileProgress(harness.repository).activeAttempt?.level, 1);
+  });
+
+  testWidgets('save failure stays retryable and stale attempts do not retry', (
+    tester,
+  ) async {
+    final adapter = _ControlledColorAdapter();
+    final fixture = _profileFixture(adapter: adapter);
+    final harness = await _pumpProfile(
+      tester,
+      fixture: fixture,
+      adapter: adapter,
+    );
+    addTearDown(harness.dispose);
+    harness.repository.failWrite = true;
+
+    await _completeProfilePerfect(tester, fixture.launch);
+    await _pumpUntil(
+      tester,
+      () => find.text('Retry save').evaluate().isNotEmpty,
+    );
+    expect(_profileProgress(harness.repository).currentLevel, 1);
+    expect(find.textContaining('+10 coins'), findsNothing);
+
+    harness.repository.failWrite = false;
+    await tapText(tester, 'Retry save');
+    await _pumpUntil(
+      tester,
+      () => find.text('Next Level').evaluate().isNotEmpty,
+    );
+    expect(_profileProgress(harness.repository).currentLevel, 2);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await tester.pump();
+    harness.dispose();
+
+    final staleAdapter = _ControlledColorAdapter();
+    final staleFixture = _profileFixture(adapter: staleAdapter);
+    final staleHarness = await _pumpProfile(
+      tester,
+      fixture: staleFixture,
+      adapter: staleAdapter,
+    );
+    addTearDown(staleHarness.dispose);
+    final replacement = await staleHarness.container
+        .read(gameProfilesProvider.notifier)
+        .beginCurrentAttempt(
+          profileId: staleFixture.launch.profileId,
+          gameId: GameId.colorMatch,
+        );
+    await _completeProfilePerfect(tester, staleFixture.launch);
+    await _pumpUntil(
+      tester,
+      () => find.text('Session changed').evaluate().isNotEmpty,
+    );
+    expect(find.text('Retry save'), findsNothing);
+    expect(find.text('Next Level'), findsNothing);
+    expect(
+      _profileProgress(staleHarness.repository).activeAttempt?.attemptId,
+      replacement.attemptId,
+    );
+  });
+
+  testWidgets('active profile switch rejects an old-profile Restart', (
+    tester,
+  ) async {
+    final adapter = _ControlledColorAdapter();
+    final fixture = _profileFixture(adapter: adapter);
+    final harness = await _pumpProfile(
+      tester,
+      fixture: fixture,
+      adapter: adapter,
+    );
+    addTearDown(harness.dispose);
+
+    await harness.container
+        .read(gameProfilesProvider.notifier)
+        .createProfile(name: 'Other player');
+    final writesAfterSwitch = harness.repository.writeAttempts;
+    await press(tester, 'matching-restart');
+    await press(tester, 'confirm-matching-restart');
+
+    expect(harness.repository.writeAttempts, writesAfterSwitch);
+    expect(find.text('Session changed'), findsOneWidget);
+    expect(find.text('Retry save'), findsNothing);
+    expect(find.text('Next Level'), findsNothing);
+    expect(find.byKey(const ValueKey('matching-submit')), findsNothing);
+  });
+
+  testWidgets('duplicate and replay wins suppress all first-clear rewards', (
+    tester,
+  ) async {
+    final duplicateAdapter = _ControlledColorAdapter();
+    final duplicate = _profileFixture(
+      adapter: duplicateAdapter,
+      completedLaunch: true,
+    );
+    final duplicateHarness = await _pumpProfile(
+      tester,
+      fixture: duplicate,
+      adapter: duplicateAdapter,
+    );
+    addTearDown(duplicateHarness.dispose);
+    final coins = duplicateHarness.repository.durableState.activeProfile!.coins;
+
+    await _completeProfilePerfect(tester, duplicate.launch);
+    await _pumpUntil(
+      tester,
+      () => find.text('Level already saved').evaluate().isNotEmpty,
+    );
+    expect(find.textContaining('coins'), findsNothing);
+    expect(find.textContaining('Badge earned'), findsNothing);
+    expect(
+      duplicateHarness.repository.durableState.activeProfile!.coins,
+      coins,
+    );
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await tester.pump();
+    duplicateHarness.dispose();
+
+    final replayAdapter = _ControlledColorAdapter();
+    final replay = _profileFixture(adapter: replayAdapter, replay: true);
+    final replayHarness = await _pumpProfile(
+      tester,
+      fixture: replay,
+      adapter: replayAdapter,
+    );
+    addTearDown(replayHarness.dispose);
+    final profileBeforeReplay =
+        replayHarness.repository.durableState.activeProfile!;
+    final replayCoins = profileBeforeReplay.coins;
+    final badgeIdsBefore = profileBeforeReplay.badgeIds;
+    final milestonesBefore = _profileProgress(
+      replayHarness.repository,
+    ).badgeMilestones;
+    final originalReplayAttempt = replay.launch.attemptId;
+
+    await press(tester, 'matching-restart');
+    await press(tester, 'confirm-matching-restart');
+    final restartedProgress = _profileProgress(replayHarness.repository);
+    expect(restartedProgress.activeAttempt?.playKind, GamePlayKind.replay);
+    expect(restartedProgress.activeAttempt?.level, 1);
+    expect(
+      restartedProgress.activeAttempt?.attemptId,
+      isNot(originalReplayAttempt),
+    );
+    final restartedReplay = GameLaunch(
+      profileId: replay.launch.profileId,
+      gameId: GameId.colorMatch,
+      descriptor: restartedProgress.descriptors[1]!,
+      attemptId: restartedProgress.activeAttempt!.attemptId,
+      playKind: GamePlayKind.replay,
+    );
+    await _completeProfilePerfect(tester, restartedReplay);
+    await _pumpUntil(
+      tester,
+      () => find.text('Next Level').evaluate().isNotEmpty,
+    );
+    expect(_profileProgress(replayHarness.repository).currentLevel, 2);
+    expect(find.textContaining('coins'), findsNothing);
+    expect(
+      replayHarness.repository.durableState.activeProfile!.coins,
+      replayCoins,
+    );
+    expect(
+      replayHarness.repository.durableState.activeProfile!.badgeIds,
+      badgeIdsBefore,
+    );
+    expect(
+      _profileProgress(replayHarness.repository).badgeMilestones,
+      milestonesBefore,
+    );
+
+    await tapText(tester, 'Next Level');
+    await _pumpUntil(
+      tester,
+      () => find.text('Level 2 · Easy').evaluate().isNotEmpty,
+    );
+    expect(
+      _profileProgress(replayHarness.repository).activeAttempt?.playKind,
+      GamePlayKind.current,
+    );
+  });
+
+  testWidgets('failed Next Level keeps a Back-protected persistent retry', (
+    tester,
+  ) async {
+    final adapter = _ControlledColorAdapter();
+    final fixture = _profileFixture(adapter: adapter);
+    final harness = await _pumpProfile(
+      tester,
+      fixture: fixture,
+      adapter: adapter,
+    );
+    addTearDown(harness.dispose);
+    await _completeProfilePerfect(tester, fixture.launch);
+    await _pumpUntil(
+      tester,
+      () => find.text('Next Level').evaluate().isNotEmpty,
+    );
+
+    harness.repository.failWrite = true;
+    await tapText(tester, 'Next Level');
+    await _pumpUntil(
+      tester,
+      () => find.text('Retry Next Level').evaluate().isNotEmpty,
+    );
+    expect(await tester.binding.handlePopRoute(), isTrue);
+    await tester.pump();
+    expect(find.text('Retry Next Level'), findsOneWidget);
+
+    harness.repository.failWrite = false;
+    await tapText(tester, 'Retry Next Level');
+    await _pumpUntil(
+      tester,
+      () => find.text('Level 2 · Easy').evaluate().isNotEmpty,
+    );
+  });
+
+  testWidgets('launch replacement ignores an older pending completion UI', (
+    tester,
+  ) async {
+    final adapter = _ControlledColorAdapter();
+    final fixture = _profileFixture(adapter: adapter);
+    final harness = await _pumpProfile(
+      tester,
+      fixture: fixture,
+      adapter: adapter,
+    );
+    addTearDown(harness.dispose);
+    final gate = Completer<void>();
+    harness.repository.writeGate = gate;
+    addTearDown(() {
+      if (!gate.isCompleted) gate.complete();
+    });
+
+    await _completeProfilePerfect(tester, fixture.launch);
+    await _pumpUntil(tester, () => harness.repository.writeAttempts == 1);
+    final progress = _profileProgress(harness.repository);
+    final replacement = GameLaunch(
+      profileId: fixture.launch.profileId,
+      gameId: GameId.colorMatch,
+      descriptor: progress.descriptors[2]!,
+      attemptId: 'profile-1:colorMatch:replacement',
+      playKind: GamePlayKind.current,
+    );
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: harness.container,
+        child: MaterialApp(home: MatchingScreen(launch: replacement)),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('Level 2 · Easy'), findsOneWidget);
+
+    gate.complete();
+    harness.repository.writeGate = null;
+    await _pumpUntil(
+      tester,
+      () => _profileProgress(harness.repository).currentLevel == 2,
+    );
+    await tester.pump();
+    expect(find.text('Level 2 · Easy'), findsOneWidget);
+    expect(find.text('Next Level'), findsNothing);
+    expect(find.textContaining('+10 coins'), findsNothing);
+  });
 
   testWidgets('Lab opens the retained color matching game', (tester) async {
     await launch(tester, path: '/lab');
@@ -666,4 +1140,240 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+}
+
+final class _ProfileFixture {
+  const _ProfileFixture({required this.state, required this.launch});
+
+  final GameProfilesState state;
+  final GameLaunch launch;
+}
+
+final class _ProfileHarness {
+  _ProfileHarness({required this.container, required this.repository});
+
+  final ProviderContainer container;
+  final InMemoryGameProfilesRepository repository;
+  bool _disposed = false;
+
+  void dispose() {
+    if (_disposed) return;
+    _disposed = true;
+    container.dispose();
+  }
+}
+
+final class _ControlledColorAdapter implements GameLevelAdapter {
+  _ControlledColorAdapter({this.winningAverage});
+
+  final int? winningAverage;
+  final ColorMatchLevelAdapter _delegate = ColorMatchLevelAdapter();
+  ColorMatchOutcome? lastOutcome;
+  int? lastNormalizedScore;
+
+  @override
+  GameId get gameId => GameId.colorMatch;
+
+  @override
+  int get currentGeneratorVersion => 1;
+
+  @override
+  bool supportsVersion(int version) => version == 1;
+
+  @override
+  ColorMatchLevelLayout build(GameLevelDescriptor descriptor) {
+    final layout = _delegate.build(descriptor);
+    final threshold = winningAverage;
+    if (threshold == null) return layout;
+    return ColorMatchLevelLayout(
+      level: layout.level,
+      rules: MatchingRules(
+        roundCount: layout.rules.roundCount,
+        winningAverage: threshold,
+      ),
+      targets: layout.targets,
+      minimumSaturation: layout.minimumSaturation,
+      requestedMinimumHueSeparation: layout.requestedMinimumHueSeparation,
+      minimumHueSeparation: layout.minimumHueSeparation,
+    );
+  }
+
+  @override
+  int normalizeScore(GameLevelOutcome outcome) {
+    if (outcome is! ColorMatchOutcome) {
+      throw ArgumentError.value(outcome, 'outcome');
+    }
+    _delegate.normalizeScore(outcome);
+    lastOutcome = outcome;
+    lastNormalizedScore = 73;
+    return 73;
+  }
+}
+
+final class _ColorRegistry implements GameLevelAdapterRegistry {
+  const _ColorRegistry(this.adapter);
+
+  final GameLevelAdapter adapter;
+
+  @override
+  GameLevelAdapter adapterFor(GameId gameId) {
+    if (gameId != GameId.colorMatch) {
+      throw StateError('Unexpected game: $gameId');
+    }
+    return adapter;
+  }
+}
+
+GameProfilesState _emptyProfilesState() => GameProfilesState(
+  activeProfileId: null,
+  profiles: const {},
+  legacyMigrationComplete: true,
+);
+
+_ProfileFixture _profileFixture({
+  required _ControlledColorAdapter adapter,
+  bool completedLaunch = false,
+  bool replay = false,
+}) {
+  final engine = GameProgressionEngine(
+    catalog: GameLevelCatalog(registry: _ColorRegistry(adapter)),
+  );
+  var tick = 0;
+  DateTime now() =>
+      DateTime.utc(2026, 10, 24, 12).add(Duration(seconds: tick++));
+  var state = engine
+      .createProfile(
+        state: _emptyProfilesState(),
+        profileId: 'profile-1',
+        name: 'Player',
+        now: now(),
+      )
+      .state;
+  state = engine
+      .prepareGame(
+        state: state,
+        profileId: 'profile-1',
+        gameId: GameId.colorMatch,
+      )
+      .state;
+  final begun = engine.beginCurrentAttempt(
+    state: state,
+    profileId: 'profile-1',
+    gameId: GameId.colorMatch,
+    startedAt: now(),
+  );
+  state = begun.state;
+  if (!completedLaunch && !replay) {
+    return _ProfileFixture(state: state, launch: begun.value);
+  }
+  state = engine
+      .completeLevel(
+        state: state,
+        launch: begun.value,
+        normalizedScore: 73,
+        completedAt: now(),
+      )
+      .state;
+  if (completedLaunch) {
+    return _ProfileFixture(state: state, launch: begun.value);
+  }
+  final replayBegun = engine.beginReplayAttempt(
+    state: state,
+    profileId: 'profile-1',
+    gameId: GameId.colorMatch,
+    level: 1,
+    startedAt: now(),
+  );
+  return _ProfileFixture(state: replayBegun.state, launch: replayBegun.value);
+}
+
+Future<_ProfileHarness> _pumpProfile(
+  WidgetTester tester, {
+  required _ProfileFixture fixture,
+  required _ControlledColorAdapter adapter,
+  VoidCallback? onOpenMap,
+}) async {
+  final repository = InMemoryGameProfilesRepository(
+    initialState: fixture.state,
+  );
+  var tick = 0;
+  final container = ProviderContainer(
+    overrides: [
+      gameProfilesRepositoryProvider.overrideWith((ref) async => repository),
+      gameAdapterRegistryProvider.overrideWithValue(_ColorRegistry(adapter)),
+      gameProfilesClockProvider.overrideWithValue(
+        () => DateTime.utc(2026, 10, 24, 13).add(Duration(seconds: tick++)),
+      ),
+    ],
+  );
+  await container.read(gameProfilesProvider.future);
+  await tester.pumpWidget(
+    UncontrolledProviderScope(
+      container: container,
+      child: MaterialApp(
+        home: MatchingScreen(launch: fixture.launch, onOpenMap: onOpenMap),
+      ),
+    ),
+  );
+  await tester.pump();
+  return _ProfileHarness(container: container, repository: repository);
+}
+
+Future<void> _completeProfilePerfect(
+  WidgetTester tester,
+  GameLaunch launch,
+) async {
+  final scope = ProviderScope.containerOf(
+    tester.element(find.byType(MatchingScreen)),
+  );
+  final provider = profileMatchingGameProvider(
+    MatchingProfileSessionKey(launch),
+  );
+  final controller = scope.read(provider.notifier);
+  while (scope.read(provider).phase != MatchingPhase.complete) {
+    final game = scope.read(provider);
+    if (game.phase == MatchingPhase.editing) {
+      final target = game.target.toHsl();
+      controller
+        ..setHue(target.hue)
+        ..setSaturation(target.saturation)
+        ..setLightness(target.lightness)
+        ..submit();
+    } else {
+      controller.nextRound();
+    }
+    await tester.pump();
+  }
+}
+
+Future<void> _completeProfileWithCurrentGuess(
+  WidgetTester tester,
+  GameLaunch launch,
+) async {
+  final scope = ProviderScope.containerOf(
+    tester.element(find.byType(MatchingScreen)),
+  );
+  final provider = profileMatchingGameProvider(
+    MatchingProfileSessionKey(launch),
+  );
+  final controller = scope.read(provider.notifier);
+  while (scope.read(provider).phase != MatchingPhase.complete) {
+    if (scope.read(provider).phase == MatchingPhase.editing) {
+      controller.submit();
+    } else {
+      controller.nextRound();
+    }
+    await tester.pump();
+  }
+}
+
+PlayerGameProgress _profileProgress(
+  InMemoryGameProfilesRepository repository,
+) => repository.durableState.activeProfile!.gameProgress[GameId.colorMatch]!;
+
+Future<void> _pumpUntil(WidgetTester tester, bool Function() condition) async {
+  for (var attempt = 0; attempt < 120 && !condition(); attempt++) {
+    await tester.pump(const Duration(milliseconds: 20));
+  }
+  expect(condition(), isTrue);
 }

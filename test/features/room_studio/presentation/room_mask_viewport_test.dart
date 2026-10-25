@@ -218,6 +218,22 @@ void main() {
     },
   );
 
+  testWidgets('overlay boundary is antialiased without shifting its edge', (
+    tester,
+  ) async {
+    final h = Harness();
+    await h.mount(tester);
+    await flush(tester);
+
+    final interior = await pixel(tester, h, 150, 160);
+    final edge = await pixel(tester, h, 159, 160);
+    final exterior = await pixel(tester, h, 170, 160);
+    expect(interior[2], greaterThan(interior[0]));
+    expect(edge[2], greaterThan(edge[0]));
+    expect(edge[2] - edge[0], lessThan(interior[2] - interior[0]));
+    expect(exterior, [100, 100, 100, 255]);
+  });
+
   testWidgets(
     'stroke buffers, previews aligned vectors, commits once with gaps',
     (tester) async {

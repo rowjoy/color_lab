@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+  <!-- Original Color Lab bathroom scene. Vanity/storage are editable while
+       ceramic, glass and chrome fixtures remain fixed neutrals. -->
+  <defs>
+    <linearGradient id="bathroom-mirror" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#DDF0F2"/>
+      <stop offset="1" stop-color="#AFC9CE"/>
+    </linearGradient>
+    <linearGradient id="bathroom-glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E9F6F7" stop-opacity=".68"/>
+      <stop offset="1" stop-color="#B8D8DE" stop-opacity=".35"/>
+    </linearGradient>
+  </defs>
+
+  <g id="bathroom-shell">
+    <g id="surface-ceiling">
+      <path d="M0 0H1200V106L1118 140H82L0 106Z" fill="#00E5FF"/>
+    </g>
+    <path d="M48 82H1152L1118 124H82Z" fill="#FFFFFF" fill-opacity=".18"/>
+    <path d="M82 124H1118" stroke="#FFFFFF" stroke-opacity=".70" stroke-width="13"/>
+    <path d="M84 138H1116" stroke="#27363D" stroke-opacity=".20" stroke-width="4"/>
+
+    <g id="surface-wall">
+      <path d="M0 106L82 140H1118L1200 106V552H0Z" fill="#FF00A1"/>
+    </g>
+    <path d="M0 106L82 140V552H0Z" fill="#000000" fill-opacity=".10"/>
+    <path d="M1200 106L1118 140V552H1200Z" fill="#000000" fill-opacity=".07"/>
+    <g fill="none" stroke="#FFFFFF" stroke-opacity=".18" stroke-width="2">
+      <path d="M82 302H1118M82 448H1118"/>
+      <path d="M190 140V552M770 140V552M1118 140V552"/>
+    </g>
+
+    <g id="surface-floor">
+      <path d="M0 552H1200V800H0Z" fill="#B7FF00"/>
+    </g>
+    <path d="M0 542H1200V565H0Z" fill="#F5F2EC"/>
+    <path d="M0 565H1200" stroke="#314047" stroke-opacity=".28" stroke-width="5"/>
+    <g fill="none" stroke="#516167" stroke-opacity=".19" stroke-width="2">
+      <path d="M600 552L70 800M600 552L300 800M600 552L480 800M600 552L720 800M600 552L900 800M600 552L1130 800"/>
+      <path d="M0 620C334 610 866 610 1200 620"/>
+      <path d="M0 688C334 671 866 671 1200 688"/>
+      <path d="M0 751C334 731 866 731 1200 751"/>
+    </g>
+  </g>
+
+  <g id="bathroom-shower">
+    <rect x="22" y="158" width="151" height="395" fill="url(#bathroom-glass)"/>
+    <path d="M22 158H173V553H22Z" fill="none" stroke="#81959A" stroke-width="7"/>
+    <path d="M166 158V553" stroke="#5D6C70" stroke-width="5"/>
+    <path d="M90 212H126V244" fill="none" stroke="#6B7B7E" stroke-width="8" stroke-linecap="round"/>
+    <circle cx="126" cy="252" r="17" fill="#AEB8BA"/>
+    <path d="M113 244L139 260M113 252L139 268M113 260L139 276" stroke="#DDE4E4" stroke-width="3"/>
+    <rect x="116" y="348" width="8" height="74" rx="4" fill="#7B898C"/>
+    <path d="M37 180L151 294M37 251L151 365" stroke="#FFFFFF" stroke-opacity=".28" stroke-width="10"/>
+  </g>
+
+  <g id="bathroom-mirror-area">
+    <rect x="238" y="159" width="297" height="317" rx="9" fill="#334248"/>
+    <rect x="251" y="172" width="271" height="291" rx="5" fill="url(#bathroom-mirror)"/>
+    <path d="M267 190L468 391" stroke="#FFFFFF" stroke-opacity=".30" stroke-width="18"/>
+    <path d="M290 172L522 404" stroke="#FFFFFF" stroke-opacity=".10" stroke-width="8"/>
+    <rect x="285" y="126" width="203" height="19" rx="9" fill="#EAE6DD"/>
+    <path d="M310 145V163M463 145V163" stroke="#68767A" stroke-width="5"/>
+  </g>
+
+  <!-- Bath mat and shadows sit beneath editable cabinetry. -->
+  <g id="bathroom-floor-decor">
+    <path d="M222 674H719L783 800H151Z" fill="#1A262B" fill-opacity=".13"/>
+    <path d="M249 682H694L744 800H191Z" fill="#879DA0"/>
+    <path d="M276 715H705M257 753H724" stroke="#FFFFFF" stroke-opacity=".16" stroke-width="4"/>
+    <ellipse cx="460" cy="704" rx="249" ry="42" fill="#172126" fill-opacity=".15"/>
+    <ellipse cx="984" cy="623" rx="123" ry="29" fill="#172126" fill-opacity=".15"/>
+  </g>
+
+  <g id="surface-furniture">
+    <!-- Broad vanity maintains clean editable comparison patches. -->
+    <rect x="203" y="519" width="536" height="143" rx="7" fill="#7A00FF"/>
+    <path d="M203 519H739V538H203Z" fill="#FFFFFF" fill-opacity=".14"/>
+    <path d="M203 643H739V662H203Z" fill="#000000" fill-opacity=".17"/>
+    <path d="M381 538V643M560 538V643" stroke="#FFFFFF" stroke-opacity=".16" stroke-width="3"/>
+    <rect x="224" y="550" width="136" height="78" rx="3" fill="#000000" fill-opacity=".12"/>
+    <rect x="620" y="550" width="98" height="78" rx="3" fill="#000000" fill-opacity=".12"/>
+    <path d="M236 658H277V731H244ZM665 658H706L698 731H665Z" fill="#7A00FF"/>
+
+    <!-- Tall linen storage. -->
+    <rect x="876" y="198" width="213" height="411" rx="6" fill="#7A00FF"/>
+    <path d="M876 198H895V609H876Z" fill="#FFFFFF" fill-opacity=".14"/>
+    <path d="M1070 198H1089V609H1070Z" fill="#000000" fill-opacity=".17"/>
+    <path d="M895 330H1070V343H895ZM895 460H1070V473H895Z" fill="#7A00FF"/>
+    <path d="M895 343H1070V357H895ZM895 473H1070V477H895Z" fill="#000000" fill-opacity=".12"/>
+    <rect x="915" y="222" width="135" height="83" rx="3" fill="#000000" fill-opacity=".11"/>
+  </g>
+
+  <!-- Fixed ceramic and chrome are intentionally not user-color surfaces. -->
+  <g id="bathroom-fixed-fixtures">
+    <path d="M184 491H758L739 523H203Z" fill="#F1EEE8"/>
+    <path d="M201 491H741L730 503H212Z" fill="#FFFFFF"/>
+    <ellipse cx="468" cy="508" rx="100" ry="30" fill="#B8C4C5"/>
+    <ellipse cx="468" cy="503" rx="82" ry="21" fill="#F5F4F0"/>
+    <path d="M468 498V452C468 430 493 422 510 438" fill="none" stroke="#718084" stroke-width="9" stroke-linecap="round"/>
+    <path d="M510 438V461" stroke="#718084" stroke-width="9" stroke-linecap="round"/>
+    <rect x="849" y="612" width="271" height="35" rx="16" fill="#F3F1EC"/>
+    <path d="M865 647H1104L1089 704H882Z" fill="#E2E4E2"/>
+    <path d="M882 704L867 735M1089 704L1104 735" stroke="#758286" stroke-width="8" stroke-linecap="round"/>
+    <path d="M927 609V570C927 549 950 541 967 555" fill="none" stroke="#6F7E82" stroke-width="8" stroke-linecap="round"/>
+    <circle cx="1048" cy="629" r="7" fill="#718084"/>
+  </g>
+
+  <g id="bathroom-storage-decor">
+    <rect x="921" y="253" width="37" height="52" rx="5" fill="#D5C8B5"/>
+    <rect x="966" y="244" width="24" height="61" rx="5" fill="#839CA1"/>
+    <rect x="998" y="263" width="39" height="42" rx="5" fill="#C9876D"/>
+    <path d="M920 431C944 402 977 407 987 433C1002 400 1044 412 1034 448H919Z" fill="#F0ECE5"/>
+    <path d="M924 440H1032" stroke="#C7C0B6" stroke-width="4"/>
+    <rect x="930" y="510" width="92" height="18" rx="7" fill="#E8E2D8"/>
+    <rect x="942" y="528" width="80" height="18" rx="7" fill="#B7C9C6"/>
+    <circle cx="345" cy="590" r="4" fill="#D8C49A"/>
+    <circle cx="526" cy="590" r="4" fill="#D8C49A"/>
+    <circle cx="704" cy="590" r="4" fill="#D8C49A"/>
+    <rect x="610" y="466" width="92" height="18" rx="4" fill="#E6DED1"/>
+    <rect x="618" y="448" width="84" height="18" rx="4" fill="#6F9290"/>
+  </g>
+
+  <g id="bathroom-ceiling-light">
+    <ellipse cx="659" cy="66" rx="56" ry="18" fill="#EFF1EE"/>
+    <ellipse cx="659" cy="69" rx="35" ry="10" fill="#F3D385"/>
+    <path d="M659 79V134" stroke="#F2D388" stroke-opacity=".16" stroke-width="100"/>
+  </g>
+</svg>

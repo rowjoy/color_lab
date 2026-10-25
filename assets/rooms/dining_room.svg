@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+  <!-- Original Color Lab dining-room scene. -->
+  <defs>
+    <linearGradient id="dining-window" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9BD6E7"/>
+      <stop offset="1" stop-color="#E6F2EE"/>
+    </linearGradient>
+    <linearGradient id="dining-rug" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#77898A"/>
+      <stop offset="1" stop-color="#435B60"/>
+    </linearGradient>
+  </defs>
+
+  <g id="dining-shell">
+    <g id="surface-ceiling">
+      <path d="M0 0H1200V106L1118 140H82L0 106Z" fill="#00E5FF"/>
+    </g>
+    <path d="M48 82H1152L1118 124H82Z" fill="#FFFFFF" fill-opacity=".18"/>
+    <path d="M82 124H1118" stroke="#FFFFFF" stroke-opacity=".70" stroke-width="13"/>
+    <path d="M84 138H1116" stroke="#27363D" stroke-opacity=".20" stroke-width="4"/>
+
+    <g id="surface-wall">
+      <path d="M0 106L82 140H1118L1200 106V552H0Z" fill="#FF00A1"/>
+    </g>
+    <path d="M0 106L82 140V552H0Z" fill="#000000" fill-opacity=".11"/>
+    <path d="M1200 106L1118 140V552H1200Z" fill="#000000" fill-opacity=".07"/>
+
+    <g id="surface-floor">
+      <path d="M0 552H1200V800H0Z" fill="#B7FF00"/>
+    </g>
+    <path d="M0 542H1200V565H0Z" fill="#F6F1E8"/>
+    <path d="M0 565H1200" stroke="#312B27" stroke-opacity=".30" stroke-width="5"/>
+    <g fill="none" stroke="#55483F" stroke-opacity=".17" stroke-width="2">
+      <path d="M600 552L70 800M600 552L300 800M600 552L480 800M600 552L720 800M600 552L900 800M600 552L1130 800"/>
+      <path d="M0 618C334 608 866 608 1200 618"/>
+      <path d="M0 684C334 668 866 668 1200 684"/>
+      <path d="M0 748C334 729 866 729 1200 748"/>
+    </g>
+  </g>
+
+  <path d="M52 160H330L456 552H174Z" fill="#DCEFF4" fill-opacity=".15"/>
+  <path d="M76 446L388 552L294 800H18Z" fill="#D4EAF0" fill-opacity=".08"/>
+
+  <g id="dining-window-depth">
+    <rect x="42" y="151" width="320" height="335" fill="#223138" fill-opacity=".25"/>
+    <rect x="53" y="159" width="298" height="317" fill="#F4F0E7"/>
+    <rect x="70" y="176" width="264" height="283" fill="url(#dining-window)"/>
+    <circle cx="274" cy="226" r="28" fill="#F3D27A"/>
+    <path d="M70 373L124 327L167 360L224 300L334 380V459H70Z" fill="#78998A"/>
+    <path d="M70 400L133 358L181 394L242 340L334 402V459H70Z" fill="#456D5D"/>
+    <path d="M202 176V459M70 318H334" stroke="#F4F0E7" stroke-width="10"/>
+    <path d="M57 165L70 176V459L57 470Z" fill="#FFFFFF" fill-opacity=".44"/>
+    <path d="M347 165L334 176V459L347 470Z" fill="#000000" fill-opacity=".11"/>
+    <path d="M24 146H380" stroke="#29373D" stroke-width="9" stroke-linecap="round"/>
+    <path d="M24 146C59 198 58 279 45 345S35 435 69 493H7V146Z" fill="#66747B"/>
+    <path d="M380 146C345 198 346 279 359 345S369 435 335 493H397V146Z" fill="#66747B"/>
+  </g>
+
+  <g id="dining-wall-art">
+    <rect x="445" y="164" width="132" height="116" rx="5" fill="#222B2F"/>
+    <rect x="456" y="175" width="110" height="94" fill="#F1EDE4"/>
+    <path d="M472 254L507 199L548 254Z" fill="#5B7D6D"/>
+    <circle cx="533" cy="201" r="14" fill="#D99B70"/>
+    <rect x="676" y="164" width="132" height="116" rx="5" fill="#222B2F"/>
+    <rect x="687" y="175" width="110" height="94" fill="#F1EDE4"/>
+    <circle cx="744" cy="221" r="29" fill="#D6A85A"/>
+    <path d="M701 252L735 205L785 252Z" fill="#587B8A"/>
+    <path d="M445 281H577M676 281H808" stroke="#000000" stroke-opacity=".13" stroke-width="7"/>
+  </g>
+
+  <!-- Rug and shadows precede all editable dining furniture. -->
+  <g id="dining-rug-underlay">
+    <path d="M231 623H921L1046 800H105Z" fill="#1D272C" fill-opacity=".14"/>
+    <path d="M258 631H897L990 800H165Z" fill="url(#dining-rug)"/>
+    <path d="M296 666H879M270 709H908M240 756H942" stroke="#FFFFFF" stroke-opacity=".12" stroke-width="4"/>
+    <path d="M432 631L394 800M590 631V800M748 631L788 800" stroke="#FFFFFF" stroke-opacity=".08" stroke-width="3"/>
+    <ellipse cx="601" cy="730" rx="367" ry="58" fill="#172126" fill-opacity=".17"/>
+  </g>
+
+  <g id="surface-furniture">
+    <!-- Sideboard. -->
+    <rect x="865" y="474" width="286" height="128" rx="7" fill="#7A00FF"/>
+    <path d="M865 474H1151V491H865Z" fill="#FFFFFF" fill-opacity=".16"/>
+    <path d="M865 585H1151V602H865Z" fill="#000000" fill-opacity=".18"/>
+    <rect x="885" y="507" width="75" height="61" rx="3" fill="#000000" fill-opacity=".14"/>
+    <rect x="972" y="507" width="75" height="61" rx="3" fill="#7A00FF"/>
+    <rect x="1059" y="507" width="72" height="61" rx="3" fill="#000000" fill-opacity=".14"/>
+
+    <!-- Rear chairs. -->
+    <path d="M423 474C423 442 446 423 477 423H520C551 423 574 443 574 474V606H423Z" fill="#7A00FF"/>
+    <path d="M438 455H559V478H438Z" fill="#FFFFFF" fill-opacity=".13"/>
+    <path d="M627 474C627 442 650 423 681 423H724C755 423 778 443 778 474V606H627Z" fill="#7A00FF"/>
+    <path d="M642 455H763V478H642Z" fill="#FFFFFF" fill-opacity=".13"/>
+
+    <!-- Front chairs remain visible around the table. -->
+    <path d="M291 586C291 551 317 531 352 531H395C430 531 456 553 456 587V692H291Z" fill="#7A00FF"/>
+    <path d="M308 566H439V593H308Z" fill="#FFFFFF" fill-opacity=".13"/>
+    <path d="M744 586C744 551 770 531 805 531H848C883 531 909 553 909 587V692H744Z" fill="#7A00FF"/>
+    <path d="M761 566H892V593H761Z" fill="#FFFFFF" fill-opacity=".13"/>
+
+    <!-- Central dining table. -->
+    <path d="M365 530H837L902 640H298Z" fill="#7A00FF"/>
+    <path d="M378 530H824L847 550H355Z" fill="#FFFFFF" fill-opacity=".17"/>
+    <path d="M298 625H902L891 640H309Z" fill="#000000" fill-opacity=".17"/>
+    <path d="M355 636H401L385 755H347ZM798 636H844L853 755H815Z" fill="#7A00FF"/>
+  </g>
+
+  <g id="dining-hardware-decor">
+    <circle cx="947" cy="539" r="4" fill="#D8C49A"/>
+    <circle cx="1033" cy="539" r="4" fill="#D8C49A"/>
+    <circle cx="1118" cy="539" r="4" fill="#D8C49A"/>
+    <path d="M318 687L302 761M432 687L447 761M770 687L754 761M884 687L899 761" stroke="#50392F" stroke-width="12" stroke-linecap="round"/>
+    <ellipse cx="601" cy="562" rx="75" ry="22" fill="#EAE3D8"/>
+    <ellipse cx="601" cy="558" rx="54" ry="13" fill="#C68A62"/>
+    <circle cx="557" cy="590" r="15" fill="#F0E8DA"/>
+    <circle cx="645" cy="590" r="15" fill="#F0E8DA"/>
+    <path d="M600 551C573 520 583 485 611 500C619 470 654 480 645 515C675 507 684 542 655 554Z" fill="#52765B"/>
+    <path d="M626 552V494M626 527L602 511M627 519L649 502" stroke="#355441" stroke-width="4"/>
+    <rect x="900" y="451" width="70" height="17" rx="3" fill="#E8E0D2"/>
+    <rect x="910" y="435" width="60" height="16" rx="3" fill="#C9785E"/>
+  </g>
+
+  <g id="dining-pendant">
+    <path d="M630 0V63" stroke="#344148" stroke-width="5"/>
+    <path d="M560 104L604 62H656L700 104Z" fill="#F3E6CD"/>
+    <ellipse cx="630" cy="104" rx="72" ry="12" fill="#DDAF55"/>
+    <path d="M630 116V187" stroke="#F2CF78" stroke-opacity=".15" stroke-width="150"/>
+  </g>
+</svg>

@@ -16,6 +16,7 @@ import 'package:color_lab/features/picker/presentation/color_explorer.dart';
 import 'package:color_lab/features/settings/application/app_preferences_providers.dart';
 import 'package:color_lab/features/settings/application/theme_mode_provider.dart';
 import 'package:color_lab/features/settings/domain/app_preferences.dart';
+import 'package:color_lab/features/room_studio/application/illustrated_room_controller.dart';
 import 'package:color_lab/features/room_studio/application/room_mask_controller.dart';
 import 'package:color_lab/features/room_studio/application/room_model_download_providers.dart';
 import 'package:color_lab/features/room_studio/models/room_model_store.dart';
@@ -28,6 +29,7 @@ import 'package:color_lab/features/room_studio/domain/mask_stroke.dart';
 import 'package:color_lab/features/room_studio/domain/room_layer.dart';
 import 'package:color_lab/features/room_studio/domain/room_layer_colors.dart';
 import 'package:color_lab/features/room_studio/domain/room_mask_state.dart';
+import 'package:color_lab/features/room_studio/presentation/illustrated_room_screen.dart';
 import 'package:color_lab/features/room_studio/presentation/room_mask_viewport.dart';
 import 'package:color_lab/features/room_studio/recolor/room_recolor_frame.dart';
 import 'package:color_lab/features/room_studio/segmentation/room_segmentation_service.dart';
@@ -1468,10 +1470,22 @@ void main() {
       );
       await _tap(tester, find.byType(ColorSwatchTile));
       await _tap(tester, find.text('Use in Room'));
-      expect(container.read(appRouterProvider).state.uri.path, '/room');
+      expect(
+        container.read(appRouterProvider).state.uri.path,
+        '/room/illustrated/study',
+      );
+      expect(find.byType(IllustratedRoomScreen), findsOneWidget);
       expect(container.read(roomColorProvider).hex, labHex);
+      final study = container.read(illustratedRoomProvider).draftFor('study')!;
+      expect(study.colors!.wall.hex, labHex);
+      expect(study.colors!.ceiling.hex, '#F8F4EB');
+      expect(study.colors!.floor.hex, '#C6AC84');
+      expect(study.colors!.furniture.hex, '#654A39');
       expect(container.read(roomMaskProvider).draft, same(draft));
       expect(container.read(colorHistoryProvider).requireValue, history);
+      await _tap(tester, _key('room-editor-back'));
+      expect(find.text('Keep this draft?'), findsOneWidget);
+      await _tap(tester, find.text('Keep draft'));
       await tester.tap(_key('nav-Room'));
       await _frames(tester);
       await tester.tap(_key('open-room-masks'));

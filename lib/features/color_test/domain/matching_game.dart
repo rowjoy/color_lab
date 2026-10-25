@@ -1,6 +1,41 @@
 import '../../../core/color/color_engine.dart';
+import '../../games/domain/game_difficulty.dart';
 
 enum MatchingPhase { editing, feedback, complete }
+
+final class MatchingRules {
+  const MatchingRules({required this.roundCount, required this.winningAverage})
+    : assert(roundCount >= 3 && roundCount <= 12),
+      assert(winningAverage >= 0 && winningAverage <= 100);
+
+  factory MatchingRules.fromDifficulty(GameDifficulty difficulty) =>
+      switch (difficulty) {
+        GameDifficulty.easy => const MatchingRules(
+          roundCount: 3,
+          winningAverage: 55,
+        ),
+        GameDifficulty.medium => const MatchingRules(
+          roundCount: 5,
+          winningAverage: 65,
+        ),
+        GameDifficulty.hard => const MatchingRules(
+          roundCount: 8,
+          winningAverage: 75,
+        ),
+      };
+
+  final int roundCount;
+  final int winningAverage;
+
+  @override
+  bool operator ==(Object other) =>
+      other is MatchingRules &&
+      other.roundCount == roundCount &&
+      other.winningAverage == winningAverage;
+
+  @override
+  int get hashCode => Object.hash(roundCount, winningAverage);
+}
 
 /// The exact displayed color pair frozen at submission.
 final class MatchingAttempt {
@@ -19,19 +54,27 @@ final class MatchingAttempt {
   bool get isExact => target == guess;
 }
 
-/// Immutable five-round session retaining raw HSL even at neutral endpoints.
+/// Immutable color-match session retaining raw HSL at neutral endpoints.
 final class MatchingGame {
-  factory MatchingGame.start(Iterable<RgbColor> targets) {
+  factory MatchingGame.start(
+    Iterable<RgbColor> targets, {
+    GameDifficulty difficulty = GameDifficulty.medium,
+    MatchingRules? rules,
+  }) {
     final snapshot = List<RgbColor>.unmodifiable(targets);
-    if (snapshot.length != 5 || snapshot.toSet().length != 5) {
+    final effectiveRules = rules ?? MatchingRules.fromDifficulty(difficulty);
+    if (snapshot.length != effectiveRules.roundCount ||
+        snapshot.toSet().length != snapshot.length) {
       throw ArgumentError.value(
         targets,
         'targets',
-        'Expected five distinct RGB colors',
+        'Expected ${effectiveRules.roundCount} distinct RGB colors',
       );
     }
     return MatchingGame._(
       targets: snapshot,
+      difficulty: difficulty,
+      rules: effectiveRules,
       roundIndex: 0,
       hue: 0,
       saturation: 0,
@@ -43,6 +86,8 @@ final class MatchingGame {
 
   const MatchingGame._({
     required this.targets,
+    required this.difficulty,
+    required this.rules,
     required this.roundIndex,
     required this.hue,
     required this.saturation,
@@ -52,6 +97,8 @@ final class MatchingGame {
   });
 
   final List<RgbColor> targets;
+  final GameDifficulty difficulty;
+  final MatchingRules rules;
   final int roundIndex;
   final double hue;
   final double saturation;
@@ -67,6 +114,9 @@ final class MatchingGame {
   int get totalScore => attempts.fold(0, (sum, attempt) => sum + attempt.score);
   double get averageScore =>
       attempts.isEmpty ? 0 : totalScore / attempts.length;
+  bool get won =>
+      phase == MatchingPhase.complete && averageScore >= rules.winningAverage;
+  int get rewardCoins => won ? difficulty.rewardCoins : 0;
 
   MatchingGame setHue(double value) {
     if (!value.isFinite || value < 0 || value >= 360) {
@@ -98,7 +148,9 @@ final class MatchingGame {
 
   MatchingGame advance() {
     if (phase != MatchingPhase.feedback) return this;
-    if (roundIndex == 4) return _copyWith(phase: MatchingPhase.complete);
+    if (roundIndex == targets.length - 1) {
+      return _copyWith(phase: MatchingPhase.complete);
+    }
     return _copyWith(
       roundIndex: roundIndex + 1,
       hue: 0,
@@ -117,6 +169,8 @@ final class MatchingGame {
     MatchingPhase? phase,
   }) => MatchingGame._(
     targets: targets,
+    difficulty: difficulty,
+    rules: rules,
     roundIndex: roundIndex ?? this.roundIndex,
     hue: hue ?? this.hue,
     saturation: saturation ?? this.saturation,

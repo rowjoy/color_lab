@@ -3,9 +3,12 @@ import 'package:color_lab/core/color/color_engine.dart';
 import 'package:color_lab/features/history/application/history_providers.dart';
 import 'package:color_lab/features/picker/application/color_share_service.dart';
 import 'package:color_lab/features/picker/presentation/color_explorer.dart';
+import 'package:color_lab/features/room_studio/application/illustrated_room_controller.dart';
 import 'package:color_lab/features/room_studio/application/room_color_provider.dart';
+import 'package:color_lab/features/room_studio/presentation/illustrated_room_screen.dart';
 import 'package:color_lab/features/settings/application/app_preferences_providers.dart';
 import 'package:color_lab/features/picker/application/acquisition_intent_providers.dart';
+import 'package:color_lab/routing/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -118,8 +121,41 @@ void main() {
       await tester.ensureVisible(find.text('Use in Room'));
       await tester.tap(find.text('Use in Room'));
       await tester.pumpAndSettle();
+      expect(
+        container.read(appRouterProvider).state.uri.path,
+        '/room/illustrated/study',
+      );
       expect(container.read(roomColorProvider).hex, '#00FFFF');
-      expect(find.byKey(const ValueKey('screen-Room')), findsOneWidget);
+      final draft = container.read(illustratedRoomProvider).draftFor('study')!;
+      expect(draft.colors!.wall.hex, '#00FFFF');
+      expect(draft.colors!.ceiling.hex, '#F8F4EB');
+      expect(draft.colors!.floor.hex, '#C6AC84');
+      expect(draft.colors!.furniture.hex, '#654A39');
+      expect(find.byType(IllustratedRoomScreen), findsOneWidget);
     },
   );
+
+  testWidgets('Use in Room Cancel leaves dirty Study and route untouched', (
+    tester,
+  ) async {
+    final container = await open(tester, RecordingShare());
+    final controller = container.read(illustratedRoomProvider.notifier);
+    controller.applyPalette('warm-natural');
+    final before = container.read(illustratedRoomProvider);
+    final roomBefore = container.read(roomColorProvider);
+    final routeBefore = container.read(appRouterProvider).state.uri.path;
+
+    await tester.ensureVisible(find.text('Use in Room'));
+    await tester.tap(find.text('Use in Room'));
+    await tester.pumpAndSettle();
+    expect(find.text('Replace this room draft?'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('room-draft-conflict-cancel')));
+    await tester.pumpAndSettle();
+
+    expect(container.read(illustratedRoomProvider), same(before));
+    expect(container.read(roomColorProvider), roomBefore);
+    expect(container.read(appRouterProvider).state.uri.path, routeBefore);
+    expect(find.byType(IllustratedRoomScreen), findsNothing);
+    expect(find.byType(ColorDetails), findsOneWidget);
+  });
 }
