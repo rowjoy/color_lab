@@ -11,7 +11,9 @@ Source repository: https://github.com/mlcommons/mobile_open
 Revision: 404e4c284d01b1c9e415b09d7cf8aa0648c4015d
 Original path: vision/mosaic/models_and_checkpoints/R4/mobile_segmenter_r4_quant_argmax_uint8.tflite
 License path: vision/mosaic/LICENCE.md
-Bundled filename: assets/models/room_seg.tflite
+Local development filename: assets/models/room_seg.tflite
+Distribution: https://github.com/rowjoy/color_lab/releases/tag/room-models-v1
+Runtime filename: room_seg.tflite in app-private model storage (not bundled).
 SHA-256: da8b3822a22fde45ecaf0ff32022287eff58b500096971b04f3c1b292da66a3c
 Size: 1,978,000 bytes
 Changes: filename only; model bytes are unmodified.

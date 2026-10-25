@@ -62,17 +62,38 @@ Association License source and remaining provenance/runtime limits. Exact
 upstream notices and the production model asset were subsequently retained in
 Task 1; the historical spike alone was not the completed model-license bundle.
 
-## Bundled Room model and independent test fixture
+## Downloaded Room models and independent test fixture
 
-Task 1 now bundles the unmodified MOSAIC R4 UINT8 model from
+Color Lab uses the unmodified MOSAIC R4 UINT8 model from
 [`mlcommons/mobile_open` revision `404e4c284d01b1c9e415b09d7cf8aa0648c4015d`](https://github.com/mlcommons/mobile_open/tree/404e4c284d01b1c9e415b09d7cf8aa0648c4015d).
 The [exact model](https://raw.githubusercontent.com/mlcommons/mobile_open/404e4c284d01b1c9e415b09d7cf8aa0648c4015d/vision/mosaic/models_and_checkpoints/R4/mobile_segmenter_r4_quant_argmax_uint8.tflite)
-is renamed `assets/models/room_seg.tflite`, with no byte changes, 1,978,000 bytes.
+is renamed `room_seg.tflite`, with no byte changes, 1,978,000 bytes. The local
+development copy may live at `assets/models/room_seg.tflite`, but is not bundled.
 The complete literal [MLCommons Association License](https://raw.githubusercontent.com/mlcommons/mobile_open/404e4c284d01b1c9e415b09d7cf8aa0648c4015d/vision/mosaic/LICENCE.md)
 is retained in `assets/licenses/room-model-LICENSE.txt`. Its copyright notice is
 Copyright 2020 MLCommons Association. `room-model-NOTICE.txt` records provenance
 and the filename-only change; no separate upstream NOTICE was found in the
 inspected source tree. Both license files are registered in the app license list.
+
+The second model is the unmodified [MiDaS v2.1 mobile model](https://github.com/isl-org/MiDaS/releases/download/v2_1/model_opt.tflite),
+renamed `room_depth.tflite`: 66,338,288 bytes, SHA-256
+`93d871071edff1218973ce25ee27ce95ccd20450c70a55e1b89efa3f5a772cdd`.
+Its [MIT license](https://github.com/isl-org/MiDaS/blob/v2_1/LICENSE), copyright
+2019 Intel ISL, and provenance are retained in `room-depth-LICENSE.txt` and
+`room-depth-NOTICE.txt`, registered in the app's license list. The depth runner
+uses whole-photo bilinear resizing to 256×256 and `(channel - 115) / 58`, following
+the upstream mobile normalization but deliberately not its center crop. Relative
+inverse depth protects Wall ownership against nearer foreground objects; it is
+not an object detector or a metric distance measurement.
+
+Both unchanged model binaries and all four license/notice files are distributed
+in the fixed [Color Lab room-models-v1 Release](https://github.com/rowjoy/color_lab/releases/tag/room-models-v1).
+Only the small descriptor and licenses are bundled. App startup checks saved files
+and streams missing or corrupt public HTTPS assets into app-private support storage, verifies exact size
+and pinned SHA-256, then promotes complete files. Cached files are verified before
+reuse and support offline analysis. Partial, oversized, corrupt and failed
+downloads are not promoted; retries preserve already verified peer models. The
+app contains no GitHub credential and never uploads room photos.
 
 `test/fixtures/room/reference_room.png` is a lossless PNG of the retained Daderot
 CC0 JPEG's decoded/oriented RGB using Dart `image 4.12.0`. The PNG and decoded JPEG

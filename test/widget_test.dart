@@ -1,11 +1,27 @@
 import 'package:color_lab/app.dart';
 import 'package:color_lab/core/color/color_engine.dart';
+import 'package:color_lab/features/color_test/presentation/matching_screen.dart';
+import 'package:color_lab/features/games/application/game_profiles_provider.dart';
+import 'package:color_lab/features/games/domain/game_difficulty.dart';
+import 'package:color_lab/features/games/domain/game_id.dart';
+import 'package:color_lab/features/games/domain/game_launch.dart';
+import 'package:color_lab/features/games/domain/game_level.dart';
+import 'package:color_lab/features/games/domain/game_profiles_state.dart';
+import 'package:color_lab/features/games/presentation/badges_screen.dart';
+import 'package:color_lab/features/games/presentation/bubble_shooter_screen.dart';
+import 'package:color_lab/features/games/presentation/fruit_pop_screen.dart';
+import 'package:color_lab/features/games/presentation/game_level_map_screen.dart';
+import 'package:color_lab/features/games/presentation/games_screen.dart';
+import 'package:color_lab/features/games/presentation/leaderboard_screen.dart';
+import 'package:color_lab/features/games/presentation/rainbow_rings_screen.dart';
+import 'package:color_lab/features/games/presentation/water_sort_screen.dart';
 import 'package:color_lab/features/history/application/history_providers.dart';
 import 'package:color_lab/features/picker/presentation/color_explorer.dart';
 import 'package:color_lab/features/settings/application/theme_mode_provider.dart';
 import 'package:color_lab/features/settings/application/app_preferences_providers.dart';
 import 'package:color_lab/features/picker/application/acquisition_intent_providers.dart';
 import 'package:color_lab/core/widgets/widgets.dart';
+import 'package:color_lab/routing/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,10 +29,17 @@ import 'package:flutter_test/flutter_test.dart';
 import 'support/in_memory_color_history_repository.dart';
 import 'support/in_memory_app_preferences_repository.dart';
 import 'support/in_memory_acquisition_intent_store.dart';
+import 'support/in_memory_game_profiles_repository.dart';
 
 void main() {
-  Future<ProviderContainer> launch(WidgetTester tester) async {
+  Future<ProviderContainer> launch(
+    WidgetTester tester, {
+    InMemoryGameProfilesRepository? gameProfilesRepository,
+  }) async {
     final repository = InMemoryColorHistoryRepository();
+    final profilesRepository =
+        gameProfilesRepository ??
+        InMemoryGameProfilesRepository(initialState: _emptyProfilesState());
     final container = ProviderContainer(
       overrides: [
         acquisitionIntentStoreProvider.overrideWith(
@@ -26,6 +49,9 @@ void main() {
           (ref) async => InMemoryAppPreferencesRepository(),
         ),
         colorHistoryRepositoryProvider.overrideWith((ref) async => repository),
+        gameProfilesRepositoryProvider.overrideWith(
+          (ref) async => profilesRepository,
+        ),
         colorNamerProvider.overrideWith(
           (ref) async => ColorNamer([
             NamedColor('Red', RgbColor(255, 0, 0)),
@@ -43,6 +69,24 @@ void main() {
     );
     await tester.pumpAndSettle();
     return container;
+  }
+
+  Future<void> openRoute(
+    WidgetTester tester,
+    ProviderContainer container,
+    String path, {
+    Object? extra,
+  }) async {
+    container.read(appRouterProvider).go(path, extra: extra);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
+    await tester.pump();
+  }
+
+  Future<void> finishRouteTransition(WidgetTester tester) async {
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
+    await tester.pump();
   }
 
   testWidgets('starts in Capture and opens each destination', (tester) async {
@@ -224,4 +268,342 @@ void main() {
       expect(tester.widgetList<Slider>(find.byType(Slider)).first.value, 120);
     },
   );
+
+  group('typed game routes', () {
+    testWidgets('all five play routes require and retain their typed launch', (
+      tester,
+    ) async {
+      final container = await launch(tester);
+
+      for (final gameId in GameId.values) {
+        final gameLaunch = _gameLaunch(gameId);
+        await openRoute(
+          tester,
+          container,
+          _playPath(gameId),
+          extra: gameLaunch,
+        );
+
+        final routedLaunch = switch (gameId) {
+          GameId.bubbleShooter =>
+            tester
+                .widget<BubbleShooterScreen>(find.byType(BubbleShooterScreen))
+                .launch,
+          GameId.fruitPop =>
+            tester.widget<FruitPopScreen>(find.byType(FruitPopScreen)).launch,
+          GameId.waterSort =>
+            tester.widget<WaterSortScreen>(find.byType(WaterSortScreen)).launch,
+          GameId.rainbowRings =>
+            tester
+                .widget<RainbowRingsScreen>(find.byType(RainbowRingsScreen))
+                .launch,
+          GameId.colorMatch =>
+            tester.widget<MatchingScreen>(find.byType(MatchingScreen)).launch,
+        };
+        expect(routedLaunch, same(gameLaunch), reason: gameId.storageId);
+        expect(tester.takeException(), isNull, reason: gameId.storageId);
+      }
+
+      final hardLaunch = _gameLaunch(
+        GameId.waterSort,
+        level: 30,
+        attemptId: 'hard-water-sort',
+      );
+      await openRoute(tester, container, '/water-sort', extra: hardLaunch);
+      final routedHardLaunch = tester
+          .widget<WaterSortScreen>(find.byType(WaterSortScreen))
+          .launch;
+      expect(routedHardLaunch, same(hardLaunch));
+      expect(routedHardLaunch.descriptor.tier, GameTier.hard);
+    });
+
+    testWidgets(
+      'missing, wrong-type, and mismatched play data opens a safe screen',
+      (tester) async {
+        final repository = InMemoryGameProfilesRepository(
+          initialState: _emptyProfilesState(),
+        );
+        final container = await launch(
+          tester,
+          gameProfilesRepository: repository,
+        );
+
+        for (final gameId in GameId.values) {
+          if (gameId != GameId.colorMatch) {
+            await openRoute(tester, container, _playPath(gameId));
+            expect(
+              find.byKey(const ValueKey('invalid-game-launch')),
+              findsOneWidget,
+              reason: '${gameId.storageId} missing launch',
+            );
+          }
+
+          await openRoute(
+            tester,
+            container,
+            _playPath(gameId),
+            extra: GameDifficulty.easy,
+          );
+          expect(
+            find.byKey(const ValueKey('invalid-game-launch')),
+            findsOneWidget,
+            reason: '${gameId.storageId} wrong launch type',
+          );
+
+          final otherGame =
+              GameId.values[(GameId.values.indexOf(gameId) + 1) %
+                  GameId.values.length];
+          await openRoute(
+            tester,
+            container,
+            _playPath(gameId),
+            extra: _gameLaunch(otherGame),
+          );
+          expect(
+            find.byKey(const ValueKey('invalid-game-launch')),
+            findsOneWidget,
+            reason: '${gameId.storageId} mismatched launch',
+          );
+          expect(tester.takeException(), isNull, reason: gameId.storageId);
+        }
+
+        await openRoute(tester, container, '/bubble-shooter');
+        expect(find.byType(BubbleShooterScreen), findsNothing);
+        expect(find.text('Easy'), findsNothing);
+        expect(repository.transitionCount, 0);
+        expect(repository.writeAttempts, 0);
+      },
+    );
+
+    testWidgets('/matching without extra remains isolated Lab practice', (
+      tester,
+    ) async {
+      final repository = InMemoryGameProfilesRepository(
+        initialState: _emptyProfilesState(),
+      );
+      final container = await launch(
+        tester,
+        gameProfilesRepository: repository,
+      );
+
+      await openRoute(tester, container, '/matching');
+
+      final screen = tester.widget<MatchingScreen>(find.byType(MatchingScreen));
+      expect(screen.launch, isNull);
+      expect(screen.onOpenMap, isNull);
+      expect(find.byKey(const ValueKey('screen-Matching')), findsOneWidget);
+      expect(repository.transitionCount, 0);
+      expect(repository.writeAttempts, 0);
+    });
+
+    testWidgets('map, badges, and leaderboard routes parse stable game IDs', (
+      tester,
+    ) async {
+      final container = await launch(tester);
+
+      for (final gameId in GameId.values) {
+        await openRoute(tester, container, '/games/${gameId.storageId}/map');
+        expect(
+          tester
+              .widget<GameLevelMapScreen>(find.byType(GameLevelMapScreen))
+              .gameId,
+          gameId,
+        );
+      }
+
+      await openRoute(tester, container, '/games/not-a-game/map');
+      expect(find.byType(GameLevelMapScreen), findsNothing);
+      expect(find.byKey(const ValueKey('invalid-game-launch')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+
+      await openRoute(tester, container, '/games/BubbleShooter/map');
+      expect(find.byType(GameLevelMapScreen), findsNothing);
+      expect(find.byKey(const ValueKey('invalid-game-launch')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+
+      await openRoute(tester, container, '/games/badges');
+      expect(find.byType(BadgesScreen), findsOneWidget);
+
+      await openRoute(tester, container, '/games/leaderboard');
+      expect(find.byType(LeaderboardScreen), findsOneWidget);
+    });
+
+    testWidgets('Games hub callbacks open every destination and Back returns', (
+      tester,
+    ) async {
+      final container = await launch(tester);
+      final router = container.read(appRouterProvider);
+      await openRoute(tester, container, '/games');
+
+      for (final gameId in GameId.values) {
+        tester.widget<GamesScreen>(find.byType(GamesScreen)).onOpenMap!(gameId);
+        await finishRouteTransition(tester);
+        expect(
+          tester
+              .widget<GameLevelMapScreen>(find.byType(GameLevelMapScreen))
+              .gameId,
+          gameId,
+        );
+        router.pop();
+        await finishRouteTransition(tester);
+        expect(find.byType(GamesScreen), findsOneWidget);
+      }
+
+      tester.widget<GamesScreen>(find.byType(GamesScreen)).onOpenBadges!();
+      await finishRouteTransition(tester);
+      expect(find.byType(BadgesScreen), findsOneWidget);
+      router.pop();
+      await finishRouteTransition(tester);
+
+      tester.widget<GamesScreen>(find.byType(GamesScreen)).onOpenLeaderboard!();
+      await finishRouteTransition(tester);
+      expect(find.byType(LeaderboardScreen), findsOneWidget);
+      router.pop();
+      await finishRouteTransition(tester);
+
+      for (final gameId in GameId.values) {
+        final gameLaunch = _gameLaunch(gameId);
+        tester.widget<GamesScreen>(find.byType(GamesScreen)).onLaunchGame!(
+          gameLaunch,
+        );
+        await finishRouteTransition(tester);
+        expect(_findGameScreen(gameId), findsOneWidget);
+        router.pop();
+        await finishRouteTransition(tester);
+        expect(find.byType(GamesScreen), findsOneWidget);
+      }
+    });
+
+    testWidgets('game Map callbacks and map replay preserve Back history', (
+      tester,
+    ) async {
+      final container = await launch(tester);
+      final router = container.read(appRouterProvider);
+
+      for (final gameId in GameId.values) {
+        final gameLaunch = _gameLaunch(gameId);
+        await openRoute(
+          tester,
+          container,
+          _playPath(gameId),
+          extra: gameLaunch,
+        );
+
+        final openMap = switch (gameId) {
+          GameId.bubbleShooter =>
+            tester
+                .widget<BubbleShooterScreen>(find.byType(BubbleShooterScreen))
+                .onOpenMap,
+          GameId.fruitPop =>
+            tester
+                .widget<FruitPopScreen>(find.byType(FruitPopScreen))
+                .onOpenMap,
+          GameId.waterSort =>
+            tester
+                .widget<WaterSortScreen>(find.byType(WaterSortScreen))
+                .onOpenMap,
+          GameId.rainbowRings =>
+            tester
+                .widget<RainbowRingsScreen>(find.byType(RainbowRingsScreen))
+                .onOpenMap,
+          GameId.colorMatch =>
+            tester
+                .widget<MatchingScreen>(find.byType(MatchingScreen))
+                .onOpenMap,
+        };
+        expect(openMap, isNotNull, reason: gameId.storageId);
+        openMap!();
+        await finishRouteTransition(tester);
+        expect(
+          tester
+              .widget<GameLevelMapScreen>(find.byType(GameLevelMapScreen))
+              .gameId,
+          gameId,
+        );
+
+        final replay = _gameLaunch(
+          gameId,
+          attemptId: 'replay-${gameId.storageId}',
+          playKind: GamePlayKind.replay,
+        );
+        tester
+            .widget<GameLevelMapScreen>(find.byType(GameLevelMapScreen))
+            .onLaunchGame!(replay);
+        await finishRouteTransition(tester);
+        expect(_findGameScreen(gameId), findsOneWidget);
+
+        router.pop();
+        await finishRouteTransition(tester);
+        expect(find.byType(GameLevelMapScreen), findsOneWidget);
+        router.pop();
+        await finishRouteTransition(tester);
+        expect(_findGameScreen(gameId), findsOneWidget);
+      }
+    });
+
+    testWidgets('invalid launch recovery returns safely to Games', (
+      tester,
+    ) async {
+      final container = await launch(tester);
+      await openRoute(
+        tester,
+        container,
+        '/water-sort',
+        extra: const <String, Object?>{'difficulty': 'easy'},
+      );
+
+      await tester.tap(find.byKey(const ValueKey('invalid-game-launch-back')));
+      await finishRouteTransition(tester);
+
+      expect(find.byType(GamesScreen), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  });
 }
+
+GameProfilesState _emptyProfilesState() => GameProfilesState(
+  activeProfileId: null,
+  profiles: const {},
+  legacyMigrationComplete: true,
+);
+
+String _playPath(GameId gameId) => switch (gameId) {
+  GameId.bubbleShooter => '/bubble-shooter',
+  GameId.fruitPop => '/fruit-pop',
+  GameId.waterSort => '/water-sort',
+  GameId.rainbowRings => '/rainbow-rings',
+  GameId.colorMatch => '/matching',
+};
+
+GameLaunch _gameLaunch(
+  GameId gameId, {
+  String? attemptId,
+  GamePlayKind playKind = GamePlayKind.current,
+  int level = 1,
+}) {
+  final identity = (GameId.values.indexOf(gameId) + 1) * 1000 + level;
+  return GameLaunch(
+    profileId: 'profile-router-test',
+    gameId: gameId,
+    descriptor: GameLevelDescriptor(
+      gameId: gameId,
+      level: level,
+      seed: identity,
+      generatorVersion: 1,
+      retrySalt: 0,
+      fingerprint: identity.toRadixString(16).padLeft(64, '0'),
+      tier: GameTier.forLevel(level),
+      levelPressure: levelPressureFor(level),
+    ),
+    attemptId: attemptId ?? 'attempt-${gameId.storageId}',
+    playKind: playKind,
+  );
+}
+
+Finder _findGameScreen(GameId gameId) => switch (gameId) {
+  GameId.bubbleShooter => find.byType(BubbleShooterScreen),
+  GameId.fruitPop => find.byType(FruitPopScreen),
+  GameId.waterSort => find.byType(WaterSortScreen),
+  GameId.rainbowRings => find.byType(RainbowRingsScreen),
+  GameId.colorMatch => find.byType(MatchingScreen),
+};

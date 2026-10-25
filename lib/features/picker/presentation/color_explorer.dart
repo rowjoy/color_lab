@@ -9,9 +9,9 @@ import '../../../core/widgets/widgets.dart';
 import '../../../data/assets/color_name_asset_loader.dart';
 import '../../history/domain/saved_color.dart';
 import '../../history/presentation/save_color_actions.dart';
-import '../../room_studio/application/room_color_provider.dart';
 import '../../formula/application/formula_providers.dart';
 import '../../harmonies/application/harmony_controller.dart';
+import '../../room_studio/presentation/illustrated_room_navigation.dart';
 import '../application/color_share_service.dart';
 
 final colorNamerProvider = FutureProvider<ColorNamer>(
@@ -111,12 +111,11 @@ Future<void> showColorDetails(
       return;
     }
     if (result.destination == _DetailDestination.room) {
-      ProviderScope.containerOf(
-        context,
-        listen: false,
-      ).read(roomColorProvider.notifier).setColor(result.color);
-      context.go('/room');
-      return;
+      final opened = await openStudyWallHandoff(context, result.color);
+      if (opened || !context.mounted) return;
+      selected = result.color;
+      heroTag = null;
+      continue;
     }
     selected = result.color;
     heroTag = null;

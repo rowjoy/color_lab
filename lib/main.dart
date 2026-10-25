@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'app.dart';
+import 'bootstrap.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,5 +22,5 @@ void main() {
       ], await rootBundle.loadString(asset.$2));
     });
   }
-  runApp(const ProviderScope(child: ColorLabApp()));
+  runApp(const ProviderScope(child: ColorLabBootstrap()));
 }

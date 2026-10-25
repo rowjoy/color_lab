@@ -488,7 +488,7 @@ class _MaskPainter extends CustomPainter {
       rect,
       Paint()
         ..color = Colors.white.withValues(alpha: opacity)
-        ..filterQuality = FilterQuality.none,
+        ..filterQuality = FilterQuality.medium,
     );
     if (photo != null) draw(photo!, 1);
     if (overlay != null && photo != null) draw(overlay!, .45);

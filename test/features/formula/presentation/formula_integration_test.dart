@@ -12,7 +12,9 @@ import 'package:color_lab/features/mixer/presentation/mixer_screen.dart';
 import 'package:color_lab/features/picker/application/camera_session.dart';
 import 'package:color_lab/features/picker/presentation/camera_picker_screen.dart';
 import 'package:color_lab/features/picker/presentation/color_explorer.dart';
+import 'package:color_lab/features/room_studio/application/illustrated_room_controller.dart';
 import 'package:color_lab/features/room_studio/application/room_color_provider.dart';
+import 'package:color_lab/features/room_studio/presentation/illustrated_room_screen.dart';
 import 'package:color_lab/features/settings/application/app_preferences_providers.dart';
 import 'package:color_lab/features/picker/application/acquisition_intent_providers.dart';
 import 'package:color_lab/features/settings/domain/app_preferences.dart';
@@ -554,8 +556,17 @@ void main() {
     await tester.ensureVisible(find.text('Use in Room'));
     await tester.tap(find.text('Use in Room'));
     await tester.pumpAndSettle();
+    expect(
+      container.read(appRouterProvider).state.uri.path,
+      '/room/illustrated/study',
+    );
     expect(container.read(roomColorProvider).hex, '#777777');
-    expect(find.byKey(const ValueKey('screen-Room')), findsOneWidget);
+    final room = container.read(illustratedRoomProvider).draftFor('study')!;
+    expect(room.colors!.wall.hex, '#777777');
+    expect(room.colors!.ceiling.hex, '#F8F4EB');
+    expect(room.colors!.floor.hex, '#C6AC84');
+    expect(room.colors!.furniture.hex, '#654A39');
+    expect(find.byType(IllustratedRoomScreen), findsOneWidget);
   });
 
   testWidgets('formula root route obeys first-run guard', (tester) async {

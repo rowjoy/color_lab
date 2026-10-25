@@ -1,7 +1,14 @@
+import 'dart:math';
+
 import 'package:color_lab/core/color/color_engine.dart';
 import 'package:color_lab/features/color_test/application/matching_game_controller.dart';
+import 'package:color_lab/features/color_test/domain/color_match_level_adapter.dart';
 import 'package:color_lab/features/color_test/domain/matching_game.dart';
 import 'package:color_lab/features/formula/application/formula_providers.dart';
+import 'package:color_lab/features/games/domain/game_difficulty.dart';
+import 'package:color_lab/features/games/domain/game_id.dart';
+import 'package:color_lab/features/games/domain/game_launch.dart';
+import 'package:color_lab/features/games/domain/game_level.dart';
 import 'package:color_lab/features/harmonies/application/harmony_controller.dart';
 import 'package:color_lab/features/history/application/history_providers.dart';
 import 'package:color_lab/features/mixer/application/mixer_controller.dart';
@@ -40,6 +47,35 @@ void main() {
     expect(game.targets.length, 5);
     expect(game.targets.toSet().length, 5);
     expect(game.guess.hex, '#808080');
+    expect(game.rules, const MatchingRules(roundCount: 5, winningAverage: 65));
+  });
+
+  test('legacy difficulty start and restart retain exact practice rules', () {
+    final container = ProviderContainer(
+      overrides: [
+        matchingTargetGeneratorProvider.overrideWithValue(_firstTargets),
+        matchingLevelTargetGeneratorProvider.overrideWithValue(
+          (count) =>
+              generateMatchingTargets(random: Random(count), count: count),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    final controller = container.read(matchingGameProvider.notifier);
+
+    controller.start(GameDifficulty.easy);
+    var game = container.read(matchingGameProvider);
+    expect(game.rules, const MatchingRules(roundCount: 3, winningAverage: 55));
+    expect(game.targets, hasLength(3));
+    controller.restart();
+    game = container.read(matchingGameProvider);
+    expect(game.rules, const MatchingRules(roundCount: 3, winningAverage: 55));
+    expect(game.targets, hasLength(3));
+
+    controller.start(GameDifficulty.hard);
+    game = container.read(matchingGameProvider);
+    expect(game.rules, const MatchingRules(roundCount: 8, winningAverage: 75));
+    expect(game.targets, hasLength(8));
   });
 
   test(
@@ -196,4 +232,109 @@ void main() {
       expect(container.read(roomColorProvider), blue);
     },
   );
+
+  test(
+    'profile session builds deterministic descriptor rules in isolation',
+    () {
+      final descriptor = _descriptor(level: 10, seed: 9123);
+      final launch = GameLaunch(
+        profileId: 'profile-1',
+        gameId: GameId.colorMatch,
+        descriptor: descriptor,
+        attemptId: 'profile-1:color_match:1',
+        playKind: GamePlayKind.current,
+      );
+      final key = MatchingProfileSessionKey(launch);
+      final container = containerFor(_firstTargets);
+      final expected = ColorMatchLevelAdapter().build(descriptor);
+
+      final profileGame = container.read(profileMatchingGameProvider(key));
+      expect(profileGame.targets, expected.targets);
+      expect(profileGame.rules, expected.rules);
+      expect(profileGame.targets, isNot(_firstTargets()));
+      expect(container.read(matchingGameProvider).targets, _firstTargets());
+
+      container
+          .read(profileMatchingGameProvider(key).notifier)
+          .setSaturation(1);
+      expect(container.read(profileMatchingGameProvider(key)).saturation, 1);
+      expect(container.read(matchingGameProvider).saturation, 0);
+    },
+  );
+
+  test('profile session rejects a launch for another game', () {
+    final launch = GameLaunch(
+      profileId: 'profile-1',
+      gameId: GameId.waterSort,
+      descriptor: _descriptor(level: 1, seed: 7, gameId: GameId.waterSort),
+      attemptId: 'profile-1:water_sort:1',
+      playKind: GamePlayKind.current,
+    );
+
+    expect(() => MatchingProfileSessionKey(launch), throwsArgumentError);
+  });
+
+  test('profile sessions are keyed by attempt ID and auto-dispose', () async {
+    final firstLaunch = GameLaunch(
+      profileId: 'profile-1',
+      gameId: GameId.colorMatch,
+      descriptor: _descriptor(level: 10, seed: 41),
+      attemptId: 'profile-1:color_match:4',
+      playKind: GamePlayKind.current,
+    );
+    final equivalentKey = MatchingProfileSessionKey(firstLaunch);
+    final sameAttemptKey = MatchingProfileSessionKey(firstLaunch);
+    final secondLaunch = GameLaunch(
+      profileId: 'profile-1',
+      gameId: GameId.colorMatch,
+      descriptor: firstLaunch.descriptor,
+      attemptId: 'profile-1:color_match:5',
+      playKind: GamePlayKind.current,
+    );
+    final secondKey = MatchingProfileSessionKey(secondLaunch);
+    final container = containerFor(_firstTargets);
+    final listener = container.listen(
+      profileMatchingGameProvider(equivalentKey),
+      (_, _) {},
+    );
+    final firstController = container.read(
+      profileMatchingGameProvider(equivalentKey).notifier,
+    );
+    firstController.setHue(120);
+
+    expect(equivalentKey, sameAttemptKey);
+    expect(
+      container.read(profileMatchingGameProvider(sameAttemptKey)).hue,
+      120,
+    );
+    expect(container.read(profileMatchingGameProvider(secondKey)).hue, 0);
+
+    listener.close();
+    await container.pump();
+    final reopened = container.listen(
+      profileMatchingGameProvider(equivalentKey),
+      (_, _) {},
+    );
+    addTearDown(reopened.close);
+    expect(reopened.read().hue, 0);
+    expect(
+      container.read(profileMatchingGameProvider(equivalentKey).notifier),
+      isNot(same(firstController)),
+    );
+  });
 }
+
+GameLevelDescriptor _descriptor({
+  required int level,
+  required int seed,
+  GameId gameId = GameId.colorMatch,
+}) => GameLevelDescriptor(
+  gameId: gameId,
+  level: level,
+  seed: seed,
+  generatorVersion: 1,
+  retrySalt: 0,
+  fingerprint: 'a' * 64,
+  tier: GameTier.forLevel(level),
+  levelPressure: levelPressureFor(level),
+);

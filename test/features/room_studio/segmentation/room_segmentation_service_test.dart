@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:color_lab/features/picker/domain/prepared_photo.dart';
 import 'package:color_lab/features/room_studio/domain/mask_bitmap.dart';
+import 'package:color_lab/features/room_studio/models/room_model_store.dart';
 import 'package:color_lab/features/room_studio/segmentation/raw_segmentation.dart';
 import 'package:color_lab/features/room_studio/segmentation/room_depth_runner.dart';
 import 'package:color_lab/features/room_studio/segmentation/room_wall_depth_protection.dart';
@@ -146,6 +147,103 @@ final class DepthRunner implements RoomDepthRunner {
 }
 
 void main() {
+  test(
+    'cancelled queued analysis cannot start setup after an older request',
+    () async {
+      var generation = 0;
+      final initialization = Completer<RoomSegmentationWorker>();
+      final worker = ControlledWorker();
+      final service = IsolateRoomSegmentationService(
+        workerFactory: () => initialization.future,
+        cancellationGeneration: () => generation,
+      );
+      final firstPhoto = photo(10);
+      final first = service.analyze(photoId: 'active', photo: firstPhoto);
+      final queued = service.analyze(
+        photoId: 'cancelled-waiter',
+        photo: photo(20),
+      );
+      final rejected = expectLater(
+        queued,
+        throwsA(failure(RoomSegmentationFailureKind.processing)),
+      );
+      generation++;
+      initialization.complete(worker);
+      await pump();
+      worker.invocations.single.complete(
+        MaskBitmap(width: 3, height: 2, labels: Uint8List(6)),
+      );
+      await first;
+      await rejected;
+      expect(worker.photos, [same(firstPhoto)]);
+      final freshPhoto = photo(30);
+      final fresh = service.analyze(photoId: 'fresh', photo: freshPhoto);
+      await pump();
+      worker.invocations.last.complete(
+        MaskBitmap(width: 3, height: 2, labels: Uint8List(6)),
+      );
+      await fresh;
+      expect(worker.photos, [same(firstPhoto), same(freshPhoto)]);
+      await service.close();
+    },
+  );
+
+  test(
+    'cancel while descriptor is pending prevents later download and allows fresh retry',
+    () async {
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      final gate = Completer<ByteData?>();
+      final json = File(
+        'assets/models/room_seg_descriptor.json',
+      ).readAsBytesSync();
+      var directoryCalls = 0;
+      var clientCalls = 0;
+      final store = RoomModelStore(
+        directory: () async {
+          directoryCalls++;
+          throw const FileSystemException('test stops before filesystem work');
+        },
+        clientFactory: () {
+          clientCalls++;
+          throw const SocketException('must not connect');
+        },
+      );
+      addTearDown(() async {
+        if (!gate.isCompleted) gate.complete(ByteData.sublistView(json));
+        await store.close();
+        messenger.setMockMessageHandler('flutter/assets', null);
+        rootBundle.clear();
+      });
+      rootBundle.clear();
+      messenger.setMockMessageHandler('flutter/assets', (_) => gate.future);
+      final pending = createRoomSegmentationWorker(modelStore: store);
+      final rejected = expectLater(
+        pending,
+        throwsA(failure(RoomSegmentationFailureKind.modelUnavailable)),
+      );
+      store.cancel();
+      gate.complete(ByteData.sublistView(json));
+      await rejected;
+      expect(
+        directoryCalls,
+        0,
+        reason: 'Cancelled setup must not reach model storage',
+      );
+      expect(clientCalls, 0);
+      rootBundle.clear();
+      await expectLater(
+        createRoomSegmentationWorker(modelStore: store),
+        throwsA(failure(RoomSegmentationFailureKind.modelUnavailable)),
+      );
+      expect(
+        directoryCalls,
+        1,
+        reason: 'A new request after cancellation must be permitted',
+      );
+    },
+  );
+
   TestWidgetsFlutterBinding.ensureInitialized();
 
   test('production frame excludes nearer foreground from semantic Wall', () {
@@ -222,6 +320,48 @@ void main() {
         throwsA(failure(RoomSegmentationFailureKind.processing)),
       );
       await service.close();
+    },
+  );
+
+  test(
+    'factory maps file download failure without requesting bundled models',
+    () async {
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      final requested = <String>[];
+      final json = File(
+        'assets/models/room_seg_descriptor.json',
+      ).readAsBytesSync();
+      final root = Directory.systemTemp.createTempSync(
+        'room-factory-store-test-',
+      );
+      final store = RoomModelStore(
+        directory: () async => root,
+        clientFactory: () => throw const SocketException('offline'),
+      );
+      addTearDown(() async {
+        await store.close();
+        root.deleteSync(recursive: true);
+        messenger.setMockMessageHandler('flutter/assets', null);
+        rootBundle.clear();
+      });
+      rootBundle.clear();
+      messenger.setMockMessageHandler('flutter/assets', (message) async {
+        final key = utf8.decode(
+          message!.buffer.asUint8List(
+            message.offsetInBytes,
+            message.lengthInBytes,
+          ),
+        );
+        requested.add(key);
+        return key.endsWith('.json') ? ByteData.sublistView(json) : null;
+      });
+      await expectLater(
+        createRoomSegmentationWorker(modelStore: store),
+        throwsA(failure(RoomSegmentationFailureKind.modelUnavailable)),
+      );
+      expect(requested, ['assets/models/room_seg_descriptor.json']);
+      expect(store.progress.stage, RoomModelDownloadStage.failed);
     },
   );
 

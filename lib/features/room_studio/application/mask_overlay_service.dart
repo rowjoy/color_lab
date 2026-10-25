@@ -56,7 +56,9 @@ Uint8List _encode(
         tint.red,
         tint.green,
         tint.blue,
-        alpha[y * masks.width + x],
+        masks.labels[y * masks.width + x] == layer.label
+            ? alpha[y * masks.width + x]
+            : 0,
       );
     }
   }

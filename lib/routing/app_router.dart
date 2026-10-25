@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +12,8 @@ import '../features/picker/presentation/camera_picker_screen.dart';
 import '../features/picker/presentation/photo_picker_screen.dart';
 import '../features/room_studio/presentation/room_screen.dart';
 import '../features/room_studio/presentation/room_mask_screen.dart';
+import '../features/room_studio/presentation/illustrated_room_gallery_screen.dart';
+import '../features/room_studio/presentation/illustrated_room_screen.dart';
 import '../features/shell/presentation/app_shell.dart';
 import '../features/onboarding/presentation/onboarding_screen.dart';
 import '../features/settings/application/app_preferences_providers.dart';
@@ -20,6 +24,17 @@ import '../features/harmonies/presentation/harmonies_screen.dart';
 import '../features/palette/presentation/saved_palettes_screen.dart';
 import '../features/color_test/presentation/matching_screen.dart';
 import '../features/color_test/presentation/vision_screen.dart';
+import '../features/games/domain/game_id.dart';
+import '../features/games/domain/game_launch.dart';
+import '../features/games/presentation/badges_screen.dart';
+import '../features/games/presentation/bubble_shooter_screen.dart';
+import '../features/games/presentation/fruit_pop_screen.dart';
+import '../features/games/presentation/game_level_map_screen.dart';
+import '../features/games/presentation/games_screen.dart';
+import '../features/games/presentation/invalid_game_launch_screen.dart';
+import '../features/games/presentation/leaderboard_screen.dart';
+import '../features/games/presentation/rainbow_rings_screen.dart';
+import '../features/games/presentation/water_sort_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final router = GoRouter(
@@ -36,6 +51,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(
+        path: '/room/study',
+        redirect: (context, state) => '/room/illustrated/study',
+      ),
+      GoRoute(
+        path: '/room/illustrated',
+        builder: (context, state) => const IllustratedRoomGalleryScreen(),
+      ),
+      GoRoute(
+        path: '/room/illustrated/:templateId',
+        builder: (context, state) => IllustratedRoomScreen(
+          templateId: state.pathParameters['templateId']!,
+        ),
+      ),
+      GoRoute(
         path: '/room/masks',
         builder: (context, state) => const RoomMaskScreen(),
       ),
@@ -45,8 +74,39 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/matching',
-        builder: (context, state) => const MatchingScreen(),
+        builder: (context, state) => state.extra == null
+            ? const MatchingScreen()
+            : _buildGameScreen(context, state, GameId.colorMatch),
       ),
+      GoRoute(
+        path: '/bubble-shooter',
+        builder: (context, state) =>
+            _buildGameScreen(context, state, GameId.bubbleShooter),
+      ),
+      GoRoute(
+        path: '/rainbow-rings',
+        builder: (context, state) =>
+            _buildGameScreen(context, state, GameId.rainbowRings),
+      ),
+      GoRoute(
+        path: '/water-sort',
+        builder: (context, state) =>
+            _buildGameScreen(context, state, GameId.waterSort),
+      ),
+      GoRoute(
+        path: '/fruit-pop',
+        builder: (context, state) =>
+            _buildGameScreen(context, state, GameId.fruitPop),
+      ),
+      GoRoute(
+        path: '/games/badges',
+        builder: (context, state) => const BadgesScreen(),
+      ),
+      GoRoute(
+        path: '/games/leaderboard',
+        builder: (context, state) => const LeaderboardScreen(),
+      ),
+      GoRoute(path: '/games/:gameId/map', builder: _buildMapScreen),
       GoRoute(
         path: '/harmonies',
         builder: (context, state) => const HarmoniesScreen(),
@@ -127,6 +187,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           _branch('/palette', const PaletteScreen()),
           _branch('/lab', const LabScreen()),
           _branch('/room', const RoomScreen()),
+          _gamesBranch(),
         ],
       ),
     ],
@@ -148,3 +209,79 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 StatefulShellBranch _branch(String path, Widget screen) => StatefulShellBranch(
   routes: [GoRoute(path: path, builder: (context, state) => screen)],
 );
+
+StatefulShellBranch _gamesBranch() => StatefulShellBranch(
+  routes: [
+    GoRoute(
+      path: '/games',
+      builder: (context, state) => GamesScreen(
+        onLaunchGame: (launch) => _pushGame(context, launch),
+        onOpenMap: (gameId) => _pushMap(context, gameId),
+        onOpenBadges: () => _push(context, '/games/badges'),
+        onOpenLeaderboard: () => _push(context, '/games/leaderboard'),
+      ),
+    ),
+  ],
+);
+
+Widget _buildGameScreen(
+  BuildContext context,
+  GoRouterState state,
+  GameId expectedGameId,
+) {
+  final extra = state.extra;
+  if (extra is! GameLaunch ||
+      extra.gameId != expectedGameId ||
+      extra.descriptor.gameId != expectedGameId) {
+    return const InvalidGameLaunchScreen();
+  }
+
+  void openMap() => _pushMap(context, expectedGameId);
+  return switch (expectedGameId) {
+    GameId.bubbleShooter => BubbleShooterScreen(
+      launch: extra,
+      onOpenMap: openMap,
+    ),
+    GameId.fruitPop => FruitPopScreen(launch: extra, onOpenMap: openMap),
+    GameId.waterSort => WaterSortScreen(launch: extra, onOpenMap: openMap),
+    GameId.rainbowRings => RainbowRingsScreen(
+      launch: extra,
+      onOpenMap: openMap,
+    ),
+    GameId.colorMatch => MatchingScreen(launch: extra, onOpenMap: openMap),
+  };
+}
+
+Widget _buildMapScreen(BuildContext context, GoRouterState state) {
+  final rawGameId = state.pathParameters['gameId'];
+  final GameId gameId;
+  try {
+    gameId = GameId.parse(rawGameId ?? '');
+  } on FormatException {
+    return const InvalidGameLaunchScreen(
+      message: 'That level map is not available.',
+    );
+  }
+  return GameLevelMapScreen(
+    gameId: gameId,
+    onLaunchGame: (launch) => _pushGame(context, launch),
+  );
+}
+
+void _pushGame(BuildContext context, GameLaunch launch) =>
+    _push(context, _playPath(launch.gameId), extra: launch);
+
+void _pushMap(BuildContext context, GameId gameId) =>
+    _push(context, '/games/${gameId.storageId}/map');
+
+void _push(BuildContext context, String location, {Object? extra}) {
+  unawaited(context.push<void>(location, extra: extra));
+}
+
+String _playPath(GameId gameId) => switch (gameId) {
+  GameId.bubbleShooter => '/bubble-shooter',
+  GameId.fruitPop => '/fruit-pop',
+  GameId.waterSort => '/water-sort',
+  GameId.rainbowRings => '/rainbow-rings',
+  GameId.colorMatch => '/matching',
+};

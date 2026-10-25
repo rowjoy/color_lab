@@ -28,6 +28,8 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>Color Lab uses the camera to sample colors from the world around you.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Save your room color preview to your photo library.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Choose a photo to explore its colors and create an on-device palette.</string>
 	<key>UIApplicationSceneManifest</key>

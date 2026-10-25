@@ -16,6 +16,7 @@ class AppShell extends StatelessWidget {
     (label: 'Palette', icon: Icons.palette_outlined),
     (label: 'Lab', icon: Icons.science_outlined),
     (label: 'Room', icon: Icons.chair_outlined),
+    (label: 'Games', icon: Icons.sports_esports_outlined),
   ];
 
   @override

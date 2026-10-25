@@ -29,11 +29,14 @@ environment:
 # versions available, run `flutter pub outdated`.
 dependencies:
   camera: ^0.12.0+2
+  characters: 1.4.1
   crypto: 3.0.7
   flutter:
     sdk: flutter
 
   flutter_riverpod: ^3.3.2
+  flutter_svg: ^2.3.0
+  gal: 2.3.2
   go_router: ^17.5.0
   hive: ^2.2.3
   image: 4.12.0
@@ -43,6 +46,7 @@ dependencies:
   permission_handler: ^12.0.1
   share_plus: ^13.3.1
   tflite_flutter: 0.12.1
+  vector_graphics: 1.2.4
 
 dev_dependencies:
   flutter_test:
@@ -66,8 +70,10 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   assets:
+    - assets/audio/pour_bottle_clean.mp3
     - assets/data/color_names.json
-    - assets/models/
+    - assets/models/room_seg_descriptor.json
+    - assets/rooms/
     - assets/licenses/
   fonts:
     - family: PlusJakartaSans

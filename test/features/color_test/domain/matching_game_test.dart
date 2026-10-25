@@ -62,7 +62,28 @@ void main() {
       expect(game.currentAttempt, isNull);
       expect(game.totalScore, 0);
       expect(game.averageScore, 0);
+      expect(
+        game.rules,
+        const MatchingRules(roundCount: 5, winningAverage: 65),
+      );
+      expect(game.difficulty.name, 'medium');
     });
+
+    test(
+      'accepts explicit rules independently of legacy difficulty metadata',
+      () {
+        const rules = MatchingRules(roundCount: 3, winningAverage: 80);
+        final game = MatchingGame.start(_targets().take(3), rules: rules);
+
+        expect(game.rules, rules);
+        expect(game.targets, hasLength(3));
+        expect(game.difficulty.name, 'medium');
+        expect(
+          () => MatchingGame.start(_targets(), rules: rules),
+          throwsArgumentError,
+        );
+      },
+    );
 
     test('requires exactly five distinct target RGB values', () {
       for (final targets in [

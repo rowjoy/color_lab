@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -15,7 +16,10 @@ import 'package:color_lab/features/picker/presentation/color_explorer.dart';
 import 'package:color_lab/features/settings/application/app_preferences_providers.dart';
 import 'package:color_lab/features/settings/application/theme_mode_provider.dart';
 import 'package:color_lab/features/settings/domain/app_preferences.dart';
+import 'package:color_lab/features/room_studio/application/illustrated_room_controller.dart';
 import 'package:color_lab/features/room_studio/application/room_mask_controller.dart';
+import 'package:color_lab/features/room_studio/application/room_model_download_providers.dart';
+import 'package:color_lab/features/room_studio/models/room_model_store.dart';
 import 'package:color_lab/features/room_studio/application/room_color_provider.dart';
 import 'package:color_lab/features/room_studio/application/room_image_export_service.dart';
 import 'package:color_lab/features/room_studio/application/room_recolor_provider.dart';
@@ -25,6 +29,7 @@ import 'package:color_lab/features/room_studio/domain/mask_stroke.dart';
 import 'package:color_lab/features/room_studio/domain/room_layer.dart';
 import 'package:color_lab/features/room_studio/domain/room_layer_colors.dart';
 import 'package:color_lab/features/room_studio/domain/room_mask_state.dart';
+import 'package:color_lab/features/room_studio/presentation/illustrated_room_screen.dart';
 import 'package:color_lab/features/room_studio/presentation/room_mask_viewport.dart';
 import 'package:color_lab/features/room_studio/recolor/room_recolor_frame.dart';
 import 'package:color_lab/features/room_studio/segmentation/room_segmentation_service.dart';
@@ -189,6 +194,7 @@ Future<ProviderContainer> _launch(
   RoomImageExportService? exporter,
   InMemoryAcquisitionIntentStore? store,
   AppPreferences? preferences,
+  RoomModelStore? modelStore,
 }) async {
   final container = ProviderContainer(
     overrides: [
@@ -213,6 +219,8 @@ Future<ProviderContainer> _launch(
         roomRecolorServiceProvider.overrideWithValue(recolorer),
       if (exporter != null)
         roomImageExportServiceProvider.overrideWithValue(exporter),
+      if (modelStore != null)
+        roomModelStoreProvider.overrideWithValue(modelStore),
       cameraSessionFactoryProvider.overrideWithValue(
         () => throw StateError(
           'Room must use the explicit photo source, never live camera',
@@ -346,6 +354,49 @@ Future<void> _zoom(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets('Cancel download aborts model setup and ignores late analysis', (
+    tester,
+  ) async {
+    final directory = Directory.systemTemp.createTempSync(
+      'room-model-screen-test-',
+    );
+    final gate = Completer<Directory>();
+    final modelStore = RoomModelStore(directory: () => gate.future);
+    final pending = modelStore.load();
+    final cancelled = expectLater(
+      pending,
+      throwsA(
+        isA<RoomModelDownloadException>().having(
+          (e) => e.cancelled,
+          'cancelled',
+          isTrue,
+        ),
+      ),
+    );
+    addTearDown(() async {
+      if (!gate.isCompleted) gate.complete(directory);
+      await modelStore.close();
+      directory.deleteSync(recursive: true);
+    });
+    final segmenter = _Segmenter();
+    final container = await _launch(
+      tester,
+      segmenter: segmenter,
+      modelStore: modelStore,
+    );
+    await _open(tester);
+    await _tap(tester, _key('room-mask-gallery'));
+    expect(find.text('Checking saved AI models…'), findsOneWidget);
+    await _tap(tester, find.text('Cancel download'));
+    gate.complete(directory);
+    await cancelled;
+    expect(container.read(roomMaskProvider).stage, RoomMaskStage.empty);
+    segmenter.requests.single.succeed(1);
+    await _frames(tester);
+    expect(container.read(roomMaskProvider).draft, isNull);
+    expect(modelStore.progress.stage, RoomModelDownloadStage.cancelled);
+  });
+
   testWidgets('refresh AI masks retains the photo, corrections, and colors', (
     tester,
   ) async {
@@ -1419,10 +1470,22 @@ void main() {
       );
       await _tap(tester, find.byType(ColorSwatchTile));
       await _tap(tester, find.text('Use in Room'));
-      expect(container.read(appRouterProvider).state.uri.path, '/room');
+      expect(
+        container.read(appRouterProvider).state.uri.path,
+        '/room/illustrated/study',
+      );
+      expect(find.byType(IllustratedRoomScreen), findsOneWidget);
       expect(container.read(roomColorProvider).hex, labHex);
+      final study = container.read(illustratedRoomProvider).draftFor('study')!;
+      expect(study.colors!.wall.hex, labHex);
+      expect(study.colors!.ceiling.hex, '#F8F4EB');
+      expect(study.colors!.floor.hex, '#C6AC84');
+      expect(study.colors!.furniture.hex, '#654A39');
       expect(container.read(roomMaskProvider).draft, same(draft));
       expect(container.read(colorHistoryProvider).requireValue, history);
+      await _tap(tester, _key('room-editor-back'));
+      expect(find.text('Keep this draft?'), findsOneWidget);
+      await _tap(tester, find.text('Keep draft'));
       await tester.tap(_key('nav-Room'));
       await _frames(tester);
       await tester.tap(_key('open-room-masks'));

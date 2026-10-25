@@ -7,6 +7,7 @@ import 'dart:typed_data';
 import 'package:color_lab/core/image/photo_processing.dart';
 import 'package:color_lab/features/picker/domain/prepared_photo.dart';
 import 'package:color_lab/features/room_studio/domain/room_layer.dart';
+import 'package:color_lab/features/room_studio/models/room_model_store.dart';
 import 'package:color_lab/features/room_studio/segmentation/raw_segmentation.dart';
 import 'package:color_lab/features/room_studio/segmentation/room_depth_runner.dart';
 import 'package:color_lab/features/room_studio/segmentation/room_mask_processing.dart';
@@ -158,6 +159,7 @@ Future<Map<String, Object?>?> verifyAdditionalPhoto(
 Future<void> main() async {
   TfliteRoomModelRunner? runner;
   IsolateRoomSegmentationService? service;
+  RoomModelStore? modelStore;
   try {
     WidgetsFlutterBinding.ensureInitialized();
     final descriptor = RoomModelDescriptor.fromMap(
@@ -241,8 +243,35 @@ Future<void> main() async {
       previewBytes: png,
       palette: const [],
     );
-    // The acceptance gate deliberately supplies NO workerFactory override.
-    service = IsolateRoomSegmentationService();
+    // The CLI has no platform path_provider plugin. Seed a private temporary
+    // cache with fixture bytes, then exercise the same verified-file factory
+    // used by the app. No model asset is required in a production APK.
+    final modelCache = Directory.systemTemp.createTempSync(
+      'color-lab-model-cache.',
+    );
+    final verifyDownloads =
+        Platform.environment['COLOR_LAB_VERIFY_MODEL_DOWNLOADS'] == '1';
+    for (final artifact
+        in verifyDownloads ? <RoomModelArtifact>[] : roomModelArtifacts) {
+      final data = await rootBundle.load('assets/models/${artifact.name}');
+      final file = File(
+        '${modelCache.path}/room_models/${artifact.sha256}/${artifact.name}',
+      );
+      await file.parent.create(recursive: true);
+      await file.writeAsBytes(
+        data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+      );
+    }
+    final cacheStore = RoomModelStore(
+      directory: () async => modelCache,
+      clientFactory: verifyDownloads
+          ? null
+          : () => throw StateError('Smoke must use verified offline fixtures'),
+    );
+    modelStore = cacheStore;
+    service = IsolateRoomSegmentationService(
+      workerFactory: () => createRoomSegmentationWorker(modelStore: cacheStore),
+    );
     var heartbeatTicks = 0;
     final heartbeat = Timer.periodic(const Duration(milliseconds: 1), (_) {
       heartbeatTicks++;
@@ -336,6 +365,26 @@ Future<void> main() async {
       cached.photoId == 'new-caller-revision' && identical(cached.masks, masks),
       'Production service cache changed caller revision or masks',
     );
+    final offlineStore = RoomModelStore(
+      directory: () async => modelCache,
+      clientFactory: () =>
+          throw const SocketException('Cold cache must work offline'),
+    );
+    try {
+      final offline = await offlineStore.load();
+      check(
+        sha256.convert(offline.semantic).toString() ==
+            roomModelArtifacts[0].sha256,
+        'Offline segmentation cache',
+      );
+      check(
+        sha256.convert(offline.depth).toString() ==
+            roomModelArtifacts[1].sha256,
+        'Offline depth cache',
+      );
+    } finally {
+      await offlineStore.close();
+    }
     final additionalPhoto = await verifyAdditionalPhoto(
       service,
       model,
@@ -362,9 +411,12 @@ Future<void> main() async {
     final serviceEvidence = <String, Object?>{
       'status': 'PASS',
       'factory':
-          'IsolateRoomSegmentationService() default createRoomSegmentationWorker',
+          'createRoomSegmentationWorker with verified offline model files',
       'runtime': tfl.version,
-      'modelAsset': 'assets/models/room_seg.tflite',
+      'modelSource': verifyDownloads
+          ? 'public fixed GitHub Release'
+          : 'temporary seeded model cache',
+      'coldOfflineCacheVerified': true,
       'descriptorAsset': 'assets/models/room_seg_descriptor.json',
       'modelSha256': descriptor.sha256,
       'depthModelSha256': roomDepthModelSha256,
@@ -442,7 +494,7 @@ Future<void> main() async {
         'additionalPhoto': ?additionalPhoto,
         'diagnostics': evidenceFile.path,
         'checks': [
-          'bundled assets',
+          'staged reference fixtures and verified model files',
           'actual production runner',
           'corrupt model',
           'input length',
@@ -452,7 +504,7 @@ Future<void> main() async {
           'snapshot',
           'idempotent close',
           'closed use',
-          'default service factory and bundled rootBundle assets',
+          'production factory and verified offline model files',
           'real isolate production pipeline',
           'non-square dense aligned-corner inverse',
           'depth protection changes Wall to unselected only',
@@ -468,6 +520,7 @@ Future<void> main() async {
     exitCode = 1;
   } finally {
     await service?.close();
+    await modelStore?.close();
     runner?.close();
   }
   await stderr.flush();

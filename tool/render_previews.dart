@@ -29,6 +29,8 @@ import 'package:color_lab/features/picker/domain/photo_acquisition.dart';
 import 'package:color_lab/features/picker/domain/prepared_photo.dart';
 import 'package:color_lab/features/picker/presentation/color_explorer.dart';
 import 'package:color_lab/features/room_studio/application/room_mask_controller.dart';
+import 'package:color_lab/features/room_studio/application/illustrated_room_controller.dart';
+import 'package:color_lab/features/room_studio/application/room_designs_providers.dart';
 import 'package:color_lab/features/room_studio/domain/mask_bitmap.dart';
 import 'package:color_lab/features/room_studio/domain/room_layer.dart';
 import 'package:color_lab/features/room_studio/domain/room_mask_state.dart';
@@ -46,6 +48,7 @@ import '../test/support/in_memory_color_history_repository.dart';
 import '../test/support/in_memory_acquisition_intent_store.dart';
 import '../test/support/in_memory_app_preferences_repository.dart';
 import '../test/support/in_memory_saved_palette_repository.dart';
+import '../test/support/in_memory_room_design_repository.dart';
 
 final _capturedPreviewNames = <String>{};
 
@@ -791,7 +794,66 @@ void main() {
     ) async {
       await renderRoomPreviews(tester, mode);
     });
+    testWidgets('render ${mode.name} illustrated study room', (tester) async {
+      await renderIllustratedRoomPreviews(tester, mode);
+    });
   }
+}
+
+Future<void> renderIllustratedRoomPreviews(
+  WidgetTester tester,
+  ThemeMode mode,
+) async {
+  tester.view.physicalSize = const Size(390, 844);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+  final fixedNow = DateTime.utc(2026, 10, 25, 4);
+  final designs = InMemoryRoomDesignRepository(clock: () => fixedNow);
+  addTearDown(designs.close);
+  final container = ProviderContainer(
+    overrides: [
+      acquisitionIntentStoreProvider.overrideWith(
+        (ref) async => InMemoryAcquisitionIntentStore(),
+      ),
+      appPreferencesRepositoryProvider.overrideWith(
+        (ref) async => InMemoryAppPreferencesRepository(
+          initial: AppPreferences(themeMode: mode, onboardingCompleted: true),
+        ),
+      ),
+      colorHistoryRepositoryProvider.overrideWith(
+        (ref) async => InMemoryColorHistoryRepository(),
+      ),
+      roomDesignRepositoryProvider.overrideWith((ref) async => designs),
+      roomDesignClockProvider.overrideWithValue(() => fixedNow),
+    ],
+  );
+  addTearDown(container.dispose);
+  final boundary = GlobalKey();
+  await tester.pumpWidget(
+    RepaintBoundary(
+      key: boundary,
+      child: UncontrolledProviderScope(
+        container: container,
+        child: const ColorLabApp(),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+  container.read(appRouterProvider).go('/room/illustrated/study');
+  await tester.pumpAndSettle();
+  expect(tester.takeException(), isNull);
+  await capturePreview(tester, boundary, 'room-study-grayscale-${mode.name}');
+  container
+      .read(illustratedRoomProvider.notifier)
+      .applyPalette('soft-botanical');
+  await tester.pumpAndSettle();
+  expect(tester.takeException(), isNull);
+  await capturePreview(
+    tester,
+    boundary,
+    'room-study-soft-botanical-${mode.name}',
+  );
 }
 
 /// Native acquisition and inference alone are controlled boundaries. These
