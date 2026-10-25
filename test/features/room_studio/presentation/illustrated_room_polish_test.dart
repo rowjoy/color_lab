@@ -277,6 +277,33 @@ void main() {
       decorationAnchor: (180, 250),
       decorationHex: '#9FD7EA',
     ),
+    (
+      template: IllustratedRoomCatalog.living,
+      contract: const IllustratedRoomPolishContract(
+        requiredGroupIds: [
+          'living-architecture-depth',
+          'living-daylight',
+          'living-practical-light',
+          'living-contact-shadows',
+          'living-upholstery-details',
+        ],
+        editableObjectGroupIds: [
+          'living-editable-sofa',
+          'living-editable-accent-chair',
+          'living-editable-console',
+          'living-editable-coffee-table',
+        ],
+        toneSample: (
+          highlight: (600, 570),
+          base: (600, 610),
+          shade: (600, 685),
+        ),
+        contactShadowAnchor: (1020, 575),
+        clearFloorAnchor: (1100, 760),
+      ),
+      decorationAnchor: (301, 226),
+      decorationHex: '#F4D27B',
+    ),
   ]) {
     test(
       '${fixture.template.title} satisfies the polish structure contract',
