@@ -304,6 +304,33 @@ void main() {
       decorationAnchor: (301, 226),
       decorationHex: '#F4D27B',
     ),
+    (
+      template: IllustratedRoomCatalog.bedroom,
+      contract: const IllustratedRoomPolishContract(
+        requiredGroupIds: [
+          'bedroom-architecture-depth',
+          'bedroom-daylight',
+          'bedroom-practical-light',
+          'bedroom-contact-shadows',
+          'bedroom-textile-details',
+          'bedroom-timber-details',
+        ],
+        editableObjectGroupIds: [
+          'bedroom-editable-bed',
+          'bedroom-editable-wardrobe',
+          'bedroom-editable-side-tables',
+        ],
+        toneSample: (
+          highlight: (600, 630),
+          base: (600, 650),
+          shade: (600, 710),
+        ),
+        contactShadowAnchor: (1030, 580),
+        clearFloorAnchor: (1100, 760),
+      ),
+      decorationAnchor: (262, 225),
+      decorationHex: '#F3D37D',
+    ),
   ]) {
     test(
       '${fixture.template.title} satisfies the polish structure contract',
