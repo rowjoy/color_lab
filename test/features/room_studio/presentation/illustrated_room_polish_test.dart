@@ -331,6 +331,32 @@ void main() {
       decorationAnchor: (262, 225),
       decorationHex: '#F3D37D',
     ),
+    (
+      template: IllustratedRoomCatalog.dining,
+      contract: const IllustratedRoomPolishContract(
+        requiredGroupIds: [
+          'dining-architecture-depth',
+          'dining-daylight',
+          'dining-pendant-light',
+          'dining-contact-shadows',
+          'dining-material-cues',
+        ],
+        editableObjectGroupIds: [
+          'dining-editable-table',
+          'dining-editable-chairs',
+          'dining-editable-sideboard',
+        ],
+        toneSample: (
+          highlight: (600, 540),
+          base: (600, 610),
+          shade: (600, 632),
+        ),
+        contactShadowAnchor: (1010, 615),
+        clearFloorAnchor: (1100, 760),
+      ),
+      decorationAnchor: (274, 226),
+      decorationHex: '#F3D27A',
+    ),
   ]) {
     test(
       '${fixture.template.title} satisfies the polish structure contract',
