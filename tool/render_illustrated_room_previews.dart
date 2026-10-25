@@ -1,9 +1,10 @@
-// Run with: flutter test --no-pub tool/render_illustrated_room_previews.dart
+// Run with the compiler-denying sandbox; see README's guarded preview command.
 // Writes deterministic multi-room evidence to build/previews.
 import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
 
+import 'package:color_lab/core/color/color_models.dart';
 import 'package:color_lab/core/theme/theme.dart';
 import 'package:color_lab/features/room_studio/application/illustrated_room_artwork_encoder.dart';
 import 'package:color_lab/features/room_studio/application/illustrated_room_controller.dart';
@@ -21,7 +22,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image/image.dart' as image;
 
+import '../test/support/illustrated_room_svg_contract.dart';
 import '../test/support/in_memory_room_design_repository.dart';
 
 final _capturedNames = <String>{};
@@ -29,14 +32,17 @@ final _expectedNames = <String>{
   for (final template in IllustratedRoomCatalog.all) ...{
     'illustrated-room-artwork-${template.id}-grayscale.png',
     'illustrated-room-artwork-${template.id}-recommended.png',
+    'illustrated-room-artwork-${template.id}-stress.png',
   },
   'illustrated-room-gallery-phone.png',
   'illustrated-room-gallery-tablet.png',
   'illustrated-room-editor-phone-rail-closed.png',
   'illustrated-room-editor-phone-rail-open.png',
   'illustrated-room-editor-phone-focus.png',
+  'illustrated-room-editor-phone-whole-room.png',
   'illustrated-room-editor-landscape-640x360.png',
   'illustrated-room-editor-tablet-1024x768.png',
+  'illustrated-room-export-study-recommended-2400x1600.png',
 };
 
 void main() {
@@ -54,6 +60,21 @@ void main() {
 
   tearDownAll(() async {
     expect(_capturedNames, _expectedNames);
+    expect(_capturedNames, hasLength(27));
+    final templates = IllustratedRoomCatalog.all.toList()
+      ..sort((a, b) => a.id.compareTo(b.id));
+    final assetMetrics = <String, Map<String, int>>{};
+    for (final template in templates) {
+      final metrics = illustratedRoomSvgMetrics(
+        await rootBundle.loadString(template.assetPath),
+      );
+      assetMetrics[template.id] = {
+        'utf8Bytes': metrics.utf8Bytes,
+        'geometryCount': metrics.geometryCount,
+        'gradientCount': metrics.gradientCount,
+        'clipPathCount': metrics.clipPathCount,
+      };
+    }
     final output = Directory('build/previews');
     await output.create(recursive: true);
     await File(
@@ -61,8 +82,9 @@ void main() {
     ).writeAsString(
       const JsonEncoder.withIndent('  ').convert({
         'scope': 'Illustrated room previews captured by this invocation',
-        'count': 19,
+        'count': 27,
         'files': _expectedNames.toList()..sort(),
+        'assetMetrics': assetMetrics,
       }),
       flush: true,
     );
@@ -106,8 +128,40 @@ void main() {
         ).applyPalette(template.defaultPaletteId),
         'recommended',
       );
+      var stress = IllustratedRoomDraft.grayscale(template);
+      for (final entry in <IllustratedRoomSurface, String>{
+        IllustratedRoomSurface.wall: '#F4EEE4',
+        IllustratedRoomSurface.ceiling: '#20242C',
+        IllustratedRoomSurface.floor: '#0057FF',
+        IllustratedRoomSurface.furniture: '#FF4D00',
+      }.entries) {
+        stress = stress.setSurfaceColor(
+          entry.key,
+          RgbColor.fromHex(entry.value),
+        );
+      }
+      await render(stress, 'stress');
     }
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('render real recommended Study export at 2400 x 1600', (
+    tester,
+  ) async {
+    await tester.runAsync(() async {
+      final draft = IllustratedRoomDraft.grayscale(
+        IllustratedRoomCatalog.study,
+      ).applyPalette(IllustratedRoomCatalog.study.defaultPaletteId);
+      final png = await SvgIllustratedRoomArtworkEncoder().encodePng(draft);
+      final decoded = image.decodePng(png);
+      expect(decoded, isNotNull);
+      expect((decoded!.width, decoded.height), (2400, 1600));
+      const name = 'illustrated-room-export-study-recommended-2400x1600.png';
+      final output = Directory('build/previews');
+      await output.create(recursive: true);
+      await File('${output.path}/$name').writeAsBytes(png, flush: true);
+      expect(_capturedNames.add(name), isTrue);
+    });
   });
 
   for (final scenario in [
@@ -174,6 +228,21 @@ void main() {
       tester,
       harness.boundary,
       'illustrated-room-editor-phone-focus',
+    );
+    await tester.tap(find.byKey(const ValueKey('room-exit-focus-preview')));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey('room-view-full'), skipOffstage: false),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<IllustratedRoomSvg>(find.byType(IllustratedRoomSvg)).fit,
+      BoxFit.contain,
+    );
+    await _capture(
+      tester,
+      harness.boundary,
+      'illustrated-room-editor-phone-whole-room',
     );
     expect(tester.takeException(), isNull);
   });
