@@ -60,3 +60,21 @@ TintAtlas must not include Asian Paints or another manufacturer's branding, prop
 | Android application ID | blocked | Product owner + Android release owner | Record after both gates above pass |
 | iOS bundle ID | blocked | Product owner + iOS release owner | Record after both gates above pass |
 | Production signing | blocked | Platform release owners | Later release ledger; credentials never enter this repository |
+
+## Task 9 gate amendment — 2026-10-27
+
+Task 9 rechecked both prerequisites before changing platform identity or
+installing locked public brand assets. `newListing` remains `blocked`, and
+`brandNameClearance` remains `blocked`. Therefore this branch intentionally
+retains the current Android/iOS application identifiers, signing setup,
+launcher icons, and public splash assets.
+
+No repository inference can satisfy either gate. Resuming Task 9 requires:
+
+1. the store-account owner's written new-listing attestation with the Google
+   Play Console/App Store Connect evidence reference; and
+2. the product owner's dated accept-or-rename decision for the recorded
+   TintAtlas exact-name conflict.
+
+This amendment records a safety stop, not approval of the current development
+identifiers for publication.
