@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/theme.dart';
+import '../../../l10n/l10n.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../picker/application/photo_acquisition_controller.dart';
 import '../../picker/domain/photo_acquisition.dart';
@@ -303,9 +304,7 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
                 : null,
           ),
           const SizedBox(height: AppSpacing.xl),
-          const Text(
-            'AI models are verified during app startup. After setup, room analysis works offline.',
-          ),
+          Text(context.l10n.roomModelsEditorOffline),
           const SizedBox(height: AppSpacing.md),
           if (receipt != null) ...[
             Text(
@@ -392,7 +391,7 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
               liveRegion: true,
               child: Text(
                 modelProgress.stage == RoomModelDownloadStage.failed
-                    ? 'AI models could not be downloaded or verified. Check your connection and free space, then retry. Your photo is safe.'
+                    ? context.l10n.roomSetupFailure
                     : 'Room analysis could not finish. Try again or choose another photo.',
               ),
             ),

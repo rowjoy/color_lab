@@ -19,6 +19,7 @@ import 'package:color_lab/features/settings/domain/app_preferences.dart';
 import 'package:color_lab/features/room_studio/application/illustrated_room_controller.dart';
 import 'package:color_lab/features/room_studio/application/room_mask_controller.dart';
 import 'package:color_lab/features/room_studio/application/room_model_download_providers.dart';
+import 'package:color_lab/features/room_studio/application/room_model_setup_controller.dart';
 import 'package:color_lab/features/room_studio/models/room_model_store.dart';
 import 'package:color_lab/features/room_studio/application/room_color_provider.dart';
 import 'package:color_lab/features/room_studio/application/room_image_export_service.dart';
@@ -186,6 +187,21 @@ class _Store extends InMemoryAcquisitionIntentStore {
   }
 }
 
+class _ReadySetup extends RoomModelSetupController {
+  @override
+  RoomModelSetupState build() => const RoomModelSetupState(
+    availability: RoomModelAvailability.ready,
+    canEnter: true,
+    progress: RoomModelDownloadProgress(
+      stage: RoomModelDownloadStage.ready,
+      receivedBytes: 68316288,
+      totalBytes: 68316288,
+    ),
+  );
+  @override
+  Future<void> check() async {}
+}
+
 Future<ProviderContainer> _launch(
   WidgetTester tester, {
   _Picker? picker,
@@ -198,6 +214,7 @@ Future<ProviderContainer> _launch(
 }) async {
   final container = ProviderContainer(
     overrides: [
+      roomModelSetupProvider.overrideWith(_ReadySetup.new),
       acquisitionIntentStoreProvider.overrideWith(
         (ref) async => store ?? InMemoryAcquisitionIntentStore(),
       ),

@@ -10,7 +10,8 @@ final roomModelStoreProvider = Provider<RoomModelStore>((ref) {
   return store;
 });
 
-// One cold-start preparation per app container. Failures require explicit retry.
+// Compatibility entry for explicit preparation only. Bootstrap does not watch
+// this provider; photo setup requests downloads through its controller.
 final roomModelStartupProvider = FutureProvider<void>(
   (ref) => ref.watch(roomModelStoreProvider).prepare(),
   retry: (retryCount, error) => null,

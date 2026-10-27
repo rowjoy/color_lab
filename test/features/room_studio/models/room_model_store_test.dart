@@ -80,6 +80,324 @@ void main() {
   ];
 
   test(
+    'cache-only check never constructs a client and requires both hashes',
+    () async {
+      final subject = RoomModelStore(
+        directory: () async => root,
+        artifacts: artifacts,
+        clientFactory: () => throw StateError('check must not create a client'),
+      );
+      stores.add(subject);
+      expect(await subject.check(), isFalse);
+      for (final entry in [
+        ('room_seg.tflite', _helloSha, 'hello'),
+        ('room_depth.tflite', _worldSha, 'world'),
+      ]) {
+        final file = cached(entry.$1, entry.$2);
+        await file.parent.create(recursive: true);
+        await file.writeAsString(entry.$3);
+      }
+      expect(await subject.check(), isTrue);
+      expect(subject.progress.stage, RoomModelDownloadStage.ready);
+      await cached('room_depth.tflite', _worldSha).writeAsString('wrong');
+      expect(await subject.check(), isFalse);
+      expect(subject.progress.stage, RoomModelDownloadStage.idle);
+      expect(requests, isEmpty);
+    },
+  );
+
+  test('setup aggregate is derived from pinned artifact bytes', () async {
+    final subject = RoomModelStore(directory: () async => root);
+    stores.add(subject);
+    expect(subject.progress.totalBytes, 68316288);
+  });
+
+  Future<File> seedPartial(String body) async {
+    final file = File('${cached('room_seg.tflite', _helloSha).path}.part');
+    await file.parent.create(recursive: true);
+    await file.writeAsString(body);
+    return file;
+  }
+
+  test(
+    'valid range resumes actual partial bytes with identity encoding',
+    () async {
+      await seedPartial('he');
+      final ranges = <String?>[];
+      respond = (request) async {
+        ranges.add(request.headers.value(HttpHeaders.rangeHeader));
+        expect(
+          request.headers.value(HttpHeaders.acceptEncodingHeader),
+          'identity',
+        );
+        if (request.uri.path == '/seg') {
+          request.response.statusCode = 206;
+          request.response.headers.set(
+            HttpHeaders.contentRangeHeader,
+            'bytes 2-4/5',
+          );
+          request.response.contentLength = 3;
+          request.response.write('llo');
+        } else {
+          request.response.write('world');
+        }
+        await request.response.close();
+      };
+      expect(utf8.decode((await store().load()).semantic), 'hello');
+      expect(ranges, ['bytes=2-', null]);
+    },
+  );
+
+  for (final kind in [
+    'ignored',
+    'malformed',
+    'rejected',
+    'wrong-length',
+    'wrong-total',
+    'wrong-end',
+    'overflow',
+    'duplicate',
+  ]) {
+    test('$kind range restarts safely with at most one clean fallback', () async {
+      await seedPartial('he');
+      final ranges = <String?>[];
+      respond = (request) async {
+        final range = request.headers.value(HttpHeaders.rangeHeader);
+        ranges.add(range);
+        if (range != null && kind != 'ignored') {
+          request.response.statusCode = kind == 'rejected' ? 416 : 206;
+          request.response.headers.set(
+            HttpHeaders.contentRangeHeader,
+            switch (kind) {
+              'wrong-length' => 'bytes 2-4/5',
+              'wrong-total' => 'bytes 2-4/6',
+              'wrong-end' => 'bytes 2-3/5',
+              'overflow' =>
+                'bytes 9999999999999999999999999999999999999999999999999999-4/5',
+              _ => 'bytes 0-4/5',
+            },
+          );
+          if (kind == 'duplicate') {
+            request.response.headers.add(
+              HttpHeaders.contentRangeHeader,
+              'bytes 2-4/5',
+            );
+          }
+          if (kind == 'wrong-length') request.response.contentLength = 4;
+          request.response.write('bad!');
+        } else {
+          request.response.write(
+            request.uri.path == '/seg' ? 'hello' : 'world',
+          );
+        }
+        await request.response.close();
+      };
+      expect(utf8.decode((await store().load()).semantic), 'hello');
+      expect(
+        ranges,
+        kind == 'ignored' ? ['bytes=2-', null] : ['bytes=2-', null, null],
+      );
+    });
+  }
+
+  test('rejected clean fallback is bounded and never promotes', () async {
+    final partial = await seedPartial('he');
+    respond = (request) async {
+      request.response.statusCode = 416;
+      await request.response.close();
+    };
+    await expectLater(
+      store().prepare(),
+      throwsA(isA<RoomModelDownloadException>()),
+    );
+    expect(requests, ['/seg', '/seg']);
+    expect(await partial.readAsString(), 'he');
+    expect(await cached('room_seg.tflite', _helloSha).exists(), isFalse);
+  });
+
+  test(
+    'complete partial verifies and promotes without requesting its model',
+    () async {
+      await seedPartial('hello');
+      await store().prepare();
+      expect(requests, ['/depth']);
+      expect(
+        await cached('room_seg.tflite', _helloSha).readAsString(),
+        'hello',
+      );
+    },
+  );
+
+  test('complete wrong-hash partial is removed and never promoted', () async {
+    final partial = await seedPartial('wrong');
+    await expectLater(
+      store().prepare(),
+      throwsA(isA<RoomModelDownloadException>()),
+    );
+    expect(await partial.exists(), isFalse);
+    expect(await cached('room_seg.tflite', _helloSha).exists(), isFalse);
+    expect(requests, isEmpty);
+  });
+
+  final capacityCodes = Platform.isWindows
+      ? [39, 112, 1295]
+      : Platform.isMacOS || Platform.isIOS
+      ? [28, 69]
+      : [28, 122];
+  for (final code in [28, 39, 69, 112, 122, 1295, 13, 5]) {
+    test(
+      'I/O code $code maps capacity separately from safe generic failure',
+      () async {
+        final subject = RoomModelStore(
+          directory: () async => throw FileSystemException(
+            'private path',
+            '/secret',
+            OSError('private', code),
+          ),
+          artifacts: artifacts,
+        );
+        stores.add(subject);
+        await expectLater(
+          subject.prepare(),
+          throwsA(
+            isA<RoomModelDownloadException>().having(
+              (e) => e.storageFull,
+              'storage full',
+              capacityCodes.contains(code),
+            ),
+          ),
+        );
+        expect(
+          subject.progress.stage,
+          capacityCodes.contains(code)
+              ? RoomModelDownloadStage.storageFull
+              : RoomModelDownloadStage.failed,
+        );
+      },
+    );
+  }
+
+  for (final code in [Platform.isWindows ? 112 : 28, 13]) {
+    test(
+      'partial-file write failure $code is typed without exposing paths',
+      () async {
+        final subject = store();
+        await IOOverrides.runWithIOOverrides(() async {
+          await expectLater(
+            subject.prepare(),
+            throwsA(
+              isA<RoomModelDownloadException>().having(
+                (e) => e.storageFull,
+                'storage full',
+                code != 13,
+              ),
+            ),
+          );
+        }, _WriteFailureIO(code));
+        expect(
+          subject.progress.stage,
+          code != 13
+              ? RoomModelDownloadStage.storageFull
+              : RoomModelDownloadStage.failed,
+        );
+        expect(await cached('room_seg.tflite', _helloSha).exists(), isFalse);
+      },
+    );
+  }
+
+  test(
+    'cancel publishes immediately and retains flushed bytes for retry',
+    () async {
+      final release = Completer<void>();
+      final ranges = <String?>[];
+      respond = (request) async {
+        final range = request.headers.value(HttpHeaders.rangeHeader);
+        ranges.add(range);
+        if (ranges.length == 1) {
+          request.response.contentLength = 5;
+          request.response.bufferOutput = false;
+          request.response.write('he');
+          await request.response.flush();
+          await release.future;
+        } else if (range != null) {
+          request.response.statusCode = 206;
+          request.response.headers.set(
+            HttpHeaders.contentRangeHeader,
+            'bytes 2-4/5',
+          );
+          request.response.write('llo');
+        } else {
+          request.response.write(
+            request.uri.path == '/seg' ? 'hello' : 'world',
+          );
+        }
+        await request.response.close();
+      };
+      addTearDown(() {
+        if (!release.isCompleted) release.complete();
+      });
+      final subject = store();
+      final chunk = subject.changes.firstWhere((p) => p.receivedBytes == 2);
+      final pending = subject.prepare();
+      final failure = expectLater(
+        pending,
+        throwsA(isA<RoomModelDownloadException>()),
+      );
+      await chunk;
+      subject.cancel();
+      expect(subject.progress.stage, RoomModelDownloadStage.cancelled);
+      await failure;
+      expect(
+        await File(
+          '${cached('room_seg.tflite', _helloSha).path}.part',
+        ).readAsString(),
+        'he',
+      );
+      await subject.prepare();
+      expect(ranges, [null, 'bytes=2-', null]);
+      expect(subject.progress.stage, RoomModelDownloadStage.ready);
+    },
+  );
+
+  for (final body in ['he', 'hello']) {
+    test(
+      'cancel during partial metadata read keeps cancellation terminal for $body',
+      () async {
+        await seedPartial(body);
+        var clients = 0;
+        final subject = RoomModelStore(
+          directory: () async => root,
+          artifacts: artifacts,
+          clientFactory: () {
+            clients++;
+            return HttpClient();
+          },
+        );
+        stores.add(subject);
+        final boundary = _PartialLengthIO();
+        await IOOverrides.runWithIOOverrides(() async {
+          final pending = subject.prepare();
+          final failure = expectLater(
+            pending,
+            throwsA(isA<RoomModelDownloadException>()),
+          );
+          await boundary.started.future;
+          subject.cancel();
+          expect(subject.progress.stage, RoomModelDownloadStage.cancelled);
+          boundary.release.complete();
+          await failure;
+        }, boundary);
+        expect(subject.progress.stage, RoomModelDownloadStage.cancelled);
+        expect(
+          clients,
+          0,
+          reason: 'Cancelled metadata work must never create a client',
+        );
+      },
+    );
+  }
+
+  test(
     'inventory is read only and removal leaves unrelated files intact',
     () async {
       final subject = store();
@@ -278,21 +596,18 @@ void main() {
   );
 
   for (final body in ['hell', 'hello!']) {
-    test(
-      'rejects wrong byte count ${body.length} and removes partial file',
-      () async {
-        respond = (request) async {
-          request.response.write(body);
-          await request.response.close();
-        };
-        await expectLater(
-          store().load(),
-          throwsA(isA<RoomModelDownloadException>()),
-        );
-        expect(await cached('room_seg.tflite', _helloSha).exists(), isFalse);
-        expect(await partials(), isEmpty);
-      },
-    );
+    test('rejects wrong byte count ${body.length} without promoting', () async {
+      respond = (request) async {
+        request.response.write(body);
+        await request.response.close();
+      };
+      await expectLater(
+        store().load(),
+        throwsA(isA<RoomModelDownloadException>()),
+      );
+      expect(await cached('room_seg.tflite', _helloSha).exists(), isFalse);
+      expect(await partials(), body.length < 5 ? hasLength(1) : isEmpty);
+    });
   }
 
   test(
@@ -445,7 +760,7 @@ void main() {
   });
 
   test(
-    'stalled response body fails with bounded timeout and cleans partial',
+    'stalled response body fails with bounded timeout and retains partial',
     () async {
       final gate = Completer<void>();
       respond = (request) async {
@@ -468,7 +783,7 @@ void main() {
         throwsA(isA<RoomModelDownloadException>()),
       );
       expect(subject.progress.stage, RoomModelDownloadStage.failed);
-      expect(await partials(), isEmpty);
+      expect(await partials(), hasLength(1));
     },
   );
 
@@ -496,4 +811,70 @@ void main() {
       expect(await partials(), isEmpty);
     },
   );
+}
+
+final class _WriteFailureIO extends IOOverrides {
+  _WriteFailureIO(this.code);
+  final int code;
+  @override
+  File createFile(String path) {
+    final file = super.createFile(path);
+    return path.endsWith('.part') ? _WriteFailureFile(file, code) : file;
+  }
+}
+
+class _WriteFailureFile implements File {
+  _WriteFailureFile(this.delegate, this.code);
+  final File delegate;
+  final int code;
+  @override
+  String get path => delegate.path;
+  @override
+  Future<bool> exists() => delegate.exists();
+  @override
+  IOSink openWrite({
+    FileMode mode = FileMode.write,
+    Encoding encoding = utf8,
+  }) => throw FileSystemException(
+    'private write failure',
+    path,
+    OSError('private', code),
+  );
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+final class _PartialLengthIO extends IOOverrides {
+  final started = Completer<void>();
+  final release = Completer<void>();
+  @override
+  File createFile(String path) {
+    final file = super.createFile(path);
+    return path.endsWith('.part') ? _PartialLengthFile(file, this) : file;
+  }
+}
+
+class _PartialLengthFile implements File {
+  _PartialLengthFile(this.delegate, this.boundary);
+  final File delegate;
+  final _PartialLengthIO boundary;
+  @override
+  String get path => delegate.path;
+  @override
+  Future<bool> exists() => delegate.exists();
+  @override
+  Future<int> length() async {
+    if (!boundary.started.isCompleted) boundary.started.complete();
+    await boundary.release.future;
+    return delegate.length();
+  }
+
+  @override
+  Stream<List<int>> openRead([int? start, int? end]) =>
+      delegate.openRead(start, end);
+  @override
+  Future<RandomAccessFile> open({FileMode mode = FileMode.read}) =>
+      delegate.open(mode: mode);
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

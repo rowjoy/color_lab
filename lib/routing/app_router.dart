@@ -15,6 +15,7 @@ import '../features/picker/presentation/camera_picker_screen.dart';
 import '../features/picker/presentation/photo_picker_screen.dart';
 import '../features/room_studio/presentation/room_screen.dart';
 import '../features/room_studio/presentation/room_mask_screen.dart';
+import '../features/room_studio/presentation/room_model_setup_panel.dart';
 import '../features/room_studio/presentation/illustrated_room_gallery_screen.dart';
 import '../features/room_studio/presentation/illustrated_room_screen.dart';
 import '../features/shell/presentation/app_shell.dart';
@@ -110,7 +111,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/room/masks',
-        builder: (context, state) => const RoomMaskScreen(),
+        builder: (context, state) =>
+            const RoomModelSetupGate(child: RoomMaskScreen()),
       ),
       GoRoute(
         path: '/vision',

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/theme.dart';
+import '../../../l10n/l10n.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../history/domain/saved_color.dart';
 import '../../picker/presentation/color_explorer.dart';
@@ -22,7 +23,7 @@ class RoomScreen extends ConsumerWidget {
         const SizedBox(height: AppSpacing.md),
         PrimaryButton(
           key: const ValueKey('open-room-masks'),
-          label: 'Visualize your room',
+          label: context.l10n.roomUsePhoto,
           icon: Icons.format_paint_outlined,
           onPressed: () => context.push('/room/masks'),
         ),
@@ -42,7 +43,7 @@ class RoomScreen extends ConsumerWidget {
               const SizedBox(height: AppSpacing.lg),
               PrimaryButton(
                 key: const ValueKey('open-illustrated-gallery'),
-                label: 'Choose an illustrated room',
+                label: context.l10n.roomTryIllustrated,
                 icon: Icons.meeting_room_outlined,
                 onPressed: () => context.push('/room/illustrated'),
               ),

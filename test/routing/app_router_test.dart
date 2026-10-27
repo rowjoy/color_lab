@@ -281,6 +281,22 @@ void main() {
     expect(harness.router.state.uri.path, '/rooms');
   });
 
+  testWidgets('direct photo editor route presents optional model setup', (
+    tester,
+  ) async {
+    _configureView(tester, const Size(390, 844));
+    final harness = await _launch(tester);
+    addTearDown(harness.dispose);
+    harness.router.go('/room/masks');
+    await _pumpUntil(tester, find.byKey(const ValueKey('room-model-setup')));
+    expect(harness.router.state.uri.path, '/room/masks');
+    expect(find.byKey(const ValueKey('room-mask-gallery')), findsNothing);
+    expect(
+      find.byKey(const ValueKey('room-setup-illustrated')),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('invalid and unknown deep links recover safely to Home', (
     tester,
   ) async {

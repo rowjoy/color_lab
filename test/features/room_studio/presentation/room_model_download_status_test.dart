@@ -1,12 +1,15 @@
 import 'package:color_lab/features/room_studio/models/room_model_store.dart';
 import 'package:color_lab/features/room_studio/presentation/room_model_download_status.dart';
 import 'package:flutter/material.dart';
+import 'package:color_lab/l10n/l10n.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   Future<void> show(WidgetTester tester, RoomModelDownloadStage stage) async {
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: RoomModelDownloadStatus(
             progress: RoomModelDownloadProgress(

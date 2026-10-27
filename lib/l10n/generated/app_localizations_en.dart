@@ -11,6 +11,88 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get roomUsePhoto => 'Use my photo';
+
+  @override
+  String get roomTryIllustrated => 'Try an Illustrated Room';
+
+  @override
+  String get roomSetupTitle => 'Set up Room photo analysis';
+
+  @override
+  String get roomSetupIntro =>
+      'Download the optional AI models to find surfaces in your room photo.';
+
+  @override
+  String get roomSetupPrivacy =>
+      'Your photo stays on this device. Downloading models uses the network but never uploads your photos.';
+
+  @override
+  String get roomSetupOffline =>
+      'Once verified models are saved, room analysis works offline.';
+
+  @override
+  String get roomSetupDownload => 'Download';
+
+  @override
+  String get roomSetupLater => 'Later';
+
+  @override
+  String get roomSetupContinue => 'Continue';
+
+  @override
+  String get roomSetupRetry => 'Retry';
+
+  @override
+  String get roomSetupCancelled =>
+      'Download paused. Your saved progress is kept; Retry resumes when possible.';
+
+  @override
+  String get roomSetupFailure =>
+      'Could not download or verify the models. Check your connection, then retry. Your photo is safe.';
+
+  @override
+  String get roomSetupStorageFull =>
+      'There is not enough storage space. Free some space on this device, then retry. Your photo is safe.';
+
+  @override
+  String get roomSetupReady =>
+      'Verified models are saved on this device. Continue to choose your photo.';
+
+  @override
+  String get roomModelsChecking => 'Checking saved AI models…';
+
+  @override
+  String get roomModelsDownloading => 'Downloading AI models…';
+
+  @override
+  String get roomModelsVerifying => 'Verifying AI models…';
+
+  @override
+  String get roomModelsSurfaces => 'Room surfaces';
+
+  @override
+  String get roomModelsDepth => 'Foreground depth protection';
+
+  @override
+  String get roomModelsPrivacyOffline =>
+      'Your photo stays on this device. Once models are saved, AI works offline.';
+
+  @override
+  String get roomModelsEditorOffline =>
+      'Room analysis uses the models saved on this device and works offline.';
+
+  @override
+  String roomSetupSize(String bytes, String mib) {
+    return '$bytes bytes · $mib MiB';
+  }
+
+  @override
+  String roomModelsProgress(String received, String total, String percent) {
+    return '$received / $total MiB · $percent%';
+  }
+
+  @override
   String get modelsRemovalError =>
       'Couldn\'t remove all Room models. Some downloaded model files may already have been removed. Refresh storage, then retry removal.';
 

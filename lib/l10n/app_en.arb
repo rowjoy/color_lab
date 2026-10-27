@@ -1,4 +1,115 @@
 {
+  "roomUsePhoto": "Use my photo",
+  "@roomUsePhoto": {
+    "description": "Room model setup: Use my photo"
+  },
+  "roomTryIllustrated": "Try an Illustrated Room",
+  "@roomTryIllustrated": {
+    "description": "Room model setup: Try an Illustrated Room"
+  },
+  "roomSetupTitle": "Set up Room photo analysis",
+  "@roomSetupTitle": {
+    "description": "Room model setup: Set up Room photo analysis"
+  },
+  "roomSetupIntro": "Download the optional AI models to find surfaces in your room photo.",
+  "@roomSetupIntro": {
+    "description": "Room model setup: Download the optional AI models to find surfaces in your room photo."
+  },
+  "roomSetupPrivacy": "Your photo stays on this device. Downloading models uses the network but never uploads your photos.",
+  "@roomSetupPrivacy": {
+    "description": "Room model setup: Your photo stays on this device. Downloading models uses the network but never uploads your photos."
+  },
+  "roomSetupOffline": "Once verified models are saved, room analysis works offline.",
+  "@roomSetupOffline": {
+    "description": "Room model setup: Once verified models are saved, room analysis works offline."
+  },
+  "roomSetupDownload": "Download",
+  "@roomSetupDownload": {
+    "description": "Room model setup: Download"
+  },
+  "roomSetupLater": "Later",
+  "@roomSetupLater": {
+    "description": "Room model setup: Later"
+  },
+  "roomSetupContinue": "Continue",
+  "@roomSetupContinue": {
+    "description": "Room model setup: Continue"
+  },
+  "roomSetupRetry": "Retry",
+  "@roomSetupRetry": {
+    "description": "Room model setup: Retry"
+  },
+  "roomSetupCancelled": "Download paused. Your saved progress is kept; Retry resumes when possible.",
+  "@roomSetupCancelled": {
+    "description": "Room model setup: Download paused. Your saved progress is kept; Retry resumes when possible."
+  },
+  "roomSetupFailure": "Could not download or verify the models. Check your connection, then retry. Your photo is safe.",
+  "@roomSetupFailure": {
+    "description": "Room model setup: Could not download or verify the models. Check your connection, then retry. Your photo is safe."
+  },
+  "roomSetupStorageFull": "There is not enough storage space. Free some space on this device, then retry. Your photo is safe.",
+  "@roomSetupStorageFull": {
+    "description": "Room model setup: There is not enough storage space. Free some space on this device, then retry. Your photo is safe."
+  },
+  "roomSetupReady": "Verified models are saved on this device. Continue to choose your photo.",
+  "@roomSetupReady": {
+    "description": "Room model setup: Verified models are saved on this device. Continue to choose your photo."
+  },
+  "roomModelsChecking": "Checking saved AI models…",
+  "@roomModelsChecking": {
+    "description": "Room model setup: Checking saved AI models…"
+  },
+  "roomModelsDownloading": "Downloading AI models…",
+  "@roomModelsDownloading": {
+    "description": "Room model setup: Downloading AI models…"
+  },
+  "roomModelsVerifying": "Verifying AI models…",
+  "@roomModelsVerifying": {
+    "description": "Room model setup: Verifying AI models…"
+  },
+  "roomModelsSurfaces": "Room surfaces",
+  "@roomModelsSurfaces": {
+    "description": "Room model setup: Room surfaces"
+  },
+  "roomModelsDepth": "Foreground depth protection",
+  "@roomModelsDepth": {
+    "description": "Room model setup: Foreground depth protection"
+  },
+  "roomModelsPrivacyOffline": "Your photo stays on this device. Once models are saved, AI works offline.",
+  "@roomModelsPrivacyOffline": {
+    "description": "Room model setup: Your photo stays on this device. Once models are saved, AI works offline."
+  },
+  "roomModelsEditorOffline": "Room analysis uses the models saved on this device and works offline.",
+  "@roomModelsEditorOffline": {
+    "description": "Room model setup: Room analysis uses the models saved on this device and works offline."
+  },
+  "roomSetupSize": "{bytes} bytes · {mib} MiB",
+  "@roomSetupSize": {
+    "description": "Room model setup: {bytes} bytes · {mib} MiB",
+    "placeholders": {
+      "bytes": {
+        "type": "String"
+      },
+      "mib": {
+        "type": "String"
+      }
+    }
+  },
+  "roomModelsProgress": "{received} / {total} MiB · {percent}%",
+  "@roomModelsProgress": {
+    "description": "Room model setup: {received} / {total} MiB · {percent}%",
+    "placeholders": {
+      "received": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
   "modelsRemovalError": "Couldn't remove all Room models. Some downloaded model files may already have been removed. Refresh storage, then retry removal.",
   "@modelsRemovalError": {"description": "Removal-specific error: independent file deletes can partially succeed before an I/O failure."},
   "modelsRefresh": "Refresh storage",

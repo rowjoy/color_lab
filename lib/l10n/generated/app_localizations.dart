@@ -95,6 +95,144 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[Locale('en')];
 
+  /// Room model setup: Use my photo
+  ///
+  /// In en, this message translates to:
+  /// **'Use my photo'**
+  String get roomUsePhoto;
+
+  /// Room model setup: Try an Illustrated Room
+  ///
+  /// In en, this message translates to:
+  /// **'Try an Illustrated Room'**
+  String get roomTryIllustrated;
+
+  /// Room model setup: Set up Room photo analysis
+  ///
+  /// In en, this message translates to:
+  /// **'Set up Room photo analysis'**
+  String get roomSetupTitle;
+
+  /// Room model setup: Download the optional AI models to find surfaces in your room photo.
+  ///
+  /// In en, this message translates to:
+  /// **'Download the optional AI models to find surfaces in your room photo.'**
+  String get roomSetupIntro;
+
+  /// Room model setup: Your photo stays on this device. Downloading models uses the network but never uploads your photos.
+  ///
+  /// In en, this message translates to:
+  /// **'Your photo stays on this device. Downloading models uses the network but never uploads your photos.'**
+  String get roomSetupPrivacy;
+
+  /// Room model setup: Once verified models are saved, room analysis works offline.
+  ///
+  /// In en, this message translates to:
+  /// **'Once verified models are saved, room analysis works offline.'**
+  String get roomSetupOffline;
+
+  /// Room model setup: Download
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get roomSetupDownload;
+
+  /// Room model setup: Later
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get roomSetupLater;
+
+  /// Room model setup: Continue
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get roomSetupContinue;
+
+  /// Room model setup: Retry
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get roomSetupRetry;
+
+  /// Room model setup: Download paused. Your saved progress is kept; Retry resumes when possible.
+  ///
+  /// In en, this message translates to:
+  /// **'Download paused. Your saved progress is kept; Retry resumes when possible.'**
+  String get roomSetupCancelled;
+
+  /// Room model setup: Could not download or verify the models. Check your connection, then retry. Your photo is safe.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not download or verify the models. Check your connection, then retry. Your photo is safe.'**
+  String get roomSetupFailure;
+
+  /// Room model setup: There is not enough storage space. Free some space on this device, then retry. Your photo is safe.
+  ///
+  /// In en, this message translates to:
+  /// **'There is not enough storage space. Free some space on this device, then retry. Your photo is safe.'**
+  String get roomSetupStorageFull;
+
+  /// Room model setup: Verified models are saved on this device. Continue to choose your photo.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified models are saved on this device. Continue to choose your photo.'**
+  String get roomSetupReady;
+
+  /// Room model setup: Checking saved AI models…
+  ///
+  /// In en, this message translates to:
+  /// **'Checking saved AI models…'**
+  String get roomModelsChecking;
+
+  /// Room model setup: Downloading AI models…
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading AI models…'**
+  String get roomModelsDownloading;
+
+  /// Room model setup: Verifying AI models…
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying AI models…'**
+  String get roomModelsVerifying;
+
+  /// Room model setup: Room surfaces
+  ///
+  /// In en, this message translates to:
+  /// **'Room surfaces'**
+  String get roomModelsSurfaces;
+
+  /// Room model setup: Foreground depth protection
+  ///
+  /// In en, this message translates to:
+  /// **'Foreground depth protection'**
+  String get roomModelsDepth;
+
+  /// Room model setup: Your photo stays on this device. Once models are saved, AI works offline.
+  ///
+  /// In en, this message translates to:
+  /// **'Your photo stays on this device. Once models are saved, AI works offline.'**
+  String get roomModelsPrivacyOffline;
+
+  /// Room model setup: Room analysis uses the models saved on this device and works offline.
+  ///
+  /// In en, this message translates to:
+  /// **'Room analysis uses the models saved on this device and works offline.'**
+  String get roomModelsEditorOffline;
+
+  /// Room model setup: {bytes} bytes · {mib} MiB
+  ///
+  /// In en, this message translates to:
+  /// **'{bytes} bytes · {mib} MiB'**
+  String roomSetupSize(String bytes, String mib);
+
+  /// Room model setup: {received} / {total} MiB · {percent}%
+  ///
+  /// In en, this message translates to:
+  /// **'{received} / {total} MiB · {percent}%'**
+  String roomModelsProgress(String received, String total, String percent);
+
   /// Removal-specific error: independent file deletes can partially succeed before an I/O failure.
   ///
   /// In en, this message translates to:

@@ -50,6 +50,7 @@ enum RoomModelDownloadStage {
   verifying,
   ready,
   failed,
+  storageFull,
   cancelled,
 }
 
@@ -76,8 +77,12 @@ final class RoomModelDownloadProgress {
 }
 
 final class RoomModelDownloadException implements Exception {
-  const RoomModelDownloadException({this.cancelled = false});
+  const RoomModelDownloadException({
+    this.cancelled = false,
+    this.storageFull = false,
+  });
   final bool cancelled;
+  final bool storageFull;
 }
 
 final class _Load {
@@ -219,7 +224,64 @@ final class RoomModelStore implements LocalDataOwner {
   Stream<RoomModelDownloadProgress> get changes => _changes.stream;
   int get cancellationGeneration => _cancellationGeneration;
 
-  /// Verifies/downloads files without allocating inference buffers at startup.
+  /// Cache-only availability: never constructs a client or promotes a partial.
+  Future<bool> check() async {
+    if (_closed || _maintaining) {
+      throw const RoomModelDownloadException(cancelled: true);
+    }
+    final generation = _cancellationGeneration;
+    _emit(RoomModelDownloadStage.checking, 0);
+    try {
+      final root = await _directory();
+      var completed = 0;
+      for (final artifact in _artifacts) {
+        final file = File(
+          '${root.path}/room_models/${artifact.sha256}/${artifact.name}',
+        );
+        if (!await _valid(file, artifact)) {
+          if (!_closed && generation == _cancellationGeneration) {
+            _emit(RoomModelDownloadStage.idle, completed);
+          }
+          return false;
+        }
+        completed += artifact.bytes;
+      }
+      if (_closed || generation != _cancellationGeneration) {
+        throw const RoomModelDownloadException(cancelled: true);
+      }
+      _emit(RoomModelDownloadStage.ready, completed);
+      return true;
+    } catch (error) {
+      final cancelled = _closed || generation != _cancellationGeneration;
+      final capacity = _isCapacity(error);
+      if (!cancelled) {
+        _emit(
+          capacity
+              ? RoomModelDownloadStage.storageFull
+              : RoomModelDownloadStage.failed,
+          0,
+        );
+      }
+      throw RoomModelDownloadException(
+        cancelled: cancelled,
+        storageFull: capacity,
+      );
+    }
+  }
+
+  static bool _isCapacity(Object error) {
+    if (error is! FileSystemException) return false;
+    // Errno values overlap across operating systems. Only native no-space and
+    // disk-quota codes may turn an I/O failure into storage-full guidance.
+    final codes = Platform.isWindows
+        ? const {39, 112, 1295}
+        : Platform.isMacOS || Platform.isIOS
+        ? const {28, 69}
+        : const {28, 122};
+    return codes.contains(error.osError?.errorCode);
+  }
+
+  /// Explicitly downloads missing files without allocating inference buffers.
   Future<void> prepare() async {
     await _prepareFiles();
   }
@@ -321,14 +383,19 @@ final class RoomModelStore implements LocalDataOwner {
       operation.result.complete(files);
     } catch (error, stack) {
       final cancelled = _closed || operation.cancelled;
-      _emit(
-        cancelled
-            ? RoomModelDownloadStage.cancelled
-            : RoomModelDownloadStage.failed,
-        completed,
-      );
+      if (!cancelled) {
+        _emit(
+          _isCapacity(error)
+              ? RoomModelDownloadStage.storageFull
+              : RoomModelDownloadStage.failed,
+          completed,
+        );
+      }
       operation.result.completeError(
-        RoomModelDownloadException(cancelled: cancelled),
+        RoomModelDownloadException(
+          cancelled: cancelled,
+          storageFull: _isCapacity(error),
+        ),
         stack,
       );
     } finally {
@@ -346,44 +413,110 @@ final class RoomModelStore implements LocalDataOwner {
     final partial = File('${target.path}.part');
     await target.parent.create(recursive: true);
     _check(operation);
-    if (await partial.exists()) await partial.delete();
-    IOSink? sink;
-    try {
-      final client = operation.client ??= _clientFactory()
-        ..connectionTimeout = _timeout;
-      _emit(RoomModelDownloadStage.downloading, completed, artifact.name);
+    var offset = await partial.exists() ? await partial.length() : 0;
+    _check(operation);
+    if (offset > artifact.bytes) {
+      await partial.delete();
+      offset = 0;
+    }
+    if (offset == artifact.bytes) {
+      _emit(
+        RoomModelDownloadStage.verifying,
+        completed + offset,
+        artifact.name,
+      );
+      if (!await _valid(partial, artifact)) {
+        await partial.delete();
+        throw const RoomModelDownloadException();
+      }
+      _check(operation);
+      await partial.rename(target.path);
+      return;
+    }
+    _check(operation);
+    final client = operation.client ??= _clientFactory()
+      ..connectionTimeout = _timeout
+      ..autoUncompress = false;
+    var cleanFallback = false;
+    while (true) {
+      _check(operation);
+      _emit(
+        RoomModelDownloadStage.downloading,
+        completed + offset,
+        artifact.name,
+      );
       final request = await client
           .getUrl(Uri.parse(artifact.url))
           .timeout(_timeout);
       _check(operation);
+      request.headers.set(HttpHeaders.acceptEncodingHeader, 'identity');
+      if (offset > 0) {
+        request.headers.set(HttpHeaders.rangeHeader, 'bytes=$offset-');
+      }
       final response = await request.close().timeout(_timeout);
       _check(operation);
-      if (response.statusCode != HttpStatus.ok ||
-          (response.contentLength >= 0 &&
-              response.contentLength != artifact.bytes)) {
+      final range = response.headers.value(HttpHeaders.contentRangeHeader);
+      final match = range == null
+          ? null
+          : RegExp(r'^bytes (\d+)-(\d+)/(\d+)$').firstMatch(range);
+      final validRange =
+          offset > 0 &&
+          response.statusCode == HttpStatus.partialContent &&
+          match != null &&
+          int.tryParse(match[1]!) == offset &&
+          int.tryParse(match[2]!) == artifact.bytes - 1 &&
+          int.tryParse(match[3]!) == artifact.bytes &&
+          (response.contentLength < 0 ||
+              response.contentLength == artifact.bytes - offset);
+      final validFull =
+          response.statusCode == HttpStatus.ok &&
+          (response.contentLength < 0 ||
+              response.contentLength == artifact.bytes);
+      if (!validRange && !validFull) {
+        await response.listen((_) {}).cancel();
+        if (offset > 0 && !cleanFallback) {
+          offset = 0;
+          cleanFallback = true;
+          continue;
+        }
         throw const RoomModelDownloadException();
       }
-      var received = 0;
-      Stream<List<int>> chunks() async* {
-        await for (final bytes in response.timeout(_timeout)) {
-          _check(operation);
-          received += bytes.length;
-          if (received > artifact.bytes) {
-            throw const RoomModelDownloadException();
+      // A server ignoring Range supplies a full response. Truncate before
+      // consuming that same response, never append it to the retained prefix.
+      if (validFull) offset = 0;
+      var received = offset;
+      var oversize = false;
+      final sink = partial.openWrite(
+        mode: offset > 0 ? FileMode.append : FileMode.write,
+      );
+      try {
+        Stream<List<int>> chunks() async* {
+          await for (final bytes in response.timeout(_timeout)) {
+            _check(operation);
+            received += bytes.length;
+            if (received > artifact.bytes) {
+              oversize = true;
+              throw const RoomModelDownloadException();
+            }
+            yield bytes;
+            _check(operation);
+            _emit(
+              RoomModelDownloadStage.downloading,
+              completed + received,
+              artifact.name,
+            );
           }
-          _emit(
-            RoomModelDownloadStage.downloading,
-            completed + received,
-            artifact.name,
-          );
-          yield bytes;
+        }
+
+        await sink.addStream(chunks());
+        await sink.flush();
+      } finally {
+        try {
+          await sink.close();
+        } finally {
+          if (oversize && await partial.exists()) await partial.delete();
         }
       }
-
-      sink = partial.openWrite();
-      await sink.addStream(chunks());
-      await sink.close();
-      sink = null;
       _check(operation);
       if (received != artifact.bytes) throw const RoomModelDownloadException();
       _emit(
@@ -392,18 +525,12 @@ final class RoomModelStore implements LocalDataOwner {
         artifact.name,
       );
       if (!await _valid(partial, artifact)) {
+        await partial.delete();
         throw const RoomModelDownloadException();
       }
       _check(operation);
       await partial.rename(target.path);
-    } finally {
-      try {
-        await sink?.close();
-      } catch (_) {
-        // A source-stream failure can also fail close(). Still remove its part.
-      } finally {
-        if (await partial.exists()) await partial.delete();
-      }
+      return;
     }
   }
 
@@ -414,6 +541,11 @@ final class RoomModelStore implements LocalDataOwner {
     final operation = _active;
     if (operation == null || operation.cancelled) return;
     operation.cancelled = true;
+    _emit(
+      RoomModelDownloadStage.cancelled,
+      _progress.receivedBytes,
+      _progress.modelName,
+    );
     operation.client?.close(force: true);
   }
 
