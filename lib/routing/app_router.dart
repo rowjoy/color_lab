@@ -198,7 +198,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       StatefulShellRoute.indexedStack(
         restorationScopeId: 'tintatlas-shell',
-        builder: (context, state, shell) => AppShell(navigationShell: shell),
+        pageBuilder: (context, state, shell) => MaterialPage<void>(
+          key: state.pageKey,
+          restorationId: 'tintatlas-shell-page',
+          child: AppShell(navigationShell: shell),
+        ),
         branches: [
           _homeBranch(homeNavigatorKey),
           _roomsBranch(roomsNavigatorKey),

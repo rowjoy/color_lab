@@ -123,6 +123,117 @@ void main() {
     expect(harness.router.state.uri.path, '/home');
   });
 
+  testWidgets('My Work visible Back returns to the preceding desktop route', (
+    tester,
+  ) async {
+    _configureView(tester, const Size(1280, 800));
+    final harness = await _launch(tester);
+    addTearDown(harness.dispose);
+    await tester.tap(find.byKey(const ValueKey('nav-learn')));
+    await _pumpUntil(tester, find.byType(LearnScreen));
+    harness.router.push<void>('/my-work');
+    await tester.pumpAndSettle();
+
+    final back = find.byKey(const ValueKey('my-work-back'));
+    expect(back.hitTestable(), findsOneWidget);
+    expect(
+      find.descendant(of: back, matching: find.text('Back')),
+      findsOneWidget,
+    );
+    await tester.tap(back);
+    await tester.pumpAndSettle();
+    expect(find.byType(LearnScreen), findsOneWidget);
+    expect(harness.router.state.uri.path, '/learn');
+  });
+
+  testWidgets('My Work direct link has a visible Back fallback to Home', (
+    tester,
+  ) async {
+    _configureView(tester, const Size(390, 844));
+    final harness = await _launch(tester);
+    addTearDown(harness.dispose);
+    harness.router.go('/my-work');
+    await tester.pumpAndSettle();
+    expect(harness.router.canPop(), isFalse);
+
+    await tester.tap(find.byKey(const ValueKey('my-work-back')));
+    await tester.pumpAndSettle();
+    expect(find.byType(HomeScreen), findsOneWidget);
+    expect(harness.router.state.uri.path, '/home');
+  });
+
+  testWidgets(
+    'Home Learn card restores Lab stack and draft, then system Back',
+    (tester) async {
+      _configureView(tester, const Size(390, 844));
+      final harness = await _launch(tester);
+      addTearDown(harness.dispose);
+      await tester.tap(find.byKey(const ValueKey('nav-learn')));
+      await tester.pumpAndSettle();
+      final openLab = find.byKey(const ValueKey('learn-open-lab'));
+      await tester.ensureVisible(openLab);
+      await tester.tap(openLab);
+      await tester.pumpAndSettle();
+      tester.widgetList<Slider>(find.byType(Slider)).first.onChanged!(123);
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('nav-home')));
+      await tester.pumpAndSettle();
+      final learnCard = find.byKey(const ValueKey('home-card-learn'));
+      await tester.ensureVisible(learnCard);
+      await tester.tap(learnCard);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(LabScreen), findsOneWidget);
+      expect(harness.router.state.uri.path, '/lab');
+      expect(
+        tester.widgetList<Slider>(find.byType(Slider)).first.value,
+        closeTo(123, .01),
+      );
+      expect(await tester.binding.handlePopRoute(), isTrue);
+      await tester.pumpAndSettle();
+      expect(find.byType(LearnScreen), findsOneWidget);
+      expect(harness.router.state.uri.path, '/learn');
+    },
+  );
+
+  testWidgets('fresh router restores active and retained branch stacks', (
+    tester,
+  ) async {
+    _configureView(tester, const Size(390, 844));
+    final original = await _launch(tester);
+    await tester.tap(find.byKey(const ValueKey('nav-learn')));
+    await tester.pumpAndSettle();
+    final openLab = find.byKey(const ValueKey('learn-open-lab'));
+    await tester.ensureVisible(openLab);
+    await tester.tap(openLab);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('nav-rooms')));
+    await tester.pumpAndSettle();
+    final restoration = await tester.getRestorationData();
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    original.dispose();
+    await tester.restoreFrom(restoration);
+    final restored = await _launch(
+      tester,
+      expectedScreen: find.byType(RoomScreen),
+    );
+    addTearDown(restored.dispose);
+    expect(identical(restored.router, original.router), isFalse);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(RoomScreen), findsOneWidget);
+    expect(restored.router.state.uri.path, '/rooms');
+    await tester.tap(find.byKey(const ValueKey('nav-learn')));
+    await tester.pumpAndSettle();
+    expect(find.byType(LabScreen), findsOneWidget);
+    expect(restored.router.state.uri.path, '/lab');
+    expect(await tester.binding.handlePopRoute(), isTrue);
+    await tester.pumpAndSettle();
+    expect(find.byType(LearnScreen), findsOneWidget);
+    expect(restored.router.state.uri.path, '/learn');
+  });
+
   testWidgets('legacy tool paths and the Room redirect remain valid', (
     tester,
   ) async {
@@ -210,7 +321,10 @@ final class _RouterHarness {
   void dispose() => container.dispose();
 }
 
-Future<_RouterHarness> _launch(WidgetTester tester) async {
+Future<_RouterHarness> _launch(
+  WidgetTester tester, {
+  Finder? expectedScreen,
+}) async {
   final container = ProviderContainer(
     overrides: [
       acquisitionIntentStoreProvider.overrideWith(
@@ -239,11 +353,12 @@ Future<_RouterHarness> _launch(WidgetTester tester) async {
       ),
     ],
   );
+  await container.read(appPreferencesProvider.future);
   await tester.pumpWidget(
     UncontrolledProviderScope(container: container, child: const ColorLabApp()),
   );
   final router = container.read(appRouterProvider);
-  await _pumpUntil(tester, find.byType(HomeScreen));
+  await _pumpUntil(tester, expectedScreen ?? find.byType(HomeScreen));
   return _RouterHarness(container, router);
 }
 

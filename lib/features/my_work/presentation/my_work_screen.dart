@@ -26,6 +26,22 @@ class MyWorkScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) => StudioPage(
     name: 'MyWork',
     children: [
+      Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: SecondaryButton(
+          key: const ValueKey('my-work-back'),
+          label: context.l10n.back,
+          icon: Icons.arrow_back_rounded,
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/home');
+            }
+          },
+        ),
+      ),
+      const SizedBox(height: AppSpacing.lg),
       StudioHeading(
         eyebrow: context.l10n.myWorkEyebrow,
         title: context.l10n.myWorkTitle,

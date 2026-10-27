@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../l10n/l10n.dart';
+import '../../shell/presentation/app_shell.dart';
 import '../../shell/presentation/studio_page.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -73,7 +74,7 @@ class HomeScreen extends StatelessWidget {
                 icon: Icons.chair_outlined,
                 title: context.l10n.homeRoomsTitle,
                 description: context.l10n.homeRoomsBody,
-                onTap: () => context.go('/rooms'),
+                onTap: () => _openDestination(context, AppDestination.rooms),
               ),
               _HomeActionCard(
                 key: const ValueKey('home-card-learn'),
@@ -81,7 +82,7 @@ class HomeScreen extends StatelessWidget {
                 icon: Icons.school_outlined,
                 title: context.l10n.homeLearnTitle,
                 description: context.l10n.homeLearnBody,
-                onTap: () => context.go('/learn'),
+                onTap: () => _openDestination(context, AppDestination.learn),
               ),
               _HomeActionCard(
                 key: const ValueKey('home-card-games'),
@@ -89,7 +90,7 @@ class HomeScreen extends StatelessWidget {
                 icon: Icons.sports_esports_outlined,
                 title: context.l10n.homeGamesTitle,
                 description: context.l10n.homeGamesBody,
-                onTap: () => context.go('/games'),
+                onTap: () => _openDestination(context, AppDestination.games),
               ),
               _HomeActionCard(
                 key: const ValueKey('home-card-my-work'),
@@ -105,6 +106,15 @@ class HomeScreen extends StatelessWidget {
       ),
     ],
   );
+
+  void _openDestination(BuildContext context, AppDestination destination) {
+    final shell = StatefulNavigationShell.maybeOf(context);
+    if (shell != null) {
+      shell.goBranch(destination.index);
+    } else {
+      context.go(destination.path);
+    }
+  }
 }
 
 class _HomeActionCard extends StatelessWidget {
