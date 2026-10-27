@@ -4,6 +4,7 @@ import 'package:color_lab/core/color/color_models.dart';
 import 'package:color_lab/core/image/photo_processing.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as image;
+import '../../support/room_png_fixtures.dart';
 
 void main() {
   Matcher fails(PhotoProcessingFailure kind) => throwsA(
@@ -53,6 +54,35 @@ void main() {
     final preview = image.decodePng(photo.previewBytes)!;
     expect(preview.iccProfile, isNull);
     expect(photo.sample(.5, .5), RgbColor(12, 34, 56));
+  });
+
+  test('strips text XMP profile and EXIF from prepared pixel copies', () {
+    final input = image.Image(width: 2, height: 1)
+      ..setPixelRgb(0, 0, 14, 28, 42);
+    input.textData = {
+      'XML:com.adobe.xmp': '<private>GPS</private>',
+      'Comment': 'room',
+    };
+    input.exif.imageIfd.imageDescription = 'private source';
+    input.iccProfile = image.IccProfile(
+      'source',
+      image.IccProfileCompression.none,
+      Uint8List.fromList([1, 2, 3]),
+    );
+    final source = image.encodePng(input);
+    final original = Uint8List.fromList(source);
+    final prepared = preparePhoto(source);
+    expect(source, original);
+    expect(
+      pngChunks(prepared.previewBytes).map((c) => c.$1),
+      everyElement(isIn(['IHDR', 'IDAT', 'IEND'])),
+    );
+    expect(
+      image
+          .decodePng(prepared.previewBytes)!
+          .getBytes(order: image.ChannelOrder.rgba),
+      prepared.rgbaBytes,
+    );
   });
 
   test('composites partial and fully transparent pixels over white', () {
@@ -157,6 +187,8 @@ void main() {
         pixel.setRgb(color.red, color.green, color.blue);
       }
       input.exif.imageIfd.orientation = entry.key;
+      input.exif.gpsIfd[1] = image.IfdValueAscii('N');
+      input.exif.imageIfd.imageDescription = 'private GPS room';
       final photo = preparePhoto(image.encodeJpg(input, quality: 100));
       expect((photo.width, photo.height), entry.key < 5 ? (32, 16) : (16, 32));
       final positions = [(0.25, 0.25), (.75, .25), (.25, .75), (.75, .75)];
@@ -167,6 +199,10 @@ void main() {
         expect(actual.green, closeTo(expected.green, 3));
         expect(actual.blue, closeTo(expected.blue, 3));
       }
+      expect(
+        pngChunks(photo.previewBytes).map((c) => c.$1),
+        everyElement(isIn(['IHDR', 'IDAT', 'IEND'])),
+      );
       final preview = image.decodePng(photo.previewBytes)!;
       expect(preview.getBytes(order: image.ChannelOrder.rgba), photo.rgbaBytes);
     });

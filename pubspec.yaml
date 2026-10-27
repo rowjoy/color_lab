@@ -28,6 +28,8 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  # Existing lock version: bounded Room PNG verification via public stream APIs.
+  archive: 4.5.2
   camera: ^0.12.0+2
   characters: 1.4.1
   crypto: 3.0.7

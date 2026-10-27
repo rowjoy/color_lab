@@ -80,6 +80,8 @@ final class AcquisitionReceipt {
 enum AcquisitionFailureKind {
   permissionDenied,
   unavailable,
+  cameraUnavailable,
+  unsupported,
   invalidImage,
   tooLarge,
   processing,

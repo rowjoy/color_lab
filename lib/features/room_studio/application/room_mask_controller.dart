@@ -668,11 +668,14 @@ class RoomMaskController extends Notifier<RoomMaskState> {
           RoomMaskFailureKind.permissionDenied,
         AcquisitionFailureKind.unavailable =>
           RoomMaskFailureKind.acquisitionUnavailable,
+        AcquisitionFailureKind.cameraUnavailable =>
+          RoomMaskFailureKind.cameraUnavailable,
+        AcquisitionFailureKind.unsupported => RoomMaskFailureKind.unsupported,
         AcquisitionFailureKind.invalidImage => RoomMaskFailureKind.invalidImage,
         AcquisitionFailureKind.tooLarge => RoomMaskFailureKind.tooLarge,
         AcquisitionFailureKind.storage => RoomMaskFailureKind.storage,
         AcquisitionFailureKind.processing ||
-        AcquisitionFailureKind.recovery => RoomMaskFailureKind.processing,
+        AcquisitionFailureKind.recovery => RoomMaskFailureKind.preparation,
       };
 }
 

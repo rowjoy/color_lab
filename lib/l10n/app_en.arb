@@ -675,5 +675,211 @@
   "@aboutAndLicenses": {
     "description": "Label that opens product information and open-source licenses.",
     "placeholders": {"appName": {"type": "String"}}
+  },
+  "roomExportLimits": "Display calibration, camera processing, lighting, wall texture, paint finish, surrounding colors, and variation in real paint can change how colors appear. Previews guide exploration and are not calibrated matches for buying paint.",
+  "@roomExportLimits": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomExportResolution": "PNG · {width} × {height} pixels. Exported at the processed working resolution.",
+  "@roomExportResolution": {
+    "description": "Room photo privacy, export, or typed recovery copy.",
+    "placeholders": {
+      "width": {
+        "type": "int"
+      },
+      "height": {
+        "type": "int"
+      }
+    }
+  },
+  "roomExportSelected": "Export selected variant: {name}",
+  "@roomExportSelected": {
+    "description": "Room photo privacy, export, or typed recovery copy.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "roomExportEffects": "Save image adds an external image to Photos or Gallery. Share opens the system sheet. Neither action saves the editable project.",
+  "@roomExportEffects": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomExportUnsaved": "This project has unsaved edits. Exporting an image does not save those edits.",
+  "@roomExportUnsaved": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomExportTitle": "{appName} room preview",
+  "@roomExportTitle": {
+    "description": "Room photo privacy, export, or typed recovery copy.",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "roomExportSave": "Save image",
+  "@roomExportSave": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomExportShare": "Share PNG",
+  "@roomExportShare": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomExportSaving": "Preparing image…",
+  "@roomExportSaving": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomExportSaved": "Image added to Photos or Gallery.",
+  "@roomExportSaved": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomExportShared": "The share sheet completed.",
+  "@roomExportShared": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomExportDismissed": "Share sheet dismissed.",
+  "@roomExportDismissed": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomExportUnavailable": "The sharing result could not be determined.",
+  "@roomExportUnavailable": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomExportAccess": "Photo access is off. Allow access in Settings, then try saving again.",
+  "@roomExportAccess": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomExportCapacity": "Storage is full. Free some space, then retry Save image. Check Photos or Gallery first; an image may already have been added.",
+  "@roomExportCapacity": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomExportSaveFailed": "Could not confirm the image was saved. Check Photos or Gallery before retrying; an image may already have been added.",
+  "@roomExportSaveFailed": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomExportShareFailed": "Could not share the PNG. Try again.",
+  "@roomExportShareFailed": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomExportInvalid": "This preview could not be verified for export. Your photo and edits are safe. Retry the preview.",
+  "@roomExportInvalid": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomExportInterrupted": "Export was interrupted. Return to the current preview and try again.",
+  "@roomExportInterrupted": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomOpenSettings": "Open Settings",
+  "@roomOpenSettings": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomTryAgain": "Try again",
+  "@roomTryAgain": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomChoosePhoto": "Choose photo",
+  "@roomChoosePhoto": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomChooseSupported": "Choose another supported image",
+  "@roomChooseSupported": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomChooseSmaller": "Choose a smaller image",
+  "@roomChooseSmaller": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomRetryPreview": "Retry preview",
+  "@roomRetryPreview": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomRetrySaveImage": "Retry Save image",
+  "@roomRetrySaveImage": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomRetryShare": "Retry Share",
+  "@roomRetryShare": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomPhotoPermission": "Photo access is off. Allow access in Settings to continue.",
+  "@roomPhotoPermission": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomCameraUnavailable": "A camera is unavailable. Choose a photo from this device.",
+  "@roomCameraUnavailable": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomPickerUnavailable": "The photo picker is unavailable. Try again.",
+  "@roomPickerUnavailable": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomPhotoUnsupported": "This format is not supported. Choose a JPEG, PNG, GIF, WebP, BMP, or TIFF image.",
+  "@roomPhotoUnsupported": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomPhotoInvalid": "This image could not be read. Choose another supported image.",
+  "@roomPhotoInvalid": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomPhotoTooLarge": "This image is too large to process. Choose a smaller image.",
+  "@roomPhotoTooLarge": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomPhotoPreparation": "This photo could not be prepared. Choose another supported image.",
+  "@roomPhotoPreparation": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomPhotoStorage": "The photo request could not be stored. Your prepared photo is kept when available. Retry the storage action.",
+  "@roomPhotoStorage": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomRetryPhotoStorage": "Retry photo storage",
+  "@roomRetryPhotoStorage": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomModelUnavailable": "Automatic masks need model setup. Your photo is kept; set up the models or edit manually.",
+  "@roomModelUnavailable": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomModelIncompatible": "The installed models could not analyze this photo. Your photo is kept; retry model setup or edit manually.",
+  "@roomModelIncompatible": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomAnalysisInvalid": "Automatic analysis returned unusable masks. Your photo is kept; retry analysis or edit manually.",
+  "@roomAnalysisInvalid": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomModelSetupAction": "Set up models",
+  "@roomModelSetupAction": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomPreviewFailed": "Preview could not update. Your photo and masks are safe.",
+  "@roomPreviewFailed": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomRestoreTitle": "Restore AI masks?",
+  "@roomRestoreTitle": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomRestoreMessage": "Your manual changes will be replaced by the original automatic masks. This clears the undo history.",
+  "@roomRestoreMessage": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomRestoreAction": "Restore",
+  "@roomRestoreAction": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomReplaceTitle": "Replace room photo?",
+  "@roomReplaceTitle": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomReplaceMessage": "After a new photo is analyzed successfully, it replaces these masks and their undo history. Your current masks stay available if you cancel or analysis fails.",
+  "@roomReplaceMessage": {
+    "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "roomDialogCancel": "Cancel",
+  "@roomDialogCancel": {
+    "description": "Room photo privacy, export, or typed recovery copy."
   }
 }

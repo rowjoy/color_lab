@@ -1,3 +1,5 @@
+import 'dart:io';
+import '../../../support/room_png_fixtures.dart';
 import 'package:color_lab/core/image/photo_processing.dart';
 import 'package:color_lab/features/picker/application/photo_picker_service.dart';
 import 'package:color_lab/features/picker/application/photo_processor.dart';
@@ -13,6 +15,11 @@ class Picker extends ImagePicker {
   PlatformException? error;
   LostDataResponse lost = LostDataResponse.empty();
   int recoveries = 0;
+  bool cameraAvailable = true;
+  int picks = 0;
+  @override
+  bool supportsImageSource(ImageSource source) =>
+      source != ImageSource.camera || cameraAvailable;
   ImageSource expectedSource = ImageSource.gallery;
 
   @override
@@ -24,6 +31,7 @@ class Picker extends ImagePicker {
     CameraDevice preferredCameraDevice = CameraDevice.rear,
     bool requestFullMetadata = true,
   }) async {
+    picks++;
     // Reject requests which could ask for broad metadata permission or send an
     // unbounded image to the worker. The output below remains real image data.
     if (source != expectedSource ||
@@ -57,6 +65,43 @@ class LargeFile extends XFile {
 }
 
 void main() {
+  test(
+    'lost-data and selected source use identical metadata-free preparation without deleting source',
+    () async {
+      final root = await Directory.systemTemp.createTemp('picker-source-');
+      addTearDown(() => root.delete(recursive: true));
+      final input = img.Image(width: 32, height: 16)
+        ..setPixelRgb(4, 4, 255, 0, 0);
+      input.exif.imageIfd.orientation = 6;
+      input.exif.gpsIfd[1] = img.IfdValueAscii('N');
+      input.textData = {'XML:com.adobe.xmp': 'private GPS room'};
+      for (final bytes in [img.encodeJpg(input), img.encodePng(input)]) {
+        final source = File('${root.path}/original');
+        await source.writeAsBytes(bytes);
+        final picker = Picker()
+          ..file = XFile(source.path)
+          ..lost = LostDataResponse(
+            files: [XFile(source.path)],
+            type: RetrieveType.image,
+          );
+        final adapter = PluginPhotoPickerService(
+          picker: picker,
+          processor: InlineProcessor(),
+          platform: TargetPlatform.android,
+        );
+        final selected = (await adapter.pick())!,
+            recovered = (await adapter.recoverLost())!;
+        expect(recovered.previewBytes, selected.previewBytes);
+        expect(recovered.rgbaBytes, selected.rgbaBytes);
+        expect(
+          pngChunks(recovered.previewBytes).map((c) => c.$1),
+          everyElement(isIn(['IHDR', 'IDAT', 'IEND'])),
+        );
+        expect(await source.readAsBytes(), bytes);
+      }
+    },
+  );
+
   PluginPhotoPickerService service(
     Picker picker, [
     TargetPlatform platform = TargetPlatform.android,
@@ -66,6 +111,52 @@ void main() {
     platform: platform,
   );
 
+  test(
+    'unavailable camera does not open picker and remains distinct',
+    () async {
+      final picker = Picker()..cameraAvailable = false;
+      await expectLater(
+        service(picker).pick(source: PhotoSource.camera),
+        throwsA(
+          isA<PhotoPickFailure>().having(
+            (e) => e.kind.name,
+            'kind',
+            'cameraUnavailable',
+          ),
+        ),
+      );
+      expect(picker.picks, 0);
+    },
+  );
+  test('unsupported containers are distinct from corrupt images', () async {
+    final picker = Picker()
+      ..file = XFile.fromData(
+        Uint8List.fromList([
+          0,
+          0,
+          0,
+          24,
+          102,
+          116,
+          121,
+          112,
+          104,
+          101,
+          105,
+          99,
+        ]),
+      );
+    await expectLater(
+      service(picker).pick(),
+      throwsA(
+        isA<PhotoPickFailure>().having(
+          (e) => e.kind.name,
+          'kind',
+          'unsupported',
+        ),
+      ),
+    );
+  });
   test(
     'camera preserves bounded native options and processes selected image',
     () async {

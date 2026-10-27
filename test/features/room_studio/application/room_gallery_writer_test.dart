@@ -8,6 +8,52 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gal/gal.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  test(
+    'prepared Gallery terminal seam rechecks after file work and maps native capacity',
+    () async {
+      final root = await Directory.systemTemp.createTemp('terminal-gallery-');
+      addTearDown(() => root.delete(recursive: true));
+      const channel = MethodChannel('gal');
+      var writes = 0;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+            writes++;
+            throw PlatformException(
+              code: 'NOT_ENOUGH_SPACE',
+              message: '/private/source',
+            );
+          });
+      addTearDown(
+        () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(channel, null),
+      );
+      final writer = GalRoomGalleryWriter(
+        platform: TargetPlatform.android,
+        isWeb: false,
+        temporaryRoot: () async => root,
+      );
+      await expectLater(
+        writer.savePreparedPng(
+          pngBytes: _png(),
+          fileName: 'tintatlas-room-photo.png',
+          beforeHandoff: () => false,
+        ),
+        throwsA(isA<RoomExportInterrupted>()),
+      );
+      expect(writes, 0);
+      await expectLater(
+        writer.savePreparedPng(
+          pngBytes: _png(),
+          fileName: 'tintatlas-room-photo.png',
+          beforeHandoff: () => true,
+        ),
+        _failsWith(RoomGalleryFailure.notEnoughSpace),
+      );
+      expect(writes, 1);
+      expect(await root.list().length, 0);
+    },
+  );
   late Directory root;
 
   setUp(() async {

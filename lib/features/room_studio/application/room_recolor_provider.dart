@@ -228,8 +228,12 @@ class RoomRecolorCoordinator extends Notifier<RoomRecolorPreviews>
     _submit();
   }
 
-  void retry() {
-    if (_eligible) _submit();
+  void retry({bool discardActive = false}) {
+    if (!_eligible) return;
+    // Export verification can reject a frame whose key/dimensions were valid.
+    // Release only that selected lane so its explicit recovery renders again.
+    if (discardActive) _active.clear();
+    _submit();
   }
 
   void _submit() {

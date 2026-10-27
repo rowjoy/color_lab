@@ -103,6 +103,19 @@ void main() {
     return container;
   }
 
+  for (final kind in PhotoPickFailureKind.values) {
+    test(
+      'recovery preserves typed $kind without reopening native picker',
+      () async {
+        final adapter = Adapter()..recoveryFailure = PhotoPickFailure(kind);
+        final c = containerFor(Store(), adapter);
+        await c.read(photoAcquisitionProvider.notifier).ensureRecovered();
+        expect(c.read(photoAcquisitionProvider).failure?.name, kind.name);
+        expect(adapter.pickCalls, 0);
+      },
+    );
+  }
+
   Future<void> tick() => Future<void>.delayed(Duration.zero);
 
   test(
@@ -587,7 +600,7 @@ void main() {
       expect(adapter.pickCalls, 0);
       expect(
         container.read(photoAcquisitionProvider).failure,
-        AcquisitionFailureKind.recovery,
+        AcquisitionFailureKind.processing,
       );
     },
   );

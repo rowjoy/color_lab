@@ -1792,6 +1792,288 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'About {appName} & licenses'**
   String aboutAndLicenses(String appName);
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Display calibration, camera processing, lighting, wall texture, paint finish, surrounding colors, and variation in real paint can change how colors appear. Previews guide exploration and are not calibrated matches for buying paint.'**
+  String get roomExportLimits;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'PNG · {width} × {height} pixels. Exported at the processed working resolution.'**
+  String roomExportResolution(int width, int height);
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Export selected variant: {name}'**
+  String roomExportSelected(String name);
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Save image adds an external image to Photos or Gallery. Share opens the system sheet. Neither action saves the editable project.'**
+  String get roomExportEffects;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'This project has unsaved edits. Exporting an image does not save those edits.'**
+  String get roomExportUnsaved;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'{appName} room preview'**
+  String roomExportTitle(String appName);
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Save image'**
+  String get roomExportSave;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Share PNG'**
+  String get roomExportShare;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing image…'**
+  String get roomExportSaving;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Image added to Photos or Gallery.'**
+  String get roomExportSaved;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'The share sheet completed.'**
+  String get roomExportShared;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Share sheet dismissed.'**
+  String get roomExportDismissed;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'The sharing result could not be determined.'**
+  String get roomExportUnavailable;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo access is off. Allow access in Settings, then try saving again.'**
+  String get roomExportAccess;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage is full. Free some space, then retry Save image. Check Photos or Gallery first; an image may already have been added.'**
+  String get roomExportCapacity;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not confirm the image was saved. Check Photos or Gallery before retrying; an image may already have been added.'**
+  String get roomExportSaveFailed;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not share the PNG. Try again.'**
+  String get roomExportShareFailed;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'This preview could not be verified for export. Your photo and edits are safe. Retry the preview.'**
+  String get roomExportInvalid;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Export was interrupted. Return to the current preview and try again.'**
+  String get roomExportInterrupted;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get roomOpenSettings;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get roomTryAgain;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose photo'**
+  String get roomChoosePhoto;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose another supported image'**
+  String get roomChooseSupported;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a smaller image'**
+  String get roomChooseSmaller;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry preview'**
+  String get roomRetryPreview;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry Save image'**
+  String get roomRetrySaveImage;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry Share'**
+  String get roomRetryShare;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo access is off. Allow access in Settings to continue.'**
+  String get roomPhotoPermission;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'A camera is unavailable. Choose a photo from this device.'**
+  String get roomCameraUnavailable;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'The photo picker is unavailable. Try again.'**
+  String get roomPickerUnavailable;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'This format is not supported. Choose a JPEG, PNG, GIF, WebP, BMP, or TIFF image.'**
+  String get roomPhotoUnsupported;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'This image could not be read. Choose another supported image.'**
+  String get roomPhotoInvalid;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'This image is too large to process. Choose a smaller image.'**
+  String get roomPhotoTooLarge;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'This photo could not be prepared. Choose another supported image.'**
+  String get roomPhotoPreparation;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'The photo request could not be stored. Your prepared photo is kept when available. Retry the storage action.'**
+  String get roomPhotoStorage;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry photo storage'**
+  String get roomRetryPhotoStorage;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic masks need model setup. Your photo is kept; set up the models or edit manually.'**
+  String get roomModelUnavailable;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'The installed models could not analyze this photo. Your photo is kept; retry model setup or edit manually.'**
+  String get roomModelIncompatible;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic analysis returned unusable masks. Your photo is kept; retry analysis or edit manually.'**
+  String get roomAnalysisInvalid;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up models'**
+  String get roomModelSetupAction;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview could not update. Your photo and masks are safe.'**
+  String get roomPreviewFailed;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore AI masks?'**
+  String get roomRestoreTitle;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Your manual changes will be replaced by the original automatic masks. This clears the undo history.'**
+  String get roomRestoreMessage;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get roomRestoreAction;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace room photo?'**
+  String get roomReplaceTitle;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'After a new photo is analyzed successfully, it replaces these masks and their undo history. Your current masks stay available if you cancel or analysis fails.'**
+  String get roomReplaceMessage;
+
+  /// Room photo privacy, export, or typed recovery copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get roomDialogCancel;
 }
 
 class _AppLocalizationsDelegate

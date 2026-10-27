@@ -1004,4 +1004,174 @@ class AppLocalizationsEn extends AppLocalizations {
   String aboutAndLicenses(String appName) {
     return 'About $appName & licenses';
   }
+
+  @override
+  String get roomExportLimits =>
+      'Display calibration, camera processing, lighting, wall texture, paint finish, surrounding colors, and variation in real paint can change how colors appear. Previews guide exploration and are not calibrated matches for buying paint.';
+
+  @override
+  String roomExportResolution(int width, int height) {
+    return 'PNG · $width × $height pixels. Exported at the processed working resolution.';
+  }
+
+  @override
+  String roomExportSelected(String name) {
+    return 'Export selected variant: $name';
+  }
+
+  @override
+  String get roomExportEffects =>
+      'Save image adds an external image to Photos or Gallery. Share opens the system sheet. Neither action saves the editable project.';
+
+  @override
+  String get roomExportUnsaved =>
+      'This project has unsaved edits. Exporting an image does not save those edits.';
+
+  @override
+  String roomExportTitle(String appName) {
+    return '$appName room preview';
+  }
+
+  @override
+  String get roomExportSave => 'Save image';
+
+  @override
+  String get roomExportShare => 'Share PNG';
+
+  @override
+  String get roomExportSaving => 'Preparing image…';
+
+  @override
+  String get roomExportSaved => 'Image added to Photos or Gallery.';
+
+  @override
+  String get roomExportShared => 'The share sheet completed.';
+
+  @override
+  String get roomExportDismissed => 'Share sheet dismissed.';
+
+  @override
+  String get roomExportUnavailable =>
+      'The sharing result could not be determined.';
+
+  @override
+  String get roomExportAccess =>
+      'Photo access is off. Allow access in Settings, then try saving again.';
+
+  @override
+  String get roomExportCapacity =>
+      'Storage is full. Free some space, then retry Save image. Check Photos or Gallery first; an image may already have been added.';
+
+  @override
+  String get roomExportSaveFailed =>
+      'Could not confirm the image was saved. Check Photos or Gallery before retrying; an image may already have been added.';
+
+  @override
+  String get roomExportShareFailed => 'Could not share the PNG. Try again.';
+
+  @override
+  String get roomExportInvalid =>
+      'This preview could not be verified for export. Your photo and edits are safe. Retry the preview.';
+
+  @override
+  String get roomExportInterrupted =>
+      'Export was interrupted. Return to the current preview and try again.';
+
+  @override
+  String get roomOpenSettings => 'Open Settings';
+
+  @override
+  String get roomTryAgain => 'Try again';
+
+  @override
+  String get roomChoosePhoto => 'Choose photo';
+
+  @override
+  String get roomChooseSupported => 'Choose another supported image';
+
+  @override
+  String get roomChooseSmaller => 'Choose a smaller image';
+
+  @override
+  String get roomRetryPreview => 'Retry preview';
+
+  @override
+  String get roomRetrySaveImage => 'Retry Save image';
+
+  @override
+  String get roomRetryShare => 'Retry Share';
+
+  @override
+  String get roomPhotoPermission =>
+      'Photo access is off. Allow access in Settings to continue.';
+
+  @override
+  String get roomCameraUnavailable =>
+      'A camera is unavailable. Choose a photo from this device.';
+
+  @override
+  String get roomPickerUnavailable =>
+      'The photo picker is unavailable. Try again.';
+
+  @override
+  String get roomPhotoUnsupported =>
+      'This format is not supported. Choose a JPEG, PNG, GIF, WebP, BMP, or TIFF image.';
+
+  @override
+  String get roomPhotoInvalid =>
+      'This image could not be read. Choose another supported image.';
+
+  @override
+  String get roomPhotoTooLarge =>
+      'This image is too large to process. Choose a smaller image.';
+
+  @override
+  String get roomPhotoPreparation =>
+      'This photo could not be prepared. Choose another supported image.';
+
+  @override
+  String get roomPhotoStorage =>
+      'The photo request could not be stored. Your prepared photo is kept when available. Retry the storage action.';
+
+  @override
+  String get roomRetryPhotoStorage => 'Retry photo storage';
+
+  @override
+  String get roomModelUnavailable =>
+      'Automatic masks need model setup. Your photo is kept; set up the models or edit manually.';
+
+  @override
+  String get roomModelIncompatible =>
+      'The installed models could not analyze this photo. Your photo is kept; retry model setup or edit manually.';
+
+  @override
+  String get roomAnalysisInvalid =>
+      'Automatic analysis returned unusable masks. Your photo is kept; retry analysis or edit manually.';
+
+  @override
+  String get roomModelSetupAction => 'Set up models';
+
+  @override
+  String get roomPreviewFailed =>
+      'Preview could not update. Your photo and masks are safe.';
+
+  @override
+  String get roomRestoreTitle => 'Restore AI masks?';
+
+  @override
+  String get roomRestoreMessage =>
+      'Your manual changes will be replaced by the original automatic masks. This clears the undo history.';
+
+  @override
+  String get roomRestoreAction => 'Restore';
+
+  @override
+  String get roomReplaceTitle => 'Replace room photo?';
+
+  @override
+  String get roomReplaceMessage =>
+      'After a new photo is analyzed successfully, it replaces these masks and their undo history. Your current masks stay available if you cancel or analysis fails.';
+
+  @override
+  String get roomDialogCancel => 'Cancel';
 }

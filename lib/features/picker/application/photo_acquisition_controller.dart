@@ -79,6 +79,8 @@ class PhotoAcquisitionController extends Notifier<AcquisitionState> {
         _nativeConsumed = true;
         try {
           _lost = await ref.read(photoPickerServiceProvider).recoverLost();
+        } on PhotoPickFailure catch (error) {
+          _recoveryFailure = _pickFailure(error.kind);
         } catch (_) {
           _recoveryFailure = AcquisitionFailureKind.recovery;
         }
@@ -167,16 +169,7 @@ class PhotoAcquisitionController extends Notifier<AcquisitionState> {
       try {
         photo = await ref.read(photoPickerServiceProvider).pick(source: source);
       } on PhotoPickFailure catch (error) {
-        failure = switch (error.kind) {
-          PhotoPickFailureKind.permissionDenied =>
-            AcquisitionFailureKind.permissionDenied,
-          PhotoPickFailureKind.unavailable =>
-            AcquisitionFailureKind.unavailable,
-          PhotoPickFailureKind.invalidImage =>
-            AcquisitionFailureKind.invalidImage,
-          PhotoPickFailureKind.tooLarge => AcquisitionFailureKind.tooLarge,
-          PhotoPickFailureKind.processing => AcquisitionFailureKind.processing,
-        };
+        failure = _pickFailure(error.kind);
       } catch (_) {
         failure = AcquisitionFailureKind.unavailable;
       }
@@ -207,6 +200,20 @@ class PhotoAcquisitionController extends Notifier<AcquisitionState> {
       _busy = false;
     }
   }
+
+  static AcquisitionFailureKind _pickFailure(PhotoPickFailureKind kind) =>
+      switch (kind) {
+        PhotoPickFailureKind.permissionDenied =>
+          AcquisitionFailureKind.permissionDenied,
+        PhotoPickFailureKind.cameraUnavailable =>
+          AcquisitionFailureKind.cameraUnavailable,
+        PhotoPickFailureKind.unsupported => AcquisitionFailureKind.unsupported,
+        PhotoPickFailureKind.unavailable => AcquisitionFailureKind.unavailable,
+        PhotoPickFailureKind.invalidImage =>
+          AcquisitionFailureKind.invalidImage,
+        PhotoPickFailureKind.tooLarge => AcquisitionFailureKind.tooLarge,
+        PhotoPickFailureKind.processing => AcquisitionFailureKind.processing,
+      };
 
   Future<PreparedPhoto?> claim({
     required String requestId,

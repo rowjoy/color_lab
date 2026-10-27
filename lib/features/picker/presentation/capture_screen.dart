@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../../core/color/color_engine.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/widgets/widgets.dart';
@@ -196,6 +197,10 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
                 Text(switch (error) {
                   AcquisitionFailureKind.permissionDenied =>
                     'Photo access is off. Allow access in Settings or choose a different photo.',
+                  AcquisitionFailureKind.cameraUnavailable =>
+                    context.l10n.roomCameraUnavailable,
+                  AcquisitionFailureKind.unsupported =>
+                    context.l10n.roomPhotoUnsupported,
                   AcquisitionFailureKind.tooLarge =>
                     'That photo is too large. Choose a smaller copy.',
                   AcquisitionFailureKind.invalidImage =>

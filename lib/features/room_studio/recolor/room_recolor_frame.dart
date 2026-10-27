@@ -72,6 +72,9 @@ final class RoomRecolorFrame {
   void Function()? _onReleased;
   Uint8List get rgbaBytes => _rgbaBytes ?? (throw StateError('Frame released'));
   Uint8List get pngBytes => _pngBytes ?? (throw StateError('Frame released'));
+
+  /// Physical bytes may outlive the owner briefly through a display lease.
+  bool get isOwnerReleased => _ownerReleased;
   bool get isDisposed => _rgbaBytes == null;
   int get retainedByteCount =>
       (_rgbaBytes?.length ?? 0) + (_pngBytes?.length ?? 0);

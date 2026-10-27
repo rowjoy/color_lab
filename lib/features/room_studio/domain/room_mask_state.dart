@@ -13,6 +13,9 @@ enum RoomMaskTool { move, add, erase }
 enum RoomMaskFailureKind {
   permissionDenied,
   acquisitionUnavailable,
+  cameraUnavailable,
+  unsupported,
+  preparation,
   invalidImage,
   tooLarge,
   storage,

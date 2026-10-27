@@ -55,7 +55,16 @@ PreparedPhoto preparePhoto(Uint8List bytes) {
     // untagged RGB, preventing a renderer from applying a source ICC profile
     // to the PNG while color values are interpreted differently by the app.
     // Wide-gamut profile conversion is intentionally outside this pipeline.
-    final preview = _fit(oriented, maxPhotoPreviewAxis)..iccProfile = null;
+    final fitted = _fit(oriented, maxPhotoPreviewAxis);
+    // Copy channels, never a source Image's metadata/frames. JPEG's decoder
+    // already baked EXIF orientation; other decoders are handled above.
+    final preview = image.Image.fromBytes(
+      width: fitted.width,
+      height: fitted.height,
+      bytes: fitted.getBytes(order: image.ChannelOrder.rgb).buffer,
+      numChannels: 3,
+      order: image.ChannelOrder.rgb,
+    );
     final paletteImage = _fit(preview, maxPhotoPaletteAxis);
     final palette = extractPalette(
       [

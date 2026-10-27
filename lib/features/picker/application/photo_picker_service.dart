@@ -12,6 +12,8 @@ import 'photo_processor.dart';
 enum PhotoPickFailureKind {
   permissionDenied,
   unavailable,
+  cameraUnavailable,
+  unsupported,
   invalidImage,
   tooLarge,
   processing,
@@ -55,6 +57,10 @@ class PluginPhotoPickerService implements PhotoPickerService {
   @override
   Future<PreparedPhoto?> pick({PhotoSource source = PhotoSource.gallery}) =>
       _guard(() async {
+        if (source == PhotoSource.camera &&
+            !_picker.supportsImageSource(ImageSource.camera)) {
+          throw const PhotoPickFailure(PhotoPickFailureKind.cameraUnavailable);
+        }
         final file = await _picker.pickImage(
           source: source == PhotoSource.camera
               ? ImageSource.camera
@@ -90,8 +96,9 @@ class PluginPhotoPickerService implements PhotoPickerService {
     } on PhotoProcessingException catch (error) {
       throw PhotoPickFailure(switch (error.kind) {
         PhotoProcessingFailure.tooLarge => PhotoPickFailureKind.tooLarge,
-        PhotoProcessingFailure.invalidImage ||
-        PhotoProcessingFailure.unsupported => PhotoPickFailureKind.invalidImage,
+        PhotoProcessingFailure.invalidImage =>
+          PhotoPickFailureKind.invalidImage,
+        PhotoProcessingFailure.unsupported => PhotoPickFailureKind.unsupported,
       });
     } on PhotoPickFailure {
       rethrow;
@@ -114,6 +121,12 @@ class PluginPhotoPickerService implements PhotoPickerService {
                 code.contains('restricted') ||
                 code.contains('permission')
             ? PhotoPickFailureKind.permissionDenied
+            : [
+                'no_available_camera',
+                'camera_unavailable',
+                'camera_not_available',
+              ].contains(code)
+            ? PhotoPickFailureKind.cameraUnavailable
             : PhotoPickFailureKind.unavailable,
       );
     } catch (_) {

@@ -7,6 +7,10 @@ import 'package:gal/gal.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart' as permission;
 
+final class RoomExportInterrupted implements Exception {
+  const RoomExportInterrupted();
+}
+
 enum RoomGalleryFailure {
   accessDenied,
   notEnoughSpace,
@@ -48,7 +52,13 @@ final class GalRoomGalleryWriter implements RoomGalleryWriter {
     OwnedDirectoryCleanup? cleanupOwnedDirectory,
     TargetPlatform? platform,
     bool? isWeb,
-  }) : _putImage = putImage ?? Gal.putImage,
+    Future<bool> Function()? requestAccess,
+  }) : _putImage = putImage ?? _terminalPutImage,
+       _requestAccess =
+           requestAccess ??
+           (putImage == null
+               ? () => Gal.requestAccess(toAlbum: false)
+               : () async => true),
        _temporaryRoot = temporaryRoot ?? getTemporaryDirectory,
        _cleanupOwnedDirectory = cleanupOwnedDirectory ?? _deleteOwnedDirectory,
        _platform = platform ?? defaultTargetPlatform,
@@ -58,6 +68,55 @@ final class GalRoomGalleryWriter implements RoomGalleryWriter {
   static final _safePngName = RegExp(r'^[A-Za-z0-9][A-Za-z0-9_-]{0,195}\.png$');
 
   final GalPutImage _putImage;
+  final Future<bool> Function() _requestAccess;
+  static const _channel = MethodChannel('gal');
+
+  // Locked gal 2.3.2 public protocol. Permission is a separate preparation
+  // stage; there must be no application await between guard and invocation.
+  static Future<void> _terminalPutImage(String path, {String? album}) =>
+      _channel.invokeMethod<void>('putImage', {'path': path, 'album': album});
+
+  Future<void> prepareAccess({required bool Function() isCurrent}) async {
+    try {
+      if (!isCurrent()) throw const RoomExportInterrupted();
+      final granted = await _requestAccess();
+      if (!isCurrent()) throw const RoomExportInterrupted();
+      if (!granted) {
+        throw const RoomGalleryWriteException(RoomGalleryFailure.accessDenied);
+      }
+    } on RoomExportInterrupted {
+      rethrow;
+    } catch (error) {
+      throw _mapped(error);
+    }
+  }
+
+  Future<void> savePreparedPng({
+    required Uint8List pngBytes,
+    required String fileName,
+    required bool Function() beforeHandoff,
+    bool Function()? isCurrent,
+  }) {
+    _validate(pngBytes, fileName);
+    _checkPlatform();
+    return _writeOwnedTemp(
+      Uint8List.fromList(pngBytes),
+      fileName,
+      beforeHandoff: beforeHandoff,
+      isCurrent: isCurrent,
+    );
+  }
+
+  void _checkPlatform() {
+    if (_isWeb ||
+        (_platform != TargetPlatform.android &&
+            _platform != TargetPlatform.iOS)) {
+      throw const RoomGalleryWriteException(
+        RoomGalleryFailure.unsupportedPlatform,
+      );
+    }
+  }
+
   final TemporaryRootProvider _temporaryRoot;
   final OwnedDirectoryCleanup _cleanupOwnedDirectory;
   final TargetPlatform _platform;
@@ -80,24 +139,37 @@ final class GalRoomGalleryWriter implements RoomGalleryWriter {
       // Own the bytes before returning or awaiting so caller mutation cannot
       // change the file that reaches the native Gallery boundary.
       final detached = Uint8List.fromList(pngBytes);
-      return _writeOwnedTemp(detached, fileName);
+      return _save(detached, fileName);
     } catch (error, stackTrace) {
       return Future<void>.error(_mapped(error), stackTrace);
     }
   }
 
-  Future<void> _writeOwnedTemp(Uint8List bytes, String fileName) async {
+  Future<void> _save(Uint8List bytes, String fileName) async {
+    await prepareAccess(isCurrent: () => true);
+    await _writeOwnedTemp(bytes, fileName);
+  }
+
+  Future<void> _writeOwnedTemp(
+    Uint8List bytes,
+    String fileName, {
+    bool Function()? beforeHandoff,
+    bool Function()? isCurrent,
+  }) async {
     Directory? ownedDirectory;
     Object? primaryError;
     StackTrace? primaryStackTrace;
     try {
       final root = await _temporaryRoot();
-      ownedDirectory = await root.createTemp('color-lab-gallery-');
+      if (!(isCurrent?.call() ?? true)) throw const RoomExportInterrupted();
+      ownedDirectory = await root.createTemp('tintatlas-gallery-');
+      if (!(isCurrent?.call() ?? true)) throw const RoomExportInterrupted();
       final file = File.fromUri(ownedDirectory.uri.resolve(fileName));
       await file.writeAsBytes(bytes, flush: true);
+      if (!(beforeHandoff?.call() ?? true)) throw const RoomExportInterrupted();
       await _putImage(file.path);
     } catch (error, stackTrace) {
-      primaryError = _mapped(error);
+      primaryError = error is RoomExportInterrupted ? error : _mapped(error);
       primaryStackTrace = stackTrace;
     }
 
@@ -145,6 +217,18 @@ final class GalRoomGalleryWriter implements RoomGalleryWriter {
       return const RoomGalleryWriteException(
         RoomGalleryFailure.unsupportedPlatform,
       );
+    }
+    if (error is PlatformException) {
+      return RoomGalleryWriteException(switch (error.code) {
+        'ACCESS_DENIED' => RoomGalleryFailure.accessDenied,
+        'NOT_ENOUGH_SPACE' => RoomGalleryFailure.notEnoughSpace,
+        'NOT_SUPPORTED_FORMAT' => RoomGalleryFailure.unsupportedFormat,
+        _ => RoomGalleryFailure.unexpected,
+      });
+    }
+    if (error is FileSystemException &&
+        [28, 112].contains(error.osError?.errorCode)) {
+      return const RoomGalleryWriteException(RoomGalleryFailure.notEnoughSpace);
     }
     if (error is GalException) {
       return RoomGalleryWriteException(switch (error.type) {

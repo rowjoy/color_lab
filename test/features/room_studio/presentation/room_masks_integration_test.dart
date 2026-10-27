@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:color_lab/app.dart';
+import 'package:color_lab/core/image/photo_processing.dart';
+import 'package:color_lab/features/room_studio/application/room_export_metadata_verifier.dart';
+import 'package:color_lab/features/room_studio/application/room_gallery_writer.dart';
 import 'package:color_lab/core/color/color_engine.dart';
 import 'package:color_lab/features/history/application/history_providers.dart';
 import 'package:color_lab/features/picker/application/acquisition_intent_providers.dart';
@@ -43,6 +45,7 @@ import 'package:color_lab/features/history/domain/saved_color.dart';
 import 'package:color_lab/core/widgets/widgets.dart';
 import 'package:color_lab/routing/app_router.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
@@ -59,6 +62,7 @@ class _Picker implements PhotoPickerService {
   PhotoPickFailure? failure;
   final sources = <PhotoSource>[];
   int recoveries = 0;
+  int settingsCalls = 0;
   @override
   Future<PreparedPhoto?> pick({
     PhotoSource source = PhotoSource.gallery,
@@ -77,7 +81,10 @@ class _Picker implements PhotoPickerService {
   }
 
   @override
-  Future<bool> openSettings() async => false;
+  Future<bool> openSettings() async {
+    settingsCalls++;
+    return true;
+  }
 }
 
 PreparedPhoto _photo([int gray = 100]) {
@@ -167,19 +174,50 @@ class _Exporter implements RoomImageExportService {
   Rect? origin;
   Object? failure;
   Completer<void>? gate;
+  Completer<void>? permissionGate;
+  int saves = 0, shares = 0;
+  RoomShareResult result = RoomShareResult.completed;
 
   @override
-  Future<void> sharePng({
+  Future<RoomShareResult> sharePng({
     required Uint8List pngBytes,
     required String photoId,
     required Rect origin,
+    required String title,
+    required bool Function() isCurrent,
+    void Function()? onHandoff,
   }) async {
+    if (!isCurrent()) throw const RoomExportInterrupted();
+    onHandoff?.call();
+    shares++;
     bytes = Uint8List.fromList(pngBytes);
     this.photoId = photoId;
     this.origin = origin;
     await gate?.future;
     final error = failure;
     if (error != null) throw error;
+    return result;
+  }
+
+  @override
+  Future<void> prepareSave({required bool Function() isCurrent}) async {
+    await permissionGate?.future;
+    if (!isCurrent()) throw const RoomExportInterrupted();
+  }
+
+  @override
+  Future<void> savePng({
+    required Uint8List pngBytes,
+    required String photoId,
+    required bool Function() isCurrent,
+    void Function()? onHandoff,
+  }) async {
+    if (!isCurrent()) throw const RoomExportInterrupted();
+    onHandoff?.call();
+    saves++;
+    bytes = Uint8List.fromList(pngBytes);
+    await gate?.future;
+    if (failure != null) throw failure!;
   }
 }
 
@@ -219,6 +257,7 @@ Future<ProviderContainer> _launch(
   AppPreferences? preferences,
   RoomModelStore? modelStore,
   InMemoryRoomProjectRepository? projects,
+  Future<bool> Function()? gallerySettings,
 }) async {
   final container = ProviderContainer(
     overrides: [
@@ -261,6 +300,8 @@ Future<ProviderContainer> _launch(
                 ),
         );
       }),
+      if (gallerySettings != null)
+        roomGallerySettingsProvider.overrideWithValue(gallerySettings),
       if (exporter != null)
         roomImageExportServiceProvider.overrideWithValue(exporter),
       if (modelStore != null)
@@ -402,6 +443,357 @@ Future<void> _zoom(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets(
+    'invalid current PNG retries the preview and never hands off bytes',
+    (tester) async {
+      final segmenter = _Segmenter(),
+          recolorer = _Recolorer(),
+          exporter = _Exporter();
+      final c = await _launch(
+        tester,
+        segmenter: segmenter,
+        recolorer: recolorer,
+        exporter: exporter,
+      );
+      await _open(tester);
+      await _ready(tester, segmenter);
+      final request = recolorer.requests.single;
+      request.result.complete(
+        RoomRecolorFrame(
+          key: request.key,
+          width: 10,
+          height: 10,
+          rgbaBytes: request.photo.rgbaBytes,
+          pngBytes: Uint8List.fromList([137, 80, 78, 71, 13, 10, 26, 10]),
+        ),
+      );
+      await _frames(tester);
+      // Flutter may reject the deliberately invalid display image too; export
+      // must still reject it independently before any native handoff.
+      tester.takeException();
+      await _tap(tester, _key('room-recolor-share'));
+      expect(exporter.shares, 0);
+      expect(exporter.saves, 0);
+      expect(
+        find.text(
+          'This preview could not be verified for export. Your photo and edits are safe. Retry the preview.',
+        ),
+        findsOneWidget,
+      );
+      await _tap(tester, _key('room-export-recovery'));
+      expect(recolorer.requests, hasLength(2));
+      recolorer.requests.last.succeed();
+      await _frames(tester);
+      await _tap(tester, _key('room-recolor-share'));
+      expect(exporter.shares, 1);
+      expect(c.read(roomMaskProvider).draft, isNotNull);
+    },
+  );
+
+  testWidgets(
+    'same-key close and reopen releases an old export guard before its native result',
+    (tester) async {
+      final segmenter = _Segmenter(),
+          exporter = _Exporter()..gate = Completer<void>();
+      final c = await _launch(tester, segmenter: segmenter, exporter: exporter);
+      await _open(tester);
+      await _ready(tester, segmenter);
+      await _waitSaved(tester, c);
+      await _preview(tester, c);
+      final saved = c.read(roomProjectSessionProvider)!.durable!;
+      await _tap(tester, _key('room-recolor-share'));
+      final oldLifetime = c.read(roomProjectSessionProvider)!.lifetime;
+      await tester.runAsync(
+        () => c.read(roomMaskProvider.notifier).closeProject(),
+      );
+      await _frames(tester);
+      var opened = false;
+      final opening = c
+          .read(roomMaskProvider.notifier)
+          .openProject(saved.projectId)
+          .then((value) => opened = value);
+      for (var i = 0; i < 200 && !opened; i++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 10)),
+        );
+        await tester.pump();
+      }
+      expect(opened, isTrue);
+      await opening;
+      await _frames(tester);
+      await _preview(tester, c);
+      expect(
+        c.read(roomProjectSessionProvider)!.lifetime,
+        isNot(same(oldLifetime)),
+      );
+      expect(
+        tester.widget<PrimaryButton>(_key('room-recolor-save')).onPressed,
+        isNotNull,
+      );
+      exporter.failure = StateError('private stale error');
+      exporter.gate!.complete();
+      await _frames(tester);
+      expect(find.text('Could not share the PNG. Try again.'), findsNothing);
+    },
+  );
+  testWidgets(
+    'prepared working photo thumbnail and real recolor export strip source metadata',
+    (tester) async {
+      final input = img.Image(width: 10, height: 10)
+        ..clear(img.ColorRgb8(70, 80, 90));
+      input.textData = {'XML:com.adobe.xmp': 'private location'};
+      input.exif.gpsIfd[1] = img.IfdValueAscii('N');
+      final picker = _Picker()..next = preparePhoto(img.encodePng(input));
+      final segmenter = _Segmenter(), exporter = _Exporter();
+      final c = await _launch(
+        tester,
+        picker: picker,
+        segmenter: segmenter,
+        exporter: exporter,
+      );
+      await _open(tester);
+      await _ready(tester, segmenter, label: 1);
+      await _waitSaved(tester, c);
+      await _preview(tester, c);
+      final saved = c.read(roomProjectSessionProvider)!.durable!;
+      for (final png in [
+        saved.photoPng,
+        saved.thumbnailPng!,
+        c.read(roomRecolorPreviewProvider).requireValue!.pngBytes,
+      ]) {
+        expect(const RoomExportMetadataVerifier().verify(png).width, 10);
+      }
+      await _tap(tester, _key('room-recolor-save'));
+      await _tap(tester, _key('room-recolor-share'));
+      expect(exporter.saves, 1);
+      expect(exporter.shares, 1);
+      expect(c.read(roomProjectSessionProvider)!.durable, same(saved));
+    },
+  );
+  testWidgets(
+    'one Save Share guard and access Settings recovery retain unsaved project',
+    (tester) async {
+      final projects = InMemoryRoomProjectRepository()
+        ..saveError = StateError('private disk');
+      final segmenter = _Segmenter(),
+          exporter = _Exporter()
+            ..gate = Completer<void>()
+            ..failure = const RoomGalleryWriteException(
+              RoomGalleryFailure.accessDenied,
+            );
+      var settings = 0;
+      final c = await _launch(
+        tester,
+        projects: projects,
+        segmenter: segmenter,
+        exporter: exporter,
+        gallerySettings: () async {
+          settings++;
+          return true;
+        },
+      );
+      await _open(tester);
+      await _ready(tester, segmenter, label: 1);
+      await _preview(tester, c);
+      expect(
+        find.textContaining('This project has unsaved edits.'),
+        findsOneWidget,
+      );
+      final save = tester
+          .widget<PrimaryButton>(_key('room-recolor-save'))
+          .onPressed!;
+      final share = tester
+          .widget<PrimaryButton>(_key('room-recolor-share'))
+          .onPressed!;
+      save();
+      save();
+      share();
+      await _frames(tester);
+      expect(exporter.saves, 1);
+      expect(exporter.shares, 0);
+      exporter.gate!.complete();
+      await _frames(tester);
+      expect(find.text('Open Settings'), findsOneWidget);
+      await _tap(tester, find.text('Open Settings'));
+      expect(settings, 1);
+      expect(exporter.saves, 1);
+      expect(c.read(roomProjectSessionProvider)!.hasUnsavedChanges, isTrue);
+    },
+  );
+  testWidgets(
+    'native permission lifecycle revokes Save then permits an explicit retry after resume',
+    (tester) async {
+      final segmenter = _Segmenter(),
+          exporter = _Exporter()..permissionGate = Completer<void>();
+      final c = await _launch(tester, segmenter: segmenter, exporter: exporter);
+      await _open(tester);
+      await _ready(tester, segmenter);
+      await _preview(tester, c);
+      await _tap(tester, _key('room-recolor-save'));
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      await _frames(tester);
+      exporter.permissionGate!.complete();
+      await _frames(tester);
+      expect(exporter.saves, 0);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await _frames(tester);
+      await _preview(tester, c);
+      expect(find.textContaining('Export was interrupted.'), findsOneWidget);
+      await _tap(tester, _key('room-export-recovery'));
+      expect(exporter.saves, 1);
+    },
+  );
+  for (final (kind, copy, action) in [
+    (
+      PhotoPickFailureKind.cameraUnavailable,
+      'A camera is unavailable. Choose a photo from this device.',
+      'Choose photo',
+    ),
+    (
+      PhotoPickFailureKind.unavailable,
+      'The photo picker is unavailable. Try again.',
+      'Try again',
+    ),
+    (
+      PhotoPickFailureKind.unsupported,
+      'This format is not supported. Choose a JPEG, PNG, GIF, WebP, BMP, or TIFF image.',
+      'Choose another supported image',
+    ),
+    (
+      PhotoPickFailureKind.invalidImage,
+      'This image could not be read. Choose another supported image.',
+      'Choose another supported image',
+    ),
+    (
+      PhotoPickFailureKind.tooLarge,
+      'This image is too large to process. Choose a smaller image.',
+      'Choose a smaller image',
+    ),
+    (
+      PhotoPickFailureKind.processing,
+      'This photo could not be prepared. Choose another supported image.',
+      'Choose another supported image',
+    ),
+  ]) {
+    testWidgets('typed $kind recovery invokes the correct picker action', (
+      tester,
+    ) async {
+      final picker = _Picker()..failure = PhotoPickFailure(kind);
+      final segmenter = _Segmenter();
+      await _launch(tester, picker: picker, segmenter: segmenter);
+      await _open(tester);
+      await _tap(tester, _key('room-mask-camera'));
+      expect(find.text(copy), findsOneWidget);
+      picker.failure = null;
+      await _tap(tester, find.text(action));
+      expect(
+        picker.sources.last,
+        kind == PhotoPickFailureKind.unavailable
+            ? PhotoSource.camera
+            : PhotoSource.gallery,
+      );
+      expect(segmenter.requests, hasLength(1));
+      segmenter.requests.single.succeed();
+      await _frames(tester);
+    });
+  }
+  for (final size in [
+    const Size(320, 568),
+    const Size(568, 320),
+    const Size(840, 700),
+    const Size(1200, 800),
+  ]) {
+    testWidgets(
+      'Room export disclosure and both actions are reachable at $size with doubled text',
+      (tester) async {
+        tester.view.physicalSize = size;
+        tester.view.devicePixelRatio = 1;
+        tester.platformDispatcher.textScaleFactorTestValue = 2;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        final segmenter = _Segmenter();
+        final exporter = _Exporter();
+        final c = await _launch(
+          tester,
+          segmenter: segmenter,
+          exporter: exporter,
+        );
+        await _open(tester);
+        await _ready(tester, segmenter);
+        await _preview(tester, c);
+        final saved = c.read(roomProjectSessionProvider)!.saveStatus;
+        final semantics = tester.ensureSemantics();
+        tester.view.viewPadding = const FakeViewPadding(top: 24, bottom: 16);
+        tester.view.viewInsets = const FakeViewPadding(bottom: 72);
+        addTearDown(tester.view.resetViewPadding);
+        addTearDown(tester.view.resetViewInsets);
+        await _frames(tester);
+        expect(
+          find.textContaining('Display calibration, camera processing'),
+          findsOneWidget,
+        );
+        expect(
+          find.text(
+            'PNG · 10 × 10 pixels. Exported at the processed working resolution.',
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.textContaining('Neither action saves the editable project.'),
+          findsOneWidget,
+        );
+        for (final key in ['room-recolor-save', 'room-recolor-share']) {
+          await tester.ensureVisible(_key(key));
+          await tester.pump();
+          expect(_key(key).hitTestable(), findsOneWidget);
+          expect(tester.getSize(_key(key)).height, greaterThanOrEqualTo(48));
+        }
+        await _tap(tester, _key('room-recolor-save'));
+        expect(exporter.saves, 1);
+        expect(c.read(roomProjectSessionProvider)!.saveStatus, saved);
+        await tester.ensureVisible(_key('room-recolor-share'));
+        await tester.pump();
+        final padding = find
+            .descendant(
+              of: _key('room-recolor-share'),
+              matching: find.byType(Padding),
+            )
+            .last;
+        Focus.of(tester.element(padding)).requestFocus();
+        await tester.pump();
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await _frames(tester);
+        expect(exporter.shares, 1);
+        final live = find
+            .ancestor(
+              of: _key('room-export-result'),
+              matching: find.byType(Semantics),
+            )
+            .first;
+        expect(tester.widget<Semantics>(live).properties.liveRegion, isTrue);
+        expect(tester.takeException(), isNull);
+        semantics.dispose();
+      },
+    );
+  }
+  testWidgets(
+    'permission recovery opens Settings without retrying acquisition',
+    (tester) async {
+      final picker = _Picker()
+        ..failure = const PhotoPickFailure(
+          PhotoPickFailureKind.permissionDenied,
+        );
+      await _launch(tester, picker: picker);
+      await _open(tester);
+      await _tap(tester, _key('room-mask-camera'));
+      expect(find.text('Open Settings'), findsOneWidget);
+      await _tap(tester, find.text('Open Settings'));
+      expect(picker.settingsCalls, 1);
+      expect(picker.sources, hasLength(1));
+    },
+  );
+
   testWidgets(
     'preview ownership returns through repeated retained A B A routes before old B disposes',
     (tester) async {
@@ -671,6 +1063,10 @@ void main() {
         tester.widget<PrimaryButton>(_key('room-recolor-share')).onPressed,
         isNull,
       );
+      expect(
+        tester.widget<PrimaryButton>(_key('room-recolor-save')).onPressed,
+        isNull,
+      );
       final selectedPng = _photo(180).previewBytes;
       active.result.complete(
         RoomRecolorFrame(
@@ -687,6 +1083,8 @@ void main() {
       await _tap(tester, _key('room-recolor-before'));
       expect(_key('room-comparison-original-image'), findsOneWidget);
       await _tap(tester, _key('room-recolor-share'));
+      expect(exporter.bytes, selectedPng);
+      await _tap(tester, _key('room-recolor-save'));
       expect(exporter.bytes, selectedPng);
       expect(c.read(roomRecolorPreviewProvider).requireValue!.key, key);
       expect(c.read(roomProjectSessionProvider)!.durable, same(saved));

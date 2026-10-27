@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/theme.dart';
+import '../../../core/config/app_identity.dart';
+import '../../picker/application/photo_picker_service.dart';
+import '../application/room_export_controller.dart';
+import '../application/room_gallery_writer.dart';
 import '../../../l10n/l10n.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../picker/application/photo_acquisition_controller.dart';
@@ -23,7 +27,6 @@ import 'room_mask_dialogs.dart';
 import 'room_mask_fullscreen_editor.dart';
 import 'room_mask_viewport.dart';
 import 'room_model_download_status.dart';
-import '../models/room_model_store.dart';
 import 'room_recolor_viewport.dart';
 import 'room_project_save_status.dart';
 import 'room_variant_controls.dart';
@@ -41,12 +44,14 @@ class RoomMaskScreen extends ConsumerStatefulWidget {
   ConsumerState<RoomMaskScreen> createState() => _RoomMaskScreenState();
 }
 
-class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
+class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
+    with WidgetsBindingObserver {
   int _restoreView = 0;
   bool _confirming = false;
   Object? _importOperation;
   bool _showAfter = true;
-  bool _sharing = false;
+  late final RoomExportController _exports;
+  PhotoSource _lastSource = PhotoSource.gallery;
   (String, int)? _refreshedMasks;
   late final RoomRecolorCoordinator _previews;
   Object? _previewOwner;
@@ -56,6 +61,15 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
   void initState() {
     super.initState();
     _previews = ref.read(roomRecolorCoordinatorProvider.notifier);
+    _exports = RoomExportController(
+      service: ref.read(roomImageExportServiceProvider),
+      readSource: _readExportSource,
+    )..addListener(_exportChanged);
+    WidgetsBinding.instance.addObserver(this);
+    ref.listenManual(
+      roomProjectSessionProvider,
+      (_, _) => _exports.reconcile(),
+    );
   }
 
   @override
@@ -64,10 +78,22 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
     _syncPreviewVisibility();
   }
 
+  void _exportChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) {
+      _exports.revoke(beforeHandoffOnly: true);
+    }
+  }
+
   void _syncPreviewVisibility() {
     final visible = _routeVisible;
     final becameVisible = visible && !_previewRouteVisible;
     _previewRouteVisible = visible;
+    if (!visible) _exports.revoke();
     final owner = _previewOwner;
     if (visible && (becameVisible || owner == null || !_previews.owns(owner))) {
       // A retained editor may return while the covering editor is still
@@ -80,6 +106,9 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _exports.removeListener(_exportChanged);
+    _exports.dispose();
     final owner = _previewOwner;
     if (owner != null) _previews.detachOwner(owner);
     super.dispose();
@@ -124,6 +153,8 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
   Future<void> _import({PhotoSource? source, String? requestId}) async {
     if (!_active || _confirming || _importOperation != null) return;
     if (!_analysisReady()) return;
+    if (source != null) _lastSource = source;
+    _exports.revoke();
     final operation = Object();
     setState(() => _importOperation = operation);
     try {
@@ -238,43 +269,168 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
     ref.read(roomMaskProvider.notifier).setLayerColor(layer, color);
   }
 
-  Future<void> _share(BuildContext anchor) async {
-    if (_sharing || !_active) return;
-    final draft = ref.read(roomMaskProvider).draft;
+  RoomExportSource? _readExportSource() {
+    if (!mounted) return null;
+    final owner = _previewOwner;
+    final session = ref.read(roomProjectSessionProvider);
+    if (owner == null || session == null) return null;
+    final state = ref.read(roomMaskProvider);
     final preview = ref.read(roomRecolorPreviewProvider);
-    final frame = preview.value;
-    if (draft == null ||
-        preview.isLoading ||
-        preview.hasError ||
-        frame == null ||
-        frame.key !=
-            roomActiveRecolorKey(ref.read(roomProjectSessionProvider))) {
-      return;
-    }
+    return RoomExportSource(
+      session: session,
+      owner: owner,
+      eligible:
+          _active &&
+          _previews.owns(owner) &&
+          !_confirming &&
+          _importOperation == null,
+      ready:
+          state.stage == RoomMaskStage.ready &&
+          !state.editBusy &&
+          !preview.isLoading &&
+          !preview.hasError &&
+          state.draft?.photoId == session.visible.photoId,
+      frame: preview.value,
+    );
+  }
+
+  Future<void> _export(RoomExportAction action, BuildContext anchor) async {
     final box = anchor.findRenderObject() as RenderBox?;
     if (box == null || !box.hasSize || box.size.isEmpty) return;
-    setState(() => _sharing = true);
-    try {
-      await ref
-          .read(roomImageExportServiceProvider)
-          .sharePng(
-            pngBytes: frame.pngBytes,
-            photoId: draft.photoId,
-            origin: box.localToGlobal(Offset.zero) & box.size,
-          );
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            const SnackBar(
-              content: Text('Could not share the PNG. Try again.'),
-            ),
-          );
-      }
-    } finally {
-      if (mounted) setState(() => _sharing = false);
+    await _exports.export(
+      action,
+      origin: box.localToGlobal(Offset.zero) & box.size,
+      title: context.l10n.roomExportTitle(AppIdentity.displayName),
+    );
+  }
+
+  Future<void> _recover(RoomFailureRecovery recovery) async {
+    if (!_active) return;
+    switch (recovery) {
+      case RoomFailureRecovery.settings:
+        await ref.read(photoPickerServiceProvider).openSettings();
+      case RoomFailureRecovery.storage:
+        final acquisition = ref.read(photoAcquisitionProvider);
+        if (acquisition.phase == AcquisitionPhase.storageError) {
+          await ref.read(photoAcquisitionProvider.notifier).retryStorage();
+        } else {
+          await ref.read(roomProjectSessionProvider.notifier).retrySave();
+        }
+      case RoomFailureRecovery.model:
+        await ref.read(roomModelSetupProvider.notifier).check();
+        if (mounted && _active && _analysisReady()) {
+          await ref.read(roomMaskProvider.notifier).retryAnalysis();
+        }
+      case RoomFailureRecovery.analysis:
+        if (_analysisReady()) {
+          await ref.read(roomMaskProvider.notifier).retryAnalysis();
+        }
+      case RoomFailureRecovery.picker:
+        await _import(source: _lastSource);
+      case RoomFailureRecovery.gallery:
+      case RoomFailureRecovery.smaller:
+      case RoomFailureRecovery.supported:
+        await _import(source: PhotoSource.gallery);
     }
+  }
+
+  Widget _exportPanel(RoomProjectSession session, bool enabled) {
+    final l10n = context.l10n;
+    final failure = _exports.failure, notice = _exports.notice;
+    final message = switch (failure) {
+      RoomExportFailure.accessDenied => l10n.roomExportAccess,
+      RoomExportFailure.capacity => l10n.roomExportCapacity,
+      RoomExportFailure.save => l10n.roomExportSaveFailed,
+      RoomExportFailure.share => l10n.roomExportShareFailed,
+      RoomExportFailure.invalidPreview => l10n.roomExportInvalid,
+      RoomExportFailure.interrupted => l10n.roomExportInterrupted,
+      null => switch (notice) {
+        RoomExportNotice.saved => l10n.roomExportSaved,
+        RoomExportNotice.shared => l10n.roomExportShared,
+        RoomExportNotice.dismissed => l10n.roomExportDismissed,
+        RoomExportNotice.unavailable => l10n.roomExportUnavailable,
+        null => null,
+      },
+    };
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(l10n.roomExportSelected(session.variantSet.active.name)),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          l10n.roomExportResolution(
+            session.visible.photo.width,
+            session.visible.photo.height,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Text(l10n.roomExportEffects),
+        if (session.hasUnsavedChanges) Text(l10n.roomExportUnsaved),
+        const SizedBox(height: AppSpacing.md),
+        Text(
+          l10n.roomExportLimits,
+          key: const ValueKey('room-export-disclosure'),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Builder(
+          builder: (anchor) => PrimaryButton(
+            key: const ValueKey('room-recolor-save'),
+            label: l10n.roomExportSave,
+            icon: Icons.save_alt_rounded,
+            isLoading:
+                _exports.busy && _exports.lastAction == RoomExportAction.save,
+            onPressed: enabled
+                ? () => _export(RoomExportAction.save, anchor)
+                : null,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Builder(
+          builder: (anchor) => PrimaryButton(
+            key: const ValueKey('room-recolor-share'),
+            label: l10n.roomExportShare,
+            icon: Icons.ios_share_rounded,
+            isLoading:
+                _exports.busy && _exports.lastAction == RoomExportAction.share,
+            onPressed: enabled
+                ? () => _export(RoomExportAction.share, anchor)
+                : null,
+          ),
+        ),
+        if (_exports.busy)
+          Semantics(liveRegion: true, child: Text(l10n.roomExportSaving)),
+        if (message != null) ...[
+          const SizedBox(height: AppSpacing.sm),
+          Semantics(
+            liveRegion: true,
+            child: Text(message, key: const ValueKey('room-export-result')),
+          ),
+        ],
+        if (failure != null)
+          Builder(
+            builder: (anchor) => SecondaryButton(
+              key: const ValueKey('room-export-recovery'),
+              label: failure == RoomExportFailure.accessDenied
+                  ? l10n.roomOpenSettings
+                  : failure == RoomExportFailure.invalidPreview
+                  ? l10n.roomRetryPreview
+                  : _exports.lastAction == RoomExportAction.save
+                  ? l10n.roomRetrySaveImage
+                  : l10n.roomRetryShare,
+              onPressed: _exports.busy
+                  ? null
+                  : () => failure == RoomExportFailure.accessDenied
+                        ? ref.read(roomGallerySettingsProvider)()
+                        : failure == RoomExportFailure.invalidPreview
+                        ? _previews.retry(discardActive: true)
+                        : _export(
+                            _exports.lastAction ?? RoomExportAction.share,
+                            anchor,
+                          ),
+            ),
+          ),
+      ],
+    );
   }
 
   @override
@@ -302,7 +458,8 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
         !preview.hasError &&
         state.stage == RoomMaskStage.ready &&
         !state.editBusy &&
-        !_sharing;
+        !_exports.busy &&
+        (_readExportSource()?.canCapture ?? false);
     final analyzing = state.stage == RoomMaskStage.analyzing;
     final refreshing = analyzing && state.candidate == null && draft != null;
     final acquiring = state.stage == RoomMaskStage.acquiring;
@@ -383,7 +540,8 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
               ),
             const SizedBox(height: AppSpacing.md),
           ],
-          if (acquisition.phase == AcquisitionPhase.storageError)
+          if (acquisition.phase == AcquisitionPhase.storageError &&
+              state.stage != RoomMaskStage.error)
             SecondaryButton(
               label: 'Retry photo request',
               onPressed: () =>
@@ -454,20 +612,16 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
           if (state.stage == RoomMaskStage.error) ...[
             Semantics(
               liveRegion: true,
-              child: Text(
-                modelProgress.stage == RoomModelDownloadStage.failed
-                    ? context.l10n.roomSetupFailure
-                    : context.l10n.roomAnalysisFailed,
-              ),
+              child: Text(roomFailureCopy(context.l10n, state.failure).$1),
             ),
             const SizedBox(height: AppSpacing.md),
+            PrimaryButton(
+              key: const ValueKey('room-photo-recovery'),
+              label: roomFailureCopy(context.l10n, state.failure).$2,
+              onPressed: () =>
+                  _recover(roomFailureCopy(context.l10n, state.failure).$3),
+            ),
             if (state.candidate != null) ...[
-              PrimaryButton(
-                label: context.l10n.roomRetryAnalysis,
-                onPressed: () {
-                  if (_active && _analysisReady()) controller.retryAnalysis();
-                },
-              ),
               const SizedBox(height: AppSpacing.sm),
               SecondaryButton(
                 key: const ValueKey('room-mask-manual'),
@@ -477,12 +631,6 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
                 },
               ),
             ],
-            SecondaryButton(
-              label: 'Choose another photo',
-              onPressed: canImport
-                  ? () => _import(source: PhotoSource.gallery)
-                  : null,
-            ),
             if (draft != null)
               SecondaryButton(
                 label: 'Return to previous masks',
@@ -563,14 +711,12 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
                     const SizedBox(height: AppSpacing.md),
                     Semantics(
                       liveRegion: true,
-                      child: const Text(
-                        'Preview could not update. Your photo and masks are safe.',
-                      ),
+                      child: Text(context.l10n.roomPreviewFailed),
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     SecondaryButton(
                       key: const ValueKey('room-recolor-retry'),
-                      label: 'Retry preview',
+                      label: context.l10n.roomRetryPreview,
                       onPressed: _previews.retry,
                     ),
                   ],
@@ -585,15 +731,7 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
                         controller.setLayerColor(state.selectedLayer, null),
                   ),
                   const SizedBox(height: AppSpacing.xl),
-                  Builder(
-                    builder: (anchor) => PrimaryButton(
-                      key: const ValueKey('room-recolor-share'),
-                      label: 'Share PNG',
-                      icon: Icons.ios_share_rounded,
-                      isLoading: _sharing,
-                      onPressed: canShare ? () => _share(anchor) : null,
-                    ),
-                  ),
+                  if (session != null) _exportPanel(session, canShare),
                   const SizedBox(height: AppSpacing.xxl),
                   Text(
                     'Refine masks',
