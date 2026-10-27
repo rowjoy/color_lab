@@ -4,7 +4,6 @@ export '../schema/schema_registry.dart' show LocalDataCategory;
 
 extension LocalDataAvailability on LocalDataCategory {
   bool get available => !const {
-    LocalDataCategory.roomProjects,
     LocalDataCategory.coloringProjects,
     LocalDataCategory.learningProgress,
   }.contains(this);
@@ -19,18 +18,27 @@ final class DataDeletionPreview {
     required Set<LocalDataCategory> categories,
     required this.recordCount,
     required this.estimatedBytes,
+    this.revisionCount = 0,
   }) : categories = Set.unmodifiable(categories);
   final Set<LocalDataCategory> categories;
   final int recordCount;
   final int estimatedBytes;
+  final int revisionCount;
 }
 
 /// Immutable identities and content fingerprints, including undecodable records.
 final class LocalDataManifest {
-  LocalDataManifest(Map<String, String> entries, this.estimatedBytes)
-    : entries = Map.unmodifiable(entries);
+  LocalDataManifest(
+    Map<String, String> entries,
+    this.estimatedBytes, {
+    int? recordCount,
+    this.revisionCount = 0,
+  }) : entries = Map.unmodifiable(entries),
+       recordCount = recordCount ?? entries.length;
   final Map<String, String> entries;
   final int estimatedBytes;
+  final int recordCount;
+  final int revisionCount;
   bool sameAs(LocalDataManifest other) =>
       entries.length == other.entries.length &&
       entries.entries.every((entry) => other.entries[entry.key] == entry.value);
@@ -112,11 +120,15 @@ final class ExactLocalDataManager implements LocalDataManager {
           categories: selection,
           recordCount: manifest.values.fold(
             0,
-            (sum, item) => sum + item.entries.length,
+            (sum, item) => sum + item.recordCount,
           ),
           estimatedBytes: manifest.values.fold(
             0,
             (sum, item) => sum + item.estimatedBytes,
+          ),
+          revisionCount: manifest.values.fold(
+            0,
+            (sum, item) => sum + item.revisionCount,
           ),
         );
       });

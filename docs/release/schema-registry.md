@@ -8,7 +8,7 @@
 
 ## Storage ownership
 
-Current durable data uses Hive beneath the application-documents `color_lab` directory. No SharedPreferences-backed product state was found.
+Durable data uses Hive and the Room project file tree beneath the application-documents `color_lab` directory. No SharedPreferences-backed product state was found.
 
 | Schema / box | Root identity | Current version and record | Owner / deletion boundary |
 | --- | --- | --- | --- |
@@ -19,12 +19,40 @@ Current durable data uses Hive beneath the application-documents `color_lab` dir
 | `photo_acquisition_v1` | key `pending` | `schemaVersion: 1`; `requestId`, `source`, `destination` | Transient recoverable acquisition intent. Clearing it must not delete a selected source photo owned elsewhere. |
 | `game_profiles_v2` | key `state` | root `schemaVersion: 2`; `activeProfileId`, `profiles`, `pendingLegacySnapshot`, `legacyMigrationComplete`; nested game/profile records remain v1 | Games-only profiles/progress/rewards/preferences. Profile deletion must not delete or hide shared My Work. |
 | `game_progress_v1` | key `progress` | legacy aggregate schema v1 | Read as the migration source for `game_profiles_v2`; retain until migration/rollback evidence explicitly retires it. |
+| `room_projects` (`room-projects`) | `projects/<projectId>/current` | file-tree schema v1; project/photo IDs, name, storage revision, prepared PNG/dimensions, AI/current masks, mask/color revisions, named color variants, active and nullable comparison-baseline IDs, thumbnail, UTC timestamps | Installation-local shared Room library. Its serialized `LocalDataOwner` owns this tree only; external exports and game data are excluded. |
 
 Immutable serialization details include root keys, enum storage strings, stable `GameId` values, UTC timestamp encoding, uppercase canonical `#RRGGBB`, and nested record versions. Corrupt-record handling must isolate the bad record and retain recoverable bytes; it must not reset an entire healthy box silently.
 
 ### Future schema ownership reserved by the approved design
 
-Real-room projects, Coloring projects, Learning progress/notebooks, and the unified My Work index do not yet have persisted launch schemas. Their Task 2+ implementations must choose independent versioned names, add old/current/future fixtures, and update this registry before writing production data. `game_profiles_v2` must never become the owner of those shared records.
+Coloring projects, Learning progress/notebooks, and the unified My Work index do not yet have persisted launch schemas. Their implementations must choose independent versioned names, add old/current/future fixtures, and update this registry before writing production data. `game_profiles_v2` must never become the owner of those shared records.
+
+### Room project schema v1 (frozen)
+
+`SchemaRegistry.roomProjects` reuses the reserved `fileTree` / `sharedLibrary` descriptor, version `1`, storage name `room_projects`. The layout is:
+
+```text
+color_lab/room_projects/projects/<projectId>/
+  assets/<lowercase-sha256>.png
+  assets/<lowercase-sha256>.mask
+  revisions/<positive-storage-revision>/manifest.json
+  current
+  quarantine/<diagnostic-key>.json
+```
+
+Assets are immutable and project-owned. A metadata/variant-only revision reuses the exact photo/mask references, including the SHA-256 and length; a different project gets independent ownership. Masks store one discrete label byte per working pixel, `0` (unowned) through `4`, with the existing Room coordinate system. Prepared photos are RGB/RGBA 8-bit PNG pixels with only `IHDR`, `IDAT`, `IEND` chunks; source EXIF/GPS/text and APNG are excluded. Export still has an independent platform-handoff verification boundary.
+
+The manifest contains exactly `schemaVersion`, `projectId`, `photoId`, `name`, `revision`, `width`, `height`, `maskRevision`, `colorRevision`, `activeVariantId`, `comparisonBaselineVariantId`, `variants`, `createdAt`, `updatedAt`, and `assets`. Each variant contains exactly `id`, `name`, `colors`; colors contain nullable canonical `#RRGGBB` values for wall/ceiling/floor/furniture. `assets` contains `photo`, `aiMask`, `mask`, and nullable `thumbnail`; every reference has `path`, `length`, and lowercase `sha256`. Asset paths are exactly `assets/<sha256>.(png|mask)`. A missing/corrupt thumbnail yields a typed warning and a null thumbnail while preserving otherwise valid core data.
+
+IDs match `[A-Za-z0-9][A-Za-z0-9_-]{0,79}`. Names are trimmed, nonempty, at most 80 UTF-16 code units, with no control characters; variant names are case-insensitively unique. There are 1–32 variants. Dimensions are positive integers up to 4096 each / 16,777,216 pixels; thumbnail dimensions are at most 1024 each. Masks must match the pixel count exactly. Every asset is at most 64 MiB, each manifest at most 256 KiB, and each pointer at most 2 MiB. Integer revisions are in `0..2147483647`, with persisted storage revisions starting at `1`; a project retains at most 10,000 acknowledged revisions, then returns a typed limit error. The v1 owner does not silently prune acknowledged history. Dates use canonical UTC `toIso8601String()` encoding and updated time cannot precede creation.
+
+`current` contains `schemaVersion`, `projectId`, descending `ancestry` (`revision`, `manifestSha256`), and a SHA-256 `checksum` over the canonical JSON payload excluding `checksum`. The ancestry is contiguous back to revision 1. First save requires CAS `expectedRevision: 0`; subsequent saves require the current acknowledged revision. A conflict never rebases. Recovery walks only this checksummed ancestry, checking manifest and asset hashes; a valid unacknowledged revision is never promoted. A fallback result distinguishes `snapshot.revision` from `acknowledgedRevision` (the required CAS token), with a typed warning. Invalid pointer data fails closed and its revision evidence is preserved. Corrupt projects do not hide healthy projects.
+
+New asset bytes and a manifest are flushed in a `.stage-<revision>-<nonce>` sibling, assets are published under their immutable content references, and the completed revision directory is renamed into place. A flushed `.current-<nonce>` replaces `current` atomically as the commit boundary. Process interruption before that boundary reopens the prior acknowledged state; after it, the new state is committed even if the caller did not receive the result. This is **process-interruption recovery**, not a device power-loss guarantee: no directory fsync/platform persistence barrier is currently available here. Concurrent handles in the same app isolate share the queue; the tree is not a multi-process or multi-isolate database.
+
+Reopen/save cleanup removes recognized staging, temporary-pointer and unacknowledged revision artifacts. It removes an unreferenced content asset only when all acknowledged manifests can be validated; otherwise assets are retained. Quarantine writes safe reason/revision/hash metadata best-effort, without moving/deleting corrupt originals. All owned path components are checked without following symlinks. Inventory streams file hashes and includes directories, pointers, every revision, orphan/staging/quarantine files and link identities; deletion removes links themselves without touching their targets. Inventory bounds depth to 16 and entries to 100,000, failing closed beyond that. The private app-storage parent is canonicalized once, and its canonical ancestors are rechecked on subsequent operations so later parent redirection fails closed. This is not an `openat`-style hostile-filesystem sandbox against external path swaps racing individual syscalls.
+
+Schema v1 deliberately omits explicit manual correction intent/history. Plan 03 owns schema v2 and migration fixtures; **ROOM-03 remains partial** until that work lands. Unknown versions or required fields are retained and rejected, never auto-reset.
 
 ## Route registry
 
@@ -45,7 +73,7 @@ The initial location is `/home`. Startup/onboarding guards can redirect to `/sta
 
 ### Explicit local data controls
 
-Task 8 uses the active repositories' serialized maintenance operations. A preview freezes exact record keys and content fingerprints; deletion consumes that authorization, requires the same categories, and validates every selected owner before writing. Reserved Room-photo-project, Coloring-project, and Learning-progress categories are disabled. User exports and acquisition metadata are excluded. All-game deletion explicitly covers both game boxes and leaves the Games section empty until the person creates a new named player. Shared libraries stay independent.
+Data controls use the active repositories' serialized maintenance operations. A preview freezes exact record keys and content fingerprints; deletion consumes that authorization, requires the same categories, and validates every selected owner before writing. Room-photo projects are active: preview records count projects with a current pointer (including corrupt pointers), not files; stored revision directories and aggregate owned bytes are separate detail. Coloring-project and Learning-progress categories remain disabled. User exports and acquisition metadata are excluded. All-game deletion explicitly covers both game boxes and leaves the Games section empty until the person creates a new named player. Shared libraries stay independent.
 
 Model inventory is read-only. Model removal cancels and drains active work, blocks new preparation during removal, and touches only pinned model files and partials beneath `room_models`; directory symlinks are rejected. Data-management preview fails safely while a model download is active, leaving explicit cancellation/removal to Model storage. No repository is closed/reopened to perform deletion. Storage I/O failures can leave partially removed selected data across independent owners; the UI retains its selection and last preview, reports failure, and requires a fresh review.
 
@@ -85,7 +113,7 @@ Aggregate download: 68,316,288 bytes (65.151 MiB). Model source revisions, licen
 - Illustrated Room gallery export validates PNG signature and a safe filename, writes into an owned `color-lab-gallery-*` temporary directory, calls the platform gallery API, then best-effort deletes only that owned directory.
 - Color sharing currently sends formatted color text through the platform share sheet; it does not own a persistent export file.
 - Real-room PNG sharing validates the in-memory recolor frame's PNG signature, sanitizes/truncates the photo ID into `color-lab-room-<safe-id>.png`, and hands detached bytes to `share_plus`. The app creates no durable export record; any platform/plugin share-sheet materialization is transient rather than project storage.
-- Real-room recolor frames otherwise live in memory. Durable Room projects/photos/masks/thumbnails are future schemas and must define private-storage ownership and deletion before persistence lands.
+- Real-room recolor frames live in memory. Durable Room projects/photos/masks/thumbnails use the independently owned `room_projects` schema above.
 - Downloaded models are app-support data managed by the model store, not cache; model removal must not delete projects.
 
 ## Migration checklist

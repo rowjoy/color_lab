@@ -473,6 +473,12 @@ abstract class AppLocalizations {
   /// **'{records} records · approximately {bytes} bytes'**
   String dataPreviewSummary(int records, int bytes);
 
+  /// Stored Room revisions are storage detail, not additional project records.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 room project revision} other{{count} room project revisions}}'**
+  String dataRoomProjectRevisionSummary(int count);
+
   /// Installed model inventory.
   ///
   /// In en, this message translates to:

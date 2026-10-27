@@ -44,6 +44,12 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
                   preview.estimatedBytes,
                 ),
               ),
+              if (preview.revisionCount > 0)
+                Text(
+                  context.l10n.dataRoomProjectRevisionSummary(
+                    preview.revisionCount,
+                  ),
+                ),
               if (destructive) ...[
                 const SizedBox(height: 16),
                 Text(context.l10n.dataConfirmBody),
@@ -137,6 +143,10 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
             _preview!.recordCount,
             _preview!.estimatedBytes,
           ),
+        ),
+      if (_preview != null && !_busy && _preview!.revisionCount > 0)
+        Text(
+          context.l10n.dataRoomProjectRevisionSummary(_preview!.revisionCount),
         ),
       if (_message != null) Semantics(liveRegion: true, child: Text(_message!)),
       FilledButton(

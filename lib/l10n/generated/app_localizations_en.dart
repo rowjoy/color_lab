@@ -224,6 +224,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String dataRoomProjectRevisionSummary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count room project revisions',
+      one: '1 room project revision',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String modelsSummary(int files, int bytes) {
     return '$files model files · $bytes bytes';
   }

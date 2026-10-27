@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:async';
 import 'package:color_lab/data/db/hive_game_profiles_repository.dart';
+import 'package:color_lab/data/files/file_room_project_repository.dart';
 import 'package:hive/hive.dart';
 // ignore: implementation_imports
 import 'package:hive/src/hive_impl.dart';
@@ -10,6 +11,8 @@ import 'package:color_lab/data/storage/local_data_manager.dart';
 import 'package:color_lab/core/color/color_engine.dart';
 import 'package:color_lab/features/history/domain/saved_color.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../support/room_project_fixtures.dart';
 
 void main() {
   late Directory root;
@@ -160,4 +163,33 @@ void main() {
     await second;
     expect(await colors.load(), isEmpty);
   });
+
+  test(
+    'mixed preview counts Room projects independently from files and revisions',
+    () async {
+      final rooms = await FileRoomProjectRepository.open(directory: root.path);
+      try {
+        final saved = await rooms.save(
+          roomProjectFixture(),
+          expectedRevision: 0,
+        );
+        await rooms.save(saved.copyWith(name: 'Renamed'), expectedRevision: 1);
+        final data = ExactLocalDataManager(
+          owners: {
+            LocalDataCategory.savedColors: () async => colors,
+            LocalDataCategory.roomProjects: () async => rooms,
+          },
+        );
+        final preview = await data.preview({
+          LocalDataCategory.savedColors,
+          LocalDataCategory.roomProjects,
+        });
+        expect(preview.recordCount, 2);
+        expect(preview.revisionCount, 2);
+        expect(preview.estimatedBytes, greaterThan(100));
+      } finally {
+        await rooms.close();
+      }
+    },
+  );
 }

@@ -14,6 +14,8 @@ import 'package:color_lab/features/history/domain/saved_color.dart';
 import '../../support/in_memory_color_history_repository.dart';
 
 class TestManager implements LocalDataManager {
+  int records = 3;
+  int revisions = 0;
   int deletes = 0;
   int attempts = 0;
   Completer<void>? gate;
@@ -24,8 +26,9 @@ class TestManager implements LocalDataManager {
     Set<LocalDataCategory> categories,
   ) async => DataDeletionPreview(
     categories: categories,
-    recordCount: 3,
+    recordCount: records,
     estimatedBytes: 123,
+    revisionCount: revisions,
   );
   @override
   Future<void> delete(Set<LocalDataCategory> categories) async {
@@ -63,6 +66,25 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('preview-data')));
     await frame(tester);
   }
+
+  testWidgets('Room projects are selectable and revisions appear as detail', (
+    tester,
+  ) async {
+    final manager = TestManager()
+      ..records = 1
+      ..revisions = 2;
+    await launch(tester, manager);
+    await tester.tap(find.byKey(const ValueKey('category-roomProjects')));
+    await tester.pump();
+    await tester.ensureVisible(find.byKey(const ValueKey('preview-data')));
+    await tester.tap(find.byKey(const ValueKey('preview-data')));
+    await frame(tester);
+    expect(find.text('1 records · approximately 123 bytes'), findsOneWidget);
+    expect(find.text('2 room project revisions'), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(manager.attempts, 0);
+  });
 
   testWidgets('cancel each confirmation retains selection and never deletes', (
     tester,
@@ -323,7 +345,7 @@ void main() {
         expect(
           tester
               .widget<CheckboxListTile>(
-                find.byKey(const ValueKey('category-roomProjects')),
+                find.byKey(const ValueKey('category-coloringProjects')),
               )
               .onChanged,
           isNull,

@@ -189,6 +189,8 @@
   "modelsRemoved": "Room models removed.",
   "@modelsRemoved": {"description":"Settings: Room models removed."},
   "dataPreviewSummary": "{records} records · approximately {bytes} bytes",
+  "dataRoomProjectRevisionSummary": "{count, plural, =1{1 room project revision} other{{count} room project revisions}}",
+  "@dataRoomProjectRevisionSummary": {"description":"Stored Room revisions are storage detail, not additional project records.","placeholders":{"count":{"type":"int"}}},
   "@dataPreviewSummary": {"description":"Exact preview record count and estimated size.","placeholders":{"records":{"type":"int"},"bytes":{"type":"int"}}},
   "modelsSummary": "{files} model files · {bytes} bytes",
   "@modelsSummary": {"description":"Installed model inventory.","placeholders":{"files":{"type":"int"},"bytes":{"type":"int"}}},
