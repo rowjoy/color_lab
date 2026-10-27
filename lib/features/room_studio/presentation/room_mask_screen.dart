@@ -377,8 +377,13 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
   Future<void> _recover(
     RoomFailureRecovery recovery, {
     AcquisitionRecoveryFailure? recoveredFailure,
+    RoomMaskState? failedState,
   }) async {
     if (!_active) return;
+    if (failedState != null &&
+        !identical(failedState, ref.read(roomMaskProvider))) {
+      return;
+    }
     if (recoveredFailure != null &&
         (!_recoveryCurrent ||
             !identical(
@@ -393,7 +398,7 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
       case RoomFailureRecovery.storage:
         final acquisition = ref.read(photoAcquisitionProvider);
         if (acquisition.phase == AcquisitionPhase.storageError) {
-          await ref.read(photoAcquisitionProvider.notifier).retryStorage();
+          await ref.read(roomMaskProvider.notifier).retryAcquisitionStorage();
         } else {
           await ref.read(roomProjectSessionProvider.notifier).retrySave();
         }
@@ -713,6 +718,7 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
               onPressed: () => _recover(
                 roomFailureCopy(context.l10n, failure).$3,
                 recoveredFailure: recoveredFailure,
+                failedState: state.stage == RoomMaskStage.error ? state : null,
               ),
             ),
             if (state.candidate != null) ...[

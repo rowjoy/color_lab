@@ -233,3 +233,124 @@ not a remote CI claim. The iOS archive/device gate remains blocked as recorded.
 - A blocked field names its owner and required evidence; code does not manufacture store history, legal clearance, human mask annotations, device access, or publication approval.
 - Product files remain untouched in Task 1. Later work must preserve schema names and routes or supply migrations/redirects.
 - No public release, store upload, credential change, package-ID change, signing change, or ad activation follows from this ledger.
+
+## Plan 02 Task 8 — durable real-room milestone (2026-10-28)
+
+This evidence follows Tasks 1–7 at
+`4d98b1604d6901086035dd8eb7af26b61ced824f` on `TintAtlas`. The four scenarios in
+`test/features/room_studio/real_room_project_integration_test.dart` use the real
+app/router, setup, photo preparation, session/autosave, disk repository,
+variants, recoloring algorithm and export service. Native picker/segmentation,
+worker scheduling and platform channels are controlled boundaries. The fresh
+empty offline onboarding/Illustrated Rooms/Later flow is separate from the
+verified synthetic model-cache flow; both forbid network construction. Tiny
+`hello`/`world` cache files prove hash/cache protocol behavior, not TFLite
+inference.
+
+The durable flow asserts exact oriented photo pixels, zero-mask manual fallback,
+completed versus cancelled edits, pointer failure with continued edits and one
+Retry of the newest coherent draft, metadata-only asset reuse, rename recovery,
+independent duplication, full-key comparison/lifecycle behavior, and a fresh
+repository/container/router reopen of the last acknowledged state. It reads
+actual Save/Share files at the terminal mocked channel before cleanup, then
+checks project deletion preserves independently owned source/model/duplicate
+and external export bytes. Existing controlled scheduler/session tests in the
+focused gate additionally cover late completion/error, physical timeout
+replacement and draining accepted work before deletion. No real recolor isolate
+runs inside widget fake-async; separate existing real-isolate tests remain in the
+gate.
+
+A focused behavioral RED proved that successful acquisition-storage Retry left
+`RoomMaskFailureKind.storage` visible (one failed test, exit 1, 9.57s). The small
+controller/screen correction reconciles only the captured acquisition-owned
+error and rejects its stale action, preserving the pending receipt and previous
+failed project draft. The same test now proves a second old action cannot retry
+that project's save. The frozen-fixture consumer first failed on the absent
+inventory (one failed test, exit 1, 2.66s); immutable artifacts were then added.
+Composed-flow harness failures and interrupted diagnostics are not product RED
+or passing evidence. No other production change was needed.
+
+Commands used Flutter
+`/Users/jamirulislam/Applications/flutter/bin/flutter` (3.41.1) and Dart
+`/Users/jamirulislam/Applications/flutter/bin/cache/dart-sdk/bin/dart` (3.11.0),
+with the existing dependency locks. Elapsed values include command startup.
+
+| Command / gate | Exit and result | Elapsed / evidence |
+| --- | --- | --- |
+| `flutter test --no-pub test/features/room_studio/real_room_project_integration_test.dart --reporter expanded` | `0`, 4 passed | 63.90s; final exact byte and neutral Share-dismissal assertions. |
+| `flutter test --no-pub test/features/room_studio/real_room_project_integration_test.dart test/features/room_studio/models/room_model_store_test.dart test/features/room_studio/data/room_project_codec_test.dart test/data/files/file_room_project_repository_test.dart test/features/games/game_profile_shared_library_isolation_test.dart --reporter expanded` | `0`, 131 passed | 62.09s; immutable fixtures, deferred I/O and shared-library isolation; the stricter final dismissal assertion is covered in the four-case run and final gates. |
+| `flutter test --no-pub test/features/room_studio test/features/picker test/data/files --reporter expanded` | `0`, 1,036 passed | 76.77s; exact Plan 02 focused command, including the final Share assertion. |
+| `dart format --output=none --set-exit-if-changed lib test tool` | `1`, 432 scanned / only `lib/main.dart` reported | 1.68s; protected user diff, no formatter output written. |
+| `rg --files lib test tool -g '*.dart' -g '!lib/main.dart' \| xargs /Users/jamirulislam/Applications/flutter/bin/cache/dart-sdk/bin/dart format --output=none --set-exit-if-changed` | `0`, 431 unchanged | 1.72s; excludes exactly the protected file. |
+| `flutter analyze --no-pub` | `0`, no issues | 4.26s. |
+| `flutter test --no-pub --reporter expanded` | `0`, 2,108 passed | 118.51s; 18 cases added since Task 7's 2,090, no added skips or removed tests. |
+| `flutter build apk --debug --no-pub` | `0`, debug APK built | 15.04s; Gradle `assembleDebug` 11.9s. Artifact details below. |
+| `flutter build ios --debug --no-codesign --no-pub` | **Blocked preparation**, timeout; raw Flutter/wrapper `0` after SIGINT is not success | 480.35s at the 480s bound; CocoaPods TensorFlowLiteSwift 2.12.0 source clone, no Xcode compilation. |
+| `flutter devices --machine`; `adb devices -l`; `xcrun xctrace list devices` | `0` each | 7.29s / 0.02s / 1.74s; emulator only, physical iPhone offline. |
+| `git diff --check`; staged diff and protected-file audit | `0`; 26 explicit Task 8 paths | Main is excluded; its diff SHA-256 remains `c9bd56e83824d1dff5f750092e3d751bbb1841ad9377380c057bdffb4aacf437`. |
+
+Android artifact: `build/app/outputs/flutter-apk/app-debug.apk`, 217,598,646 bytes,
+SHA-256 `737c3eeac3d6d55d65c501f06be6ebe525b02a722f76497510d08e70844cb1e6`.
+Flutter's effective JDK was
+`/Applications/Android Studio.app/Contents/jbr/Contents/Home/bin/java`, OpenJDK
+`17.0.9+0-17.0.9b1087.7-11185874`. This is debug assembly, not signing, release
+size approval or native runtime evidence. The local artifact was built from the
+authorized shared checkout including the existing protected main.dart diff.
+That preexisting diff is excluded from the Task 8 commit.
+
+The final iOS attempt was interrupted only in its owned process group after
+480 seconds. CocoaPods reported `Cancelled` / `Interrupt` and Flutter reported
+`Error running pod install`; `Running Xcode build` never occurred. Flutter and
+the wrapper both returned raw exit 0 after SIGINT, so timeout/phase evidence
+classifies the run as blocked, never a compile pass. Post-interrupt process
+inspection found zero surviving owned processes, and `git diff HEAD --name-only
+-- android ios pubspec.yaml pubspec.lock` was empty.
+
+The independent schema-v1 freeze is `test/fixtures/room_projects/v1/`, with
+inventory SHA-256
+`365055822f7b29fbff9b09afdd242c8bd597f0ff9a0980b99d559e11fbca1013`.
+It pins 13 repository files / 5,801 bytes, two projects, four acknowledged
+manifests, checksummed ancestry pointers, 3×2 synthetic PNG photos, a 1×1
+thumbnail, distinct AI/current masks, multiple variants/baseline and a null
+thumbnail. README/inventory fix IDs, timestamps, colors, masks and each file's
+size/hash. These static Python-assembled bytes are independent of the current
+Dart encoder at runtime. Plan 03 must consume them unchanged. Consumers verify
+hashes, reject unsupported versions/fields, recover acknowledged ancestry while
+retaining the correct CAS token, and discard a newer valid orphan. Storage-v1
+PNG compatibility remains broader than strict export PNG verification;
+process-interruption evidence does not establish power-loss directory durability.
+
+The milestone uses a 12×8 EXIF-oriented synthetic JPEG (765 bytes, SHA-256
+`d2ca9966976c419b66d2ba6cf91dd74dc41ab32e2ca8e5647985d2398e5538b5`). Real preparation
+produces exact rotated 12×8 pixels; prepared PNG is 210 bytes, SHA-256
+`c8ebac7dc857ea7a537a876678bfaa6c5aa955555653a5c7f480827a0e9a890c`. Terminal mocked
+Save and Share each read a strict 12×8 PNG, 250 bytes, SHA-256
+`0eb7d2e1c3884b2dbc9b3a0ebd50634ad16915e888a2aa5b77098fc44bb626f0`. Assertions cover
+the complete `(projectId, photoId, maskRevision, colorRevision, variantId)`, exact
+active-side RGBA/PNG, safe filename, MIME/title/subject/anchor and absence of
+comparison UI/overlay pixels. Permission denial/lifecycle interruption produce
+no handoff; Share dismissal is neutral. Export leaves an unsaved project's save
+status unchanged and external copies survive project deletion.
+
+The deferred Task 1 async `addStream`/flush/close probes now distinguish capacity
+from generic I/O, retain safe partials, reject incomplete promotion and retry
+cleanly. Task 2 asset write/flush/pre/post-publication and temporary-pointer
+write/flush probes preserve the old pointer/assets, clean staging/orphans on
+fresh reopen and retry successfully. Neither required production I/O changes.
+The shared-library test populates colors, palettes, illustrated designs and a
+real Room project: profile switch/delete and all-game deletion preserve their
+exact manifests; Room deletion preserves all other libraries.
+
+| Remaining gate or constraint | State / owner / evidence needed |
+| --- | --- |
+| ROOM-03 explicit intent/history | **Partial**. Schema v1 cannot distinguish successful all-zero AI from manual fallback after reopen; both receive tested cause-neutral copy. Plan 03 owns schema v2 and migration from the frozen bytes. |
+| Native Save/Share, permission/settings and external-file retention | **Unexecuted on physical devices**, Device QA. Run gallery/Share cancellation/retry, filename/MIME/metadata inspection and post-delete persistence on supported Android and iOS devices. Mocked channels prove only the host boundary contract. |
+| Native picker/camera orientation, cached production inference, OS restart | **Unexecuted**, Device QA. Use actual camera/rotated fixtures, pinned production models offline, and process/OS restart on named devices. Synthetic cache and fresh host containers do not replace these checks. |
+| iOS unsigned build/archive | **Blocked in source preparation**, iOS Release. Both the 180s diagnostic and final 480s attempt stopped at the locked TensorFlowLiteSwift 2.12.0 Git clone. Complete CocoaPods preparation, then obtain unsigned compile and separate archive/device evidence. No credentials or native configuration changed. |
+| Available device checks | Android `emulator-5554` is booted, API 34 / `arm64-v8a` (`adb getprop`, exit 0, 0.13s). `xctrace` lists physical iPhone iOS 18.3.2 offline and installed simulators; Flutter wireless discovery reports code -27. Discovery is not a runtime pass. No web support claim. |
+| Representative ten-project storage/performance | **Open**, Mobile Performance QA. The deterministic synthetic recipe and remaining realistic 1600-axis corpus/device owner are in `performance-budgets.md`; no device budget is inferred. |
+| Known schema/UX constraints | Restore AI can add a no-op metadata revision within the 10,000-revision bound while reusing assets. Rename I/O recovery safely requires Cancel → Retry save → reopen Rename. Arbitrary callers must await maintenance erase; the production manager does. No additional controlled RED justified broadening these behaviors. |
+
+No dependency, platform ID/configuration, signing, advertising or protected-main
+change is included. No push, upload, release, remote CI or physical-device pass
+is claimed by this milestone.

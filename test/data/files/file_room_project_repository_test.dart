@@ -11,12 +11,16 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../support/room_project_fixtures.dart';
+import '../../support/frozen_room_project_fixtures.dart';
 
 final class _FaultIo extends RoomProjectFileIo {
   bool failBeforePointer = false;
   bool failAfterPointer = false;
   bool failRevisionPublish = false;
   bool partialManifest = false;
+  String? assetPublicationFailure;
+  String? writeFailure;
+  bool writeFailureInjected = false;
   String? failDelete;
   Completer<void>? pointerEntered;
   Completer<void>? releasePointer;
@@ -29,6 +33,27 @@ final class _FaultIo extends RoomProjectFileIo {
         Uint8List.fromList(bytes.take(7).toList()),
       );
       throw const FileSystemException('injected interrupted manifest');
+    }
+    final phase = writeFailure;
+    final targeted =
+        phase != null &&
+        (phase.startsWith('asset-')
+            ? path.contains('/.stage-') && path.endsWith('.mask')
+            : path.contains('/.current-'));
+    if (targeted) {
+      final handle = await File(path).open(mode: FileMode.writeOnly);
+      try {
+        await handle.writeFrom(
+          bytes,
+          0,
+          phase.endsWith('write') ? 1 : bytes.length,
+        );
+        if (phase.endsWith('flush')) await handle.flush();
+        writeFailureInjected = true;
+        throw FileSystemException('injected $phase acknowledgement failure');
+      } finally {
+        await handle.close();
+      }
     }
     await super.writeFlushed(path, bytes);
   }
@@ -43,6 +68,12 @@ final class _FaultIo extends RoomProjectFileIo {
 
   @override
   Future<void> renameFile(String source, String destination) async {
+    if (destination.contains('/assets/') && assetPublicationFailure != null) {
+      if (assetPublicationFailure == 'after') {
+        await super.renameFile(source, destination);
+      }
+      throw const FileSystemException('injected asset publication');
+    }
     if (destination.endsWith('/current')) {
       pointerEntered?.complete();
       await releasePointer?.future;
@@ -91,6 +122,133 @@ void main() {
     await repository.close();
     await root.delete(recursive: true);
   });
+
+  test(
+    'frozen v1 disk reopen uses acknowledged ancestry and ignores newer orphan',
+    () async {
+      await repository.close();
+      await copyFrozenRooms(root);
+      repository = await open();
+      final healthy = (await repository.read('v1-healthy'))!;
+      expect(healthy.acknowledgedRevision, 3);
+      expect(healthy.snapshot.maskBytes, [1, 2, 0, 4, 3, 1]);
+      expect(healthy.snapshot.activeVariantId, 'b');
+      expect(healthy.snapshot.comparisonBaselineVariantId, 'a');
+      expect(
+        (await repository.read('v1-manual'))!.snapshot.thumbnailPng,
+        isNull,
+      );
+      final base = projectPath('v1-healthy');
+      final pointer = await File('$base/current').readAsBytes();
+      final newer = jsonDecode(
+        await File('$base/revisions/3/manifest.json').readAsString(),
+      );
+      newer['revision'] = 4;
+      newer['name'] = 'Unacknowledged orphan';
+      await Directory('$base/revisions/4').create();
+      await File(
+        '$base/revisions/4/manifest.json',
+      ).writeAsString(jsonEncode(newer));
+      await File(
+        '$base/revisions/3/manifest.json',
+      ).writeAsString('corrupt-current');
+      await reopen();
+      final recovered = (await repository.read('v1-healthy'))!;
+      expect(recovered.snapshot.revision, 2);
+      expect(recovered.acknowledgedRevision, 3);
+      expect(
+        recovered.warning!.reason,
+        RoomProjectRecoveryReason.earlierRevision,
+      );
+      expect(recovered.snapshot.name, 'Corner study');
+      expect(await File('$base/current').readAsBytes(), pointer);
+      expect(await Directory('$base/revisions/4').exists(), isFalse);
+      expect((await repository.listSnapshot()).records, hasLength(2));
+      await expectLater(
+        repository.save(recovered.snapshot, expectedRevision: 2),
+        throwsA(isA<RoomProjectConflict>()),
+      );
+      expect(
+        (await repository.save(
+          recovered.snapshot,
+          expectedRevision: 3,
+        )).revision,
+        4,
+      );
+      await frozenRoomFiles(); // The immutable source fixture still matches every hash.
+    },
+  );
+
+  for (final phase in [
+    'asset-write',
+    'asset-flush',
+    'asset-before',
+    'asset-after',
+    'pointer-write',
+    'pointer-flush',
+  ]) {
+    test(
+      '$phase failure preserves pointer/assets and fresh reopen retries',
+      () async {
+        final first = await saveFirst();
+        final base = projectPath();
+        final current = await File('$base/current').readAsBytes();
+        final prior = <String, Uint8List>{
+          await for (final entry in Directory('$base/assets').list())
+            if (entry is File) entry.path: await entry.readAsBytes(),
+        };
+        final next = first.copyWith(
+          maskBytes: Uint8List.fromList([0, 2, 3, 0]),
+          maskRevision: 3,
+        );
+        io.writeFailure = phase.endsWith('write') || phase.endsWith('flush')
+            ? phase
+            : null;
+        io.assetPublicationFailure = phase == 'asset-before'
+            ? 'before'
+            : phase == 'asset-after'
+            ? 'after'
+            : null;
+        await expectLater(
+          repository.save(next, expectedRevision: 1),
+          throwsA(isA<RoomProjectStorageException>()),
+        );
+        io.writeFailure = null;
+        if (phase.endsWith('write') || phase.endsWith('flush')) {
+          expect(io.writeFailureInjected, isTrue);
+        }
+        expect(await File('$base/current').readAsBytes(), current);
+        for (final entry in prior.entries) {
+          expect(await File(entry.key).readAsBytes(), entry.value);
+        }
+        io.assetPublicationFailure = null;
+        await reopen();
+        expect(
+          (await repository.read(first.projectId))!.snapshot.maskBytes,
+          first.maskBytes,
+        );
+        final paths = (await Directory(
+          base,
+        ).list(recursive: true).toList()).map((e) => e.path);
+        expect(
+          paths.where(
+            (p) =>
+                p.contains('.stage-') ||
+                p.contains('.current-') ||
+                p.contains('/revisions/2'),
+          ),
+          isEmpty,
+        );
+        expect(await Directory('$base/assets').list().length, prior.length);
+        expect((await repository.save(next, expectedRevision: 1)).revision, 2);
+        await reopen();
+        expect(
+          (await repository.read(first.projectId))!.snapshot.maskBytes,
+          next.maskBytes,
+        );
+      },
+    );
+  }
 
   test('first save commits revision 1 and reopens byte-identically', () async {
     final saved = await saveFirst();

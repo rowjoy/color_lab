@@ -31,7 +31,7 @@ No number is approved merely because it sounds reasonable. Each row remains bloc
 | Android AAB delivered download/install size per ABI/density | blocked | blocked | Release Engineering: production-shaped AAB and Play bundle/device report |
 | iOS archive/IPA and installed size | blocked | blocked | iOS Release: production-shaped archive/export and App Store size report |
 | Cold-start first frame | blocked | blocked | Mobile Performance QA: profile/release traces on AND-LOW-24, AND-CUR-36, IOS-MIN-13 or approved replacement, and IOS-CUR |
-| Ten real-room projects: database + photos + masks + thumbnails | blocked because the Room project schema/fixture is not implemented | blocked | Plan 02 storage owner creates the fixed ten-project fixture; Device QA measures fresh versus populated app storage |
+| Ten real-room projects: database + photos + masks + thumbnails | schema v1 and immutable synthetic protocol fixture implemented; representative device measurement remains open | blocked | Mobile Performance QA: use the fixed-ID ten-project recipe below, freeze representative 1600-axis photo bytes, and measure fresh versus populated app storage on named supported devices |
 | Peak RSS: startup, model load, inference, recolor, export | blocked | blocked | Device Lab captures platform memory traces on the minimum-RAM Android and required iPhone/iPad |
 | Current device model-inference latency | blocked | blocked | Device Lab; warm/cold p50/p95 with exact model hashes |
 | Recolor and PNG export latency | blocked | blocked | Device Lab; fixed photo/mask fixture and named devices |
@@ -54,3 +54,24 @@ These are gates, not current results. Smart timings apply only if the conditiona
 3. Retain raw timings and report median plus p95 for interactive latency; report peak and steady-state memory separately.
 4. Compare against this baseline and explain every dependency/artifact increase.
 5. A failed or unmeasured gate narrows/blocks the relevant release or feature; it never becomes a guessed pass.
+
+## Plan 02 storage recipe and remaining measurement owner
+
+The frozen schema-v1 inputs live in `test/fixtures/room_projects/v1/`; inventory
+SHA-256 `365055822f7b29fbff9b09afdd242c8bd597f0ff9a0980b99d559e11fbca1013`.
+For a deterministic protocol floor, decode the static latest snapshots and save
+five independent copies of each through the repository, with project IDs
+`budget-01` through `budget-10`, photo IDs `budget-photo-01` through
+`budget-photo-10`, the fixture timestamps/colors/masks and one acknowledged
+revision each. Retain independent assets per project; never measure filesystem
+hard links as independent ownership. The fixture README pins decoded inputs.
+
+These 3 × 2 synthetic images intentionally exercise storage semantics; their
+byte count is not a representative real-room storage budget. Mobile Performance
+QA still owns a frozen realistic ten-project corpus at the supported working
+resolution, device free-space/RSS measurements, revision counts, and an approved
+threshold. No phone-storage or latency number is inferred from host tests.
+Metadata-only variants reuse immutable assets; acknowledged v1 history remains
+bounded at 10,000 revisions per project. Restore AI can add a no-op manifest and
+pointer revision while reusing the same assets; suppressing that revision is
+not required by this milestone.

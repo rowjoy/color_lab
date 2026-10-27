@@ -54,6 +54,25 @@ Reopen/save cleanup removes recognized staging, temporary-pointer and unacknowle
 
 Schema v1 deliberately omits explicit manual correction intent/history. Plan 03 owns schema v2 and migration fixtures; **ROOM-03 remains partial** until that work lands. Unknown versions or required fields are retained and rejected, never auto-reset.
 
+### Frozen Plan 02 migration artifacts
+
+`test/fixtures/room_projects/v1/` is the immutable Plan 03 input. Its
+`inventory.json` (SHA-256
+`365055822f7b29fbff9b09afdd242c8bd597f0ff9a0980b99d559e11fbca1013`)
+pins 13 files / 5,801 bytes: two checksummed pointers, four acknowledged
+manifests, independent project-owned PNG/mask assets, and a null-thumbnail case.
+The independent synthetic fixture assembly targets schema v1 at commit
+`4d98b1604d6901086035dd8eb7af26b61ced824f`; no personal photo or model is included.
+The fixture README records fixed IDs, UTC timestamps, 3 × 2 corner pixels,
+AI/current labels, variants/colors and baseline expectations. Consumer tests
+verify every file's size/hash, copy exact bytes into owned temporary storage,
+and reopen without using the current encoder to produce their input. They
+exercise unknown versions/fields, corrupt-current acknowledged-ancestry
+fallback, the distinct CAS token, and rejection of a valid newer orphan.
+Plan 03 must migrate these exact bytes rather than regenerate them. These
+fixtures do not broaden strict export PNG support or establish device
+power-loss durability.
+
 ## Route registry
 
 Routes are currently path-addressed; no GoRouter `name:` contracts exist. Preserve or explicitly migrate inbound/internal links when the adaptive shell changes.
@@ -65,7 +84,7 @@ Routes are currently path-addressed; no GoRouter `name:` contracts exist. Preser
 | Nested/compatible tools | `/capture`, `/palette`, `/lab`, `/room` (redirect to `/rooms`) |
 | Startup/onboarding | `/startup`, `/onboarding`, `/welcome` |
 | Photo acquisition | `/camera`, `/photo` |
-| Real/illustrated rooms | `/room/study` (redirect), `/room/illustrated`, `/room/illustrated/:templateId`, `/room/masks` |
+| Real/illustrated rooms | `/room/study` (redirect), `/room/illustrated`, `/room/illustrated/:templateId`, `/room/masks`, `/rooms/projects`, `/rooms/project/:projectId` |
 | Color learning/tools | `/vision`, `/matching`, `/harmonies`, `/palettes`, `/formula`, `/mixer` |
 | Games | `/bubble-shooter`, `/rainbow-rings`, `/water-sort`, `/fruit-pop`, `/games/badges`, `/games/leaderboard`, `/games/:gameId/map` |
 

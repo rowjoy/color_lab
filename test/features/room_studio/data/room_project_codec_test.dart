@@ -6,6 +6,7 @@ import 'package:color_lab/features/room_studio/data/room_project_codec.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../support/room_project_fixtures.dart';
+import '../../../support/frozen_room_project_fixtures.dart';
 
 void main() {
   const codec = RoomProjectCodec();
@@ -18,6 +19,58 @@ void main() {
           as Map<String, dynamic>;
   Uint8List bytes(Map<String, dynamic> value) =>
       Uint8List.fromList(utf8.encode(jsonEncode(value)));
+
+  test(
+    'frozen independent schema-v1 manifests decode without encoding',
+    () async {
+      final files = await frozenRoomFiles();
+      for (final id in ['v1-healthy', 'v1-manual']) {
+        final prefix = 'projects/$id/';
+        final manifest =
+            files['${prefix}revisions/${id == 'v1-healthy' ? 3 : 1}/manifest.json']!;
+        final parsed = codec.readManifest(manifest);
+        final decoded = codec.decode(parsed, {
+          for (final entry in files.entries)
+            if (entry.key.startsWith('${prefix}assets/'))
+              entry.key.substring(prefix.length): entry.value,
+        }).snapshot;
+        expect(decoded.projectId, id);
+        expect(decoded.photoId, '$id-photo');
+        expect((decoded.width, decoded.height), (3, 2));
+        expect(decoded.createdAt, DateTime.utc(2026, 10, 27, 1));
+        if (id == 'v1-healthy') {
+          expect(decoded.revision, 3);
+          expect(decoded.aiMaskBytes, [1, 1, 0, 4, 3, 0]);
+          expect(decoded.maskBytes, [1, 2, 0, 4, 3, 1]);
+          expect(decoded.activeVariantId, 'b');
+          expect(decoded.comparisonBaselineVariantId, 'a');
+          expect(decoded.variants.map((v) => v.name), ['Warm', 'Cool']);
+          expect(decoded.variants[1].colors.wall!.hex, '#2255AA');
+          expect(decoded.thumbnailPng, isNotNull);
+        } else {
+          expect(decoded.aiMaskBytes, List.filled(6, 0));
+          expect(decoded.maskBytes, [0, 1, 0, 0, 0, 0]);
+          expect(decoded.thumbnailPng, isNull);
+        }
+        for (final version in [0, 2, 999]) {
+          final changed =
+              jsonDecode(utf8.decode(manifest)) as Map<String, dynamic>;
+          changed['schemaVersion'] = version;
+          expect(
+            () => codec.readManifest(bytes(changed)),
+            throwsFormatException,
+          );
+        }
+        final unsupported =
+            jsonDecode(utf8.decode(manifest)) as Map<String, dynamic>;
+        unsupported['intent'] = [1];
+        expect(
+          () => codec.readManifest(bytes(unsupported)),
+          throwsFormatException,
+        );
+      }
+    },
+  );
 
   test(
     'v1 roundtrip uses canonical UTC/HEX and immutable asset references',

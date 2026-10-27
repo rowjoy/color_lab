@@ -369,6 +369,69 @@ void main() {
     );
   }
 
+  for (final phase in ['addStream', 'flush', 'close']) {
+    for (final code in [Platform.isWindows ? 112 : 28, 13]) {
+      test(
+        'deferred $phase failure $code retains safe partial and retries',
+        () async {
+          final subject = store();
+          final fault = _AsyncSinkIO(phase, code);
+          await IOOverrides.runWithIOOverrides(() async {
+            await expectLater(
+              subject.prepare(),
+              throwsA(
+                isA<RoomModelDownloadException>().having(
+                  (e) => e.storageFull,
+                  'capacity is distinct',
+                  code != 13,
+                ),
+              ),
+            );
+          }, fault);
+          expect(fault.injected, isTrue);
+          expect(
+            subject.progress.stage,
+            code == 13
+                ? RoomModelDownloadStage.failed
+                : RoomModelDownloadStage.storageFull,
+          );
+          expect(await cached('room_seg.tflite', _helloSha).exists(), isFalse);
+          final partial = File(
+            '${cached('room_seg.tflite', _helloSha).path}.part',
+          );
+          expect(
+            await partial.readAsString(),
+            phase == 'addStream' ? 'he' : 'hello',
+          );
+          final ranges = <String?>[];
+          respond = (request) async {
+            final range = request.headers.value(HttpHeaders.rangeHeader);
+            ranges.add(range);
+            if (range != null) {
+              request.response.statusCode = 206;
+              request.response.headers.set(
+                HttpHeaders.contentRangeHeader,
+                'bytes 2-4/5',
+              );
+              request.response.write('llo');
+            } else {
+              request.response.write(
+                request.uri.path == '/seg' ? 'hello' : 'world',
+              );
+            }
+            await request.response.close();
+          };
+          final result = await subject.load();
+          expect(utf8.decode(result.semantic), 'hello');
+          expect(utf8.decode(result.depth), 'world');
+          expect(ranges, phase == 'addStream' ? ['bytes=2-', null] : [null]);
+          expect(await partials(), isEmpty);
+          expect(subject.progress.stage, RoomModelDownloadStage.ready);
+        },
+      );
+    }
+  }
+
   test(
     'cancel publishes immediately and retains flushed bytes for retry',
     () async {
@@ -1114,3 +1177,81 @@ Future<Map<String, String>> _snapshot(Directory directory) async => {
   await for (final entry in directory.list(recursive: true, followLinks: false))
     if (entry is File) entry.path: await entry.readAsString(),
 };
+
+final class _AsyncSinkIO extends IOOverrides {
+  _AsyncSinkIO(this.phase, this.code);
+  final String phase;
+  final int code;
+  bool injected = false;
+  @override
+  File createFile(String path) {
+    final file = super.createFile(path);
+    return path.endsWith('.part') ? _AsyncSinkFile(file, this) : file;
+  }
+
+  Future<void> fail() async {
+    await Future<void>.delayed(Duration.zero);
+    injected = true;
+    throw FileSystemException(
+      'injected asynchronous sink error',
+      '',
+      OSError('', code),
+    );
+  }
+}
+
+class _AsyncSinkFile implements File {
+  _AsyncSinkFile(this.file, this.fault);
+  final File file;
+  final _AsyncSinkIO fault;
+  @override
+  String get path => file.path;
+  @override
+  Directory get parent => file.parent;
+  @override
+  Future<bool> exists() => file.exists();
+  @override
+  Future<int> length() => file.length();
+  @override
+  Stream<List<int>> openRead([int? start, int? end]) =>
+      file.openRead(start, end);
+  @override
+  IOSink openWrite({
+    FileMode mode = FileMode.write,
+    Encoding encoding = utf8,
+  }) => _AsyncSink(file.openWrite(mode: mode, encoding: encoding), fault);
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _AsyncSink implements IOSink {
+  _AsyncSink(this.sink, this.fault);
+  final IOSink sink;
+  final _AsyncSinkIO fault;
+  @override
+  Future<void> addStream(Stream<List<int>> stream) async {
+    if (fault.phase != 'addStream') return sink.addStream(stream);
+    await for (final bytes in stream) {
+      sink.add(bytes.take(2).toList());
+      await sink.flush();
+      await fault.fail();
+    }
+  }
+
+  @override
+  Future<void> flush() async {
+    await sink.flush();
+    if (fault.phase == 'flush') await fault.fail();
+  }
+
+  @override
+  Future<void> close() async {
+    await sink.close();
+    if (fault.phase == 'close') await fault.fail();
+  }
+
+  @override
+  Future<void> get done => sink.done;
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}

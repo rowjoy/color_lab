@@ -109,6 +109,28 @@ class RoomMaskController extends Notifier<RoomMaskState> {
     }
   }
 
+  /// Storage retry restores receipt availability, never accepts a photo or
+  /// retries an unrelated project save. A newer editor state owns its errors.
+  Future<void> retryAcquisitionStorage() async {
+    if (!_live ||
+        state.failure != RoomMaskFailureKind.storage ||
+        ref.read(photoAcquisitionProvider).phase !=
+            AcquisitionPhase.storageError) {
+      return;
+    }
+    final captured = state;
+    final operation = _operation;
+    await ref.read(photoAcquisitionProvider.notifier).retryStorage();
+    if (_current(operation) &&
+        identical(state, captured) &&
+        ref.read(photoAcquisitionProvider).phase == AcquisitionPhase.ready) {
+      state = state.copyWith(
+        stage: state.draft == null ? RoomMaskStage.empty : RoomMaskStage.ready,
+        failure: null,
+      );
+    }
+  }
+
   Future<void> continueImport(
     String requestId, {
     required bool Function() isActive,

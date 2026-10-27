@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "originatingCommit": "4d98b1604d6901086035dd8eb7af26b61ced824f",
+  "provenance": "Independent Python standard-library synthetic RGB PNG, masks and canonical JSON assembled against frozen v1 contract; no personal photo or production model. Never regenerate during tests or Plan 03 migration.",
+  "files": [
+    {
+      "path": "projects/v1-healthy/assets/22e86822b5d907426164067ea7fd4d62e6a0f3e976e92e10b0e48fa68ca1a155.png",
+      "length": 78,
+      "sha256": "22e86822b5d907426164067ea7fd4d62e6a0f3e976e92e10b0e48fa68ca1a155"
+    },
+    {
+      "path": "projects/v1-healthy/assets/93304ed4c41aa8b3581faa821e51fedc74b66372ce584658f05ab3b61f6cbaa7.png",
+      "length": 69,
+      "sha256": "93304ed4c41aa8b3581faa821e51fedc74b66372ce584658f05ab3b61f6cbaa7"
+    },
+    {
+      "path": "projects/v1-healthy/assets/e3aa781313807b356c431fd1e0ab5a481057d1a131713ce6192d79ff18239c36.mask",
+      "length": 6,
+      "sha256": "e3aa781313807b356c431fd1e0ab5a481057d1a131713ce6192d79ff18239c36"
+    },
+    {
+      "path": "projects/v1-healthy/assets/f78f32e048c1933ed5ca0c34d5d723c0df2d2fa2b1d93be4b55a3a199f241197.mask",
+      "length": 6,
+      "sha256": "f78f32e048c1933ed5ca0c34d5d723c0df2d2fa2b1d93be4b55a3a199f241197"
+    },
+    {
+      "path": "projects/v1-healthy/current",
+      "length": 432,
+      "sha256": "ac4b533d58f2c7fa6f460d7b3b79c50a69cf1203da683b2d35d813e7802a23b5"
+    },
+    {
+      "path": "projects/v1-healthy/revisions/1/manifest.json",
+      "length": 1265,
+      "sha256": "90190eda6dd82c80e1c31fb0de3567730bc9d4261f4934f4866db6a872e72f18"
+    },
+    {
+      "path": "projects/v1-healthy/revisions/2/manifest.json",
+      "length": 1265,
+      "sha256": "b938ac59a5a0490fac207977d39efdd69e878844bd58a8ec02cd09e5b9a65f89"
+    },
+    {
+      "path": "projects/v1-healthy/revisions/3/manifest.json",
+      "length": 1264,
+      "sha256": "3ec86380f2d3aab504b1cdae71103b476b6d562cc60f72ffca2dd8a429859f3f"
+    },
+    {
+      "path": "projects/v1-manual/assets/01cf85cfeb36d628ca2e6f583fa2331be029b6b28e877e1008fb3f862306c086.mask",
+      "length": 6,
+      "sha256": "01cf85cfeb36d628ca2e6f583fa2331be029b6b28e877e1008fb3f862306c086"
+    },
+    {
+      "path": "projects/v1-manual/assets/22e86822b5d907426164067ea7fd4d62e6a0f3e976e92e10b0e48fa68ca1a155.png",
+      "length": 78,
+      "sha256": "22e86822b5d907426164067ea7fd4d62e6a0f3e976e92e10b0e48fa68ca1a155"
+    },
+    {
+      "path": "projects/v1-manual/assets/b0f66adc83641586656866813fd9dd0b8ebb63796075661ba45d1aa8089e1d44.mask",
+      "length": 6,
+      "sha256": "b0f66adc83641586656866813fd9dd0b8ebb63796075661ba45d1aa8089e1d44"
+    },
+    {
+      "path": "projects/v1-manual/current",
+      "length": 233,
+      "sha256": "7b77032743e0531fc53eda9fb43b8028a2dc0669107688dad0f06c2a0100dbe1"
+    },
+    {
+      "path": "projects/v1-manual/revisions/1/manifest.json",
+      "length": 1093,
+      "sha256": "e34188145bd3cef5c785d7ef165dacc0a0b7ed6d196c015256fccf71af214c08"
+    }
+  ]
+}
