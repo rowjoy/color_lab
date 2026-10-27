@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:color_lab/core/config/app_identity.dart';
 import 'package:color_lab/core/theme/theme.dart';
 import 'package:color_lab/core/widgets/buttons.dart';
 import 'package:color_lab/features/onboarding/presentation/onboarding_screen.dart';
+import 'package:color_lab/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -22,6 +24,8 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         theme: dark ? AppTheme.dark : AppTheme.light,
         builder: (context, child) => MediaQuery(
           data: MediaQuery.of(context).copyWith(
@@ -49,6 +53,7 @@ void main() {
   ) async {
     final semantics = tester.ensureSemantics();
     await launch(tester);
+    expect(find.text(AppIdentity.displayName), findsOneWidget);
     expect(find.text('Find your next shade.'), findsOneWidget);
     expect(find.bySemanticsLabel('Step 1 of 3'), findsOneWidget);
     expect(find.byTooltip('Back'), findsNothing);
@@ -229,6 +234,8 @@ void main() {
       final pending = Completer<void>();
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           theme: AppTheme.light,
           home: const Scaffold(body: Text('Previous screen')),
         ),

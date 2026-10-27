@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme/theme.dart';
 import 'features/settings/application/theme_mode_provider.dart';
 import 'features/settings/application/app_preferences_providers.dart';
+import 'l10n/l10n.dart';
 import 'routing/app_router.dart';
 
 class ColorLabApp extends ConsumerStatefulWidget {
@@ -22,8 +23,10 @@ class _ColorLabAppState extends ConsumerState<ColorLabApp> {
     final animateTheme = _preferencesWereLoaded && loaded;
     _preferencesWereLoaded = loaded;
     return MaterialApp.router(
-      title: 'Color Lab',
+      onGenerateTitle: (context) => context.l10n.appName,
       debugShowCheckedModeBanner: false,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: ref.watch(themeModeProvider),

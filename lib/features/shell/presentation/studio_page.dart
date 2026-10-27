@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/theme.dart';
 import '../../../core/widgets/widgets.dart';
+import '../../../l10n/l10n.dart';
 import '../../settings/presentation/settings_sheet.dart';
 
 class StudioPage extends StatelessWidget {
@@ -33,13 +34,13 @@ class StudioPage extends StatelessWidget {
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Text(
-                        'color lab',
+                        context.l10n.appName,
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                     ),
                     IconCircleButton(
                       icon: Icons.tune_rounded,
-                      label: 'Appearance settings',
+                      label: context.l10n.appearanceSettings,
                       onPressed: () => showAppSettings(context),
                     ),
                   ],

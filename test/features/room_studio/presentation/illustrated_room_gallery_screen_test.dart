@@ -5,6 +5,7 @@ import 'package:color_lab/features/room_studio/domain/illustrated_room_draft.dar
 import 'package:color_lab/features/room_studio/domain/saved_room_design.dart';
 import 'package:color_lab/features/room_studio/presentation/illustrated_room_gallery_screen.dart';
 import 'package:color_lab/features/room_studio/presentation/illustrated_room_screen.dart';
+import 'package:color_lab/l10n/l10n.dart';
 import 'package:color_lab/features/room_studio/presentation/illustrated_room_svg.dart';
 import 'package:color_lab/features/settings/application/app_preferences_providers.dart';
 import 'package:color_lab/routing/app_router.dart';
@@ -71,6 +72,8 @@ Future<_GalleryHarness> _pumpGallery(
     UncontrolledProviderScope(
       container: container,
       child: MaterialApp.router(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         routerConfig: router,
         builder: (context, child) => MediaQuery(
           data: MediaQuery.of(context).copyWith(textScaler: textScaler),
@@ -399,7 +402,11 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: MaterialApp.router(routerConfig: router),
+        child: MaterialApp.router(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: router,
+        ),
       ),
     );
 

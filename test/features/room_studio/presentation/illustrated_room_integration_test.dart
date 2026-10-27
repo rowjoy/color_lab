@@ -21,6 +21,7 @@ import 'package:color_lab/features/room_studio/presentation/illustrated_room_con
 import 'package:color_lab/features/room_studio/presentation/illustrated_room_screen.dart';
 import 'package:color_lab/features/room_studio/presentation/illustrated_room_svg.dart';
 import 'package:color_lab/features/room_studio/presentation/room_screen.dart';
+import 'package:color_lab/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -201,6 +202,8 @@ Future<_TestNavigation> _pumpApp(
       child: ValueListenableBuilder<ThemeMode>(
         valueListenable: navigation.themeMode,
         builder: (context, mode, child) => MaterialApp.router(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,
           themeMode: mode,

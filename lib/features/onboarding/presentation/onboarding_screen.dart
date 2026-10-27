@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/theme.dart';
 import '../../../core/widgets/buttons.dart';
+import '../../../l10n/l10n.dart';
 import 'onboarding_art.dart';
 
 /// A presentation-only tour. The caller owns saving completion and navigation.
@@ -65,6 +66,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final l10n = context.l10n;
+    final slides = _slides(l10n);
     return PopScope<Object?>(
       canPop: widget.isReplay && !_busy,
       onPopInvokedWithResult: (didPop, result) {
@@ -101,7 +104,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Text(
-                        'COLOR LAB',
+                        l10n.appName,
                         style: Theme.of(context).textTheme.labelMedium
                             ?.copyWith(
                               color: colors.textPrimary,
@@ -110,7 +113,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     ),
                     SecondaryButton(
-                      label: 'Skip',
+                      label: l10n.skip,
                       onPressed: _busy ? null : _finish,
                     ),
                   ],
@@ -119,7 +122,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               Expanded(
                 child: PageView.builder(
                   controller: _pages,
-                  itemCount: _slides.length,
+                  itemCount: slides.length,
                   physics: _busy ? const NeverScrollableScrollPhysics() : null,
                   onPageChanged: (page) {
                     setState(() {
@@ -130,7 +133,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   itemBuilder: (context, page) => _Slide(
                     key: ValueKey('onboarding-page-$page'),
                     index: page,
-                    slide: _slides[page],
+                    slide: slides[page],
                     failed: _failed && page == _page,
                   ),
                 ),
@@ -152,7 +155,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             ExcludeSemantics(
                               child: Row(
                                 children: List.generate(
-                                  _slides.length,
+                                  slides.length,
                                   (index) => Container(
                                     width: index == _page
                                         ? AppSpacing.xxl
@@ -176,11 +179,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             const SizedBox(width: AppSpacing.sm),
                             Flexible(
                               child: Semantics(
-                                label: 'Step ${_page + 1} of 3',
+                                label: l10n.onboardingStep(
+                                  _page + 1,
+                                  slides.length,
+                                ),
                                 liveRegion: true,
                                 excludeSemantics: true,
                                 child: Text(
-                                  'Step ${_page + 1} of 3',
+                                  l10n.onboardingStep(_page + 1, slides.length),
                                   style: Theme.of(
                                     context,
                                   ).textTheme.labelMedium,
@@ -195,7 +201,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             if (_page > 0) ...[
                               IconCircleButton(
                                 icon: Icons.arrow_back_rounded,
-                                label: 'Back',
+                                label: l10n.back,
                                 onPressed: _busy
                                     ? null
                                     : () => _goTo(_page - 1),
@@ -205,16 +211,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             Expanded(
                               child: PrimaryButton(
                                 label: _failed
-                                    ? 'Try again'
-                                    : _page == _slides.length - 1
-                                    ? (widget.isReplay ? 'Done' : 'Get started')
-                                    : 'Next',
+                                    ? l10n.tryAgain
+                                    : _page == slides.length - 1
+                                    ? (widget.isReplay
+                                          ? l10n.done
+                                          : l10n.getStarted)
+                                    : l10n.next,
                                 isLoading: _busy,
                                 onPressed: _busy
                                     ? null
                                     : () {
                                         if (_failed ||
-                                            _page == _slides.length - 1) {
+                                            _page == slides.length - 1) {
                                           unawaited(_finish());
                                         } else {
                                           _goTo(_page + 1);
@@ -237,30 +245,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 }
 
-const _slides = [
+List<_SlideContent> _slides(AppLocalizations l10n) => [
   (
-    eyebrow: 'A CURIOUS EYE',
-    title: 'Find your next shade.',
-    body:
-        'Turn a camera moment or a favorite photo into a color worth keeping.',
-    note: 'Explore a shade. Discover its name and color codes.',
+    eyebrow: l10n.onboardingCuriousEyeEyebrow,
+    title: l10n.onboardingCuriousEyeTitle,
+    body: l10n.onboardingCuriousEyeBody,
+    note: l10n.onboardingCuriousEyeNote,
     icon: Icons.colorize_outlined,
   ),
   (
-    eyebrow: 'MAKE IT PERSONAL',
-    title: 'A little library of you.',
-    body:
-        'Save the shades you love in a personal library, ready to revisit offline.',
-    note: 'Your saved colors stay on this device.',
+    eyebrow: l10n.onboardingPersonalEyebrow,
+    title: l10n.onboardingPersonalTitle,
+    body: l10n.onboardingPersonalBody,
+    note: l10n.onboardingPersonalNote,
     icon: Icons.bookmark_border_rounded,
   ),
   (
-    eyebrow: 'ON YOUR TERMS',
-    title: 'Your curiosity. Your control.',
-    body:
-        'Color exploration stays on your device. We ask for camera or photo '
-        'access only when you choose to use it.',
-    note: 'No permission is needed to take this tour.',
+    eyebrow: l10n.onboardingControlEyebrow,
+    title: l10n.onboardingControlTitle,
+    body: l10n.onboardingControlBody,
+    note: l10n.onboardingControlNote,
     icon: Icons.verified_user_outlined,
   ),
 ];
@@ -313,7 +317,7 @@ class _Slide extends StatelessWidget {
                         borderRadius: BorderRadius.circular(AppRadii.small),
                       ),
                       child: Text(
-                        'We couldn’t finish the tour. Please try again.',
+                        context.l10n.tourFinishError,
                         style: text.bodyMedium,
                       ),
                     ),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/theme.dart';
 import '../../../core/widgets/widgets.dart';
+import '../../../l10n/l10n.dart';
 import '../application/app_preferences_providers.dart';
 
 /// No content or native feature is mounted until stored preferences resolve.
@@ -30,20 +31,20 @@ class PreferencesStartupScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: AppSpacing.xxl),
                   Text(
-                    'color lab',
+                    context.l10n.appName,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: AppSpacing.xxl),
                   if (preferences.hasError) ...[
                     Text(
-                      "We couldn't load your preferences",
+                      context.l10n.preferencesLoadErrorTitle,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: AppSpacing.md),
                     Text(
-                      "Your saved colors haven't been changed. Please try again.",
+                      context.l10n.preferencesLoadErrorBody,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: context.appColors.textSecondary,
@@ -51,7 +52,7 @@ class PreferencesStartupScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: AppSpacing.xxl),
                     PrimaryButton(
-                      label: 'Try again',
+                      label: context.l10n.tryAgain,
                       icon: Icons.refresh_rounded,
                       onPressed: () =>
                           ref.read(appPreferencesProvider.notifier).retry(),
@@ -59,8 +60,8 @@ class PreferencesStartupScreen extends ConsumerWidget {
                   ] else ...[
                     const Center(child: CircularProgressIndicator()),
                     const SizedBox(height: AppSpacing.lg),
-                    const Text(
-                      'Loading your preferences…',
+                    Text(
+                      context.l10n.loadingPreferences,
                       textAlign: TextAlign.center,
                     ),
                   ],

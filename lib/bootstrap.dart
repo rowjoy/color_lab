@@ -6,6 +6,7 @@ import 'core/theme/theme.dart';
 import 'features/room_studio/application/room_model_download_providers.dart';
 import 'features/room_studio/models/room_model_store.dart';
 import 'features/settings/application/theme_mode_provider.dart';
+import 'l10n/l10n.dart';
 
 /// Production entry: no router, camera or photo recovery mounts before setup.
 class ColorLabBootstrap extends ConsumerStatefulWidget {
@@ -39,8 +40,10 @@ class _ColorLabBootstrapState extends ConsumerState<ColorLabBootstrap> {
       });
     }
     return MaterialApp(
-      title: 'Color Lab',
+      onGenerateTitle: (context) => context.l10n.appName,
       debugShowCheckedModeBanner: false,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: ref.watch(themeModeProvider),
@@ -70,18 +73,19 @@ class _RoomModelSetupScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final colors = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
     final fraction = (progress?.fraction ?? 0).clamp(0.0, 1.0);
     final percent = ready ? 100 : (fraction * 100).floor().clamp(1, 99);
     final label = ready
-        ? 'Room Studio is ready'
+        ? l10n.roomStudioReady
         : failed
-        ? 'Setup could not finish'
+        ? l10n.setupCouldNotFinish
         : switch (progress?.stage) {
-            RoomModelDownloadStage.downloading => 'Downloading AI models…',
-            RoomModelDownloadStage.verifying => 'Verifying AI models…',
-            _ => 'Checking saved AI models…',
+            RoomModelDownloadStage.downloading => l10n.downloadingAiModels,
+            RoomModelDownloadStage.verifying => l10n.verifyingAiModels,
+            _ => l10n.checkingSavedAiModels,
           };
     final checking =
         !ready &&
@@ -108,7 +112,7 @@ class _RoomModelSetupScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    'Room Studio setup',
+                    l10n.roomStudioSetup,
                     style: text.headlineMedium,
                     textAlign: TextAlign.center,
                   ),
@@ -120,7 +124,7 @@ class _RoomModelSetupScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 32),
                   Text(
-                    '$percent%',
+                    l10n.progressPercent(percent),
                     style: text.displayMedium,
                     textAlign: TextAlign.center,
                   ),
@@ -132,24 +136,25 @@ class _RoomModelSetupScreen extends StatelessWidget {
                         ? 1
                         : fraction.clamp(0.01, 0.99),
                     semanticsLabel: label,
-                    semanticsValue: '$percent',
+                    semanticsValue: l10n.progressPercent(percent),
                   ),
                   const SizedBox(height: 12),
                   if (progress != null && progress!.receivedBytes > 0 && !ready)
                     Text(
-                      '${mib(progress!.receivedBytes)} / ${mib(progress!.totalBytes)} MiB',
+                      l10n.downloadProgressMib(
+                        mib(progress!.receivedBytes),
+                        mib(progress!.totalBytes),
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   const SizedBox(height: 24),
                   Text(
-                    failed
-                        ? 'Check your internet connection and available storage, then retry. Verified files are kept.'
-                        : 'First setup downloads about 65.2 MiB. Saved models are checked automatically and work offline.',
+                    failed ? l10n.setupFailureHelp : l10n.setupDownloadHelp,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    'Your room photos stay on this device.',
+                  Text(
+                    l10n.roomPhotosStayOnDevice,
                     textAlign: TextAlign.center,
                   ),
                   if (failed) ...[
@@ -157,7 +162,7 @@ class _RoomModelSetupScreen extends StatelessWidget {
                     FilledButton.icon(
                       onPressed: onRetry,
                       icon: const Icon(Icons.refresh),
-                      label: const Text('Retry setup'),
+                      label: Text(l10n.retrySetup),
                     ),
                   ],
                 ],

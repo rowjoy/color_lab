@@ -8,6 +8,7 @@ import 'package:color_lab/features/history/domain/saved_color.dart';
 import 'package:color_lab/features/history/presentation/color_history_section.dart';
 import 'package:color_lab/features/palette/presentation/palette_screen.dart';
 import 'package:color_lab/features/picker/presentation/color_explorer.dart';
+import 'package:color_lab/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -48,6 +49,8 @@ Future<void> _launch(
         ),
       ],
       child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         theme: AppTheme.light,
         home: palette
             ? const PaletteScreen()
@@ -78,6 +81,8 @@ void main() {
           colorHistoryRepositoryProvider.overrideWith((ref) => ready.future),
         ],
         child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           theme: AppTheme.light,
           home: const Scaffold(body: ColorHistorySection()),
         ),

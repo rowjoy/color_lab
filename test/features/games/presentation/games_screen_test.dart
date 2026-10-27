@@ -10,6 +10,7 @@ import 'package:color_lab/features/games/domain/game_level_adapter.dart';
 import 'package:color_lab/features/games/domain/game_profiles_state.dart';
 import 'package:color_lab/features/games/domain/player_profile.dart';
 import 'package:color_lab/features/games/presentation/games_screen.dart';
+import 'package:color_lab/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -467,6 +468,8 @@ Future<_HubHarness> _pumpHub(
     UncontrolledProviderScope(
       container: container,
       child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         theme: AppTheme.light,
         darkTheme: AppTheme.dark,
         themeMode: themeMode,

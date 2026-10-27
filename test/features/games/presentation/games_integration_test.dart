@@ -9,6 +9,7 @@ import 'package:color_lab/features/games/domain/game_progression_engine.dart';
 import 'package:color_lab/features/games/presentation/game_level_map_screen.dart';
 import 'package:color_lab/features/games/presentation/games_screen.dart';
 import 'package:color_lab/features/games/presentation/leaderboard_screen.dart';
+import 'package:color_lab/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -400,7 +401,12 @@ void main() {
 Widget _testApp({required ProviderContainer container, required Widget home}) =>
     UncontrolledProviderScope(
       container: container,
-      child: MaterialApp(theme: AppTheme.light, home: home),
+      child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        theme: AppTheme.light,
+        home: home,
+      ),
     );
 
 String _text(WidgetTester tester, String key) =>

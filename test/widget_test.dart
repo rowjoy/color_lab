@@ -1,5 +1,6 @@
 import 'package:color_lab/app.dart';
 import 'package:color_lab/core/color/color_engine.dart';
+import 'package:color_lab/core/config/app_identity.dart';
 import 'package:color_lab/features/color_test/presentation/matching_screen.dart';
 import 'package:color_lab/features/games/application/game_profiles_provider.dart';
 import 'package:color_lab/features/games/domain/game_difficulty.dart';
@@ -91,6 +92,12 @@ void main() {
 
   testWidgets('starts in Capture and opens each destination', (tester) async {
     await launch(tester);
+    expect(find.text(AppIdentity.displayName), findsOneWidget);
+    expect(
+      tester.widget<Title>(find.byType(Title)).title,
+      AppIdentity.displayName,
+    );
+    expect(find.text('Color Lab'), findsNothing);
     expect(find.text('See the world'), findsOneWidget);
     for (final destination in ['Palette', 'Lab', 'Room', 'Capture']) {
       await tester.tap(find.byKey(ValueKey('nav-$destination')));

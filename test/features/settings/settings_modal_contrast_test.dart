@@ -8,6 +8,7 @@ import 'package:color_lab/features/picker/domain/photo_acquisition.dart';
 import 'package:color_lab/features/picker/domain/prepared_photo.dart';
 import 'package:color_lab/features/settings/application/app_preferences_providers.dart';
 import 'package:color_lab/features/settings/domain/app_preferences.dart';
+import 'package:color_lab/l10n/l10n.dart';
 import 'package:color_lab/routing/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -38,7 +39,11 @@ double _contrast(Color foreground, Color background) {
 }
 
 void main() {
-  const errorMessage = "Couldn't save your appearance. Try again.";
+  late AppLocalizations l10n;
+
+  setUpAll(() async {
+    l10n = await AppLocalizations.delegate.load(const Locale('en'));
+  });
 
   Future<ProviderContainer> launch(
     WidgetTester tester,
@@ -70,7 +75,7 @@ void main() {
   }
 
   Future<void> openSettings(WidgetTester tester) async {
-    await tester.tap(find.byTooltip('Appearance settings'));
+    await tester.tap(find.byTooltip(l10n.appearanceSettings));
     await tester.pumpAndSettle();
   }
 
@@ -88,10 +93,10 @@ void main() {
           )..failSave = true,
         );
         await openSettings(tester);
-        await tester.tap(find.text(dark ? 'Light' : 'Dark'));
+        await tester.tap(find.text(dark ? l10n.themeLight : l10n.themeDark));
         await tester.pumpAndSettle();
 
-        final error = find.text(errorMessage);
+        final error = find.text(l10n.settingsSaveError);
         expect(error, findsOneWidget);
         final foreground = tester
             .renderObject<RenderParagraph>(error)
@@ -136,9 +141,9 @@ void main() {
     final container = await launch(tester, repository);
     final tabPosition = tester.getCenter(find.byKey(const ValueKey('nav-Lab')));
     await openSettings(tester);
-    await tester.tap(find.text('Dark'));
+    await tester.tap(find.text(l10n.themeDark));
     await tester.pump();
-    expect(find.text('Saving appearance…'), findsOneWidget);
+    expect(find.text(l10n.savingAppearance), findsOneWidget);
 
     await tester.tapAt(tabPosition);
     await tester.pump(const Duration(milliseconds: 500));
@@ -146,7 +151,7 @@ void main() {
       container.read(appRouterProvider).routeInformationProvider.value.uri.path,
       '/capture',
     );
-    expect(find.text('Saving appearance…'), findsOneWidget);
+    expect(find.text(l10n.savingAppearance), findsOneWidget);
     gate.complete();
     await tester.pumpAndSettle();
   });
@@ -160,9 +165,9 @@ void main() {
     );
     final tabPosition = tester.getCenter(find.byKey(const ValueKey('nav-Lab')));
     await openSettings(tester);
-    await tester.tap(find.text('Dark'));
+    await tester.tap(find.text(l10n.themeDark));
     await tester.pumpAndSettle();
-    expect(find.text(errorMessage), findsOneWidget);
+    expect(find.text(l10n.settingsSaveError), findsOneWidget);
 
     await tester.tapAt(tabPosition);
     await tester.pumpAndSettle();
@@ -170,6 +175,6 @@ void main() {
       container.read(appRouterProvider).routeInformationProvider.value.uri.path,
       '/capture',
     );
-    expect(find.text(errorMessage), findsOneWidget);
+    expect(find.text(l10n.settingsSaveError), findsOneWidget);
   });
 }

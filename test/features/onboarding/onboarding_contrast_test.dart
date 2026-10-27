@@ -1,5 +1,6 @@
 import 'package:color_lab/core/theme/theme.dart';
 import 'package:color_lab/features/onboarding/presentation/onboarding_screen.dart';
+import 'package:color_lab/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -22,6 +23,8 @@ void main() {
         (tester) async {
           await tester.pumpWidget(
             MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
               theme: dark ? AppTheme.dark : AppTheme.light,
               home: OnboardingScreen(onFinish: () async {}),
             ),
