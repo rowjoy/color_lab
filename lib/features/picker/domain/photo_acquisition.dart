@@ -97,6 +97,22 @@ final class AcquisitionRecoveryFailure {
   final AcquisitionFailureKind kind;
 }
 
+/// One failed storage operation, retained through its retries. Even another
+/// failure for the same receipt has a distinct identity. This is transient,
+/// never part of the persisted intent schema.
+@immutable
+final class AcquisitionStorageFailure {
+  // Public construction always allocates; canonical const values would merge
+  // separate failed operations for the same request.
+  factory AcquisitionStorageFailure({
+    String? requestId,
+    AcquisitionDestination? destination,
+  }) => AcquisitionStorageFailure._(requestId, destination);
+  const AcquisitionStorageFailure._(this.requestId, this.destination);
+  final String? requestId;
+  final AcquisitionDestination? destination;
+}
+
 @immutable
 sealed class AcquisitionOutcome {
   const AcquisitionOutcome();
@@ -116,8 +132,9 @@ final class AcquisitionBusy extends AcquisitionOutcome {
 }
 
 final class AcquisitionFailed extends AcquisitionOutcome {
-  const AcquisitionFailed(this.kind);
+  const AcquisitionFailed(this.kind, {this.storageFailure});
   final AcquisitionFailureKind kind;
+  final AcquisitionStorageFailure? storageFailure;
 }
 
 enum AcquisitionPhase {
@@ -135,6 +152,8 @@ final class AcquisitionState {
     this.pendingReceipt,
     this.failure,
     this.recoveryFailure,
+    this.storageFailure,
+    this.resolvedStorageFailure,
     this.hasUntrustedIntent = false,
   });
   const AcquisitionState.initial()
@@ -142,10 +161,14 @@ final class AcquisitionState {
       pendingReceipt = null,
       failure = null,
       recoveryFailure = null,
+      storageFailure = null,
+      resolvedStorageFailure = null,
       hasUntrustedIntent = false;
   final AcquisitionPhase phase;
   final AcquisitionReceipt? pendingReceipt;
   final AcquisitionFailureKind? failure;
   final AcquisitionRecoveryFailure? recoveryFailure;
+  final AcquisitionStorageFailure? storageFailure;
+  final AcquisitionStorageFailure? resolvedStorageFailure;
   final bool hasUntrustedIntent;
 }

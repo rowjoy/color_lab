@@ -361,7 +361,12 @@ Future<_App> _mount(
   return app;
 }
 
-Future<void> _cachedEditor(WidgetTester tester, _App app) async {
+Future<void> _cachedEditor(
+  WidgetTester tester,
+  _App app, {
+  int pickerCalls = 0,
+  int analysisCalls = 0,
+}) async {
   await _tap(tester, _key('nav-rooms'));
   await _tap(tester, _key('open-room-masks'));
   await _until(
@@ -371,8 +376,8 @@ Future<void> _cachedEditor(WidgetTester tester, _App app) async {
         RoomModelAvailability.ready,
   );
   expect(app.container.read(roomModelSetupProvider).canEnter, isFalse);
-  expect(app.picker.calls, 0);
-  expect(app.analysis.calls, 0);
+  expect(app.picker.calls, pickerCalls);
+  expect(app.analysis.calls, analysisCalls);
   await _tap(tester, _key('room-setup-continue'));
   await _until(tester, () => _key('room-mask-gallery').evaluate().isNotEmpty);
   expect(app.container.read(roomModelSetupProvider).canEnter, isTrue);
@@ -556,6 +561,133 @@ void main() {
         expect(app.session.visible, same(previous));
         expect(app.session.saveStatus, RoomProjectSaveStatus.failed);
         staleAction();
+        await _frames(tester);
+        expect(io.commits, committed);
+        expect(app.session.saveStatus, RoomProjectSaveStatus.failed);
+        expect(app.picker.calls, 2);
+        expect(app.analysis.calls, 1);
+      } finally {
+        await app.dispose(tester);
+        await _io(tester, () => root.delete(recursive: true));
+      }
+    },
+  );
+
+  testWidgets(
+    'Capture storage retry cannot make a retained Room photo action save its project',
+    (tester) async {
+      final root = (await _io(
+        tester,
+        () => Directory.systemTemp.createTemp('milestone-receipt-'),
+      ))!;
+      final io = _PointerBoundary();
+      final source = await _source(tester, root);
+      final receipts = _ReceiptStore();
+      final app = await _mount(
+        tester,
+        root,
+        cached: true,
+        io: io,
+        receipts: receipts,
+        picker: _NativePicker()..file = XFile(source.path),
+      );
+      try {
+        await _cachedEditor(tester, app);
+        await _tap(tester, _key('room-mask-gallery'));
+        await _until(
+          tester,
+          () => _key('room-mask-manual').evaluate().isNotEmpty,
+        );
+        await _tap(tester, _key('room-mask-manual'));
+        await app.saved(tester);
+        io.fail = true;
+        app.container
+            .read(roomMaskProvider.notifier)
+            .setLayerColor(RoomLayer.wall, RgbColor.fromHex('#CC8844'));
+        await _until(
+          tester,
+          () => app.session.saveStatus == RoomProjectSaveStatus.failed,
+        );
+        final previous = app.session.visible;
+        final committed = io.commits;
+        receipts.failClear = true;
+        await _tap(tester, _key('room-mask-gallery'));
+        await _tap(tester, _key('confirm-room-mask-replace'));
+        await _until(
+          tester,
+          () =>
+              app.container.read(photoAcquisitionProvider).phase ==
+              AcquisitionPhase.storageError,
+        );
+        expect(
+          app.container.read(roomMaskProvider).failure,
+          RoomMaskFailureKind.storage,
+        );
+        final receipt = app.container
+            .read(photoAcquisitionProvider)
+            .pendingReceipt!;
+        final staleAction = tester
+            .widget<PrimaryButton>(_key('room-photo-recovery'))
+            .onPressed!;
+        final waiting = app.container.read(photoAcquisitionProvider);
+        tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+        await _frames(tester);
+        expect(staleAction, returnsNormally);
+        await _frames(tester);
+        expect(app.container.read(photoAcquisitionProvider), same(waiting));
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.resumed,
+        );
+        await _frames(tester);
+        app.container.read(appRouterProvider).go('/capture');
+        await _frames(tester);
+        expect(staleAction, returnsNormally);
+        await _frames(tester);
+        expect(app.container.read(photoAcquisitionProvider), same(waiting));
+        receipts.failClear = false;
+        io.fail = false;
+        await _tap(tester, find.text('Retry photo request'));
+        await _until(
+          tester,
+          () =>
+              app.container.read(photoAcquisitionProvider).phase ==
+              AcquisitionPhase.ready,
+        );
+        expect(
+          app.container.read(photoAcquisitionProvider).pendingReceipt,
+          same(receipt),
+        );
+        await _cachedEditor(tester, app, pickerCalls: 2, analysisCalls: 1);
+        expect(app.session.visible, same(previous));
+        expect(app.session.saveStatus, RoomProjectSaveStatus.failed);
+        expect(io.commits, committed);
+        final revision = app.session.acknowledgedRevision;
+        // A resolved photo error may remove its affordance. If it remains,
+        // exercise the real returning Room button, never a project-save button.
+        if (_key('room-photo-recovery').evaluate().isNotEmpty) {
+          await _tap(tester, _key('room-photo-recovery'));
+        }
+        await _frames(tester);
+        final disk = (await _io(
+          tester,
+          () => app.repository.read(app.session.projectId),
+        ))!.snapshot;
+        expect(
+          disk.revision,
+          revision,
+          reason: 'Photo recovery must not durably save the failed project',
+        );
+        expect(io.commits, committed);
+        expect(app.session.saveStatus, RoomProjectSaveStatus.failed);
+        expect(app.session.visible, same(previous));
+        expect(app.container.read(roomMaskProvider).draft, same(previous));
+        expect(
+          app.container.read(photoAcquisitionProvider).pendingReceipt,
+          same(receipt),
+        );
+        expect(app.container.read(roomMaskProvider).failure, isNull);
+        expect(_key('room-photo-recovery'), findsNothing);
+        expect(staleAction, returnsNormally);
         await _frames(tester);
         expect(io.commits, committed);
         expect(app.session.saveStatus, RoomProjectSaveStatus.failed);

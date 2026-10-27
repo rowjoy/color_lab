@@ -60,10 +60,11 @@ class Store extends InMemoryAcquisitionIntentStore {
   Store({super.initial});
   Completer<void>? saveGate, clearGate, loadGate;
   bool failSave = false, failClear = false, failLoad = false;
-  int closes = 0;
+  int closes = 0, loads = 0;
   AcquisitionIntent? lastIntent;
   @override
   Future<AcquisitionIntentRecord> load() async {
+    loads++;
     await loadGate?.future;
     if (failLoad) throw const AcquisitionStorageException();
     return super.load();
@@ -617,6 +618,105 @@ void main() {
       );
       expect(await controller.dismiss('obsolete'), false);
       expect(await controller.dismiss('old-room'), true);
+    },
+  );
+
+  test(
+    'storage recovery retains exact event identity and rejects old or lookalike events',
+    () async {
+      final store = Store(
+        initial: const AcquisitionIntentRecord.valid(oldIntent),
+      );
+      final adapter = Adapter()..lost = photo;
+      final container = containerFor(store, adapter);
+      final controller = container.read(photoAcquisitionProvider.notifier);
+      await controller.ensureRecovered();
+      final receipt = container.read(photoAcquisitionProvider).pendingReceipt;
+      store.failClear = true;
+      final outcome =
+          await controller.claimReceipt(
+                requestId: 'old-room',
+                destination: AcquisitionDestination.room,
+              )
+              as AcquisitionFailed;
+      final first = outcome.storageFailure!;
+      expect(first.requestId, 'old-room');
+      expect(first.destination, AcquisitionDestination.room);
+      expect(
+        container.read(photoAcquisitionProvider).storageFailure,
+        same(first),
+      );
+      store.failLoad = true;
+      await controller.retryStorage(expectedFailure: first);
+      expect(
+        container.read(photoAcquisitionProvider).storageFailure,
+        same(first),
+      );
+      expect(
+        container.read(photoAcquisitionProvider).resolvedStorageFailure,
+        isNull,
+      );
+      store.failLoad = false;
+      final before = store.loads;
+      await controller.retryStorage(
+        expectedFailure: AcquisitionStorageFailure(
+          requestId: first.requestId,
+          destination: first.destination,
+        ),
+      );
+      expect(store.loads, before);
+      await controller.retryStorage(expectedFailure: first);
+      expect(
+        container.read(photoAcquisitionProvider).resolvedStorageFailure,
+        same(first),
+      );
+      expect(
+        container.read(photoAcquisitionProvider).pendingReceipt,
+        same(receipt),
+      );
+      final again =
+          await controller.claimReceipt(
+                requestId: 'old-room',
+                destination: AcquisitionDestination.room,
+              )
+              as AcquisitionFailed;
+      final second = again.storageFailure!;
+      expect(second, isNot(same(first)));
+      expect(second.requestId, first.requestId);
+      final newer = container.read(photoAcquisitionProvider);
+      final loads = store.loads;
+      await controller.retryStorage(expectedFailure: first);
+      expect(container.read(photoAcquisitionProvider), same(newer));
+      expect(store.loads, loads);
+      expect(adapter.recoverCalls, 1);
+      expect(adapter.pickCalls, 0);
+    },
+  );
+
+  test(
+    'failed intent result owns its storage recovery even without a receipt',
+    () async {
+      final store = Store()..failSave = true;
+      final adapter = Adapter();
+      final container = containerFor(store, adapter);
+      final controller = container.read(photoAcquisitionProvider.notifier);
+      final outcome =
+          await controller.request(
+                source: PhotoSource.camera,
+                destination: AcquisitionDestination.room,
+              )
+              as AcquisitionFailed;
+      final failure = outcome.storageFailure!;
+      expect(failure.requestId, store.lastIntent!.requestId);
+      expect(failure.destination, AcquisitionDestination.room);
+      expect(container.read(photoAcquisitionProvider).pendingReceipt, isNull);
+      store.failSave = false;
+      await controller.retryStorage(expectedFailure: failure);
+      expect(
+        container.read(photoAcquisitionProvider).resolvedStorageFailure,
+        same(failure),
+      );
+      expect(adapter.pickCalls, 0);
     },
   );
 

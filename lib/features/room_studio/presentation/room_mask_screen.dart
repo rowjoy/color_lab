@@ -396,11 +396,10 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
       case RoomFailureRecovery.settings:
         await ref.read(photoPickerServiceProvider).openSettings();
       case RoomFailureRecovery.storage:
-        final acquisition = ref.read(photoAcquisitionProvider);
-        if (acquisition.phase == AcquisitionPhase.storageError) {
-          await ref.read(roomMaskProvider.notifier).retryAcquisitionStorage();
-        } else {
-          await ref.read(roomProjectSessionProvider.notifier).retrySave();
+        if (failedState != null) {
+          await ref
+              .read(roomMaskProvider.notifier)
+              .retryAcquisitionStorage(failedState: failedState);
         }
       case RoomFailureRecovery.model:
         await ref.read(roomModelSetupProvider.notifier).check();
@@ -539,6 +538,7 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
         : recoveredFailure == null
         ? null
         : RoomMaskController.acquisitionFailure(recoveredFailure.kind);
+    final photoRecovery = roomFailureCopy(context.l10n, failure).$3;
     final draft = state.draft;
     final preview = ref.watch(roomRecolorPreviewProvider);
     final recolorKey = roomActiveRecolorKey(session);
@@ -716,7 +716,7 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
               key: const ValueKey('room-photo-recovery'),
               label: roomFailureCopy(context.l10n, failure).$2,
               onPressed: () => _recover(
-                roomFailureCopy(context.l10n, failure).$3,
+                photoRecovery,
                 recoveredFailure: recoveredFailure,
                 failedState: state.stage == RoomMaskStage.error ? state : null,
               ),

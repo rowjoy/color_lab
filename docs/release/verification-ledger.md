@@ -354,3 +354,74 @@ exact manifests; Room deletion preserves all other libraries.
 No dependency, platform ID/configuration, signing, advertising or protected-main
 change is included. No push, upload, release, remote CI or physical-device pass
 is claimed by this milestone.
+
+## Plan 02 Task 8 fix round 1 — request-owned photo recovery
+
+Review of `2d0b9de2e442217a644ab906cc542f817111ceb9` found that Capture could
+complete the shared photo-storage retry while Room retained its error. Pressing
+Room's photo-recovery button then incorrectly saved an unrelated failed project.
+The new real-router regression first failed on durable disk revision 2 where
+revision 1 was required (exit 1, one failed test, 13.49s). It exercises Capture's
+actual Retry photo request, cached Continue back to Room, the pending receipt and
+previous unsaved draft, and the returning/stale photo action.
+
+Recovery now carries an immutable transient storage-failure event with its
+request/destination through the exact request or claim outcome. A successful
+shared retry resolves that same event. Room reconciles only its captured error,
+operation, receipt and session owner; newer events/errors/controller/session
+state cannot clear or act on it. Photo recovery never dispatches project
+`retrySave()`. Paused/disposed callbacks are inert and avoid disposed-context
+localization reads. The legacy photo-returning `claim()` remains compatible;
+Room uses the typed claim outcome. No persisted schema changes or automatic
+picker reopening follow from this correction.
+
+Final verification used the same absolute Flutter/Dart binaries and locked
+`--no-pub` dependencies recorded above. All code/test/analyzer/format gates
+finished before the single final Android and single bounded iOS build attempts;
+code/test hashes remained unchanged afterward.
+
+| Gate | Result | Elapsed |
+| --- | --- | --- |
+| Acquisition + Room controller tests | `0`, 109 passed | 3.77s |
+| Focused cross-route regression | `0`, 1 passed | 12.08s |
+| Milestone + Room controller/UI + all picker tests | `0`, 269 passed | 67.51s |
+| `flutter test --no-pub test/features/room_studio test/features/picker test/data/files --reporter expanded` | `0`, 1,045 passed | 83.38s |
+| `flutter test --no-pub --reporter expanded` | `0`, 2,117 passed | 117.19s |
+| `flutter analyze --no-pub` | `0`, no issues | 3.21s |
+| Eligible formatter excluding exactly `lib/main.dart` | `0`, 431 unchanged | 2.75s |
+| `flutter build apk --debug --no-pub` | `0`, debug APK built | 13.75s; Gradle 11.4s |
+| `flutter build ios --debug --no-codesign --no-pub` | **User-stopped / non-success**, before compilation; raw Flutter/wrapper `0` after SIGINT | 160.29s; planned 480s bound superseded by user instruction |
+
+The nine additional cases cover cross-route durable ownership, exact/repeated
+failure-event identity, old/lookalike event rejection, failed intent without a
+receipt, shared retry retaining the previous draft, newer mask errors, session
+replacement, closed editor, acquisition-provider replacement, and stale actions.
+The milestone contains five scenarios. Prior coverage was retained.
+
+Final-code APK: `build/app/outputs/flutter-apk/app-debug.apk`, 217,609,175 bytes,
+SHA-256 `fce21500ed16c331216a1b83412e102f3d8cd2f82477cac2e2be4aa3252e9c95`.
+Flutter's effective JDK remains Android Studio JBR at
+`/Applications/Android Studio.app/Contents/jbr/Contents/Home/bin/java`, OpenJDK
+`17.0.9+0-17.0.9b1087.7-11185874`. This local debug artifact includes the
+preexisting protected main.dart diff in the authorized shared checkout; that
+diff is excluded from the fix commit.
+
+At the user's request, the running iOS process group was stopped immediately
+with SIGINT during CocoaPods' locked TensorFlowLiteSwift 2.12.0 source clone.
+CocoaPods reported `Cancelled` / `Interrupt`, followed by `Error running pod
+install`; Xcode compilation never started. Flutter and the wrapper returned raw
+exit 0 and the automatic timeout flag was false because the stop was manual;
+**userStopped=true** makes this a non-success, not a completed gate. The exact
+owned process group had zero survivors after cleanup, and native/dependency
+Git diffs were empty. No further build or test was run after the user changed
+the workflow.
+
+Frozen schema-v1 artifacts and their inventory hash remain unchanged. ROOM-03
+intent/history stays partial for Plan 03; native runtime and representative
+device performance gates remain open with the owners recorded above. Device
+discovery still reports the API 34 Android emulator and wireless iPhone error
+-27. No physical-device or web pass is claimed. Final whitespace/staging audits
+pass; only the eight explicit fix/evidence paths are committed. Protected
+`lib/main.dart` retains diff SHA-256
+`c9bd56e83824d1dff5f750092e3d751bbb1841ad9377380c057bdffb4aacf437`; dependency/native
+configuration/signing/advertising files are unchanged.

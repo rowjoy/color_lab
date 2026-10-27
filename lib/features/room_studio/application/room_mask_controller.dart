@@ -26,6 +26,23 @@ final roomMaskProvider = NotifierProvider<RoomMaskController, RoomMaskState>(
   RoomMaskController.new,
 );
 
+final class _PhotoStorageError {
+  const _PhotoStorageError({
+    required this.failure,
+    required this.state,
+    required this.operation,
+    required this.sessionLifetime,
+    required this.sessionDraft,
+    required this.receipt,
+  });
+  final AcquisitionStorageFailure failure;
+  final RoomMaskState state;
+  final int operation;
+  final Object? sessionLifetime;
+  final RoomMaskDraft? sessionDraft;
+  final AcquisitionReceipt? receipt;
+}
+
 class RoomMaskController extends Notifier<RoomMaskState> {
   bool _alive = false;
   int _operation = 0;
@@ -33,6 +50,7 @@ class RoomMaskController extends Notifier<RoomMaskState> {
   int _editSelection = 0;
   bool _refining = false;
   RoomProjectSessionController? _projectSession;
+  _PhotoStorageError? _photoStorageError;
 
   RoomProjectSessionController get _session {
     final session = ref.read(roomProjectSessionProvider.notifier);
@@ -43,8 +61,21 @@ class RoomMaskController extends Notifier<RoomMaskState> {
   @override
   RoomMaskState build() {
     _alive = true;
+    ref.listen(
+      photoAcquisitionProvider,
+      (_, next) => _reconcilePhotoStorage(next),
+    );
+    ref.listen(roomProjectSessionProvider, (_, next) {
+      final error = _photoStorageError;
+      if (error != null &&
+          (!identical(error.sessionLifetime, next?.lifetime) ||
+              !identical(error.sessionDraft, next?.visible))) {
+        _photoStorageError = null;
+      }
+    });
     ref.onDispose(() {
       _alive = false;
+      _photoStorageError = null;
       _operation++;
       unawaited(
         _projectSession?.closeProject(deferNotification: true) ??
@@ -68,6 +99,7 @@ class RoomMaskController extends Notifier<RoomMaskState> {
 
   int _startImport() {
     final operation = ++_operation;
+    _photoStorageError = null;
     state = state.copyWith(
       stage: RoomMaskStage.acquiring,
       candidate: null,
@@ -95,8 +127,8 @@ class RoomMaskController extends Notifier<RoomMaskState> {
       switch (outcome) {
         case Acquired(:final receipt):
           await _claim(receipt.requestId, operation, isActive);
-        case AcquisitionFailed(:final kind):
-          _fail(acquisitionFailure(kind));
+        case AcquisitionFailed(:final kind, :final storageFailure):
+          _failAcquisition(kind, storageFailure);
         case AcquisitionCancelled():
           _returnToDraft();
         case AcquisitionBusy():
@@ -109,26 +141,76 @@ class RoomMaskController extends Notifier<RoomMaskState> {
     }
   }
 
-  /// Storage retry restores receipt availability, never accepts a photo or
-  /// retries an unrelated project save. A newer editor state owns its errors.
-  Future<void> retryAcquisitionStorage() async {
-    if (!_live ||
-        state.failure != RoomMaskFailureKind.storage ||
-        ref.read(photoAcquisitionProvider).phase !=
-            AcquisitionPhase.storageError) {
+  /// A photo recovery action can retry only its exact failed mutation. Shared
+  /// retry completion is reconciled independently of the initiating route.
+  Future<void> retryAcquisitionStorage({
+    required RoomMaskState failedState,
+  }) async {
+    final error = _photoStorageError;
+    if (error == null ||
+        !identical(failedState, error.state) ||
+        !_ownsPhotoStorageError(error)) {
       return;
     }
-    final captured = state;
-    final operation = _operation;
-    await ref.read(photoAcquisitionProvider.notifier).retryStorage();
-    if (_current(operation) &&
-        identical(state, captured) &&
-        ref.read(photoAcquisitionProvider).phase == AcquisitionPhase.ready) {
+    await ref
+        .read(photoAcquisitionProvider.notifier)
+        .retryStorage(expectedFailure: error.failure);
+  }
+
+  bool _ownsPhotoStorageError(_PhotoStorageError error) =>
+      _current(error.operation) &&
+      identical(state, error.state) &&
+      identical(
+        error.sessionLifetime,
+        ref.read(roomProjectSessionProvider)?.lifetime,
+      ) &&
+      identical(
+        error.sessionDraft,
+        ref.read(roomProjectSessionProvider)?.visible,
+      );
+
+  void _reconcilePhotoStorage(AcquisitionState acquisition) {
+    final error = _photoStorageError;
+    if (error == null) return;
+    if (!_ownsPhotoStorageError(error)) {
+      _photoStorageError = null;
+      return;
+    }
+    if (acquisition.phase == AcquisitionPhase.ready &&
+        identical(acquisition.resolvedStorageFailure, error.failure) &&
+        identical(acquisition.pendingReceipt, error.receipt)) {
+      _photoStorageError = null;
       state = state.copyWith(
         stage: state.draft == null ? RoomMaskStage.empty : RoomMaskStage.ready,
         failure: null,
       );
+    } else if (!identical(acquisition.storageFailure, error.failure)) {
+      // Replaced provider/request/event identities can never resolve this error.
+      _photoStorageError = null;
     }
+  }
+
+  void _failAcquisition(
+    AcquisitionFailureKind kind,
+    AcquisitionStorageFailure? failure,
+  ) {
+    _fail(acquisitionFailure(kind));
+    if (kind != AcquisitionFailureKind.storage ||
+        failure?.requestId == null ||
+        failure?.destination != AcquisitionDestination.room) {
+      return;
+    }
+    final session = ref.read(roomProjectSessionProvider);
+    final acquisition = ref.read(photoAcquisitionProvider);
+    _photoStorageError = _PhotoStorageError(
+      failure: failure!,
+      state: state,
+      operation: _operation,
+      sessionLifetime: session?.lifetime,
+      sessionDraft: session?.visible,
+      receipt: acquisition.pendingReceipt,
+    );
+    _reconcilePhotoStorage(acquisition);
   }
 
   Future<void> continueImport(
@@ -165,9 +247,9 @@ class RoomMaskController extends Notifier<RoomMaskState> {
     }
     _claimOperation = operation;
     try {
-      final photo = await ref
+      final outcome = await ref
           .read(photoAcquisitionProvider.notifier)
-          .claim(
+          .claimReceipt(
             requestId: requestId,
             destination: AcquisitionDestination.room,
             accept: (photo) {
@@ -183,13 +265,15 @@ class RoomMaskController extends Notifier<RoomMaskState> {
             },
           );
       if (!_current(operation)) return;
-      if (photo == null) {
-        final failure = ref.read(photoAcquisitionProvider).failure;
-        _fail(
-          failure == null
-              ? RoomMaskFailureKind.acquisitionUnavailable
-              : acquisitionFailure(failure),
-        );
+      if (outcome is! Acquired) {
+        if (outcome case AcquisitionFailed(
+          :final kind,
+          :final storageFailure,
+        )) {
+          _failAcquisition(kind, storageFailure);
+        } else {
+          _fail(RoomMaskFailureKind.acquisitionUnavailable);
+        }
         return;
       }
       // Screen visibility can change during the durable receipt clear.
@@ -359,6 +443,7 @@ class RoomMaskController extends Notifier<RoomMaskState> {
   Future<void> closeProject() {
     if (!_live) return Future.value();
     _operation++;
+    _photoStorageError = null;
     state = const RoomMaskState.initial();
     return _session.closeProject();
   }
@@ -474,6 +559,7 @@ class RoomMaskController extends Notifier<RoomMaskState> {
   }
 
   void _returnToDraft() {
+    _photoStorageError = null;
     state = state.copyWith(
       stage: state.draft == null ? RoomMaskStage.empty : RoomMaskStage.ready,
       candidate: null,
@@ -483,6 +569,7 @@ class RoomMaskController extends Notifier<RoomMaskState> {
   }
 
   void _fail(RoomMaskFailureKind failure) {
+    _photoStorageError = null;
     state = state.copyWith(
       stage: RoomMaskStage.error,
       failure: failure,

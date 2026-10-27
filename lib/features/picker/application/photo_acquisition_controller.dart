@@ -32,6 +32,8 @@ class PhotoAcquisitionController extends Notifier<AcquisitionState> {
     AcquisitionReceipt? receipt,
     AcquisitionFailureKind? failure,
     AcquisitionRecoveryFailure? recoveryFailure,
+    AcquisitionStorageFailure? storageFailure,
+    AcquisitionStorageFailure? resolvedStorageFailure,
     bool? untrusted,
   }) {
     if (!ref.mounted) return;
@@ -40,17 +42,31 @@ class PhotoAcquisitionController extends Notifier<AcquisitionState> {
       pendingReceipt: receipt,
       failure: failure,
       recoveryFailure: recoveryFailure,
+      storageFailure: storageFailure,
+      resolvedStorageFailure: resolvedStorageFailure,
       hasUntrustedIntent: untrusted ?? state.hasUntrustedIntent,
     );
   }
 
-  void _storageFailure() {
-    if (!ref.mounted) return;
+  AcquisitionStorageFailure _storageFailure({
+    String? requestId,
+    AcquisitionDestination? destination,
+    AcquisitionStorageFailure? retrying,
+  }) {
+    final receipt = ref.mounted ? state.pendingReceipt : null;
+    final failure =
+        retrying ??
+        AcquisitionStorageFailure(
+          requestId: requestId ?? receipt?.requestId,
+          destination: destination ?? receipt?.destination,
+        );
     _publish(
       AcquisitionPhase.storageError,
-      receipt: state.pendingReceipt,
+      receipt: receipt,
       failure: AcquisitionFailureKind.storage,
+      storageFailure: failure,
     );
+    return failure;
   }
 
   // No providers are read in build: onboarding decides when to recover.
@@ -63,9 +79,9 @@ class PhotoAcquisitionController extends Notifier<AcquisitionState> {
     return _recovery ??= _recover();
   }
 
-  Future<void> _recover() async {
+  Future<void> _recover({AcquisitionStorageFailure? retrying}) async {
     _busy = true;
-    _publish(AcquisitionPhase.recovering);
+    _publish(AcquisitionPhase.recovering, storageFailure: retrying);
     try {
       final store = await ref.read(acquisitionIntentStoreProvider.future);
       if (!ref.mounted) return;
@@ -74,6 +90,7 @@ class PhotoAcquisitionController extends Notifier<AcquisitionState> {
       _origin ??= record;
       _publish(
         AcquisitionPhase.recovering,
+        storageFailure: retrying,
         untrusted: _origin!.kind == IntentRecordKind.untrusted,
       );
       if (!_nativeConsumed) {
@@ -93,6 +110,7 @@ class PhotoAcquisitionController extends Notifier<AcquisitionState> {
         final intent = _origin!.intent;
         _publish(
           AcquisitionPhase.ready,
+          resolvedStorageFailure: retrying,
           receipt: AcquisitionReceipt(
             requestId: intent?.requestId ?? _newId(),
             source: intent?.source,
@@ -109,6 +127,7 @@ class PhotoAcquisitionController extends Notifier<AcquisitionState> {
         final intent = _origin!.intent;
         _publish(
           AcquisitionPhase.ready,
+          resolvedStorageFailure: retrying,
           failure: _recoveryFailure,
           recoveryFailure: intent != null && _recoveryFailure != null
               ? AcquisitionRecoveryFailure(
@@ -122,7 +141,11 @@ class PhotoAcquisitionController extends Notifier<AcquisitionState> {
       // The pending receipt is now the sole owner of these pixels.
       _lost = null;
     } catch (_) {
-      _storageFailure();
+      _storageFailure(
+        requestId: _origin?.intent?.requestId,
+        destination: _origin?.intent?.destination,
+        retrying: retrying,
+      );
     } finally {
       _busy = false;
     }
@@ -159,6 +182,11 @@ class PhotoAcquisitionController extends Notifier<AcquisitionState> {
     }
     _busy = true;
     _publish(AcquisitionPhase.picking);
+    final intent = AcquisitionIntent(
+      requestId: _newId(),
+      source: source,
+      destination: destination,
+    );
     try {
       final store = await ref.read(acquisitionIntentStoreProvider.future);
       if (!ref.mounted) return const AcquisitionCancelled();
@@ -166,11 +194,6 @@ class PhotoAcquisitionController extends Notifier<AcquisitionState> {
         _publish(AcquisitionPhase.ready);
         return const AcquisitionCancelled();
       }
-      final intent = AcquisitionIntent(
-        requestId: _newId(),
-        source: source,
-        destination: destination,
-      );
       // A failed put/flush may already have updated Hive's memory. Retry must
       // resolve that intent, never automatically reopen a native picker.
       _cleanupNeeded = true;
@@ -213,8 +236,14 @@ class PhotoAcquisitionController extends Notifier<AcquisitionState> {
           ? const AcquisitionCancelled()
           : AcquisitionFailed(failure);
     } catch (_) {
-      _storageFailure();
-      return const AcquisitionFailed(AcquisitionFailureKind.storage);
+      final failure = _storageFailure(
+        requestId: intent.requestId,
+        destination: intent.destination,
+      );
+      return AcquisitionFailed(
+        AcquisitionFailureKind.storage,
+        storageFailure: failure,
+      );
     } finally {
       _busy = false;
     }
@@ -239,37 +268,52 @@ class PhotoAcquisitionController extends Notifier<AcquisitionState> {
     required AcquisitionDestination destination,
     bool Function(PreparedPhoto photo)? accept,
   }) async {
-    if (!ref.mounted) return null;
+    final outcome = await claimReceipt(
+      requestId: requestId,
+      destination: destination,
+      accept: accept,
+    );
+    return outcome is Acquired ? outcome.receipt.photo : null;
+  }
+
+  /// Keeps a failed mutation's identity in the result, so its caller never
+  /// borrows a newer provider failure after awaiting the storage boundary.
+  Future<AcquisitionOutcome> claimReceipt({
+    required String requestId,
+    required AcquisitionDestination destination,
+    bool Function(PreparedPhoto photo)? accept,
+  }) async {
+    if (!ref.mounted) return const AcquisitionCancelled();
     final receipt = state.pendingReceipt;
     if (receipt == null ||
         receipt.requestId != requestId ||
         (receipt.destination != null && receipt.destination != destination)) {
-      return null;
+      return const AcquisitionCancelled();
     }
-    return await _disposeReceipt(requestId, accept: accept)
-        ? receipt.photo
-        : null;
+    return _disposeReceipt(requestId, destination: destination, accept: accept);
   }
 
-  Future<bool> dismiss(String requestId) => _disposeReceipt(requestId);
+  Future<bool> dismiss(String requestId) async =>
+      await _disposeReceipt(requestId) is Acquired;
 
-  Future<bool> _disposeReceipt(
+  Future<AcquisitionOutcome> _disposeReceipt(
     String requestId, {
+    AcquisitionDestination? destination,
     bool Function(PreparedPhoto photo)? accept,
   }) async {
     if (!ref.mounted ||
         _busy ||
         state.phase != AcquisitionPhase.ready ||
         state.pendingReceipt?.requestId != requestId) {
-      return false;
+      return const AcquisitionCancelled();
     }
     _busy = true;
     try {
       final receipt = state.pendingReceipt!;
       final store = await ref.read(acquisitionIntentStoreProvider.future);
-      if (!ref.mounted) return false;
+      if (!ref.mounted) return const AcquisitionCancelled();
       await store.clear(discardUntrusted: state.hasUntrustedIntent);
-      if (!ref.mounted) return false;
+      if (!ref.mounted) return const AcquisitionCancelled();
       // Keep the gate and pixels until the original owner synchronously accepts
       // delivery. A route may have disappeared during the durable clear.
       var accepted = true;
@@ -278,16 +322,22 @@ class PhotoAcquisitionController extends Notifier<AcquisitionState> {
       } catch (_) {
         accepted = false;
       }
-      if (!ref.mounted) return false;
+      if (!ref.mounted) return const AcquisitionCancelled();
       if (!accepted) {
         _publish(AcquisitionPhase.ready, receipt: receipt, untrusted: false);
-        return false;
+        return const AcquisitionCancelled();
       }
       _publish(AcquisitionPhase.ready, untrusted: false);
-      return true;
+      return Acquired(receipt);
     } catch (_) {
-      _storageFailure();
-      return false;
+      final failure = _storageFailure(
+        requestId: requestId,
+        destination: destination,
+      );
+      return AcquisitionFailed(
+        AcquisitionFailureKind.storage,
+        storageFailure: failure,
+      );
     } finally {
       _busy = false;
     }
@@ -317,10 +367,18 @@ class PhotoAcquisitionController extends Notifier<AcquisitionState> {
     }
   }
 
-  Future<void> retryStorage() async {
-    if (!ref.mounted || _busy || state.phase != AcquisitionPhase.storageError) {
+  Future<void> retryStorage({
+    AcquisitionStorageFailure? expectedFailure,
+  }) async {
+    if (!ref.mounted ||
+        _busy ||
+        state.phase != AcquisitionPhase.storageError ||
+        state.storageFailure == null ||
+        (expectedFailure != null &&
+            !identical(expectedFailure, state.storageFailure))) {
       return;
     }
+    final failure = state.storageFailure!;
     _busy = true;
     try {
       if (ref.read(acquisitionStorageDirectoryProvider).hasError) {
@@ -334,7 +392,7 @@ class PhotoAcquisitionController extends Notifier<AcquisitionState> {
       await store.load(); // Reaches the store's failed-flush retry barrier.
       if (!ref.mounted) return;
       if (!_recovered) {
-        _recovery = _recover();
+        _recovery = _recover(retrying: failure);
         await _recovery;
         return;
       }
@@ -345,9 +403,13 @@ class PhotoAcquisitionController extends Notifier<AcquisitionState> {
       }
       // A receipt survives a failed clear. The caller must claim/dismiss again
       // so retry never silently delivers or discards prepared pixels.
-      _publish(AcquisitionPhase.ready, receipt: state.pendingReceipt);
+      _publish(
+        AcquisitionPhase.ready,
+        receipt: state.pendingReceipt,
+        resolvedStorageFailure: failure,
+      );
     } catch (_) {
-      _storageFailure();
+      _storageFailure(retrying: failure);
     } finally {
       _busy = false;
     }

@@ -98,9 +98,15 @@ class Picker implements PhotoPickerService {
 }
 
 class Store extends InMemoryAcquisitionIntentStore {
-  Completer<void>? saveGate, clearGate;
+  Completer<void>? saveGate, clearGate, loadGate;
   int clears = 0;
   bool failClear = false;
+
+  @override
+  Future<AcquisitionIntentRecord> load() async {
+    await loadGate?.future;
+    return super.load();
+  }
 
   @override
   Future<void> save(AcquisitionIntent intent) async {
@@ -1083,6 +1089,107 @@ void main() {
     expect(h.state.canEdit, isFalse);
     expect(h.segmenter.requests.length, 1);
   });
+
+  test('shared storage retry reconciles only its owned Room error', () async {
+    final h = Harness();
+    final draft = await h.ready();
+    await h.saved();
+    h.store.failClear = true;
+    await h.import();
+    final receipt = h.pending;
+    final before = h.container.read(roomProjectSessionProvider);
+    h.store.failClear = false;
+    await h.container.read(photoAcquisitionProvider.notifier).retryStorage();
+    expect(h.state.failure, isNull);
+    expect(h.state.stage, RoomMaskStage.ready);
+    expect(h.state.draft, same(draft));
+    expect(h.pending, same(receipt));
+    expect(h.container.read(roomProjectSessionProvider), same(before));
+    expect(h.picker.picks, 2);
+    expect(h.segmenter.requests, hasLength(1));
+  });
+
+  for (final replacement in [
+    'new mask error',
+    'new session',
+    'closed editor',
+    'new acquisition owner',
+  ]) {
+    test('late shared storage retry cannot alter $replacement', () async {
+      final h = Harness();
+      await h.ready();
+      await h.saved();
+      h.store.failClear = true;
+      await h.import();
+      final failed = h.state;
+      h.store.failClear = false;
+      final gate = h.store.loadGate = Completer<void>();
+      final retry = h.container
+          .read(photoAcquisitionProvider.notifier)
+          .retryStorage();
+      await tick();
+      switch (replacement) {
+        case 'new mask error':
+          h.controller.cancelCandidate();
+          h.projects.readError = const RoomProjectStorageException();
+          expect(await h.controller.openProject('unreadable'), isFalse);
+          expect(h.state.failure, RoomMaskFailureKind.storage);
+        case 'new session':
+          await h.container
+              .read(roomProjectSessionProvider.notifier)
+              .createManualFallback(
+                RoomPhotoCandidate(photoId: 'replacement', photo: photo(2)),
+              );
+          await h.saved();
+        case 'closed editor':
+          await h.controller.closeProject();
+        case 'new acquisition owner':
+          h.container.invalidate(photoAcquisitionProvider);
+          h.container.read(photoAcquisitionProvider);
+      }
+      final newer = h.state;
+      final session = h.container.read(roomProjectSessionProvider);
+      gate.complete();
+      await retry;
+      await h.controller.retryAcquisitionStorage(failedState: failed);
+      expect(h.state, same(newer));
+      expect(h.container.read(roomProjectSessionProvider), same(session));
+      expect(h.picker.picks, 2);
+      expect(h.segmenter.requests, hasLength(1));
+    });
+  }
+
+  test(
+    'an old photo retry cannot act on a newer failure of the same receipt',
+    () async {
+      final h = Harness();
+      final draft = await h.ready();
+      await h.saved();
+      h.store.failClear = true;
+      await h.import();
+      final oldError = h.state;
+      final receipt = h.pending!;
+      h.store.failClear = false;
+      await h.container.read(photoAcquisitionProvider.notifier).retryStorage();
+      h.store.failClear = true;
+      await h.controller.continueImport(
+        receipt.requestId,
+        isActive: () => true,
+      );
+      final newer = h.state;
+      final acquisition = h.container.read(photoAcquisitionProvider);
+      h.store.failClear = false;
+      await h.controller.retryAcquisitionStorage(failedState: oldError);
+      expect(h.state, same(newer));
+      expect(h.container.read(photoAcquisitionProvider), same(acquisition));
+      expect(h.pending, same(receipt));
+      await h.controller.retryAcquisitionStorage(failedState: newer);
+      expect(h.state.failure, isNull);
+      expect(h.state.draft, same(draft));
+      expect(h.pending, same(receipt));
+      expect(h.picker.picks, 2);
+    },
+  );
 
   test('picker failure is typed and last draft survives', () async {
     final h = Harness();
