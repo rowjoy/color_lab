@@ -275,9 +275,13 @@ Future<void> _tap(WidgetTester tester, Finder finder) async {
 }
 
 Future<void> _open(WidgetTester tester) async {
-  await tester.tap(_key('nav-Room'));
+  final rooms = _key('nav-rooms');
+  expect(rooms, findsOneWidget);
+  await tester.tap(rooms);
   await _frames(tester);
-  await tester.tap(_key('open-room-masks'));
+  final masks = _key('open-room-masks');
+  expect(masks, findsOneWidget);
+  await tester.tap(masks);
   await _frames(tester);
 }
 
@@ -933,7 +937,9 @@ void main() {
     tester,
   ) async {
     await _launch(tester);
-    await tester.tap(find.byKey(const ValueKey('nav-Room')));
+    final rooms = find.byKey(const ValueKey('nav-rooms'));
+    expect(rooms, findsOneWidget);
+    await tester.tap(rooms);
     await tester.pumpAndSettle();
     final entry = find.byKey(const ValueKey('open-room-masks'));
     expect(entry, findsOneWidget);
@@ -1280,8 +1286,10 @@ void main() {
       await _ready(tester, segmenter);
       final draft = container.read(roomMaskProvider).draft;
       await _tap(tester, find.byTooltip('Back'));
-      expect(router.state.uri.path, '/room');
-      await tester.tap(_key('open-room-masks'));
+      expect(router.state.uri.path, '/rooms');
+      final masks = _key('open-room-masks');
+      expect(masks, findsOneWidget);
+      await tester.tap(masks);
       await _frames(tester);
       expect(container.read(roomMaskProvider).draft, same(draft));
     },
@@ -1449,7 +1457,14 @@ void main() {
             source: ColorSource.lab,
           );
       final history = container.read(colorHistoryProvider).requireValue;
-      await tester.tap(_key('nav-Lab'));
+      final learn = _key('nav-learn');
+      expect(learn, findsOneWidget);
+      await tester.tap(learn);
+      await _frames(tester);
+      final openLab = _key('learn-open-lab');
+      expect(openLab, findsOneWidget);
+      await tester.ensureVisible(openLab);
+      await tester.tap(openLab);
       await _frames(tester);
       tester.widgetList<Slider>(find.byType(Slider)).first.onChanged!(123);
       await _frames(tester);
@@ -1462,8 +1477,10 @@ void main() {
       await _dot(tester, container);
       final draft = container.read(roomMaskProvider).draft;
       await _tap(tester, find.byTooltip('Back'));
-      await tester.tap(_key('nav-Lab'));
+      expect(learn, findsOneWidget);
+      await tester.tap(learn);
       await _frames(tester);
+      expect(find.text('Open color mixer'), findsOneWidget);
       expect(
         tester.widget<ColorSwatchTile>(find.byType(ColorSwatchTile)).hex,
         labHex,
@@ -1486,9 +1503,13 @@ void main() {
       await _tap(tester, _key('room-editor-back'));
       expect(find.text('Keep this draft?'), findsOneWidget);
       await _tap(tester, find.text('Keep draft'));
-      await tester.tap(_key('nav-Room'));
+      final rooms = _key('nav-rooms');
+      expect(rooms, findsOneWidget);
+      await tester.tap(rooms);
       await _frames(tester);
-      await tester.tap(_key('open-room-masks'));
+      final masks = _key('open-room-masks');
+      expect(masks, findsOneWidget);
+      await tester.tap(masks);
       await _frames(tester);
       expect(container.read(roomMaskProvider).draft, same(draft));
     },
@@ -1545,13 +1566,17 @@ void main() {
             themeMode: theme,
           ),
         );
-        await tester.tap(_key('nav-Room'));
+        final rooms = _key('nav-rooms');
+        expect(rooms, findsOneWidget);
+        await tester.tap(rooms);
         await _frames(tester);
+        final roomScreen = _key('screen-Rooms');
+        expect(roomScreen, findsOneWidget);
         expect(
           _key('open-room-masks').hitTestable(),
           findsOneWidget,
           reason:
-              'entry ${tester.getRect(_key('open-room-masks'))}, room ${tester.getRect(_key('screen-Room'))}',
+              'entry ${tester.getRect(_key('open-room-masks'))}, room ${tester.getRect(roomScreen)}',
         );
         await tester.tap(_key('open-room-masks'));
         await _frames(tester);

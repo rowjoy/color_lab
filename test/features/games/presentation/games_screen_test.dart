@@ -161,7 +161,7 @@ void main() {
     await tester.pumpAndSettle();
 
     repository.writeGate = Completer<void>();
-    await tester.tap(find.byKey(const ValueKey('play-waterSort')));
+    await _tapPlay(tester, 'waterSort');
     await tester.pump();
     await _pumpUntil(tester, () => repository.writeAttempts == 1);
     expect(launches, isEmpty);
@@ -180,7 +180,7 @@ void main() {
 
     repository.writeGate = null;
     repository.failWrite = true;
-    await tester.tap(find.byKey(const ValueKey('play-fruitPop')));
+    await _tapPlay(tester, 'fruitPop');
     await tester.pumpAndSettle();
     expect(launches, hasLength(1));
     expect(
@@ -215,10 +215,10 @@ void main() {
     addTearDown(harness.dispose);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const ValueKey('play-waterSort')));
+    await _tapPlay(tester, 'waterSort');
     await tester.pump();
     await _pumpUntil(tester, () => repository.writeAttempts == 1);
-    await tester.tap(find.byKey(const ValueKey('play-fruitPop')));
+    await _tapPlay(tester, 'fruitPop');
     await tester.pump();
     expect(repository.writeAttempts, 1);
 
@@ -283,7 +283,7 @@ void main() {
       await tester.pumpAndSettle();
 
       repository.writeGate = Completer<void>();
-      await tester.tap(find.byKey(const ValueKey('play-waterSort')));
+      await _tapPlay(tester, 'waterSort');
       await tester.pump();
       await _pumpUntil(tester, () => repository.writeAttempts == 1);
       expect(
@@ -351,7 +351,7 @@ void main() {
       await tester.pumpAndSettle();
 
       repository.writeGate = Completer<void>();
-      await tester.tap(find.byKey(const ValueKey('play-waterSort')));
+      await _tapPlay(tester, 'waterSort');
       await tester.pump();
       await _pumpUntil(tester, () => repository.writeAttempts == 1);
       expect(
@@ -490,8 +490,14 @@ Future<_HubHarness> _pumpHub(
   return _HubHarness(container);
 }
 
-String _text(WidgetTester tester, String key) =>
-    tester.widget<Text>(find.byKey(ValueKey(key))).data!;
+String _text(WidgetTester tester, String key) {
+  final keyed = find.byKey(ValueKey(key));
+  final widget = tester.widget(keyed);
+  if (widget is Text) return widget.data!;
+  return tester
+      .widget<Text>(find.descendant(of: keyed, matching: find.byType(Text)))
+      .data!;
+}
 
 GameProfilesState _emptyState() => GameProfilesState(
   activeProfileId: null,
@@ -599,4 +605,11 @@ Future<void> _pumpUntil(WidgetTester tester, bool Function() condition) async {
     await tester.pump();
   }
   if (!condition()) throw StateError('Timed out waiting for test boundary');
+}
+
+Future<void> _tapPlay(WidgetTester tester, String gameId) async {
+  final play = find.byKey(ValueKey('play-$gameId'));
+  await tester.ensureVisible(play);
+  await tester.pump();
+  await tester.tap(play);
 }

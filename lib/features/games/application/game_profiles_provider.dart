@@ -105,27 +105,7 @@ final class GameProfilesController extends AsyncNotifier<GameProfilesState> {
     _ensureMounted();
     final loaded = await repository.loadState();
     _ensureMounted();
-    if (loaded.activeProfile != null) return loaded;
-
-    // Give first-time players a ready-to-play local profile instead of
-    // blocking the Games hub on a mandatory profile-creation screen.
-    final profileId = ref.read(gameProfileIdFactoryProvider)();
-    final now = _utcNow();
-    final engine = ref.read(gameProgressionEngineProvider);
-    final initialized = await repository.transact((current) {
-      final active = current.activeProfile;
-      if (active != null) {
-        return ProgressionChange(state: current, value: active);
-      }
-      return engine.createProfile(
-        state: current,
-        profileId: profileId,
-        name: 'You',
-        now: now,
-      );
-    });
-    _ensureMounted();
-    return initialized.state;
+    return loaded;
   }
 
   Future<T> _enqueue<T>(
@@ -271,6 +251,43 @@ final class GameProfilesController extends AsyncNotifier<GameProfilesState> {
       return ProgressionChange(state: launch.state, value: launch.value);
     });
   }
+
+  /// Removes a just-created attempt when its launch lost an active-player
+  /// race before navigation. Existing/resumed attempts are never discarded.
+  Future<PlayerProfile> discardStaleNewAttempt({
+    required PlayerProfile originalProfile,
+    required GameLaunch launch,
+  }) => _transact((engine, current) {
+    final currentProfile = current.profiles[launch.profileId];
+    if (currentProfile == null ||
+        current.activeProfileId == launch.profileId ||
+        originalProfile.id != launch.profileId) {
+      return ProgressionChange(
+        state: current,
+        value: currentProfile ?? originalProfile,
+      );
+    }
+
+    final originalProgress = originalProfile.gameProgress[launch.gameId];
+    final currentProgress = currentProfile.gameProgress[launch.gameId];
+    final startedHere =
+        originalProgress?.activeAttempt == null &&
+        currentProgress?.activeAttempt?.attemptId == launch.attemptId &&
+        currentProfile.gamesPlayed == originalProfile.gamesPlayed + 1 &&
+        currentProgress!.attempts == (originalProgress?.attempts ?? 0) + 1 &&
+        currentProfile.coins == originalProfile.coins &&
+        currentProfile.gamesWon == originalProfile.gamesWon &&
+        currentProfile.bestScore == originalProfile.bestScore &&
+        currentProfile.badges.length == originalProfile.badges.length;
+    if (!startedHere) {
+      return ProgressionChange(state: current, value: currentProfile);
+    }
+
+    final profiles = <String, PlayerProfile>{...current.profiles};
+    profiles[originalProfile.id] = originalProfile;
+    final restored = current.copyWith(profiles: profiles);
+    return ProgressionChange(state: restored, value: originalProfile);
+  });
 
   Future<GameLaunch> beginCurrentAttempt({
     required String profileId,

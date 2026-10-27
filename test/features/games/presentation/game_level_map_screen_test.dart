@@ -142,7 +142,7 @@ void main() {
 
     var writesBefore = repository.writeAttempts;
     repository.writeGate = Completer<void>();
-    await tester.tap(find.byKey(const ValueKey('replay-level-1')));
+    await _tapLevelAction(tester, const ValueKey('replay-level-1'));
     await tester.pump();
     await _pumpUntil(
       tester,
@@ -168,7 +168,7 @@ void main() {
 
     writesBefore = repository.writeAttempts;
     repository.writeGate = Completer<void>();
-    await tester.tap(find.byKey(const ValueKey('play-current-level')));
+    await _tapLevelAction(tester, const ValueKey('play-current-level'));
     await tester.pump();
     await _pumpUntil(
       tester,
@@ -215,7 +215,7 @@ void main() {
     await tester.pumpAndSettle();
 
     repository.failWrite = true;
-    await tester.tap(find.byKey(const ValueKey('play-current-level')));
+    await _tapLevelAction(tester, const ValueKey('play-current-level'));
     await tester.pumpAndSettle();
 
     expect(launches, isEmpty);
@@ -350,7 +350,9 @@ Future<_MapHarness> _pumpMap(
         darkTheme: AppTheme.dark,
         themeMode: themeMode,
         builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(context).copyWith(textScaler: textScaler),
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: textScaler, disableAnimations: true),
           child: child!,
         ),
         home: GameLevelMapScreen(
@@ -501,4 +503,11 @@ Future<void> _pumpUntil(WidgetTester tester, bool Function() condition) async {
     await tester.pump();
   }
   if (!condition()) throw StateError('Timed out waiting for test boundary');
+}
+
+Future<void> _tapLevelAction(WidgetTester tester, ValueKey<String> key) async {
+  final action = find.byKey(key);
+  await tester.ensureVisible(action);
+  await tester.pump();
+  await tester.tap(action);
 }

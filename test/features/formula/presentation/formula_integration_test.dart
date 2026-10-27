@@ -141,7 +141,14 @@ void main() {
     'Lab entry retains formula target, HSL study and separate Mixer draft',
     (tester) async {
       final container = await launch(tester, openFormula: false);
-      await tester.tap(find.byKey(const ValueKey('nav-Lab')));
+      final learn = find.byKey(const ValueKey('nav-learn'));
+      expect(learn, findsOneWidget);
+      await tester.tap(learn);
+      await tester.pumpAndSettle();
+      final openLab = find.byKey(const ValueKey('learn-open-lab'));
+      expect(openLab, findsOneWidget);
+      await tester.ensureVisible(openLab);
+      await tester.tap(openLab);
       await tester.pumpAndSettle();
       tester.widgetList<Slider>(find.byType(Slider)).first.onChanged!(120);
       await tester.pumpAndSettle();
@@ -220,6 +227,15 @@ void main() {
           return camera;
         },
       );
+      final learn = find.byKey(const ValueKey('nav-learn'));
+      expect(learn, findsOneWidget);
+      await tester.tap(learn);
+      await tester.pumpAndSettle();
+      final openCapture = find.byKey(const ValueKey('learn-open-capture'));
+      expect(openCapture, findsOneWidget);
+      await tester.ensureVisible(openCapture);
+      await tester.tap(openCapture);
+      await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('Open camera'));
       await tester.tap(find.text('Open camera'));
       await tester.pumpAndSettle();

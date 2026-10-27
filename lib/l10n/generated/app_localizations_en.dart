@@ -105,7 +105,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dataConfirmBody =>
-      'This cannot be undone. Only the reviewed categories will be deleted. Deleting all game data allows a fresh default profile to be created.';
+      'This cannot be undone. Only the reviewed categories will be deleted. Deleting all game data removes every local player and their progress; you can create a new player afterward.';
 
   @override
   String get dataDelete => 'Delete reviewed data';

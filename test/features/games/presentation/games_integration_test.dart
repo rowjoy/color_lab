@@ -301,8 +301,11 @@ void main() {
         ),
       );
       await tester.pump();
-      await tester.tap(find.byKey(const ValueKey('replay-level-1')));
-      await tester.pumpAndSettle();
+      final replayButton = find.byKey(const ValueKey('replay-level-1'));
+      await tester.ensureVisible(replayButton);
+      await tester.pump();
+      await tester.tap(replayButton);
+      await _pumpUntil(tester, () => mapLaunches.length == 1);
       expect(mapLaunches, hasLength(1));
       expect(mapLaunches.single.profileId, ada.id);
       expect(mapLaunches.single.gameId, GameId.waterSort);
@@ -409,8 +412,21 @@ Widget _testApp({required ProviderContainer container, required Widget home}) =>
       ),
     );
 
-String _text(WidgetTester tester, String key) =>
-    tester.widget<Text>(find.byKey(ValueKey(key))).data!;
+String _text(WidgetTester tester, String key) {
+  final keyed = find.byKey(ValueKey(key));
+  final widget = tester.widget(keyed);
+  if (widget is Text) return widget.data!;
+  return tester
+      .widget<Text>(find.descendant(of: keyed, matching: find.byType(Text)))
+      .data!;
+}
+
+Future<void> _pumpUntil(WidgetTester tester, bool Function() condition) async {
+  for (var attempt = 0; attempt < 100 && !condition(); attempt++) {
+    await tester.pump();
+  }
+  if (!condition()) throw StateError('Timed out waiting for test boundary');
+}
 
 List<int> _levelsThrough(int end) => [
   for (var level = 1; level <= end; level++) level,

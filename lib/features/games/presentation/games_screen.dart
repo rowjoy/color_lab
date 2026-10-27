@@ -11,6 +11,7 @@ import '../domain/game_launch.dart';
 import '../domain/game_level.dart';
 import '../domain/player_profile.dart';
 import 'game_ui_metadata.dart';
+import 'player_profile_dialog.dart';
 import 'profile_management_sheet.dart';
 
 class GamesScreen extends ConsumerStatefulWidget {
@@ -57,7 +58,16 @@ final class _GamesScreenState extends ConsumerState<GamesScreen> {
       // Let an already-requested durable profile switch settle before a stale
       // resume can navigate with the previous player's launch.
       await Future<void>.delayed(Duration.zero);
-      if (!mounted || !_isActiveProfile(profile.id)) return;
+      if (!mounted) return;
+      if (!_isActiveProfile(profile.id)) {
+        if (profile.gameProgress[metadata.gameId]?.activeAttempt == null) {
+          await controller.discardStaleNewAttempt(
+            originalProfile: profile,
+            launch: launch,
+          );
+        }
+        return;
+      }
       widget.onLaunchGame?.call(launch);
       // Fill the remaining level cache after the transition so generation
       // cannot delay the first game frame.
@@ -108,7 +118,7 @@ final class _GamesScreenState extends ConsumerState<GamesScreen> {
           data: (state) {
             final profile = state.activeProfile;
             if (profile == null) {
-              return const Center(child: CircularProgressIndicator());
+              return const _FirstPlayerCard();
             }
             return _GamesHub(
               profile: profile,
@@ -146,6 +156,39 @@ final class _LoadError extends StatelessWidget {
           onPressed: onRetry,
           icon: const Icon(Icons.refresh_rounded),
           label: const Text('Retry'),
+        ),
+      ],
+    ),
+  );
+}
+
+final class _FirstPlayerCard extends StatelessWidget {
+  const _FirstPlayerCard();
+
+  @override
+  Widget build(BuildContext context) => StudioCard(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Create your player',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          'Choose a local name before playing. Your levels, coins, scores, and badges stay with this player on this device.',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: context.appColors.textSecondary,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        FilledButton.icon(
+          key: const ValueKey('create-player'),
+          onPressed: () => unawaited(
+            showPlayerProfileDialog(context, requiredProfile: true),
+          ),
+          icon: const Icon(Icons.person_add_alt_1_rounded),
+          label: const Text('Create Player'),
         ),
       ],
     ),
@@ -365,195 +408,210 @@ final class _GameCard extends StatelessWidget {
     final accent = _gameAccent(metadata.gameId);
     final badgeProgress = (completed % 20) / 20;
     final radius = BorderRadius.circular(AppRadii.large);
-    return Material(
-      key: ValueKey('game-card-${metadata.gameId.storageId}'),
-      color: context.appColors.surface,
-      elevation: 3,
-      shadowColor: accent.withValues(alpha: .16),
-      borderRadius: radius,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        key: ValueKey('game-tile-${metadata.gameId.storageId}'),
-        borderRadius: radius,
-        onTap: starting ? null : onPlay,
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+    return Tooltip(
+      message: 'Play ${metadata.label}',
+      child: Semantics(
+        key: ValueKey('play-${metadata.gameId.storageId}'),
+        button: true,
+        enabled: !starting && onPlay != null,
+        label: 'Play ${metadata.label}',
+        child: Material(
+          key: ValueKey('game-card-${metadata.gameId.storageId}'),
+          color: context.appColors.surface,
+          elevation: 3,
+          shadowColor: accent.withValues(alpha: .16),
+          borderRadius: radius,
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            key: ValueKey('game-tile-${metadata.gameId.storageId}'),
+            borderRadius: radius,
+            onTap: starting ? null : onPlay,
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _GameLogo(metadata: metadata),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: AppSpacing.xs),
-                      child: Text(
-                        metadata.label,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              height: 1.08,
-                            ),
-                      ),
-                    ),
-                  ),
-                  Tooltip(
-                    message: 'Open ${metadata.label} level map',
-                    child: IconButton.filledTonal(
-                      key: ValueKey('map-${metadata.gameId.storageId}'),
-                      visualDensity: VisualDensity.compact,
-                      onPressed: onOpenMap,
-                      style: IconButton.styleFrom(
-                        backgroundColor: accent.withValues(alpha: .1),
-                        foregroundColor: accent,
-                      ),
-                      icon: const Icon(Icons.map_outlined),
-                    ),
-                  ),
-                  if (starting)
-                    const SizedBox.square(
-                      dimension: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  else
-                    Icon(
-                      resume
-                          ? Icons.play_circle_fill_rounded
-                          : Icons.play_arrow_rounded,
-                      color: context.appColors.primary,
-                    ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                metadata.description,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: context.appColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Wrap(
-                spacing: AppSpacing.md,
-                runSpacing: AppSpacing.xs,
-                children: [
-                  _GameInfoChip(
-                    'Level $currentLevel',
-                    key: ValueKey('game-level-${metadata.gameId.storageId}'),
-                    color: accent,
-                  ),
-                  _GameInfoChip(
-                    GameTier.forLevel(currentLevel).label,
-                    key: ValueKey('game-tier-${metadata.gameId.storageId}'),
-                    color: accent,
-                  ),
-                  _GameInfoChip(
-                    '$completed completed',
-                    key: ValueKey(
-                      'game-completed-${metadata.gameId.storageId}',
-                    ),
-                    color: accent,
-                  ),
-                  _GameInfoChip(
-                    'Next badge: Level $nextBadge',
-                    key: ValueKey(
-                      'game-next-badge-${metadata.gameId.storageId}',
-                    ),
-                    color: accent,
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'NEXT BADGE  ·  ${completed % 20}/20',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: context.appColors.textSecondary,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: .4,
-                      ),
-                    ),
-                  ),
-                  Icon(Icons.auto_awesome_rounded, size: 15, color: accent),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: LinearProgressIndicator(
-                  value: badgeProgress,
-                  minHeight: 5,
-                  color: accent,
-                  backgroundColor: accent.withValues(alpha: .12),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [accent, Color.lerp(accent, Colors.black, .12)!],
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: accent.withValues(alpha: .18),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (starting)
-                      const SizedBox.square(
-                        dimension: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _GameLogo(metadata: metadata),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: AppSpacing.xs),
+                          child: Text(
+                            metadata.label,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  height: 1.08,
+                                ),
+                          ),
                         ),
-                      )
-                    else
-                      Icon(
-                        resume
-                            ? Icons.play_arrow_rounded
-                            : Icons.sports_esports_rounded,
-                        color: Colors.white,
-                        size: 19,
                       ),
-                    const SizedBox(width: 7),
-                    Text(
-                      starting
-                          ? 'Starting…'
-                          : resume
-                          ? 'Continue game'
-                          : 'Play game',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: .25,
+                      Tooltip(
+                        message: 'Open ${metadata.label} level map',
+                        child: IconButton.filledTonal(
+                          key: ValueKey('map-${metadata.gameId.storageId}'),
+                          visualDensity: VisualDensity.compact,
+                          onPressed: onOpenMap,
+                          style: IconButton.styleFrom(
+                            backgroundColor: accent.withValues(alpha: .1),
+                            foregroundColor: accent,
+                          ),
+                          icon: const Icon(Icons.map_outlined),
+                        ),
                       ),
+                      if (starting)
+                        const SizedBox.square(
+                          dimension: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      else
+                        Icon(
+                          resume
+                              ? Icons.play_circle_fill_rounded
+                              : Icons.play_arrow_rounded,
+                          color: context.appColors.primary,
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    metadata.description,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: context.appColors.textSecondary,
                     ),
-                    const SizedBox(width: 4),
-                    const Icon(
-                      Icons.arrow_forward_rounded,
-                      color: Colors.white,
-                      size: 16,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Wrap(
+                    spacing: AppSpacing.md,
+                    runSpacing: AppSpacing.xs,
+                    children: [
+                      _GameInfoChip(
+                        'Level $currentLevel',
+                        key: ValueKey(
+                          'game-level-${metadata.gameId.storageId}',
+                        ),
+                        color: accent,
+                      ),
+                      _GameInfoChip(
+                        GameTier.forLevel(currentLevel).label,
+                        key: ValueKey('game-tier-${metadata.gameId.storageId}'),
+                        color: accent,
+                      ),
+                      _GameInfoChip(
+                        '$completed completed',
+                        key: ValueKey(
+                          'game-completed-${metadata.gameId.storageId}',
+                        ),
+                        color: accent,
+                      ),
+                      _GameInfoChip(
+                        'Next badge: Level $nextBadge',
+                        key: ValueKey(
+                          'game-next-badge-${metadata.gameId.storageId}',
+                        ),
+                        color: accent,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'NEXT BADGE  ·  ${completed % 20}/20',
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                color: context.appColors.textSecondary,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: .4,
+                              ),
+                        ),
+                      ),
+                      Icon(Icons.auto_awesome_rounded, size: 15, color: accent),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: LinearProgressIndicator(
+                      value: badgeProgress,
+                      minHeight: 5,
+                      color: accent,
+                      backgroundColor: accent.withValues(alpha: .12),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          accent,
+                          Color.lerp(accent, Colors.black, .12)!,
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: accent.withValues(alpha: .18),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (starting)
+                          const SizedBox.square(
+                            dimension: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        else
+                          Icon(
+                            resume
+                                ? Icons.play_arrow_rounded
+                                : Icons.sports_esports_rounded,
+                            color: Colors.white,
+                            size: 19,
+                          ),
+                        const SizedBox(width: 7),
+                        Text(
+                          starting
+                              ? 'Starting…'
+                              : resume
+                              ? 'Continue game'
+                              : 'Play game',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: .25,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(
+                          Icons.arrow_forward_rounded,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

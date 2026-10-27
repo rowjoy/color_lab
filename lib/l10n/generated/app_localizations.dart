@@ -269,10 +269,10 @@ abstract class AppLocalizations {
   /// **'Delete selected data?'**
   String get dataConfirmTitle;
 
-  /// Settings: This cannot be undone. Only the reviewed categories will be deleted. Deleting all game data allows a fresh default profile to be created.
+  /// Settings: This cannot be undone. Only the reviewed categories will be deleted. Deleting all game data removes every local player and their progress; you can create a new player afterward.
   ///
   /// In en, this message translates to:
-  /// **'This cannot be undone. Only the reviewed categories will be deleted. Deleting all game data allows a fresh default profile to be created.'**
+  /// **'This cannot be undone. Only the reviewed categories will be deleted. Deleting all game data removes every local player and their progress; you can create a new player afterward.'**
   String get dataConfirmBody;
 
   /// Settings: Delete reviewed data

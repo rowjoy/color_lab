@@ -577,7 +577,7 @@ Future<_Harness> _createHarness({
 }
 
 Future<void> _mute(WidgetTester tester) async {
-  await tester.tap(find.byTooltip('Mute sounds'));
+  await tester.tap(find.byTooltip('Mute game sounds'));
   await tester.pump();
 }
 

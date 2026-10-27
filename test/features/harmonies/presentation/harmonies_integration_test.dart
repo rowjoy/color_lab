@@ -178,7 +178,14 @@ void main() {
     'Lab entry and picker cancellation preserve all separate session drafts',
     (tester) async {
       final container = await launch(tester, path: null);
-      await tester.tap(find.byKey(const ValueKey('nav-Lab')));
+      final learn = find.byKey(const ValueKey('nav-learn'));
+      expect(learn, findsOneWidget);
+      await tester.tap(learn);
+      await tester.pumpAndSettle();
+      final openLab = find.byKey(const ValueKey('learn-open-lab'));
+      expect(openLab, findsOneWidget);
+      await tester.ensureVisible(openLab);
+      await tester.tap(openLab);
       await tester.pumpAndSettle();
       tester.widgetList<Slider>(find.byType(Slider)).first.onChanged!(120);
       await tester.pumpAndSettle();
@@ -527,7 +534,7 @@ void main() {
             .value
             .uri
             .path,
-        '/capture',
+        '/home',
       );
     },
   );
@@ -584,7 +591,14 @@ void main() {
       path: null,
       repository: InMemorySavedPaletteRepository(palettes: [_saved()]),
     );
-    await tester.tap(find.byKey(const ValueKey('nav-Palette')));
+    final learn = find.byKey(const ValueKey('nav-learn'));
+    expect(learn, findsOneWidget);
+    await tester.tap(learn);
+    await tester.pumpAndSettle();
+    final openPalette = find.byKey(const ValueKey('learn-open-palette'));
+    expect(openPalette, findsOneWidget);
+    await tester.ensureVisible(openPalette);
+    await tester.tap(openPalette);
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('palette-collections')));
     await tester.pumpAndSettle();
@@ -626,6 +640,15 @@ void main() {
           return camera;
         },
       );
+      final learn = find.byKey(const ValueKey('nav-learn'));
+      expect(learn, findsOneWidget);
+      await tester.tap(learn);
+      await tester.pumpAndSettle();
+      final openCapture = find.byKey(const ValueKey('learn-open-capture'));
+      expect(openCapture, findsOneWidget);
+      await tester.ensureVisible(openCapture);
+      await tester.tap(openCapture);
+      await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('Open camera'));
       await tester.tap(find.text('Open camera'));
       await tester.pumpAndSettle();

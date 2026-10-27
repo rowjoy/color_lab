@@ -44,11 +44,12 @@ void main() {
             ),
           );
         }
-        final initial = await container.read(gameProfilesProvider.future);
+        await container.read(gameProfilesProvider.future);
         final controller = container.read(gameProfilesProvider.notifier);
+        final first = await controller.createProfile(name: 'First');
         final second = await controller.createProfile(name: 'Second');
         await controller.setActiveProfile(profileId: second.id);
-        await controller.deleteProfile(profileId: initial.activeProfileId!);
+        await controller.deleteProfile(profileId: first.id);
         final manager = container.read(localDataManagerProvider);
         final preview = await manager.preview({LocalDataCategory.gameProfiles});
         expect(preview.recordCount, greaterThan(0));
@@ -56,10 +57,9 @@ void main() {
         expect((await games.loadState()).profiles, isEmpty);
         expect((await games.loadState()).legacyMigrationComplete, true);
         container.invalidate(gameProfilesProvider);
-        expect(
-          (await container.read(gameProfilesProvider.future)).profiles,
-          hasLength(1),
-        );
+        final reloaded = await container.read(gameProfilesProvider.future);
+        expect(reloaded.profiles, isEmpty);
+        expect(reloaded.activeProfileId, isNull);
         var index = 0;
         for (final repo in [colors, palettes, rooms]) {
           final after = await (repo as LocalDataOwner).withMaintenance(

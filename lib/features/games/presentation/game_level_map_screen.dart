@@ -439,6 +439,7 @@ final class _LevelNode extends StatelessWidget {
     final completed = progress.clearedLevels.contains(level);
     final current = level == progress.currentLevel;
     final milestone = level % 20 == 0;
+    final badgeEarned = progress.badgeMilestones.contains(level);
     final score = progress.bestScores[level];
     final stateKey = completed
         ? 'level-completed-$level'
@@ -462,7 +463,12 @@ final class _LevelNode extends StatelessWidget {
         : current
         ? context.appColors.primary
         : context.appColors.textSecondary;
-    final node = Material(
+    final actionTooltip = completed
+        ? 'Replay level $level'
+        : current
+        ? 'Play current level $level'
+        : null;
+    final material = Material(
       color: current
           ? const Color(0xff3eaf56)
           : completed
@@ -523,6 +529,9 @@ final class _LevelNode extends StatelessWidget {
         ),
       ),
     );
+    final node = actionTooltip == null
+        ? material
+        : Tooltip(message: actionTooltip, child: material);
 
     return SizedBox(
       key: ValueKey('level-node-$level'),
@@ -542,7 +551,7 @@ final class _LevelNode extends StatelessWidget {
             left: 0,
             right: 0,
             child: Text(
-              'Level $level',
+              current ? 'Play Level $level' : 'Level $level',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
                 color: Colors.white,
@@ -588,15 +597,30 @@ final class _LevelNode extends StatelessWidget {
             ),
           if (completed)
             Positioned(
-              bottom: -20,
-              child: Text(
-                'Best ${score ?? 0}',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Colors.white,
-                  shadows: const [
-                    Shadow(color: Color(0x99000000), blurRadius: 3),
-                  ],
-                ),
+              bottom: badgeEarned ? -36 : -20,
+              child: Column(
+                children: [
+                  Text(
+                    'Best ${score ?? 0}',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Colors.white,
+                      shadows: const [
+                        Shadow(color: Color(0x99000000), blurRadius: 3),
+                      ],
+                    ),
+                  ),
+                  if (badgeEarned)
+                    Text(
+                      'Badge earned',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        shadows: const [
+                          Shadow(color: Color(0x99000000), blurRadius: 3),
+                        ],
+                      ),
+                    ),
+                ],
               ),
             ),
         ],
@@ -635,7 +659,23 @@ final class _GiftPreviewState extends State<_GiftPreview>
   late final AnimationController _pulse = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1100),
-  )..repeat(reverse: true);
+  );
+  bool? _reducedMotion;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final reducedMotion = MediaQuery.disableAnimationsOf(context);
+    if (_reducedMotion == reducedMotion) return;
+    _reducedMotion = reducedMotion;
+    if (reducedMotion) {
+      _pulse
+        ..stop()
+        ..value = .5;
+    } else {
+      _pulse.repeat(reverse: true);
+    }
+  }
 
   @override
   void dispose() {

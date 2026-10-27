@@ -78,7 +78,14 @@ void main() {
     'Lab entry preserves HSL study and mixer draft through navigation',
     (tester) async {
       final container = await launch(tester, openMixer: false);
-      await tester.tap(find.byKey(const ValueKey('nav-Lab')));
+      final learn = find.byKey(const ValueKey('nav-learn'));
+      expect(learn, findsOneWidget);
+      await tester.tap(learn);
+      await tester.pumpAndSettle();
+      final openLab = find.byKey(const ValueKey('learn-open-lab'));
+      expect(openLab, findsOneWidget);
+      await tester.ensureVisible(openLab);
+      await tester.tap(openLab);
       await tester.pumpAndSettle();
       tester.widgetList<Slider>(find.byType(Slider)).first.onChanged!(120);
       await tester.pumpAndSettle();

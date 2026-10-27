@@ -47,7 +47,7 @@ class GamePlayAppBar extends StatelessWidget implements PreferredSizeWidget {
     leading: Padding(
       padding: const EdgeInsets.only(left: 12),
       child: IconButton.filledTonal(
-        tooltip: 'Back to games',
+        tooltip: MaterialLocalizations.of(context).backButtonTooltip,
         onPressed: locked ? null : onBack,
         style: IconButton.styleFrom(
           backgroundColor: buttonColor,

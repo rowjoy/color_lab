@@ -52,7 +52,7 @@ void main() {
       expect(mapOpens, 1);
 
       final oldAttemptId = fixture.launch.attemptId;
-      await tester.tap(find.byTooltip('Restart'));
+      await tester.tap(find.byTooltip('Restart level'));
       await _pumpUntil(
         tester,
         () => _progress(repository).activeAttempt?.attemptId != oldAttemptId,

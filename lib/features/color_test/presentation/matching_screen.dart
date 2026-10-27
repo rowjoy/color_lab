@@ -466,8 +466,7 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (launch != null)
-                    const SizedBox(height: AppSpacing.xl),
+                  if (launch != null) const SizedBox(height: AppSpacing.xl),
                   if (launch != null &&
                       _staleResult &&
                       game.phase != MatchingPhase.complete)

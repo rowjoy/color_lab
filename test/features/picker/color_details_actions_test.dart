@@ -63,6 +63,15 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    final learn = find.byKey(const ValueKey('nav-learn'));
+    expect(learn, findsOneWidget);
+    await tester.tap(learn);
+    await tester.pumpAndSettle();
+    final capture = find.byKey(const ValueKey('learn-open-capture'));
+    expect(capture, findsOneWidget);
+    await tester.ensureVisible(capture);
+    await tester.tap(capture);
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Explore a color'));
     await tester.tap(find.text('Explore a color'));
     await tester.pumpAndSettle();
