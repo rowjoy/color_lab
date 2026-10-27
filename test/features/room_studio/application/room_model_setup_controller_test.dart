@@ -198,6 +198,36 @@ void main() {
     expect(requests, 0);
   });
 
+  test(
+    'cancelled Continue cannot use a later independently completed Retry',
+    () async {
+      await store.prepare();
+      final controller = container.read(roomModelSetupProvider.notifier);
+      await controller.check();
+      final checking = Completer<void>();
+      final release = Completer<Directory>();
+      directory = () {
+        checking.complete();
+        return release.future;
+      };
+      final pendingContinue = controller.continueWithCachedModels();
+      await checking.future;
+      controller.cancel();
+      directory = () async => root;
+      await controller.retry();
+      expect(
+        container.read(roomModelSetupProvider).availability,
+        RoomModelAvailability.ready,
+      );
+      expect(container.read(roomModelSetupProvider).canEnter, isFalse);
+      release.complete(root);
+      expect(await pendingContinue, isFalse);
+      expect(container.read(roomModelSetupProvider).canEnter, isFalse);
+      expect(await controller.continueWithCachedModels(), isTrue);
+      expect(requests, 2);
+    },
+  );
+
   test('disposal cancels active work and ignores completion', () async {
     final gate = Completer<Directory>();
     directory = () => gate.future;

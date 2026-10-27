@@ -59,7 +59,10 @@ class RoomModelSetupController extends Notifier<RoomModelSetupState> {
 
   Future<void> check() async {
     if (state.busy) return;
-    final epoch = ++_epoch;
+    await _checkCache(++_epoch);
+  }
+
+  Future<bool> _checkCache(int epoch) async {
     state = RoomModelSetupState(
       availability: RoomModelAvailability.checking,
       progress: _store.progress,
@@ -73,10 +76,12 @@ class RoomModelSetupController extends Notifier<RoomModelSetupState> {
               : RoomModelAvailability.notInstalled,
           progress: _store.progress,
         );
+        return ready;
       }
     } on RoomModelDownloadException catch (error) {
       if (_current(epoch)) _failure(error);
     }
+    return false;
   }
 
   Future<void> download() async {
@@ -145,8 +150,10 @@ class RoomModelSetupController extends Notifier<RoomModelSetupState> {
   /// This is the explicit permission to enter the photo editor. Reverification
   /// is cache-only, including when a download just finished.
   Future<bool> continueWithCachedModels() async {
-    await check();
-    if (_disposed || state.availability != RoomModelAvailability.ready) {
+    if (state.busy) return false;
+    final epoch = ++_epoch;
+    final ready = await _checkCache(epoch);
+    if (!ready || !_current(epoch)) {
       return false;
     }
     state = RoomModelSetupState(

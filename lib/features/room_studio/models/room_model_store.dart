@@ -232,12 +232,11 @@ final class RoomModelStore implements LocalDataOwner {
     final generation = _cancellationGeneration;
     _emit(RoomModelDownloadStage.checking, 0);
     try {
-      final root = await _directory();
+      final files = await _checkedFiles(await _directory());
       var completed = 0;
-      for (final artifact in _artifacts) {
-        final file = File(
-          '${root.path}/room_models/${artifact.sha256}/${artifact.name}',
-        );
+      for (var index = 0; index < _artifacts.length; index++) {
+        final artifact = _artifacts[index];
+        final file = files[index];
         if (!await _valid(file, artifact)) {
           if (!_closed && generation == _cancellationGeneration) {
             _emit(RoomModelDownloadStage.idle, completed);
@@ -290,8 +289,12 @@ final class RoomModelStore implements LocalDataOwner {
     final generation = _cancellationGeneration;
     final files = await _prepareFiles();
     try {
+      await _assertBoundary(files[0]);
       final semantic = await files[0].readAsBytes();
+      await _assertBoundary(files[0]);
+      await _assertBoundary(files[1]);
       final depth = await files[1].readAsBytes();
+      await _assertBoundary(files[1]);
       if (_closed || generation != _cancellationGeneration) {
         throw const RoomModelDownloadException(cancelled: true);
       }
@@ -350,11 +353,45 @@ final class RoomModelStore implements LocalDataOwner {
     if (!_closed) _changes.add(_progress);
   }
 
+  /// Check every owned component without following links, before touching any
+  /// artifact. The support directory itself is supplied by the app; these are
+  /// the cache-owned descendants, which must never redirect into other data.
+  Future<List<File>> _checkedFiles(Directory root) async {
+    final files = [
+      for (final artifact in _artifacts)
+        File('${root.path}/room_models/${artifact.sha256}/${artifact.name}'),
+    ];
+    for (final file in files) {
+      await _assertBoundary(file);
+    }
+    return files;
+  }
+
+  Future<void> _assertBoundary(File target) async {
+    for (final entry in [
+      (target.parent.parent.path, FileSystemEntityType.directory),
+      (target.parent.path, FileSystemEntityType.directory),
+      (target.path, FileSystemEntityType.file),
+      ('${target.path}.part', FileSystemEntityType.file),
+    ]) {
+      final type = await FileSystemEntity.type(entry.$1, followLinks: false);
+      if (type != FileSystemEntityType.notFound && type != entry.$2) {
+        throw const RoomModelDownloadException();
+      }
+    }
+  }
+
+  File _finalTarget(File file) => file.path.endsWith('.part')
+      ? File(file.path.substring(0, file.path.length - 5))
+      : file;
+
   Future<bool> _valid(File file, RoomModelArtifact artifact) async {
+    await _assertBoundary(_finalTarget(file));
     if (!await file.exists() || await file.length() != artifact.bytes) {
       return false;
     }
     final digest = await crypto.sha256.bind(file.openRead()).first;
+    await _assertBoundary(_finalTarget(file));
     return digest.toString() == artifact.sha256;
   }
 
@@ -364,19 +401,17 @@ final class RoomModelStore implements LocalDataOwner {
       _emit(RoomModelDownloadStage.checking, 0);
       final root = await _directory();
       _check(operation);
-      final files = <File>[];
-      for (final artifact in _artifacts) {
+      final files = await _checkedFiles(root);
+      for (var index = 0; index < _artifacts.length; index++) {
         _check(operation);
-        final file = File(
-          '${root.path}/room_models/${artifact.sha256}/${artifact.name}',
-        );
+        final artifact = _artifacts[index];
+        final file = files[index];
         if (!await _valid(file, artifact)) {
           _check(operation);
           await _download(operation, artifact, file, completed);
         }
         _check(operation);
         completed += artifact.bytes;
-        files.add(file);
       }
       _check(operation);
       _emit(RoomModelDownloadStage.ready, completed);
@@ -411,7 +446,10 @@ final class RoomModelStore implements LocalDataOwner {
     int completed,
   ) async {
     final partial = File('${target.path}.part');
+    await _assertBoundary(target);
+    _check(operation);
     await target.parent.create(recursive: true);
+    await _assertBoundary(target);
     _check(operation);
     var offset = await partial.exists() ? await partial.length() : 0;
     _check(operation);
@@ -429,6 +467,8 @@ final class RoomModelStore implements LocalDataOwner {
         await partial.delete();
         throw const RoomModelDownloadException();
       }
+      _check(operation);
+      await _assertBoundary(target);
       _check(operation);
       await partial.rename(target.path);
       return;
@@ -455,7 +495,8 @@ final class RoomModelStore implements LocalDataOwner {
       }
       final response = await request.close().timeout(_timeout);
       _check(operation);
-      final range = response.headers.value(HttpHeaders.contentRangeHeader);
+      final ranges = response.headers[HttpHeaders.contentRangeHeader];
+      final range = ranges != null && ranges.length == 1 ? ranges.single : null;
       final match = range == null
           ? null
           : RegExp(r'^bytes (\d+)-(\d+)/(\d+)$').firstMatch(range);
@@ -486,6 +527,11 @@ final class RoomModelStore implements LocalDataOwner {
       if (validFull) offset = 0;
       var received = offset;
       var oversize = false;
+      // Network waits allow other app work to run. Recheck immediately before
+      // opening a writer, and again before promotion; old validation is not a
+      // permission to follow a subsequently replaced cache entry.
+      await _assertBoundary(target);
+      _check(operation);
       final sink = partial.openWrite(
         mode: offset > 0 ? FileMode.append : FileMode.write,
       );
@@ -528,6 +574,8 @@ final class RoomModelStore implements LocalDataOwner {
         await partial.delete();
         throw const RoomModelDownloadException();
       }
+      _check(operation);
+      await _assertBoundary(target);
       _check(operation);
       await partial.rename(target.path);
       return;

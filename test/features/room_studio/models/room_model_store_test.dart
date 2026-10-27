@@ -156,7 +156,6 @@ void main() {
     'wrong-total',
     'wrong-end',
     'overflow',
-    'duplicate',
   ]) {
     test('$kind range restarts safely with at most one clean fallback', () async {
       await seedPartial('he');
@@ -177,12 +176,6 @@ void main() {
               _ => 'bytes 0-4/5',
             },
           );
-          if (kind == 'duplicate') {
-            request.response.headers.add(
-              HttpHeaders.contentRangeHeader,
-              'bytes 2-4/5',
-            );
-          }
           if (kind == 'wrong-length') request.response.contentLength = 4;
           request.response.write('bad!');
         } else {
@@ -199,6 +192,77 @@ void main() {
       );
     });
   }
+
+  test(
+    'separate duplicate Content-Range lines take one clean full fallback',
+    () async {
+      await seedPartial('he');
+      final rawServer = await ServerSocket.bind(
+        InternetAddress.loopbackIPv4,
+        0,
+      );
+      final sockets = <Socket>[];
+      final rawRequests = <String>[];
+      final subscription = rawServer.listen((socket) {
+        sockets.add(socket);
+        var headers = '';
+        var replied = false;
+        socket.listen((chunk) {
+          if (replied) return;
+          headers += latin1.decode(chunk);
+          if (!headers.contains('\r\n\r\n')) return;
+          replied = true;
+          rawRequests.add(headers);
+          final range = headers.toLowerCase().contains('range: bytes=2-\r\n');
+          final segmentation = headers.startsWith('GET /seg ');
+          final body = range
+              ? 'llo'
+              : segmentation
+              ? 'hello'
+              : 'world';
+          final response = range
+              ? 'HTTP/1.1 206 Partial Content\r\nContent-Range: bytes 2-4/5\r\nContent-Range: bytes 2-4/5\r\n'
+              : 'HTTP/1.1 200 OK\r\n';
+          socket.add(
+            latin1.encode(
+              '$response'
+              'Content-Length: ${body.length}\r\nConnection: close\r\n\r\n$body',
+            ),
+          );
+          unawaited(socket.flush().then((_) => socket.close()));
+        }, onError: (Object _) {});
+      });
+      addTearDown(() async {
+        for (final socket in sockets) {
+          socket.destroy();
+        }
+        await subscription.cancel();
+        await rawServer.close();
+      });
+      final subject = RoomModelStore(
+        directory: () async => root,
+        artifacts: [
+          for (final artifact in artifacts)
+            RoomModelArtifact(
+              name: artifact.name,
+              url:
+                  'http://127.0.0.1:${rawServer.port}${Uri.parse(artifact.url).path}',
+              bytes: artifact.bytes,
+              sha256: artifact.sha256,
+            ),
+        ],
+      );
+      stores.add(subject);
+      expect(utf8.decode((await subject.load()).semantic), 'hello');
+      expect(rawRequests, hasLength(3));
+      expect(rawRequests[0], contains('GET /seg '));
+      expect(rawRequests[0].toLowerCase(), contains('range: bytes=2-\r\n'));
+      expect(rawRequests[1], contains('GET /seg '));
+      expect(rawRequests[1].toLowerCase(), isNot(contains('range:')));
+      expect(rawRequests[2], contains('GET /depth '));
+      expect(subject.progress.stage, RoomModelDownloadStage.ready);
+    },
+  );
 
   test('rejected clean fallback is bounded and never promotes', () async {
     final partial = await seedPartial('he');
@@ -396,6 +460,173 @@ void main() {
       },
     );
   }
+
+  for (final cacheOnly in [true, false]) {
+    for (final boundary in ['root', 'sha', 'final', 'partial']) {
+      for (final kind in ['link', 'nonregular']) {
+        test(
+          '${cacheOnly ? 'check' : 'prepare'} rejects $kind at $boundary boundary without following it',
+          () async {
+            final outside = Directory('${root.path}/unrelated');
+            await outside.create();
+            final target = cached('room_seg.tflite', _helloSha);
+            final modelRoot = Directory('${root.path}/room_models');
+            final peer = cached('room_depth.tflite', _worldSha);
+            String entryPath;
+            String externalPath;
+            if (boundary == 'root') {
+              entryPath = modelRoot.path;
+              externalPath = outside.path;
+              for (final entry in [
+                (_helloSha, 'room_seg.tflite', 'hello'),
+                (_worldSha, 'room_depth.tflite', 'world'),
+              ]) {
+                final file = File('${outside.path}/${entry.$1}/${entry.$2}');
+                await file.parent.create(recursive: true);
+                await file.writeAsString(entry.$3);
+              }
+            } else {
+              await modelRoot.create();
+              if (boundary == 'sha') {
+                entryPath = target.parent.path;
+                externalPath = outside.path;
+                await File(
+                  '${outside.path}/room_seg.tflite',
+                ).writeAsString('hello');
+              } else {
+                await target.parent.create();
+                entryPath =
+                    '${target.path}${boundary == 'partial' ? '.part' : ''}';
+                externalPath = '${outside.path}/original';
+                await File(
+                  externalPath,
+                ).writeAsString(boundary == 'partial' ? 'he' : 'hello');
+              }
+              await peer.parent.create(recursive: true);
+              await peer.writeAsString('world');
+            }
+            if (kind == 'link') {
+              await Link(entryPath).create(externalPath);
+            } else if (boundary == 'root' || boundary == 'sha') {
+              await File(entryPath).writeAsString('unrelated entry');
+            } else {
+              await Directory(entryPath).create();
+            }
+            final before = await _snapshot(outside);
+            var clients = 0;
+            final subject = RoomModelStore(
+              directory: () async => root,
+              artifacts: artifacts,
+              clientFactory: () {
+                clients++;
+                return HttpClient();
+              },
+            );
+            stores.add(subject);
+            await expectLater(
+              cacheOnly ? subject.check() : subject.prepare(),
+              throwsA(
+                isA<RoomModelDownloadException>().having(
+                  (error) => error.storageFull,
+                  'safe generic failure',
+                  isFalse,
+                ),
+              ),
+            );
+            expect(subject.progress.stage, RoomModelDownloadStage.failed);
+            expect(clients, 0);
+            expect(requests, isEmpty);
+            expect(await _snapshot(outside), before);
+            expect(
+              await FileSystemEntity.type(entryPath, followLinks: false),
+              kind == 'link'
+                  ? FileSystemEntityType.link
+                  : boundary == 'root' || boundary == 'sha'
+                  ? FileSystemEntityType.file
+                  : FileSystemEntityType.directory,
+            );
+            if (boundary == 'partial') {
+              expect(
+                await FileSystemEntity.type(target.path, followLinks: false),
+                FileSystemEntityType.notFound,
+              );
+            }
+          },
+        );
+      }
+    }
+  }
+
+  for (final body in ['hello', null]) {
+    test(
+      'prepare rejects ${body == null ? 'dangling' : 'complete'} partial link without promotion',
+      () async {
+        final external = File('${root.path}/unrelated-model');
+        if (body != null) await external.writeAsString(body);
+        final target = cached('room_seg.tflite', _helloSha);
+        await target.parent.create(recursive: true);
+        final partial = Link('${target.path}.part');
+        await partial.create(external.path);
+        final peer = cached('room_depth.tflite', _worldSha);
+        await peer.parent.create(recursive: true);
+        await peer.writeAsString('world');
+        final subject = store();
+        await expectLater(
+          subject.prepare(),
+          throwsA(isA<RoomModelDownloadException>()),
+        );
+        expect(requests, isEmpty);
+        expect(await partial.exists(), isTrue);
+        expect(
+          await FileSystemEntity.type(target.path, followLinks: false),
+          FileSystemEntityType.notFound,
+        );
+        expect(await external.exists(), body != null);
+        if (body != null) expect(await external.readAsString(), body);
+      },
+    );
+  }
+
+  test(
+    'partial changed to a link while awaiting headers is rejected before writing',
+    () async {
+      final partial = await seedPartial('he');
+      final external = File('${root.path}/unrelated-model');
+      await external.writeAsString('he');
+      final peer = cached('room_depth.tflite', _worldSha);
+      await peer.parent.create(recursive: true);
+      await peer.writeAsString('world');
+      respond = (request) async {
+        await partial.delete();
+        await Link(partial.path).create(external.path);
+        request.response.statusCode = 206;
+        request.response.headers.set(
+          HttpHeaders.contentRangeHeader,
+          'bytes 2-4/5',
+        );
+        request.response.contentLength = 3;
+        request.response.write('llo');
+        await request.response.close();
+      };
+      await expectLater(
+        store().prepare(),
+        throwsA(isA<RoomModelDownloadException>()),
+      );
+      expect(await external.readAsString(), 'he');
+      expect(
+        await FileSystemEntity.type(partial.path, followLinks: false),
+        FileSystemEntityType.link,
+      );
+      expect(
+        await FileSystemEntity.type(
+          cached('room_seg.tflite', _helloSha).path,
+          followLinks: false,
+        ),
+        FileSystemEntityType.notFound,
+      );
+      expect(requests, ['/seg']);
+    },
+  );
 
   test(
     'inventory is read only and removal leaves unrelated files intact',
@@ -878,3 +1109,8 @@ class _PartialLengthFile implements File {
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
+
+Future<Map<String, String>> _snapshot(Directory directory) async => {
+  await for (final entry in directory.list(recursive: true, followLinks: false))
+    if (entry is File) entry.path: await entry.readAsString(),
+};
