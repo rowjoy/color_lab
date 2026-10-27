@@ -20,6 +20,10 @@ import 'package:color_lab/features/room_studio/application/room_mask_controller.
 import 'package:color_lab/features/room_studio/application/room_project_session_controller.dart';
 import 'package:color_lab/features/room_studio/application/room_projects_providers.dart';
 import 'package:color_lab/features/room_studio/domain/mask_bitmap.dart';
+import 'package:color_lab/features/room_studio/domain/mask_edit_command.dart'
+    as exact;
+import 'package:color_lab/features/room_studio/domain/mask_edit_history.dart';
+import 'package:color_lab/features/room_studio/domain/mask_intent_bitmap.dart';
 import 'package:color_lab/features/room_studio/domain/mask_stroke.dart';
 import 'package:color_lab/features/room_studio/domain/mask_undo.dart';
 import 'package:color_lab/features/room_studio/domain/room_layer.dart';
@@ -534,6 +538,82 @@ void main() {
       expect((await h.projects.read(saved.projectId))!.snapshot.revision, 3);
     },
   );
+  for (final kind in [
+    'intent-only undo',
+    'label and intent undo',
+    'nonempty redo',
+  ]) {
+    test('refresh rejects lossy exact history: $kind', () async {
+      final h = Harness();
+      await h.ready(1);
+      await h.saved();
+      final original = h.container.read(roomProjectSessionProvider)!.durable!;
+      await h.controller.closeProject();
+      final redo = kind == 'nonempty redo';
+      final intentOnly = kind == 'intent-only undo';
+      final beforeIntent = kind == 'label and intent undo' ? 2 : 0;
+      final afterIntent = redo
+          ? 0
+          : intentOnly
+          ? 2
+          : 5;
+      final edit = exact.MaskEditCommand(
+        width: 10,
+        height: 10,
+        indices: Uint32List.fromList([0]),
+        beforeLabels: Uint8List.fromList([1]),
+        afterLabels: Uint8List.fromList([intentOnly ? 1 : 4]),
+        beforeIntent: Uint8List.fromList([beforeIntent]),
+        afterIntent: Uint8List.fromList([afterIntent]),
+      );
+      final currentLabels = Uint8List(100)..fillRange(0, 100, 1);
+      currentLabels[0] = redo ? 1 : edit.afterLabels[0];
+      final intent = Uint8List(100)..[0] = redo ? beforeIntent : afterIntent;
+      final stored = await h.projects.save(
+        original.copyWith(
+          maskBytes: currentLabels,
+          intent: MaskIntentBitmap.fromBytes(
+            width: 10,
+            height: 10,
+            bytes: intent,
+          ),
+          history: MaskEditHistory.fromStacks(
+            width: 10,
+            height: 10,
+            undoStack: redo ? [] : [edit],
+            redoStack: redo ? [edit] : [],
+          ),
+        ),
+        expectedRevision: original.revision,
+      );
+      expect(await h.controller.openProject(stored.projectId), isTrue);
+      var saves = 0;
+      h.projects.beforeSave = () async {
+        saves++;
+      };
+      final state = h.state;
+      final draft = state.draft!;
+      final session = h.container.read(roomProjectSessionProvider)!;
+      final requests = h.segmenter.requests.length;
+      final refresh = h.controller.reanalyzeCurrentPhoto();
+      // Complete the old implementation's dispatched request so RED is a clean
+      // assertion failure, while the fixed path rejects before dispatch.
+      if (h.segmenter.requests.length > requests) {
+        h.segmenter.requests.last.succeed(masks(4));
+      }
+      expect(await refresh, isFalse);
+      await tick();
+      expect(h.state, same(state));
+      expect(h.state.draft, same(draft));
+      expect(h.state.draft!.history, same(draft.history));
+      expect(h.state.draft!.intent.bytes, intent);
+      expect(h.container.read(roomProjectSessionProvider), same(session));
+      expect(h.segmenter.requests.length, requests);
+      expect(saves, 0);
+      expect((await h.projects.read(stored.projectId))!.snapshot, same(stored));
+    });
+  }
+
   test(
     'refresh keeps manual Add and Erase, colors, and rebased undo',
     () async {

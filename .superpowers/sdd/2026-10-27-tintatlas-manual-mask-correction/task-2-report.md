@@ -87,3 +87,34 @@ docs/release/schema-registry.md
 ```
 
 Commit message: `feat: add exact room mask undo and redo`. Expected postcommit status: only protected ` M lib/main.dart`.
+
+
+## Fix round 1 — prevent lossy refresh (2026-10-28)
+
+FIX_BASE `3c5cb9ad53d36b5b0ec4f964fb90be616bd301c6`. Addressed only the Important finding that legacy refresh discarded exact intent history and redo. `reanalyzeCurrentPhoto` now returns false for a nonempty redo stack or any undo command with differing before/after intent. This check occurs before operation increment, state publication, AI dispatch, legacy conversion and autosave. Losslessly representable legacy refresh remains available; Task 3 still owns exact refresh rebasing. No new rebasing semantics were invented.
+
+Three new tests load valid persisted snapshots with (a) intent-only undo, (b) label-changing undo with different before/after intent and (c) redo. Each verifies rejection, identical draft/history/state/session, exact intent, zero segmentation requests/saves and unchanged stored revision/snapshot.
+
+Clean RED, exit 1, **+0 / -3**, all expected false / actual true (no compiler/harness errors):
+
+```sh
+$F test --no-pub test/features/room_studio/application/room_mask_controller_test.dart --name 'refresh rejects lossy exact history' --reporter expanded
+```
+
+Verification of only the regressions plus named lossless/failed/stale checks:
+
+```sh
+$F test --no-pub test/features/room_studio/application/room_mask_controller_test.dart --name 'refresh rejects lossy exact history|^refresh RoomSegmentationFailureKind.processing keeps the edited draft usable$|^late refresh (success|error) cannot overwrite edit$|^refresh keeps manual Add and Erase, colors, and rebased undo$' --reporter expanded
+```
+
+This completed **+4 / -3** (exit 1): all four existing named checks passed. The three regressions had already verified rejection and unchanged state, then failed a test-only identity assumption comparing reopened history to the original repository fixture; `compute` copies that object. Corrected that assertion to the captured pre-refresh draft history. Production code was unchanged. Reran only the three failed named cases using the RED command: exit 0, **+3 / -0**. Thus all seven selected cases have passing evidence without repeating passing checks or any prior suite.
+
+Changed-path analyzer: controller + test, exit 0/no issues (1.3 s); corrected test alone, exit 0/no issues (1.3 s). Formatter: two paths / one changed, followed by `$D format --output=none --set-exit-if-changed` on those two paths, exit 0/**0 changed**. `git diff --check` clean. No broad suite/build. Frozen fixtures/domain/storage/dependencies/native files unchanged. Protected main diff SHA-256 remains `c9bd56e83824d1dff5f750092e3d751bbb1841ad9377380c057bdffb4aacf437`.
+
+Exact fix paths: `lib/features/room_studio/application/room_mask_controller.dart`, `test/features/room_studio/application/room_mask_controller_test.dart`, and this appended report only. Commit message: `fix: reject lossy legacy mask refresh`.
+
+| `/private/tmp/` log | SHA-256 |
+| --- | --- |
+| `plan03-task2-fix1-red.log` | `1031c2a63cf85eb128ff83b5dc5b1540546249bed1357172e08b9575d2de2f32` |
+| `plan03-task2-fix1-green.log` | `d0d12e32f081c6f107f549af43f1b384abe790b80390f853395c9b9df70ed0b2` |
+| `plan03-task2-fix1-green-correction.log` | `a70b06817cc2efd873a4028dcfe9c263ef2d10a6d67664e2a04b1b2b79831166` |

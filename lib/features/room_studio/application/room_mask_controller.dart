@@ -465,6 +465,14 @@ class RoomMaskController extends Notifier<RoomMaskState> {
       return false;
     }
     final draft = state.draft!;
+    // Task 3 owns exact refresh rebasing. The temporary legacy adapter cannot
+    // round-trip redo or intent deltas, so reject before publishing or saving.
+    if (draft.history.canRedo) return false;
+    for (final command in draft.history.undoStack) {
+      for (var i = 0; i < command.indices.length; i++) {
+        if (command.beforeIntent[i] != command.afterIntent[i]) return false;
+      }
+    }
     final revision = draft.maskRevision;
     final operation = ++_operation;
     state = state.copyWith(
