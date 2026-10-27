@@ -726,6 +726,157 @@ class AppLocalizationsEn extends AppLocalizations {
       'This project has unsaved edits. If you continue and open the new photo, those edits will be discarded. Its last saved version stays on this device.';
 
   @override
+  String get roomProjectsTitle => 'Room projects';
+
+  @override
+  String get roomProjectsDescription =>
+      'Your editable room photos, masks and colors stay on this device.';
+
+  @override
+  String get roomProjectsLoading => 'Loading room projects…';
+
+  @override
+  String get roomProjectsEmpty => 'No room projects yet';
+
+  @override
+  String get roomProjectsNoneReadable => 'No readable room projects';
+
+  @override
+  String get roomProjectsEmptyBody =>
+      'Use a room photo to create an editable project, or try an Illustrated Room.';
+
+  @override
+  String get roomProjectsError => 'Room projects could not be loaded';
+
+  @override
+  String get roomProjectsRetryBody =>
+      'Your local files have not been removed. Try loading the library again.';
+
+  @override
+  String get roomProjectsCorrupt =>
+      'Some projects could not be read. Your other projects are shown, and the unreadable files have been kept.';
+
+  @override
+  String get roomProjectsRefresh => 'Refresh projects';
+
+  @override
+  String roomProjectUpdated(String date) {
+    return 'Updated $date';
+  }
+
+  @override
+  String roomProjectThumbnail(String name) {
+    return 'Photo preview for $name';
+  }
+
+  @override
+  String roomProjectThumbnailUnavailable(String name) {
+    return 'Photo preview unavailable for $name';
+  }
+
+  @override
+  String get roomProjectRecovered =>
+      'Recovered an earlier saved version. Some later changes could not be read. The original files have been kept.';
+
+  @override
+  String get roomProjectThumbnailWarning =>
+      'The photo preview could not be read. Your editable photo and masks are available.';
+
+  @override
+  String get roomProjectOpen => 'Open';
+
+  @override
+  String roomProjectOpenLabel(String name) {
+    return 'Open $name';
+  }
+
+  @override
+  String get roomProjectContinue => 'Continue';
+
+  @override
+  String roomProjectContinueLabel(String name) {
+    return 'Continue $name';
+  }
+
+  @override
+  String roomProjectMenu(String name) {
+    return 'Actions for $name';
+  }
+
+  @override
+  String get roomProjectRename => 'Rename';
+
+  @override
+  String get roomProjectName => 'Project name';
+
+  @override
+  String get roomProjectNameInvalid =>
+      'Use 1–80 characters, with no control characters.';
+
+  @override
+  String get roomProjectDuplicate => 'Duplicate';
+
+  @override
+  String roomProjectCopyName(String name) {
+    return '$name (copy)';
+  }
+
+  @override
+  String get roomProjectCompare => 'Compare';
+
+  @override
+  String get roomProjectCompareUnavailable =>
+      'Comparison is not available yet.';
+
+  @override
+  String get roomProjectDelete => 'Delete project';
+
+  @override
+  String roomProjectDeleteTitle(String name) {
+    return 'Delete $name?';
+  }
+
+  @override
+  String get roomProjectDeleteBody =>
+      'This removes this project’s local working photo, masks and color variants, including any unsaved edits. Images already saved or shared outside the app are not removed. Other projects stay on this device.';
+
+  @override
+  String get roomProjectCancel => 'Cancel';
+
+  @override
+  String get roomProjectActionBusy =>
+      'A project action is in progress. Wait for it to finish, then try again.';
+
+  @override
+  String get roomProjectActionUnsaved =>
+      'Continue your current project and wait for Project saved, or retry saving its edits, before changing another project. Your visible edits are still here.';
+
+  @override
+  String get roomProjectActionConflict =>
+      'This project changed since this list was loaded. Refresh the library and review its saved version before trying again. Your current draft has been kept.';
+
+  @override
+  String get roomProjectActionUnavailable =>
+      'This project is missing or could not be read. Return to the library or try again. Any current draft has been kept.';
+
+  @override
+  String get roomProjectActionStorage =>
+      'The project action could not be completed. Check available device storage and try again.';
+
+  @override
+  String get roomProjectActionLimit =>
+      'This project action reached a storage or identifier limit. Refresh the library and try again.';
+
+  @override
+  String get roomProjectOpening => 'Opening room project…';
+
+  @override
+  String get roomProjectOpenError => 'Room project could not be opened';
+
+  @override
+  String get roomProjectWorking => 'Working…';
+
+  @override
   String aboutAndLicenses(String appName) {
     return 'About $appName & licenses';
   }

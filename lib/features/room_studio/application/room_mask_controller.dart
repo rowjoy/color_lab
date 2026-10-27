@@ -279,7 +279,29 @@ class RoomMaskController extends Notifier<RoomMaskState> {
     return true;
   }
 
-  Future<bool> openProject(String projectId) async {
+  /// Continue retains transient tools, history and the current unsaved draft.
+  /// It is separate from Open, which deliberately reads a stored version.
+  bool continueProject(String projectId) {
+    if (!_live) return false;
+    final session = ref.read(roomProjectSessionProvider);
+    if (session == null || session.projectId != projectId) return false;
+    if (state.draft?.photoId == session.visible.photoId) return true;
+    if (state.candidate != null || state.editBusy || _refining) return false;
+    _operation++;
+    state = state.copyWith(
+      stage: RoomMaskStage.ready,
+      candidate: null,
+      failure: null,
+      draft: session.visible,
+    );
+    return true;
+  }
+
+  Future<bool> openProject(
+    String projectId, {
+    bool Function()? isCurrent,
+    bool preserveCurrentOnFailure = false,
+  }) async {
     if (!_live ||
         _refining ||
         state.editBusy ||
@@ -289,7 +311,10 @@ class RoomMaskController extends Notifier<RoomMaskState> {
     }
     final captured = state.draft;
     final operation = ++_operation;
-    bool current() => _current(operation) && identical(state.draft, captured);
+    bool current() =>
+        _current(operation) &&
+        identical(state.draft, captured) &&
+        (isCurrent?.call() ?? true);
     try {
       final draft = await _session.openProject(projectId, isCurrent: current);
       if (!current() || draft == null) return false;
@@ -302,7 +327,9 @@ class RoomMaskController extends Notifier<RoomMaskState> {
       );
       return true;
     } catch (_) {
-      if (current()) _fail(RoomMaskFailureKind.storage);
+      if (current() && !preserveCurrentOnFailure) {
+        _fail(RoomMaskFailureKind.storage);
+      }
       return false;
     }
   }

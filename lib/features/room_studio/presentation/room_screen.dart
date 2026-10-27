@@ -28,6 +28,13 @@ class RoomScreen extends ConsumerWidget {
           onPressed: () => context.push('/room/masks'),
         ),
         const SizedBox(height: AppSpacing.md),
+        SecondaryButton(
+          key: const ValueKey('rooms-open-projects'),
+          label: context.l10n.roomProjectsTitle,
+          icon: Icons.photo_library_outlined,
+          onPressed: () => context.push('/rooms/projects'),
+        ),
+        const SizedBox(height: AppSpacing.md),
         const Text('Choose a sample room, or use your own room photo.'),
         const SizedBox(height: AppSpacing.xxl),
         StudioCard(

@@ -14,6 +14,7 @@ import '../application/room_image_export_service.dart';
 import '../application/room_mask_controller.dart';
 import '../application/room_project_session_controller.dart';
 import '../application/room_model_download_providers.dart';
+import '../application/room_model_setup_controller.dart';
 import '../application/room_recolor_provider.dart';
 import '../domain/room_layer.dart';
 import '../domain/room_mask_state.dart';
@@ -28,7 +29,8 @@ import 'room_recolor_viewport.dart';
 import 'room_project_save_status.dart';
 
 class RoomMaskScreen extends ConsumerStatefulWidget {
-  const RoomMaskScreen({super.key});
+  const RoomMaskScreen({super.key, this.projectId});
+  final String? projectId;
 
   @override
   ConsumerState<RoomMaskScreen> createState() => _RoomMaskScreenState();
@@ -75,8 +77,19 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
         current?.maskRevision == captured?.maskRevision;
   }
 
+  bool _analysisReady() {
+    // Stored masks/colors need no models. A new analysis still needs the
+    // explicit setup permission before picker/inference can start a download.
+    if (widget.projectId == null || ref.read(roomModelSetupProvider).canEnter) {
+      return true;
+    }
+    context.push('/room/masks');
+    return false;
+  }
+
   Future<void> _import({PhotoSource? source, String? requestId}) async {
     if (!_active || _confirming || _importOperation != null) return;
+    if (!_analysisReady()) return;
     final operation = Object();
     setState(() => _importOperation = operation);
     try {
@@ -137,6 +150,7 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
 
   Future<void> _refreshMasks(RoomMaskDraft draft) async {
     if (!_active || _confirming || !_sameDraft(draft)) return;
+    if (!_analysisReady()) return;
     setState(() => _refreshedMasks = null);
     final accepted = await ref
         .read(roomMaskProvider.notifier)
@@ -153,7 +167,7 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
     if (context.canPop()) {
       context.pop();
     } else {
-      context.go('/room');
+      context.go(widget.projectId == null ? '/room' : '/rooms/projects');
     }
   }
 
@@ -386,7 +400,9 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
                 key: const ValueKey('room-mask-continue-analysis'),
                 label: 'Analyze this photo',
                 onPressed: () {
-                  if (_active) controller.analyzeCandidate();
+                  if (_active && _analysisReady()) {
+                    controller.analyzeCandidate();
+                  }
                 },
               ),
             if (acquiring && state.candidate != null)
@@ -422,7 +438,7 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
               PrimaryButton(
                 label: context.l10n.roomRetryAnalysis,
                 onPressed: () {
-                  if (_active) controller.retryAnalysis();
+                  if (_active && _analysisReady()) controller.retryAnalysis();
                 },
               ),
               const SizedBox(height: AppSpacing.sm),

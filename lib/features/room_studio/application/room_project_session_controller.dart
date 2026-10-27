@@ -36,6 +36,7 @@ final class RoomProjectSession {
     required this.saveStatus,
     required this.saveError,
     required this.pendingSaveCount,
+    required this.acknowledgedRevision,
     this.recoveryWarning,
   });
 
@@ -46,6 +47,7 @@ final class RoomProjectSession {
   final RoomProjectSaveStatus saveStatus;
   final RoomProjectSaveError? saveError;
   final int pendingSaveCount;
+  final int acknowledgedRevision;
   final RoomProjectRecoveryWarning? recoveryWarning;
 
   bool get hasUnsavedChanges => saveStatus != RoomProjectSaveStatus.saved;
@@ -159,8 +161,41 @@ class RoomProjectSessionController extends Notifier<RoomProjectSession?> {
     return _enqueue(work, work.visible);
   }
 
+  /// Metadata changes use the session's queue and acknowledged token too.
+  /// The visible name, durable snapshot and recovery warning change only after
+  /// acknowledgement. Failed rename never adopts another writer's revision.
+  Future<RoomProjectSnapshot> renameProject(
+    String projectId,
+    String name, {
+    required int expectedRevision,
+    required DateTime updatedAt,
+  }) async {
+    final work = _work;
+    if (work == null || !_current(work) || work.projectId != projectId) {
+      throw const RoomProjectStorageException(RoomProjectStorageFailure.closed);
+    }
+    if (state!.hasUnsavedChanges) throw const RoomProjectUnsavedChanges();
+    if (work.acknowledgedRevision != expectedRevision) {
+      throw RoomProjectConflict(
+        expectedRevision: expectedRevision,
+        actualRevision: work.acknowledgedRevision,
+      );
+    }
+    if (!RoomProjectLimits.validName(name)) {
+      throw ArgumentError('Invalid project name');
+    }
+    _lifecycle++;
+    final intent = _SaveIntent(work.visible, name: name, updatedAt: updatedAt);
+    await _enqueueIntent(work, intent);
+    if (intent.saved case final saved?) return saved;
+    throw intent.failure ?? const RoomProjectStorageException();
+  }
+
   Future<void> _enqueue(_ProjectWork work, RoomMaskDraft draft) {
-    final intent = _SaveIntent(draft);
+    return _enqueueIntent(work, _SaveIntent(draft));
+  }
+
+  Future<void> _enqueueIntent(_ProjectWork work, _SaveIntent intent) {
     work.pending.add(intent);
     work.status = RoomProjectSaveStatus.saving;
     _publish(work);
@@ -222,8 +257,9 @@ class RoomProjectSessionController extends Notifier<RoomProjectSession?> {
           updatedAt: work.createdAt,
         );
       }
-      final now = DateTime.now().toUtc();
+      final now = intent.updatedAt ?? DateTime.now().toUtc();
       final snapshot = base.copyWith(
+        name: intent.name,
         aiMaskBytes: intent.draft.aiMasks.labels,
         maskBytes: intent.draft.masks.labels,
         maskRevision: intent.draft.maskRevision,
@@ -246,8 +282,15 @@ class RoomProjectSessionController extends Notifier<RoomProjectSession?> {
       );
       work.durable = saved;
       work.acknowledgedRevision = saved.revision;
+      work.name = saved.name;
+      work.warning = null;
+      intent.saved = saved;
       if (_current(work)) ref.invalidate(roomProjectsProvider);
     } catch (error) {
+      intent.failure =
+          error is RoomProjectConflict || error is RoomProjectStorageException
+          ? error
+          : const RoomProjectStorageException();
       work.error = switch (error) {
         RoomProjectConflict() => RoomProjectSaveError.conflict,
         RoomProjectStorageException(:final failure) => switch (failure) {
@@ -398,6 +441,7 @@ class RoomProjectSessionController extends Notifier<RoomProjectSession?> {
       saveError: work.error,
       pendingSaveCount:
           work.pending.length + (work.activeIntent == null ? 0 : 1),
+      acknowledgedRevision: work.acknowledgedRevision,
       recoveryWarning: work.warning,
     );
   }
@@ -412,7 +456,8 @@ final class _ProjectWork {
     required this.visible,
     required this.barrier,
   });
-  final String projectId, name, variantId, variantName;
+  final String projectId, variantId, variantName;
+  String name;
   final DateTime createdAt = DateTime.now().toUtc();
   final Future<void> barrier;
   final pending = Queue<_SaveIntent>();
@@ -429,8 +474,12 @@ final class _ProjectWork {
 }
 
 final class _SaveIntent {
-  _SaveIntent(this.draft);
+  _SaveIntent(this.draft, {this.name, this.updatedAt});
   final RoomMaskDraft draft;
+  final String? name;
+  final DateTime? updatedAt;
+  RoomProjectSnapshot? saved;
+  Object? failure;
   final done = Completer<void>();
 }
 

@@ -7,11 +7,29 @@ import 'package:color_lab/features/home/presentation/home_screen.dart';
 import 'package:color_lab/features/lab/presentation/lab_screen.dart';
 import 'package:color_lab/features/learning/presentation/learn_screen.dart';
 import 'package:color_lab/features/my_work/presentation/my_work_screen.dart';
+import 'package:color_lab/features/onboarding/presentation/onboarding_screen.dart';
+import 'package:color_lab/features/settings/domain/app_preferences.dart';
 import 'package:color_lab/features/palette/application/saved_palettes_providers.dart';
 import 'package:color_lab/features/palette/presentation/palette_screen.dart';
 import 'package:color_lab/features/picker/application/acquisition_intent_providers.dart';
+import 'package:color_lab/features/picker/application/photo_picker_service.dart';
+import 'package:color_lab/features/picker/domain/photo_acquisition.dart';
+import 'package:color_lab/features/picker/domain/prepared_photo.dart';
+import 'package:color_lab/features/room_studio/segmentation/room_segmentation_service.dart';
 import 'package:color_lab/features/picker/presentation/capture_screen.dart';
 import 'package:color_lab/features/room_studio/application/room_designs_providers.dart';
+import 'package:color_lab/core/color/color_models.dart';
+import 'package:color_lab/features/room_studio/application/room_mask_controller.dart';
+import 'package:color_lab/features/room_studio/application/room_project_session_controller.dart';
+import 'package:color_lab/features/room_studio/application/room_projects_providers.dart';
+import 'package:color_lab/features/room_studio/application/room_recolor_provider.dart';
+import 'package:color_lab/features/room_studio/domain/room_layer.dart';
+import 'package:color_lab/features/room_studio/domain/room_mask_state.dart';
+import 'package:color_lab/features/room_studio/domain/room_project.dart';
+import 'package:color_lab/features/room_studio/domain/room_project_repository.dart';
+import 'package:color_lab/features/room_studio/presentation/room_projects_screen.dart';
+import 'package:color_lab/features/room_studio/presentation/room_project_open_screen.dart';
+import 'package:color_lab/features/room_studio/presentation/room_mask_screen.dart';
 import 'package:color_lab/features/room_studio/presentation/illustrated_room_gallery_screen.dart';
 import 'package:color_lab/features/room_studio/presentation/room_screen.dart';
 import 'package:color_lab/features/settings/application/app_preferences_providers.dart';
@@ -28,8 +46,380 @@ import '../support/in_memory_color_history_repository.dart';
 import '../support/in_memory_game_profiles_repository.dart';
 import '../support/in_memory_room_design_repository.dart';
 import '../support/in_memory_saved_palette_repository.dart';
+import '../support/in_memory_room_project_repository.dart';
+import '../support/room_project_fixtures.dart';
 
 void main() {
+  for (final action in ['room-mask-gallery', 'room-mask-refresh']) {
+    testWidgets(
+      'saved project $action requests setup before new photo analysis',
+      (tester) async {
+        final project = roomProjectFixture(revision: 1);
+        final segmenter = _NoImplicitAnalysis();
+        final picker = _NoImplicitPhotoPicker();
+        final harness = await _launch(
+          tester,
+          projects: InMemoryRoomProjectRepository(initial: [project]),
+          segmenter: segmenter,
+          picker: picker,
+        );
+        addTearDown(harness.dispose);
+        harness.router.go('/rooms/project/${project.projectId}');
+        await _waitForProject(tester);
+        final draft = harness.container.read(roomMaskProvider).draft;
+        expect(segmenter.requests, 0);
+        expect(picker.requests, 0);
+        final button = find.byKey(ValueKey(action));
+        await tester.ensureVisible(button);
+        await tester.tap(button);
+        await _pumpUntil(
+          tester,
+          find.byKey(const ValueKey('room-model-setup')),
+        );
+        expect(find.byKey(const ValueKey('room-model-setup')), findsOneWidget);
+        expect(segmenter.requests, 0);
+        expect(picker.requests, 0);
+        expect(harness.container.read(roomMaskProvider).draft, same(draft));
+        expect(
+          harness.container.read(roomProjectSessionProvider)!.projectId,
+          project.projectId,
+        );
+      },
+    );
+  }
+
+  testWidgets('saved-project links still respect onboarding', (tester) async {
+    final harness = await _launch(
+      tester,
+      preferences: const AppPreferences(),
+      expectedScreen: find.byType(OnboardingScreen),
+    );
+    addTearDown(harness.dispose);
+    for (final route in [
+      '/rooms/projects',
+      '/rooms/project/project-1',
+      '/room/masks?project=project-1',
+    ]) {
+      harness.router.go(route);
+      await tester.pumpAndSettle();
+      expect(harness.router.state.uri.path, '/onboarding');
+      expect(find.byType(RoomProjectsScreen), findsNothing);
+      expect(find.byType(RoomMaskScreen), findsNothing);
+    }
+  });
+
+  testWidgets(
+    'fresh provider container restores saved project URI and editor from storage',
+    (tester) async {
+      final project = roomProjectFixture(revision: 1);
+      final repo = InMemoryRoomProjectRepository(initial: [project]);
+      final original = await _launch(tester, projects: repo);
+      original.router.go('/rooms/project/${project.projectId}');
+      await _waitForProject(tester);
+      final restoration = await tester.getRestorationData();
+      await tester.pumpWidget(const SizedBox.shrink());
+      original.dispose();
+      await tester.restoreFrom(restoration);
+      final restored = await _launch(
+        tester,
+        projects: repo,
+        expectedScreen: find.byType(RoomProjectOpenScreen),
+      );
+      addTearDown(restored.dispose);
+      await _waitForProject(tester);
+      expect(restored.router.state.uri.queryParameters['project'], 'project-1');
+      expect(
+        restored.container
+            .read(roomProjectSessionProvider)!
+            .acknowledgedRevision,
+        1,
+      );
+      expect(restored.container.read(roomMaskProvider).draft!.masks.labels, [
+        1,
+        2,
+        3,
+        4,
+      ]);
+      expect(find.byKey(const ValueKey('room-model-setup')), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'fresh restoration opens covered project only when Back makes it current',
+    (tester) async {
+      final project = roomProjectFixture(revision: 1);
+      final repo = InMemoryRoomProjectRepository(
+        initial: [
+          project,
+          project.copyWith(projectId: 'other', photoId: 'other-photo'),
+        ],
+      );
+      final original = await _launch(tester, projects: repo);
+      original.router.go('/rooms/project/${project.projectId}');
+      await _waitForProject(tester);
+      original.router.push('/rooms/projects');
+      await tester.pumpAndSettle();
+      original.router.push('/rooms/project/other');
+      await _waitForProject(tester);
+      final restoration = await tester.getRestorationData();
+      await tester.pumpWidget(const SizedBox.shrink());
+      original.dispose();
+      await tester.restoreFrom(restoration);
+      final restored = await _launch(
+        tester,
+        projects: repo,
+        expectedScreen: find.byType(RoomProjectOpenScreen),
+      );
+      addTearDown(restored.dispose);
+      await _waitForProject(tester);
+      expect(
+        restored.container.read(roomProjectSessionProvider)!.projectId,
+        'other',
+      );
+      restored.router.pop();
+      await tester.pumpAndSettle();
+      restored.router.pop();
+      await _waitForProject(tester);
+      expect(
+        restored.container.read(roomProjectSessionProvider)!.projectId,
+        project.projectId,
+      );
+      expect(
+        restored.container.read(roomMaskProvider).draft!.photoId,
+        project.photoId,
+      );
+    },
+  );
+
+  testWidgets(
+    'Back to a retained project route reopens its own saved identity',
+    (tester) async {
+      final project = roomProjectFixture(revision: 1);
+      final harness = await _launch(
+        tester,
+        projects: InMemoryRoomProjectRepository(
+          initial: [
+            project,
+            project.copyWith(projectId: 'other', photoId: 'other-photo'),
+          ],
+        ),
+      );
+      addTearDown(harness.dispose);
+      harness.router.go('/rooms/project/${project.projectId}');
+      await _waitForProject(tester);
+      harness.router.push('/rooms/projects');
+      await tester.pumpAndSettle();
+      harness.router.push('/rooms/project/other');
+      await _waitForProject(tester);
+      expect(
+        harness.container.read(roomProjectSessionProvider)!.projectId,
+        'other',
+      );
+      harness.router.pop();
+      await tester.pumpAndSettle();
+      harness.router.pop();
+      await _waitForProject(tester);
+      expect(
+        harness.router.state.uri.queryParameters['project'],
+        project.projectId,
+      );
+      expect(
+        harness.container.read(roomProjectSessionProvider)!.projectId,
+        project.projectId,
+      );
+      expect(
+        harness.container.read(roomMaskProvider).draft!.photoId,
+        project.photoId,
+      );
+    },
+  );
+
+  testWidgets(
+    'new project in a saved editor updates restart URI without reopening old photo',
+    (tester) async {
+      final project = roomProjectFixture(revision: 1);
+      final harness = await _launch(
+        tester,
+        projects: InMemoryRoomProjectRepository(initial: [project]),
+      );
+      addTearDown(harness.dispose);
+      harness.router.go('/rooms/project/${project.projectId}');
+      await _waitForProject(tester);
+      final draft = harness.container.read(roomMaskProvider).draft!;
+      final creating = harness.container
+          .read(roomProjectSessionProvider.notifier)
+          .createFromAnalysis(
+            RoomMaskDraft(
+              photoId: 'new-working-photo',
+              photo: draft.photo,
+              aiMasks: draft.aiMasks,
+              masks: draft.masks,
+              history: draft.history,
+              maskRevision: 0,
+              changedFromAiCount: draft.changedFromAiCount,
+            ),
+          );
+      final nextId = harness.container
+          .read(roomProjectSessionProvider)!
+          .projectId;
+      harness.container.read(roomMaskProvider.notifier).continueProject(nextId);
+      for (
+        var i = 0;
+        i < 100 &&
+            harness.container.read(roomProjectSessionProvider)!.saveStatus ==
+                RoomProjectSaveStatus.saving;
+        i++
+      ) {
+        await tester.pump(const Duration(milliseconds: 20));
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 5)),
+        );
+      }
+      await creating;
+      await _waitForProject(tester);
+      expect(harness.router.state.uri.queryParameters['project'], nextId);
+      expect(
+        harness.container.read(roomMaskProvider).draft!.photoId,
+        'new-working-photo',
+      );
+    },
+  );
+
+  testWidgets('Rooms and My Work link to projects with pushed Back', (
+    tester,
+  ) async {
+    final harness = await _launch(tester);
+    addTearDown(harness.dispose);
+    for (final entry in [
+      ('/rooms', 'rooms-open-projects'),
+      ('/my-work', 'my-work-open-projects'),
+    ]) {
+      harness.router.go(entry.$1);
+      await tester.pumpAndSettle();
+      final link = find.byKey(ValueKey(entry.$2));
+      await tester.ensureVisible(link);
+      await tester.tap(link);
+      await tester.pumpAndSettle();
+      expect(find.byType(RoomProjectsScreen), findsOneWidget);
+      expect(find.byKey(const ValueKey('room-model-setup')), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('room-projects-back')));
+      await tester.pumpAndSettle();
+      expect(harness.router.state.uri.path, entry.$1);
+    }
+  });
+
+  testWidgets(
+    'saved deep link opens existing editor without setup and restores identity',
+    (tester) async {
+      final project = roomProjectFixture(revision: 1);
+      final repository = InMemoryRoomProjectRepository(initial: [project]);
+      final harness = await _launch(tester, projects: repository);
+      addTearDown(harness.dispose);
+      harness.router.go('/rooms/projects');
+      await tester.pumpAndSettle();
+      harness.router.push('/rooms/project/${project.projectId}');
+      await _waitForProject(tester);
+      expect(harness.router.state.uri.path, '/room/masks');
+      expect(
+        harness.router.state.uri.queryParameters['project'],
+        project.projectId,
+      );
+      expect(find.byType(RoomMaskScreen), findsOneWidget);
+      expect(find.byKey(const ValueKey('room-model-setup')), findsNothing);
+      expect(
+        harness.container.read(roomProjectSessionProvider)!.durable!.maskBytes,
+        project.maskBytes,
+      );
+      final restoredUri = harness.router.state.uri.toString();
+      await tester.restartAndRestore();
+      await _waitForProject(tester);
+      expect(harness.router.state.uri.toString(), restoredUri);
+      expect(await tester.binding.handlePopRoute(), isTrue);
+      await tester.pumpAndSettle();
+      expect(find.byType(RoomProjectsScreen), findsOneWidget);
+      await harness.container.read(roomMaskProvider.notifier).closeProject();
+      harness.router.go(restoredUri);
+      await _waitForProject(tester);
+      expect(
+        harness.container.read(roomProjectSessionProvider)!.projectId,
+        project.projectId,
+      );
+    },
+  );
+
+  testWidgets(
+    'Continue retains unsaved draft while other deep link offers safe recovery',
+    (tester) async {
+      final project = roomProjectFixture(revision: 1);
+      final repository = InMemoryRoomProjectRepository(
+        initial: [
+          project,
+          project.copyWith(projectId: 'other'),
+        ],
+      );
+      final harness = await _launch(tester, projects: repository);
+      addTearDown(harness.dispose);
+      harness.router.go('/rooms/project/${project.projectId}');
+      await _waitForProject(tester);
+      repository.saveError = const RoomProjectStorageException();
+      harness.container
+          .read(roomMaskProvider.notifier)
+          .setLayerColor(RoomLayer.wall, RgbColor(3, 4, 5));
+      await tester.pumpAndSettle();
+      final draft = harness.container.read(roomMaskProvider).draft;
+      harness.router.go('/rooms/projects');
+      await tester.pumpAndSettle();
+      final continued = find.byKey(
+        ValueKey('room-project-open-${project.projectId}'),
+      );
+      await tester.ensureVisible(continued);
+      expect(
+        find.descendant(of: continued, matching: find.text('Continue')),
+        findsOneWidget,
+      );
+      await tester.tap(continued);
+      await _waitForProject(tester);
+      expect(harness.container.read(roomMaskProvider).draft, same(draft));
+      harness.router.go('/rooms/project/other');
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('room-project-open-error')),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('Continue your current project'),
+        findsOneWidget,
+      );
+      expect(harness.container.read(roomMaskProvider).draft, same(draft));
+      expect(find.byKey(const ValueKey('room-model-setup')), findsNothing);
+    },
+  );
+
+  for (final id in ['missing', 'bad', 'unsafe!']) {
+    testWidgets('$id saved link has safe error, retry and library recovery', (
+      tester,
+    ) async {
+      final harness = await _launch(tester, projects: _UnreadableProjects());
+      addTearDown(harness.dispose);
+      harness.router.go('/rooms/project/$id');
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('room-project-open-error')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('room-project-open-retry')),
+        findsOneWidget,
+      );
+      expect(find.textContaining('/private'), findsNothing);
+      expect(find.byType(RoomMaskScreen), findsNothing);
+      expect(find.byKey(const ValueKey('room-model-setup')), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('room-project-open-library')));
+      await tester.pumpAndSettle();
+      expect(harness.router.state.uri.path, '/rooms/projects');
+    });
+  }
+
   for (final route in [
     '/settings/privacy',
     '/settings/data',
@@ -362,14 +752,25 @@ final class _RouterHarness {
 Future<_RouterHarness> _launch(
   WidgetTester tester, {
   Finder? expectedScreen,
+  RoomProjectRepository? projects,
+  AppPreferences? preferences,
+  RoomSegmentationService? segmenter,
+  PhotoPickerService? picker,
 }) async {
   final container = ProviderContainer(
     overrides: [
+      if (segmenter != null)
+        roomSegmentationServiceProvider.overrideWithValue(segmenter),
+      if (picker != null) photoPickerServiceProvider.overrideWithValue(picker),
+      roomProjectRepositoryProvider.overrideWith(
+        (ref) async => projects ?? InMemoryRoomProjectRepository(),
+      ),
+      roomRecolorPreviewProvider.overrideWith((ref) async => null),
       acquisitionIntentStoreProvider.overrideWith(
         (ref) async => InMemoryAcquisitionIntentStore(),
       ),
       appPreferencesRepositoryProvider.overrideWith(
-        (ref) async => InMemoryAppPreferencesRepository(),
+        (ref) async => InMemoryAppPreferencesRepository(initial: preferences),
       ),
       colorHistoryRepositoryProvider.overrideWith(
         (ref) async => InMemoryColorHistoryRepository(),
@@ -398,6 +799,65 @@ Future<_RouterHarness> _launch(
   final router = container.read(appRouterProvider);
   await _pumpUntil(tester, expectedScreen ?? find.byType(HomeScreen));
   return _RouterHarness(container, router);
+}
+
+Future<void> _waitForProject(WidgetTester tester) async {
+  for (var frame = 0; frame < 100; frame++) {
+    await tester.pump(const Duration(milliseconds: 20));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 5)),
+    );
+    if (find.byType(RoomMaskScreen).evaluate().isNotEmpty) {
+      await tester.pumpAndSettle();
+      return;
+    }
+  }
+  expect(find.byType(RoomMaskScreen), findsOneWidget);
+}
+
+class _UnreadableProjects extends InMemoryRoomProjectRepository {
+  @override
+  Future<RoomProjectReadResult?> read(String id) async {
+    if (id == 'bad') {
+      throw const RoomProjectStorageException(
+        RoomProjectStorageFailure.corrupt,
+      );
+    }
+    return null;
+  }
+}
+
+class _NoImplicitAnalysis implements RoomSegmentationService {
+  int requests = 0;
+  @override
+  Future<RoomSegmentationResult> analyze({
+    required String photoId,
+    required PreparedPhoto photo,
+  }) async {
+    requests++;
+    throw const RoomSegmentationException(
+      RoomSegmentationFailureKind.modelUnavailable,
+    );
+  }
+
+  @override
+  Future<void> close() async {}
+}
+
+class _NoImplicitPhotoPicker implements PhotoPickerService {
+  int requests = 0;
+  @override
+  Future<PreparedPhoto?> pick({
+    PhotoSource source = PhotoSource.gallery,
+  }) async {
+    requests++;
+    return null;
+  }
+
+  @override
+  Future<PreparedPhoto?> recoverLost() async => null;
+  @override
+  Future<bool> openSettings() async => false;
 }
 
 void _configureView(WidgetTester tester, Size size) {

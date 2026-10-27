@@ -48,6 +48,24 @@ class MyWorkScreen extends ConsumerWidget {
         description: context.l10n.myWorkDescription,
       ),
       _LibrarySection(
+        key: const ValueKey('my-work-room-projects'),
+        title: context.l10n.roomProjectsTitle,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(context.l10n.roomProjectsDescription),
+            const SizedBox(height: AppSpacing.md),
+            SecondaryButton(
+              key: const ValueKey('my-work-open-projects'),
+              label: context.l10n.roomProjectsTitle,
+              icon: Icons.photo_library_outlined,
+              onPressed: () => context.push('/rooms/projects'),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: AppSpacing.xxl),
+      _LibrarySection(
         key: const ValueKey('my-work-colors'),
         title: context.l10n.myWorkColorsTitle,
         child: _colors(context, ref),

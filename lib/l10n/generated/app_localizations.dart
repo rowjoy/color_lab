@@ -1355,6 +1355,246 @@ abstract class AppLocalizations {
   /// **'This project has unsaved edits. If you continue and open the new photo, those edits will be discarded. Its last saved version stays on this device.'**
   String get roomProjectReplaceUnsaved;
 
+  /// Title and entry label for the local real-photo project library.
+  ///
+  /// In en, this message translates to:
+  /// **'Room projects'**
+  String get roomProjectsTitle;
+
+  /// Local ownership description in Rooms and My Work.
+  ///
+  /// In en, this message translates to:
+  /// **'Your editable room photos, masks and colors stay on this device.'**
+  String get roomProjectsDescription;
+
+  /// Library loading status.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading room projects…'**
+  String get roomProjectsLoading;
+
+  /// Empty local real-room library title.
+  ///
+  /// In en, this message translates to:
+  /// **'No room projects yet'**
+  String get roomProjectsEmpty;
+
+  /// All known projects are unreadable; this does not claim the library was empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No readable room projects'**
+  String get roomProjectsNoneReadable;
+
+  /// Empty library next steps.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a room photo to create an editable project, or try an Illustrated Room.'**
+  String get roomProjectsEmptyBody;
+
+  /// Safe library read failure title.
+  ///
+  /// In en, this message translates to:
+  /// **'Room projects could not be loaded'**
+  String get roomProjectsError;
+
+  /// Safe read failure recovery guidance.
+  ///
+  /// In en, this message translates to:
+  /// **'Your local files have not been removed. Try loading the library again.'**
+  String get roomProjectsRetryBody;
+
+  /// Library warning when corrupt records are isolated.
+  ///
+  /// In en, this message translates to:
+  /// **'Some projects could not be read. Your other projects are shown, and the unreadable files have been kept.'**
+  String get roomProjectsCorrupt;
+
+  /// Reload project summaries without replacing the repository owner.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh projects'**
+  String get roomProjectsRefresh;
+
+  /// Project last update with locale-formatted date.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {date}'**
+  String roomProjectUpdated(String date);
+
+  /// Thumbnail accessibility label.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo preview for {name}'**
+  String roomProjectThumbnail(String name);
+
+  /// Visible and accessible missing/corrupt thumbnail fallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo preview unavailable for {name}'**
+  String roomProjectThumbnailUnavailable(String name);
+
+  /// Warning retained until a successful repairing project save.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovered an earlier saved version. Some later changes could not be read. The original files have been kept.'**
+  String get roomProjectRecovered;
+
+  /// Thumbnail-only recovery warning.
+  ///
+  /// In en, this message translates to:
+  /// **'The photo preview could not be read. Your editable photo and masks are available.'**
+  String get roomProjectThumbnailWarning;
+
+  /// Open a stored room project.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get roomProjectOpen;
+
+  /// Accessible named project Open action.
+  ///
+  /// In en, this message translates to:
+  /// **'Open {name}'**
+  String roomProjectOpenLabel(String name);
+
+  /// Continue the active room draft without reopening it.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get roomProjectContinue;
+
+  /// Accessible active draft action.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue {name}'**
+  String roomProjectContinueLabel(String name);
+
+  /// Accessible card menu label.
+  ///
+  /// In en, this message translates to:
+  /// **'Actions for {name}'**
+  String roomProjectMenu(String name);
+
+  /// Rename a real-room project.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get roomProjectRename;
+
+  /// Editable project name field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Project name'**
+  String get roomProjectName;
+
+  /// Bounded project name validation.
+  ///
+  /// In en, this message translates to:
+  /// **'Use 1–80 characters, with no control characters.'**
+  String get roomProjectNameInvalid;
+
+  /// Create an independent local copy of a room project.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate'**
+  String get roomProjectDuplicate;
+
+  /// Honest name of an independent project copy. Keep the suffix short enough for an 80-character name.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} (copy)'**
+  String roomProjectCopyName(String name);
+
+  /// Color comparison action, disabled until comparison is implemented.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare'**
+  String get roomProjectCompare;
+
+  /// Honest boundary for the disabled comparison action.
+  ///
+  /// In en, this message translates to:
+  /// **'Comparison is not available yet.'**
+  String get roomProjectCompareUnavailable;
+
+  /// Delete only the selected local room project.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete project'**
+  String get roomProjectDelete;
+
+  /// Explicit selected project deletion confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {name}?'**
+  String roomProjectDeleteTitle(String name);
+
+  /// Precise local-only deletion consequence and active draft authorization.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes this project’s local working photo, masks and color variants, including any unsaved edits. Images already saved or shared outside the app are not removed. Other projects stay on this device.'**
+  String get roomProjectDeleteBody;
+
+  /// Dismiss a project action without changes.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get roomProjectCancel;
+
+  /// Safe guidance for an incompatible busy operation.
+  ///
+  /// In en, this message translates to:
+  /// **'A project action is in progress. Wait for it to finish, then try again.'**
+  String get roomProjectActionBusy;
+
+  /// Preserve a saving, failed or conflicted session rather than bypassing it.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue your current project and wait for Project saved, or retry saving its edits, before changing another project. Your visible edits are still here.'**
+  String get roomProjectActionUnsaved;
+
+  /// CAS conflict without automatic rebase or false success.
+  ///
+  /// In en, this message translates to:
+  /// **'This project changed since this list was loaded. Refresh the library and review its saved version before trying again. Your current draft has been kept.'**
+  String get roomProjectActionConflict;
+
+  /// Safe missing/corrupt/invalid project failure.
+  ///
+  /// In en, this message translates to:
+  /// **'This project is missing or could not be read. Return to the library or try again. Any current draft has been kept.'**
+  String get roomProjectActionUnavailable;
+
+  /// Generic safe storage failure without raw exception or paths.
+  ///
+  /// In en, this message translates to:
+  /// **'The project action could not be completed. Check available device storage and try again.'**
+  String get roomProjectActionStorage;
+
+  /// Bounded project storage or collision failure.
+  ///
+  /// In en, this message translates to:
+  /// **'This project action reached a storage or identifier limit. Refresh the library and try again.'**
+  String get roomProjectActionLimit;
+
+  /// Loading state while reconstructing a saved editor.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening room project…'**
+  String get roomProjectOpening;
+
+  /// Saved project deep-link recovery title.
+  ///
+  /// In en, this message translates to:
+  /// **'Room project could not be opened'**
+  String get roomProjectOpenError;
+
+  /// Busy state for project actions.
+  ///
+  /// In en, this message translates to:
+  /// **'Working…'**
+  String get roomProjectWorking;
+
   /// Label that opens product information and open-source licenses.
   ///
   /// In en, this message translates to:

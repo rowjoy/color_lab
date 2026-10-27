@@ -16,6 +16,8 @@ import '../features/picker/presentation/photo_picker_screen.dart';
 import '../features/room_studio/presentation/room_screen.dart';
 import '../features/room_studio/presentation/room_mask_screen.dart';
 import '../features/room_studio/presentation/room_model_setup_panel.dart';
+import '../features/room_studio/presentation/room_projects_screen.dart';
+import '../features/room_studio/presentation/room_project_open_screen.dart';
 import '../features/room_studio/presentation/illustrated_room_gallery_screen.dart';
 import '../features/room_studio/presentation/illustrated_room_screen.dart';
 import '../features/shell/presentation/app_shell.dart';
@@ -110,9 +112,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
+        path: '/rooms/projects',
+        builder: (context, state) => const RoomProjectsScreen(),
+      ),
+      GoRoute(
+        path: '/rooms/project/:projectId',
+        redirect: (context, state) => Uri(
+          path: '/room/masks',
+          queryParameters: {'project': state.pathParameters['projectId']!},
+        ).toString(),
+      ),
+      GoRoute(
         path: '/room/masks',
-        builder: (context, state) =>
-            const RoomModelSetupGate(child: RoomMaskScreen()),
+        builder: (context, state) {
+          final projectId = state.uri.queryParameters['project'];
+          return projectId == null
+              ? const RoomModelSetupGate(child: RoomMaskScreen())
+              : RoomProjectOpenScreen(projectId: projectId);
+        },
       ),
       GoRoute(
         path: '/vision',
