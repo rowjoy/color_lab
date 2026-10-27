@@ -11,6 +11,13 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get modelsRemovalError =>
+      'Couldn\'t remove all Room models. Some downloaded model files may already have been removed. Refresh storage, then retry removal.';
+
+  @override
+  String get modelsRefresh => 'Refresh storage';
+
+  @override
   String get dataPreferences =>
       'Appearance, accessibility, and welcome preferences';
 

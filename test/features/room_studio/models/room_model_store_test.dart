@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:color_lab/features/room_studio/models/room_model_store.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../../../support/failing_model_removal_io.dart';
 
 const _helloSha =
     '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824';
@@ -91,6 +92,32 @@ void main() {
       await subject.remove();
       expect((await subject.inventory()).entries, isEmpty);
       expect(await unrelated.readAsString(), 'export');
+    },
+  );
+
+  test(
+    'removal failure after first file leaves remaining model recoverable for retry',
+    () async {
+      final subject = store();
+      await subject.prepare();
+      final first = cached('room_seg.tflite', _helloSha);
+      final second = cached('room_depth.tflite', _worldSha);
+      final failure = FailingModelRemovalIO(
+        ownedPaths: {first.path, second.path},
+        failOn: second.path,
+      );
+      await IOOverrides.runWithIOOverrides(() async {
+        await expectLater(
+          subject.remove(),
+          throwsA(isA<FileSystemException>()),
+        );
+      }, failure);
+      expect(failure.deletedPaths, [first.path]);
+      expect(await first.exists(), false);
+      expect(await second.readAsString(), 'world');
+      expect((await subject.inventory()).entries, hasLength(1));
+      await subject.remove();
+      expect((await subject.inventory()).entries, isEmpty);
     },
   );
 

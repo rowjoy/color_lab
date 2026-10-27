@@ -1,4 +1,8 @@
 {
+  "modelsRemovalError": "Couldn't remove all Room models. Some downloaded model files may already have been removed. Refresh storage, then retry removal.",
+  "@modelsRemovalError": {"description": "Removal-specific error: independent file deletes can partially succeed before an I/O failure."},
+  "modelsRefresh": "Refresh storage",
+  "@modelsRefresh": {"description": "Refresh the model inventory after an operation or storage error."},
   "dataPreferences": "Appearance, accessibility, and welcome preferences",
   "@dataPreferences": {"description": "Category for explicitly resetting preferences and replaying onboarding."},
   "cancel": "Cancel",

@@ -59,7 +59,7 @@ class _ModelStorageScreenState extends ConsumerState<ModelStorageScreen> {
       _message = context.l10n.modelsRemoved;
       await _load();
     } catch (_) {
-      if (mounted) setState(() => _message = context.l10n.modelsError);
+      if (mounted) setState(() => _message = context.l10n.modelsRemovalError);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -108,7 +108,7 @@ class _ModelStorageScreenState extends ConsumerState<ModelStorageScreen> {
               });
               _load();
             },
-            child: Text(context.l10n.tryAgain),
+            child: Text(context.l10n.modelsRefresh),
           ),
         if (_busy) const Center(child: CircularProgressIndicator()),
       ],

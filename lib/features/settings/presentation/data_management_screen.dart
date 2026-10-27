@@ -25,31 +25,30 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
       await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
+          scrollable: true,
           title: Text(
             destructive
                 ? context.l10n.dataConfirmTitle
                 : context.l10n.dataReviewTitle,
           ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (final category in preview.categories)
-                  Text(categoryLabel(context.l10n, category)),
-                const SizedBox(height: 16),
-                Text(
-                  context.l10n.dataPreviewSummary(
-                    preview.recordCount,
-                    preview.estimatedBytes,
-                  ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (final category in preview.categories)
+                Text(categoryLabel(context.l10n, category)),
+              const SizedBox(height: 16),
+              Text(
+                context.l10n.dataPreviewSummary(
+                  preview.recordCount,
+                  preview.estimatedBytes,
                 ),
-                if (destructive) ...[
-                  const SizedBox(height: 16),
-                  Text(context.l10n.dataConfirmBody),
-                ],
+              ),
+              if (destructive) ...[
+                const SizedBox(height: 16),
+                Text(context.l10n.dataConfirmBody),
               ],
-            ),
+            ],
           ),
           actions: [
             TextButton(
@@ -105,6 +104,7 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
 
   @override
   Widget build(BuildContext context) => SettingsPage(
+    canLeave: !_busy,
     title: context.l10n.settingsDataEntry,
     children: [
       Text(context.l10n.dataIntro),

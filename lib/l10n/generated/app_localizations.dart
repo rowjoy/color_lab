@@ -95,6 +95,18 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[Locale('en')];
 
+  /// Removal-specific error: independent file deletes can partially succeed before an I/O failure.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t remove all Room models. Some downloaded model files may already have been removed. Refresh storage, then retry removal.'**
+  String get modelsRemovalError;
+
+  /// Refresh the model inventory after an operation or storage error.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh storage'**
+  String get modelsRefresh;
+
   /// Category for explicitly resetting preferences and replaying onboarding.
   ///
   /// In en, this message translates to:
