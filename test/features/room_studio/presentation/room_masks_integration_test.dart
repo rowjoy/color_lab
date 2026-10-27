@@ -35,6 +35,7 @@ import 'package:color_lab/features/room_studio/domain/room_layer_colors.dart';
 import 'package:color_lab/features/room_studio/domain/room_mask_state.dart';
 import 'package:color_lab/features/room_studio/presentation/illustrated_room_screen.dart';
 import 'package:color_lab/features/room_studio/presentation/room_mask_viewport.dart';
+import 'package:color_lab/features/room_studio/presentation/room_mask_screen.dart';
 import 'package:color_lab/features/room_studio/recolor/room_recolor_frame.dart';
 import 'package:color_lab/features/room_studio/recolor/room_photo_recolorer.dart';
 import 'package:color_lab/features/room_studio/segmentation/room_segmentation_service.dart';
@@ -146,6 +147,7 @@ class _RecolorRequest {
 
 class _Recolorer {
   final requests = <_RecolorRequest>[];
+  int workersCreated = 0;
 
   Future<RoomRecolorFrame> render({
     required RoomRecolorKey key,
@@ -241,8 +243,9 @@ Future<ProviderContainer> _launch(
       roomSegmentationServiceProvider.overrideWithValue(
         segmenter ?? _Segmenter(),
       ),
-      roomRecolorWorkerFactoryProvider.overrideWithValue(
-        () => CallbackRecolorWorker(
+      roomRecolorWorkerFactoryProvider.overrideWithValue(() {
+        if (recolorer != null) recolorer.workersCreated++;
+        return CallbackRecolorWorker(
           (input) async => recolorer == null
               ? recolorRoomPhoto(
                   key: input.key,
@@ -256,8 +259,8 @@ Future<ProviderContainer> _launch(
                   masks: input.masks,
                   colors: input.colors,
                 ),
-        ),
-      ),
+        );
+      }),
       if (exporter != null)
         roomImageExportServiceProvider.overrideWithValue(exporter),
       if (modelStore != null)
@@ -399,6 +402,165 @@ Future<void> _zoom(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets(
+    'preview ownership returns through repeated retained A B A routes before old B disposes',
+    (tester) async {
+      final segmenter = _Segmenter();
+      final recolorer = _Recolorer();
+      final c = await _launch(
+        tester,
+        segmenter: segmenter,
+        recolorer: recolorer,
+      );
+      await _open(tester);
+      await _ready(tester, segmenter, label: 1);
+      await _waitSaved(tester, c);
+      final editorA = tester.state(find.byType(RoomMaskScreen));
+      final router = c.read(appRouterProvider);
+      recolorer.requests.single.succeed();
+      await _frames(tester);
+
+      for (var round = 0; round < 2; round++) {
+        final count = recolorer.requests.length;
+        router.push('/room/masks');
+        await _frames(tester);
+        final editorB = tester.state(find.byType(RoomMaskScreen));
+        expect(editorA.mounted, isTrue);
+        expect(editorB, isNot(same(editorA)));
+        expect(recolorer.requests, hasLength(count + 1));
+        expect(recolorer.workersCreated, count + 1);
+        recolorer.requests.last.succeed();
+        await _frames(tester);
+
+        router.pop();
+        // Flush dependency and worker microtasks without advancing B's exit
+        // animation. A must reclaim while the old owner is still mounted.
+        await tester.pump();
+        await tester.pump();
+        expect(editorB.mounted, isTrue);
+        expect(ModalRoute.of(editorA.context)!.isCurrent, isTrue);
+        expect(
+          recolorer.requests,
+          hasLength(count + 2),
+          reason:
+              'Returning retained editor must claim exactly one new preview',
+        );
+        expect(recolorer.workersCreated, count + 2);
+        expect(
+          tester
+              .widget<PrimaryButton>(_key('room-recolor-share').first)
+              .onPressed,
+          isNull,
+        );
+        final returned = recolorer.requests.last;
+        returned.succeed();
+        await tester.pump();
+        final frame = c.read(roomRecolorPreviewProvider).requireValue!;
+        expect(frame.key, c.read(roomRecolorKeyProvider));
+
+        // B receives another dependency/visibility callback before its later
+        // dispose; neither callback may revoke A's newly acquired ownership.
+        await c
+            .read(themeModeProvider.notifier)
+            .setMode(round == 0 ? ThemeMode.dark : ThemeMode.light);
+        await _frames(tester);
+        expect(editorB.mounted, isFalse);
+        expect(editorA.mounted, isTrue);
+        expect(c.read(roomRecolorPreviewProvider).requireValue, same(frame));
+        expect(frame.isDisposed, isFalse);
+        expect(recolorer.requests, hasLength(count + 2));
+        expect(recolorer.workersCreated, count + 2);
+        expect(
+          tester.widget<PrimaryButton>(_key('room-recolor-share')).onPressed,
+          isNotNull,
+        );
+      }
+    },
+  );
+
+  for (final rebuild in ['Theme', 'MediaQuery']) {
+    testWidgets(
+      'preview ownership resumes latest after inactive $rebuild rebuild and stays stopped when covered',
+      (tester) async {
+        final segmenter = _Segmenter();
+        final recolorer = _Recolorer();
+        final c = await _launch(
+          tester,
+          segmenter: segmenter,
+          recolorer: recolorer,
+        );
+        await _open(tester);
+        await _ready(tester, segmenter, label: 1);
+        await _waitSaved(tester, c);
+        recolorer.requests.single.succeed();
+        await _frames(tester);
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.inactive,
+        );
+        c
+            .read(roomMaskProvider.notifier)
+            .setLayerColor(RoomLayer.wall, RgbColor(30, 40, 50));
+        if (rebuild == 'Theme') {
+          await c.read(themeModeProvider.notifier).setMode(ThemeMode.dark);
+        } else {
+          tester.view.physicalSize = Size(
+            840 * tester.view.devicePixelRatio,
+            700 * tester.view.devicePixelRatio,
+          );
+          addTearDown(tester.view.resetPhysicalSize);
+        }
+        await _frames(tester);
+        expect(c.read(roomRecolorPreviewProvider).value, isNull);
+        expect(recolorer.requests, hasLength(1));
+        expect(recolorer.workersCreated, 1);
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.resumed,
+        );
+        await _frames(tester);
+        expect(
+          recolorer.requests,
+          hasLength(2),
+          reason:
+              'Visible route must resume exactly once after inactive rebuild',
+        );
+        expect(recolorer.workersCreated, 2);
+        expect(recolorer.requests.last.key, c.read(roomRecolorKeyProvider));
+        recolorer.requests.last.succeed();
+        await _frames(tester);
+        expect(
+          c.read(roomRecolorPreviewProvider).requireValue!.key,
+          c.read(roomRecolorKeyProvider),
+        );
+
+        final router = c.read(appRouterProvider);
+        router.push('/settings');
+        await _frames(tester);
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.inactive,
+        );
+        await c.read(themeModeProvider.notifier).setMode(ThemeMode.light);
+        await _frames(tester);
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.resumed,
+        );
+        await _frames(tester);
+        expect(recolorer.requests, hasLength(2));
+        expect(recolorer.workersCreated, 2);
+        expect(c.read(roomRecolorPreviewProvider).value, isNull);
+        router.pop();
+        await _frames(tester);
+        expect(recolorer.requests, hasLength(3));
+        expect(recolorer.workersCreated, 3);
+        recolorer.requests.last.succeed();
+        await _frames(tester);
+        expect(
+          c.read(roomRecolorPreviewProvider).requireValue!.key,
+          c.read(roomRecolorKeyProvider),
+        );
+      },
+    );
+  }
+
   testWidgets(
     'background dependency rebuild preserves visible owner on resume',
     (tester) async {

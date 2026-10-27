@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -52,16 +50,12 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
   (String, int)? _refreshedMasks;
   late final RoomRecolorCoordinator _previews;
   Object? _previewOwner;
+  bool _previewRouteVisible = false;
 
   @override
   void initState() {
     super.initState();
     _previews = ref.read(roomRecolorCoordinatorProvider.notifier);
-    scheduleMicrotask(() {
-      if (!mounted) return;
-      _previewOwner = _previews.attachOwner(isVisible: () => _active);
-      _syncPreviewVisibility();
-    });
   }
 
   @override
@@ -71,8 +65,17 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
   }
 
   void _syncPreviewVisibility() {
+    final visible = _routeVisible;
+    final becameVisible = visible && !_previewRouteVisible;
+    _previewRouteVisible = visible;
     final owner = _previewOwner;
-    if (owner != null) _previews.setOwnerVisible(owner, _active);
+    if (visible && (becameVisible || owner == null || !_previews.owns(owner))) {
+      // A retained editor may return while the covering editor is still
+      // animating out. Claim now; that old owner's later dispose stays stale.
+      _previewOwner = _previews.attachOwner(isVisible: () => _routeVisible);
+    } else if (owner != null) {
+      _previews.setOwnerVisible(owner, visible);
+    }
   }
 
   @override
@@ -82,13 +85,17 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
     super.dispose();
   }
 
-  bool get _active =>
+  // The coordinator tracks lifecycle independently. An inactive dependency
+  // rebuild must not mark a current route hidden and prevent its later resume.
+  bool get _routeVisible =>
       mounted &&
-      (WidgetsBinding.instance.lifecycleState == null ||
-          WidgetsBinding.instance.lifecycleState ==
-              AppLifecycleState.resumed) &&
       (ModalRoute.of(context)?.isCurrent ?? false) &&
       GoRouter.of(context).state.uri.path == '/room/masks';
+
+  bool get _active =>
+      _routeVisible &&
+      (WidgetsBinding.instance.lifecycleState == null ||
+          WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed);
 
   bool _sameDraft(RoomMaskDraft? captured) {
     final current = ref.read(roomMaskProvider).draft;
