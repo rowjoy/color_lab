@@ -176,9 +176,9 @@ void main() {
   );
 
   test(
-    'malformed records fail reads and writes without replacing stored bytes',
+    'malformed records are isolated while healthy edits remain durable',
     () async {
-      await repository.save(
+      final valid = await repository.save(
         color: RgbColor(1, 2, 3),
         name: 'Ink',
         source: ColorSource.manual,
@@ -188,41 +188,39 @@ void main() {
       final malformed = {'version': 99, 'source': 'future'};
       await box.put('#BADBAD', malformed);
       await box.close();
-      final file = File('${directory.path}/$boxName.hive');
-      final bytesBefore = await file.readAsBytes();
       repository = await HiveColorHistoryRepository.open(
         directory: directory.path,
         boxName: boxName,
       );
-      await expectLater(
-        repository.load(),
-        throwsA(isA<HistoryStorageException>()),
-      );
+
+      final snapshot = await repository.loadSnapshot();
+      expect(snapshot.records, [valid]);
+      expect(snapshot.corruptRecords.single.storageKey, '#BADBAD');
       await expectLater(
         repository.save(
-          color: RgbColor(7, 8, 9),
-          name: 'New',
+          color: RgbColor(186, 219, 173),
+          name: 'Conflicting',
           source: ColorSource.manual,
         ),
         throwsA(isA<HistoryStorageException>()),
       );
-      await expectLater(
-        repository.setFavorite('#010203', true),
-        throwsA(isA<HistoryStorageException>()),
+      final created = await repository.save(
+        color: RgbColor(7, 8, 9),
+        name: 'New',
+        source: ColorSource.manual,
       );
-      await expectLater(
-        repository.delete('#010203'),
-        throwsA(isA<HistoryStorageException>()),
-      );
+      await repository.setFavorite(valid.id, true);
+      await repository.delete(valid.id);
+      await repository.delete('#BADBAD');
+      expect((await repository.loadSnapshot()).records, [created]);
       await repository.close();
-      expect(await file.readAsBytes(), bytesBefore);
       final unchanged = await Hive.openBox<dynamic>(
         boxName,
         path: directory.path,
       );
       expect(unchanged.get('#BADBAD'), malformed);
-      expect(unchanged.containsKey('#010203'), isTrue);
-      expect(unchanged.containsKey('#070809'), isFalse);
+      expect(unchanged.containsKey(valid.id), isFalse);
+      expect(unchanged.containsKey(created.id), isTrue);
       await unchanged.close();
     },
   );

@@ -9,6 +9,9 @@ import 'package:hive/src/hive_impl.dart';
 import '../../core/color/color_engine.dart';
 import '../../features/palette/domain/saved_palette.dart';
 import '../../features/palette/domain/saved_palette_repository.dart';
+import '../schema/corrupt_record.dart';
+import '../schema/repository_snapshot.dart';
+import '../schema/schema_registry.dart';
 
 final class HivePaletteRepository implements SavedPaletteRepository {
   HivePaletteRepository._(this._box, this._clock);
@@ -71,24 +74,55 @@ final class HivePaletteRepository implements SavedPaletteRepository {
     return result;
   }
 
-  List<SavedPalette> _read() {
+  RepositorySnapshot<SavedPalette> _readSnapshot() {
     final palettes = <SavedPalette>[];
+    final corruptRecords = <CorruptRecord>[];
     for (final key in _box.keys) {
       final value = _box.get(key);
-      if (value is! Map) throw const PaletteStorageException();
-      final palette = SavedPalette.fromMap(value);
-      if (key != palette.id) throw const PaletteStorageException();
+      if (value is! Map) {
+        corruptRecords.add(_corrupt(key, 'Stored value is not a record.'));
+        continue;
+      }
+      late final SavedPalette palette;
+      try {
+        palette = SavedPalette.fromMap(value);
+      } on FormatException {
+        corruptRecords.add(
+          _corrupt(key, 'Stored record could not be decoded.'),
+        );
+        continue;
+      }
+      if (key != palette.id) {
+        corruptRecords.add(
+          _corrupt(key, 'Stored key does not match the record identifier.'),
+        );
+        continue;
+      }
       palettes.add(palette);
     }
     palettes.sort((a, b) {
       final byDate = b.createdAt.compareTo(a.createdAt);
       return byDate == 0 ? a.id.compareTo(b.id) : byDate;
     });
-    return List<SavedPalette>.unmodifiable(palettes);
+    return RepositorySnapshot(
+      records: List<SavedPalette>.unmodifiable(palettes),
+      corruptRecords: List<CorruptRecord>.unmodifiable(corruptRecords),
+    );
   }
 
+  CorruptRecord _corrupt(Object key, String reason) => CorruptRecord(
+    collectionId: SchemaRegistry.savedPalettes.id,
+    storageKey: key,
+    reason: reason,
+  );
+
   @override
-  Future<List<SavedPalette>> load() => _serialize(_read);
+  Future<RepositorySnapshot<SavedPalette>> loadSnapshot() =>
+      _serialize(_readSnapshot);
+
+  @override
+  Future<List<SavedPalette>> load() =>
+      loadSnapshot().then((snapshot) => snapshot.records);
 
   @override
   Future<SavedPalette> save({
@@ -98,9 +132,11 @@ final class HivePaletteRepository implements SavedPaletteRepository {
     required Iterable<RgbColor> colors,
   }) => _serialize(() async {
     final id = SavedPalette.idFor(base, mode);
-    for (final existing in _read()) {
+    for (final existing in _readSnapshot().records) {
       if (existing.id == id) return existing;
     }
+    // Deterministic IDs must never overwrite an undecodable raw record.
+    if (_box.keys.contains(id)) throw const PaletteStorageException();
     final saved = SavedPalette(
       name: name,
       base: base,
@@ -116,7 +152,7 @@ final class HivePaletteRepository implements SavedPaletteRepository {
 
   @override
   Future<void> delete(String id) => _serialize(() async {
-    if (!_read().any((palette) => palette.id == id)) return;
+    if (!_readSnapshot().records.any((palette) => palette.id == id)) return;
     _needsFlush = true;
     await _box.delete(id);
     await _ensureDurable();

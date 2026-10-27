@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/color/color_engine.dart';
 import '../../../data/db/hive_palette_repository.dart';
+import '../../../data/schema/corrupt_record.dart';
 import '../../../data/storage/app_storage_directory.dart';
 import '../domain/saved_palette.dart';
 import '../domain/saved_palette_repository.dart';
@@ -42,14 +43,26 @@ final savedPalettesProvider =
       retry: (retryCount, error) => null,
     );
 
+final savedPalettesCorruptRecordsProvider = Provider<List<CorruptRecord>>((
+  ref,
+) {
+  ref.watch(savedPalettesProvider);
+  return ref.watch(savedPalettesProvider.notifier).corruptRecords;
+});
+
 class SavedPalettesController extends AsyncNotifier<List<SavedPalette>> {
   Future<void> _pending = Future<void>.value();
+  List<CorruptRecord> _corruptRecords = const [];
+
+  List<CorruptRecord> get corruptRecords => _corruptRecords;
 
   @override
   Future<List<SavedPalette>> build() async {
     final repository = await ref.watch(savedPaletteRepositoryProvider.future);
     if (!ref.mounted) throw StateError('Palettes are no longer available.');
-    return List<SavedPalette>.unmodifiable(await repository.load());
+    final snapshot = await repository.loadSnapshot();
+    _corruptRecords = List.unmodifiable(snapshot.corruptRecords);
+    return List<SavedPalette>.unmodifiable(snapshot.records);
   }
 
   Future<T> _mutate<T>(Future<T> Function(SavedPaletteRepository) operation) {
@@ -69,11 +82,10 @@ class SavedPalettesController extends AsyncNotifier<List<SavedPalette>> {
         if (!ref.mounted) throw StateError('Palettes are no longer available.');
         final value = await operation(repository);
         if (!ref.mounted) throw StateError('Palettes are no longer available.');
-        final palettes = List<SavedPalette>.unmodifiable(
-          await repository.load(),
-        );
+        final snapshot = await repository.loadSnapshot();
         if (!ref.mounted) throw StateError('Palettes are no longer available.');
-        state = AsyncData(palettes);
+        _corruptRecords = List.unmodifiable(snapshot.corruptRecords);
+        state = AsyncData(List<SavedPalette>.unmodifiable(snapshot.records));
         result.complete(value);
       } catch (error, stack) {
         // Mutation errors belong to the caller; keep the last committed list.

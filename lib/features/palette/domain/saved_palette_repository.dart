@@ -1,8 +1,10 @@
 import '../../../core/color/color_engine.dart';
+import '../../../data/schema/repository_snapshot.dart';
 import 'saved_palette.dart';
 
 /// Successful edits finish only once their complete snapshots are durable.
 abstract interface class SavedPaletteRepository {
+  Future<RepositorySnapshot<SavedPalette>> loadSnapshot();
   Future<List<SavedPalette>> load();
   Future<SavedPalette> save({
     required String name,

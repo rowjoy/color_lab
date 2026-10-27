@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/color/color_engine.dart';
 import '../../../data/db/hive_color_history_repository.dart';
+import '../../../data/schema/corrupt_record.dart';
 import '../../../data/storage/app_storage_directory.dart';
 import '../domain/color_history_repository.dart';
 import '../domain/saved_color.dart';
@@ -41,13 +42,23 @@ final colorHistoryProvider =
       ColorHistoryController.new,
     );
 
+final colorHistoryCorruptRecordsProvider = Provider<List<CorruptRecord>>((ref) {
+  ref.watch(colorHistoryProvider);
+  return ref.watch(colorHistoryProvider.notifier).corruptRecords;
+});
+
 class ColorHistoryController extends AsyncNotifier<List<SavedColor>> {
   Future<void> _pending = Future<void>.value();
+  List<CorruptRecord> _corruptRecords = const [];
+
+  List<CorruptRecord> get corruptRecords => _corruptRecords;
 
   @override
   Future<List<SavedColor>> build() async {
     final repository = await ref.watch(colorHistoryRepositoryProvider.future);
-    return List.unmodifiable(await repository.load());
+    final snapshot = await repository.loadSnapshot();
+    _corruptRecords = List.unmodifiable(snapshot.corruptRecords);
+    return List.unmodifiable(snapshot.records);
   }
 
   Future<T> _mutate<T>(Future<T> Function(ColorHistoryRepository) operation) {
@@ -61,8 +72,11 @@ class ColorHistoryController extends AsyncNotifier<List<SavedColor>> {
           colorHistoryRepositoryProvider.future,
         );
         final value = await operation(repository);
-        final colors = List<SavedColor>.unmodifiable(await repository.load());
-        if (ref.mounted) state = AsyncData(colors);
+        final snapshot = await repository.loadSnapshot();
+        if (ref.mounted) {
+          _corruptRecords = List.unmodifiable(snapshot.corruptRecords);
+          state = AsyncData(List.unmodifiable(snapshot.records));
+        }
         result.complete(value);
       } catch (error, stack) {
         // Keep the last good snapshot. Each caller presents its own friendly error.

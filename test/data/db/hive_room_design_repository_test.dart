@@ -286,33 +286,39 @@ void main() {
     },
   ]) {
     test(
-      'malformed or mismatched records block edits without changing bytes: $malformed',
+      'malformed or mismatched records are isolated during edits: $malformed',
       () async {
         final valid = await save();
         await repository.close();
         final box = await Hive.openBox<dynamic>(boxName, path: directory.path);
         await box.put('wrong-key', malformed);
         await box.close();
-        final file = File('${directory.path}/$boxName.hive');
-        final before = await file.readAsBytes();
 
         repository = await HiveRoomDesignRepository.open(
           directory: directory.path,
           boxName: boxName,
           clock: () => now,
         );
-        await expectLater(repository.load(), error);
-        await expectLater(save(name: 'Blocked'), error);
-        await expectLater(repository.delete(valid.id), error);
+        final snapshot = await repository.loadSnapshot();
+        expect(snapshot.records, [valid]);
+        expect(snapshot.corruptRecords.single.storageKey, 'wrong-key');
+        final updated = await save(
+          existingId: valid.id,
+          name: 'Updated',
+          colors: coolFocus,
+        );
+        expect((await repository.loadSnapshot()).records, [updated]);
+        await repository.delete(valid.id);
+        await repository.delete('wrong-key');
+        expect((await repository.loadSnapshot()).records, isEmpty);
         await repository.close();
 
-        expect(await file.readAsBytes(), before);
         final unchanged = await Hive.openBox<dynamic>(
           boxName,
           path: directory.path,
         );
         expect(unchanged.get('wrong-key'), malformed);
-        expect(unchanged.length, 2);
+        expect(unchanged.length, 1);
         await unchanged.close();
       },
     );

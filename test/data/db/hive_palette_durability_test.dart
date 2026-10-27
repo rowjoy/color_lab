@@ -108,8 +108,9 @@ void main() {
     () async {
       box.failFlush = true;
       await expectLater(save(), error);
+      await expectLater(repository.loadSnapshot(), error);
       box.failFlush = false;
-      expect((await repository.load()).single.name, 'Ink');
+      expect((await repository.loadSnapshot()).records.single.name, 'Ink');
       await reopen();
       expect((await repository.load()).single.colors.map((c) => c.hex), [
         '#010203',

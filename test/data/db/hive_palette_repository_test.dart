@@ -154,31 +154,33 @@ void main() {
     },
   ]) {
     test(
-      'invalid schema or mismatched key blocks edits without changing bytes: $malformed',
+      'invalid schema or mismatched key is isolated during edits: $malformed',
       () async {
-        await save();
+        final valid = await save();
         await repository.close();
         final box = await Hive.openBox<dynamic>(boxName, path: directory.path);
         await box.put('wrong-key', malformed);
         await box.close();
-        final file = File('${directory.path}/$boxName.hive');
-        final before = await file.readAsBytes();
         repository = await HivePaletteRepository.open(
           directory: directory.path,
           boxName: boxName,
         );
-        await expectLater(repository.load(), error);
-        await expectLater(save(name: 'Duplicate'), error);
-        await expectLater(save(mode: HarmonyMode.triadic), error);
-        await expectLater(repository.delete('complementary-AABBCC'), error);
+        final snapshot = await repository.loadSnapshot();
+        expect(snapshot.records, [valid]);
+        expect(snapshot.corruptRecords.single.storageKey, 'wrong-key');
+        expect(await save(name: 'Duplicate'), valid);
+        final created = await save(mode: HarmonyMode.triadic);
+        await repository.delete(valid.id);
+        await repository.delete('wrong-key');
+        expect((await repository.loadSnapshot()).records, [created]);
         await repository.close();
-        expect(await file.readAsBytes(), before);
         final unchanged = await Hive.openBox<dynamic>(
           boxName,
           path: directory.path,
         );
         expect(unchanged.get('wrong-key'), malformed);
         expect(unchanged.length, 2);
+        expect(unchanged.containsKey(created.id), isTrue);
         await unchanged.close();
       },
     );

@@ -9,6 +9,9 @@ import 'package:hive/src/hive_impl.dart';
 import '../../features/room_studio/domain/illustrated_room.dart';
 import '../../features/room_studio/domain/room_design_repository.dart';
 import '../../features/room_studio/domain/saved_room_design.dart';
+import '../schema/corrupt_record.dart';
+import '../schema/repository_snapshot.dart';
+import '../schema/schema_registry.dart';
 
 final class HiveRoomDesignRepository implements RoomDesignRepository {
   HiveRoomDesignRepository._(this._box, this._clock);
@@ -69,24 +72,55 @@ final class HiveRoomDesignRepository implements RoomDesignRepository {
     return result;
   }
 
-  List<SavedRoomDesign> _read() {
+  RepositorySnapshot<SavedRoomDesign> _readSnapshot() {
     final designs = <SavedRoomDesign>[];
+    final corruptRecords = <CorruptRecord>[];
     for (final key in _box.keys) {
       final value = _box.get(key);
-      if (value is! Map) throw const RoomDesignStorageException();
-      final design = SavedRoomDesign.fromMap(value);
-      if (key != design.id) throw const RoomDesignStorageException();
+      if (value is! Map) {
+        corruptRecords.add(_corrupt(key, 'Stored value is not a record.'));
+        continue;
+      }
+      late final SavedRoomDesign design;
+      try {
+        design = SavedRoomDesign.fromMap(value);
+      } on FormatException {
+        corruptRecords.add(
+          _corrupt(key, 'Stored record could not be decoded.'),
+        );
+        continue;
+      }
+      if (key != design.id) {
+        corruptRecords.add(
+          _corrupt(key, 'Stored key does not match the record identifier.'),
+        );
+        continue;
+      }
       designs.add(design);
     }
     designs.sort((first, second) {
       final byUpdatedAt = second.updatedAt.compareTo(first.updatedAt);
       return byUpdatedAt == 0 ? first.id.compareTo(second.id) : byUpdatedAt;
     });
-    return List.unmodifiable(designs);
+    return RepositorySnapshot(
+      records: List.unmodifiable(designs),
+      corruptRecords: List.unmodifiable(corruptRecords),
+    );
   }
 
+  CorruptRecord _corrupt(Object key, String reason) => CorruptRecord(
+    collectionId: SchemaRegistry.illustratedRooms.id,
+    storageKey: key,
+    reason: reason,
+  );
+
   @override
-  Future<List<SavedRoomDesign>> load() => _serialize(_read);
+  Future<RepositorySnapshot<SavedRoomDesign>> loadSnapshot() =>
+      _serialize(_readSnapshot);
+
+  @override
+  Future<List<SavedRoomDesign>> load() =>
+      loadSnapshot().then((snapshot) => snapshot.records);
 
   @override
   Future<SavedRoomDesign> save({
@@ -95,12 +129,12 @@ final class HiveRoomDesignRepository implements RoomDesignRepository {
     required String templateId,
     required IllustratedRoomColors colors,
   }) => _serialize(() async {
-    final existing = _read();
+    final existing = _readSnapshot().records;
     final now = _clock().toUtc();
     late final SavedRoomDesign saved;
     if (existingId == null) {
       saved = SavedRoomDesign(
-        id: _nextId(templateId, now, existing),
+        id: _nextId(templateId, now, _box.keys.cast<Object>().toSet()),
         name: name,
         templateId: templateId,
         colors: colors,
@@ -132,17 +166,12 @@ final class HiveRoomDesignRepository implements RoomDesignRepository {
     return saved;
   });
 
-  String _nextId(
-    String templateId,
-    DateTime now,
-    List<SavedRoomDesign> existing,
-  ) {
+  String _nextId(String templateId, DateTime now, Set<Object> used) {
     final normalizedTemplateId = templateId.trim();
     if (normalizedTemplateId.isEmpty) {
       throw ArgumentError.value(templateId, 'templateId', 'Must not be empty');
     }
     final base = '$normalizedTemplateId-${now.microsecondsSinceEpoch}';
-    final used = existing.map((design) => design.id).toSet();
     if (!used.contains(base)) return base;
     var suffix = 1;
     while (used.contains('$base-$suffix')) {
@@ -153,7 +182,7 @@ final class HiveRoomDesignRepository implements RoomDesignRepository {
 
   @override
   Future<void> delete(String id) => _serialize(() async {
-    if (!_read().any((design) => design.id == id)) return;
+    if (!_readSnapshot().records.any((design) => design.id == id)) return;
     _needsFlush = true;
     await _box.delete(id);
     await _ensureDurable();

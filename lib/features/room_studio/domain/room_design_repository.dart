@@ -1,7 +1,9 @@
+import '../../../data/schema/repository_snapshot.dart';
 import 'illustrated_room.dart';
 import 'saved_room_design.dart';
 
 abstract interface class RoomDesignRepository {
+  Future<RepositorySnapshot<SavedRoomDesign>> loadSnapshot();
   Future<List<SavedRoomDesign>> load();
 
   Future<SavedRoomDesign> save({

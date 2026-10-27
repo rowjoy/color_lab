@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:color_lab/core/color/color_engine.dart';
+import 'package:color_lab/data/schema/corrupt_record.dart';
 import 'package:color_lab/features/palette/application/saved_palettes_providers.dart';
 import 'package:color_lab/features/palette/domain/saved_palette.dart';
 import 'package:color_lab/features/palette/domain/saved_palette_repository.dart';
@@ -80,6 +81,48 @@ void main() {
       final palettes = await container.read(savedPalettesProvider.future);
       expect(palettes, [second, first]);
       expect(() => palettes.clear(), throwsUnsupportedError);
+    },
+  );
+
+  test(
+    'publishes recoverable corrupt-record warnings beside palettes',
+    () async {
+      const warning = CorruptRecord(
+        collectionId: 'saved-palettes',
+        storageKey: 'triadic-AABBCC',
+        reason: 'Stored record could not be decoded.',
+      );
+      final repository = InMemorySavedPaletteRepository(
+        palettes: [first],
+        corruptRecords: [warning],
+      );
+      final container = containerFor(repository);
+      expect(container.read(savedPalettesCorruptRecordsProvider), isEmpty);
+
+      expect(await container.read(savedPalettesProvider.future), [first]);
+      final warnings = container.read(savedPalettesCorruptRecordsProvider);
+      expect(warnings, [warning]);
+      expect(() => warnings.clear(), throwsUnsupportedError);
+
+      repository.failLoad = true;
+      container.invalidate(savedPalettesProvider);
+      await expectLater(container.read(savedPalettesProvider.future), error);
+      expect(container.read(savedPalettesProvider).value, [first]);
+      expect(container.read(savedPalettesCorruptRecordsProvider), [warning]);
+      repository.failLoad = false;
+      container.read(savedPalettesProvider.notifier).retry();
+      expect(await container.read(savedPalettesProvider.future), [first]);
+
+      repository
+        ..corruptRecords = const []
+        ..failWrites = true;
+      final controller = container.read(savedPalettesProvider.notifier);
+      await expectLater(controller.deletePalette(first.id), error);
+      expect(container.read(savedPalettesCorruptRecordsProvider), [warning]);
+
+      repository.failWrites = false;
+      await controller.deletePalette(first.id);
+      expect(container.read(savedPalettesCorruptRecordsProvider), isEmpty);
     },
   );
 

@@ -1,15 +1,21 @@
 import 'dart:async';
 
 import 'package:color_lab/core/color/color_engine.dart';
+import 'package:color_lab/data/schema/corrupt_record.dart';
+import 'package:color_lab/data/schema/repository_snapshot.dart';
 import 'package:color_lab/features/history/domain/color_history_repository.dart';
 import 'package:color_lab/features/history/domain/saved_color.dart';
 
 /// A test-local repository boundary. Durable behavior is tested with real Hive.
 class InMemoryColorHistoryRepository implements ColorHistoryRepository {
-  InMemoryColorHistoryRepository({Iterable<SavedColor> colors = const []})
-    : _colors = {for (final color in colors) color.id: color};
+  InMemoryColorHistoryRepository({
+    Iterable<SavedColor> colors = const [],
+    Iterable<CorruptRecord> corruptRecords = const [],
+  }) : _colors = {for (final color in colors) color.id: color},
+       corruptRecords = List.unmodifiable(corruptRecords);
 
   final Map<String, SavedColor> _colors;
+  List<CorruptRecord> corruptRecords;
   bool failLoad = false;
   bool failWrites = false;
   int activeWrites = 0;
@@ -18,15 +24,22 @@ class InMemoryColorHistoryRepository implements ColorHistoryRepository {
   Completer<void>? writeGate;
 
   @override
-  Future<List<SavedColor>> load() async {
+  Future<RepositorySnapshot<SavedColor>> loadSnapshot() async {
     if (failLoad) throw StateError('private storage load failure');
     final result = _colors.values.toList()
       ..sort((a, b) {
         final byDate = b.createdAt.compareTo(a.createdAt);
         return byDate == 0 ? a.id.compareTo(b.id) : byDate;
       });
-    return List.unmodifiable(result);
+    return RepositorySnapshot(
+      records: List.unmodifiable(result),
+      corruptRecords: List.unmodifiable(corruptRecords),
+    );
   }
+
+  @override
+  Future<List<SavedColor>> load() =>
+      loadSnapshot().then((snapshot) => snapshot.records);
 
   Future<T> _write<T>(T Function() operation) async {
     activeWrites++;

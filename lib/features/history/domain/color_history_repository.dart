@@ -1,8 +1,10 @@
 import '../../../core/color/color_engine.dart';
+import '../../../data/schema/repository_snapshot.dart';
 import 'saved_color.dart';
 
 /// Durable saved colors. Successful edits are persisted before their futures end.
 abstract interface class ColorHistoryRepository {
+  Future<RepositorySnapshot<SavedColor>> loadSnapshot();
   Future<List<SavedColor>> load();
   Future<SavedColor> save({
     required RgbColor color,

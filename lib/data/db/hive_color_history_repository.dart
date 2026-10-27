@@ -10,6 +10,9 @@ import 'package:hive/src/hive_impl.dart';
 import '../../core/color/color_engine.dart';
 import '../../features/history/domain/color_history_repository.dart';
 import '../../features/history/domain/saved_color.dart';
+import '../schema/corrupt_record.dart';
+import '../schema/repository_snapshot.dart';
+import '../schema/schema_registry.dart';
 
 final class HiveColorHistoryRepository implements ColorHistoryRepository {
   HiveColorHistoryRepository._(this._box, this._clock);
@@ -77,24 +80,55 @@ final class HiveColorHistoryRepository implements ColorHistoryRepository {
     return result;
   }
 
-  List<SavedColor> _read() {
+  RepositorySnapshot<SavedColor> _readSnapshot() {
     final colors = <SavedColor>[];
+    final corruptRecords = <CorruptRecord>[];
     for (final key in _box.keys) {
       final map = _box.get(key);
-      if (map is! Map) throw const HistoryStorageException();
-      final color = SavedColor.fromMap(map);
-      if (key != color.id) throw const HistoryStorageException();
+      if (map is! Map) {
+        corruptRecords.add(_corrupt(key, 'Stored value is not a record.'));
+        continue;
+      }
+      late final SavedColor color;
+      try {
+        color = SavedColor.fromMap(map);
+      } on FormatException {
+        corruptRecords.add(
+          _corrupt(key, 'Stored record could not be decoded.'),
+        );
+        continue;
+      }
+      if (key != color.id) {
+        corruptRecords.add(
+          _corrupt(key, 'Stored key does not match the record identifier.'),
+        );
+        continue;
+      }
       colors.add(color);
     }
     colors.sort((a, b) {
       final dateOrder = b.createdAt.compareTo(a.createdAt);
       return dateOrder != 0 ? dateOrder : a.id.compareTo(b.id);
     });
-    return List.unmodifiable(colors);
+    return RepositorySnapshot(
+      records: List.unmodifiable(colors),
+      corruptRecords: List.unmodifiable(corruptRecords),
+    );
   }
 
+  CorruptRecord _corrupt(Object key, String reason) => CorruptRecord(
+    collectionId: SchemaRegistry.savedColors.id,
+    storageKey: key,
+    reason: reason,
+  );
+
   @override
-  Future<List<SavedColor>> load() => _serialize(_read);
+  Future<RepositorySnapshot<SavedColor>> loadSnapshot() =>
+      _serialize(_readSnapshot);
+
+  @override
+  Future<List<SavedColor>> load() =>
+      loadSnapshot().then((snapshot) => snapshot.records);
 
   @override
   Future<SavedColor> save({
@@ -102,10 +136,12 @@ final class HiveColorHistoryRepository implements ColorHistoryRepository {
     required String name,
     required ColorSource source,
   }) => _serialize(() async {
-    final existing = _read();
+    final existing = _readSnapshot().records;
     for (final saved in existing) {
       if (saved.id == color.hex) return saved;
     }
+    // A skipped raw record may own this deterministic ID. Never replace it.
+    if (_box.keys.contains(color.hex)) throw const HistoryStorageException();
     final saved = SavedColor(
       id: color.hex,
       hex: color.hex,
@@ -122,7 +158,7 @@ final class HiveColorHistoryRepository implements ColorHistoryRepository {
 
   @override
   Future<void> setFavorite(String id, bool isFavorite) => _serialize(() async {
-    final colors = _read();
+    final colors = _readSnapshot().records;
     final normalized = RgbColor.fromHex(id).hex;
     final saved = colors.firstWhere(
       (color) => color.id == normalized,
@@ -136,7 +172,7 @@ final class HiveColorHistoryRepository implements ColorHistoryRepository {
 
   @override
   Future<void> delete(String id) => _serialize(() async {
-    final colors = _read();
+    final colors = _readSnapshot().records;
     final normalized = RgbColor.fromHex(id).hex;
     if (!colors.any((color) => color.id == normalized)) return;
     _needsFlush = true;

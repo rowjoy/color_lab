@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:color_lab/core/color/color_engine.dart';
+import 'package:color_lab/data/schema/corrupt_record.dart';
 import 'package:color_lab/features/history/application/history_providers.dart';
 import 'package:color_lab/features/history/domain/saved_color.dart';
 import 'package:color_lab/features/history/domain/color_history_repository.dart';
@@ -45,6 +46,64 @@ void main() {
     final colors = await container.read(colorHistoryProvider.future);
     expect(colors.map((c) => c.name), ['Ocean blue', 'Scarlet']);
     expect(() => colors.clear(), throwsUnsupportedError);
+  });
+
+  test(
+    'publishes recoverable corrupt-record warnings beside healthy data',
+    () async {
+      const warning = CorruptRecord(
+        collectionId: 'saved-colors',
+        storageKey: '#AABBCC',
+        reason: 'Stored record could not be decoded.',
+      );
+      final repository = InMemoryColorHistoryRepository(
+        colors: [red],
+        corruptRecords: [warning],
+      );
+      final container = containerFor(repository);
+      expect(container.read(colorHistoryCorruptRecordsProvider), isEmpty);
+
+      expect(await container.read(colorHistoryProvider.future), [red]);
+      final warnings = container.read(colorHistoryCorruptRecordsProvider);
+      expect(warnings, [warning]);
+      expect(() => warnings.clear(), throwsUnsupportedError);
+
+      repository
+        ..corruptRecords = const []
+        ..failWrites = true;
+      final controller = container.read(colorHistoryProvider.notifier);
+      await expectLater(controller.deleteColor(red.id), throwsStateError);
+      expect(container.read(colorHistoryCorruptRecordsProvider), [warning]);
+
+      repository.failWrites = false;
+      await controller.deleteColor(red.id);
+      expect(container.read(colorHistoryCorruptRecordsProvider), isEmpty);
+    },
+  );
+
+  test('failed refresh retains the last data and corrupt warning', () async {
+    const warning = CorruptRecord(
+      collectionId: 'saved-colors',
+      storageKey: '#AABBCC',
+      reason: 'Stored record could not be decoded.',
+    );
+    final repository = InMemoryColorHistoryRepository(
+      colors: [red],
+      corruptRecords: [warning],
+    );
+    final container = containerFor(repository);
+    expect(await container.read(colorHistoryProvider.future), [red]);
+    expect(container.read(colorHistoryCorruptRecordsProvider), [warning]);
+
+    repository.failLoad = true;
+    container.invalidate(colorHistoryProvider);
+    await expectLater(
+      container.read(colorHistoryProvider.future),
+      throwsStateError,
+    );
+
+    expect(container.read(colorHistoryProvider).value, [red]);
+    expect(container.read(colorHistoryCorruptRecordsProvider), [warning]);
   });
 
   test('serializes save and favorite and retains duplicate metadata', () async {

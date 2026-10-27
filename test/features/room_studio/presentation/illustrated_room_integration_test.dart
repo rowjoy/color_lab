@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'dart:ui' show SemanticsAction, Tristate;
 
 import 'package:color_lab/core/color/color_engine.dart';
+import 'package:color_lab/data/schema/repository_snapshot.dart';
 import 'package:color_lab/core/theme/theme.dart';
 import 'package:color_lab/features/history/application/history_providers.dart';
 import 'package:color_lab/features/picker/presentation/color_explorer.dart';
@@ -108,7 +109,12 @@ final class _RawLoadFailureRepository implements RoomDesignRepository {
       '/Users/example/Documents/color_lab/room_designs.hive';
 
   @override
-  Future<List<SavedRoomDesign>> load() async => throw StateError(rawFailure);
+  Future<RepositorySnapshot<SavedRoomDesign>> loadSnapshot() async =>
+      throw StateError(rawFailure);
+
+  @override
+  Future<List<SavedRoomDesign>> load() =>
+      loadSnapshot().then((snapshot) => snapshot.records);
 
   @override
   Future<SavedRoomDesign> save({

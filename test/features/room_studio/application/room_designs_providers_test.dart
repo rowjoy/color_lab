@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:color_lab/core/color/color_models.dart';
+import 'package:color_lab/data/schema/corrupt_record.dart';
 import 'package:color_lab/features/room_studio/application/room_designs_providers.dart';
 import 'package:color_lab/features/room_studio/domain/illustrated_room.dart';
 import 'package:color_lab/features/room_studio/domain/room_design_repository.dart';
@@ -75,6 +76,49 @@ void main() {
     expect(designs, [second, first]);
     expect(() => designs.clear(), throwsUnsupportedError);
   });
+
+  test(
+    'publishes recoverable corrupt-record warnings beside designs',
+    () async {
+      const warning = CorruptRecord(
+        collectionId: 'illustrated-rooms',
+        storageKey: 'study-corrupt',
+        reason: 'Stored record could not be decoded.',
+      );
+      final repository = InMemoryRoomDesignRepository(
+        designs: [first],
+        corruptRecords: [warning],
+        clock: () => DateTime.utc(2026, 10, 27),
+      );
+      final container = containerFor(repository);
+      expect(container.read(roomDesignCorruptRecordsProvider), isEmpty);
+
+      expect(await container.read(savedRoomDesignsProvider.future), [first]);
+      final warnings = container.read(roomDesignCorruptRecordsProvider);
+      expect(warnings, [warning]);
+      expect(() => warnings.clear(), throwsUnsupportedError);
+
+      repository.failLoad = true;
+      container.invalidate(savedRoomDesignsProvider);
+      await expectLater(container.read(savedRoomDesignsProvider.future), error);
+      expect(container.read(savedRoomDesignsProvider).value, [first]);
+      expect(container.read(roomDesignCorruptRecordsProvider), [warning]);
+      repository.failLoad = false;
+      container.read(savedRoomDesignsProvider.notifier).retry();
+      expect(await container.read(savedRoomDesignsProvider.future), [first]);
+
+      repository
+        ..corruptRecords = const []
+        ..failWrites = true;
+      final controller = container.read(savedRoomDesignsProvider.notifier);
+      await expectLater(controller.deleteDesign(first.id), error);
+      expect(container.read(roomDesignCorruptRecordsProvider), [warning]);
+
+      repository.failWrites = false;
+      await controller.deleteDesign(first.id);
+      expect(container.read(roomDesignCorruptRecordsProvider), isEmpty);
+    },
+  );
 
   test('serializes edits and publishes only after durable success', () async {
     final repository = InMemoryRoomDesignRepository(

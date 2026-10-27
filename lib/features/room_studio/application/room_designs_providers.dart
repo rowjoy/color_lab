@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/db/hive_room_design_repository.dart';
+import '../../../data/schema/corrupt_record.dart';
 import '../../../data/storage/app_storage_directory.dart';
 import '../domain/illustrated_room.dart';
 import '../domain/room_design_repository.dart';
@@ -42,8 +43,16 @@ final savedRoomDesignsProvider =
       retry: (retryCount, error) => null,
     );
 
+final roomDesignCorruptRecordsProvider = Provider<List<CorruptRecord>>((ref) {
+  ref.watch(savedRoomDesignsProvider);
+  return ref.watch(savedRoomDesignsProvider.notifier).corruptRecords;
+});
+
 class SavedRoomDesignsController extends AsyncNotifier<List<SavedRoomDesign>> {
   Future<void> _pending = Future<void>.value();
+  List<CorruptRecord> _corruptRecords = const [];
+
+  List<CorruptRecord> get corruptRecords => _corruptRecords;
 
   @override
   Future<List<SavedRoomDesign>> build() async {
@@ -51,7 +60,9 @@ class SavedRoomDesignsController extends AsyncNotifier<List<SavedRoomDesign>> {
     if (!ref.mounted) {
       throw StateError('Room designs are no longer available.');
     }
-    return List.unmodifiable(await repository.load());
+    final snapshot = await repository.loadSnapshot();
+    _corruptRecords = List.unmodifiable(snapshot.corruptRecords);
+    return List.unmodifiable(snapshot.records);
   }
 
   Future<T> _mutate<T>(Future<T> Function(RoomDesignRepository) operation) {
@@ -77,13 +88,12 @@ class SavedRoomDesignsController extends AsyncNotifier<List<SavedRoomDesign>> {
         if (!ref.mounted) {
           throw StateError('Room designs are no longer available.');
         }
-        final designs = List<SavedRoomDesign>.unmodifiable(
-          await repository.load(),
-        );
+        final snapshot = await repository.loadSnapshot();
         if (!ref.mounted) {
           throw StateError('Room designs are no longer available.');
         }
-        state = AsyncData(designs);
+        _corruptRecords = List.unmodifiable(snapshot.corruptRecords);
+        state = AsyncData(List<SavedRoomDesign>.unmodifiable(snapshot.records));
         result.complete(value);
       } catch (error, stackTrace) {
         // Keep the last committed list. The caller presents friendly feedback.

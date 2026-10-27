@@ -1,12 +1,17 @@
 import 'dart:async';
 
 import 'package:color_lab/core/color/color_engine.dart';
+import 'package:color_lab/data/schema/corrupt_record.dart';
+import 'package:color_lab/data/schema/repository_snapshot.dart';
 import 'package:color_lab/features/palette/domain/saved_palette.dart';
 import 'package:color_lab/features/palette/domain/saved_palette_repository.dart';
 
 /// UI/provider test boundary. Disk durability is exercised against real Hive.
 class InMemorySavedPaletteRepository implements SavedPaletteRepository {
-  InMemorySavedPaletteRepository({Iterable<SavedPalette> palettes = const []}) {
+  InMemorySavedPaletteRepository({
+    Iterable<SavedPalette> palettes = const [],
+    Iterable<CorruptRecord> corruptRecords = const [],
+  }) : corruptRecords = List.unmodifiable(corruptRecords) {
     for (final palette in palettes) {
       // Keep the same validation boundary as a persisted record; first wins.
       final validated = SavedPalette.fromMap(palette.toMap());
@@ -15,6 +20,7 @@ class InMemorySavedPaletteRepository implements SavedPaletteRepository {
   }
 
   final _palettes = <String, SavedPalette>{};
+  List<CorruptRecord> corruptRecords;
   bool failLoad = false;
   bool failWrites = false;
   Completer<void>? writeGate;
@@ -23,15 +29,22 @@ class InMemorySavedPaletteRepository implements SavedPaletteRepository {
   int maxConcurrentWrites = 0;
 
   @override
-  Future<List<SavedPalette>> load() async {
+  Future<RepositorySnapshot<SavedPalette>> loadSnapshot() async {
     if (failLoad) throw const PaletteStorageException();
     final palettes = _palettes.values.toList()
       ..sort((a, b) {
         final byDate = b.createdAt.compareTo(a.createdAt);
         return byDate == 0 ? a.id.compareTo(b.id) : byDate;
       });
-    return List<SavedPalette>.unmodifiable(palettes);
+    return RepositorySnapshot(
+      records: List<SavedPalette>.unmodifiable(palettes),
+      corruptRecords: List<CorruptRecord>.unmodifiable(corruptRecords),
+    );
   }
+
+  @override
+  Future<List<SavedPalette>> load() =>
+      loadSnapshot().then((snapshot) => snapshot.records);
 
   Future<T> _write<T>(T Function() operation) async {
     activeWrites++;
