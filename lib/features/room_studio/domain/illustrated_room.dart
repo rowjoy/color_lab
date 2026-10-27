@@ -270,6 +270,11 @@ abstract final class IllustratedRoomCatalog {
       'warm-natural': ['#E6D8C3', '#F8F4EB', '#C5AD8A', '#7B5944'],
       'soft-botanical': ['#C4D3C1', '#F8F4EB', '#BEB2A2', '#9A7557'],
       'cool-airy': ['#D3E0E4', '#F7F5EF', '#B5BEC1', '#5F493F'],
+      'soft-pink-earthy-neutrals': ['#E5C8BE', '#F8F4EB', '#C5AD8A', '#E1CCB7'],
+      'coral-peach-layers': ['#E49473', '#F8F4EB', '#C5AD8A', '#F1BAA2'],
+      'white-gentle-grey': ['#C8C8C6', '#F8F4EB', '#C5AD8A', '#E8E6E2'],
+      'pink-lavender-pairing': ['#DFCAC9', '#F8F4EB', '#C5AD8A', '#D4C9CF'],
+      'peach-coral-glow': ['#F1B89B', '#F8F4EB', '#C5AD8A', '#EDA28E'],
     },
   );
 
@@ -431,6 +436,11 @@ abstract final class IllustratedRoomCatalog {
     'warm-natural' => 'Warm Natural',
     'soft-botanical' => 'Soft Botanical',
     'cool-airy' => 'Cool Airy',
+    'soft-pink-earthy-neutrals' => 'Soft Pink with Earthy Neutrals',
+    'coral-peach-layers' => 'Coral and Peach Layers',
+    'white-gentle-grey' => 'White with Gentle Grey',
+    'pink-lavender-pairing' => 'Pink and Lavender Pairing',
+    'peach-coral-glow' => 'Peach and Coral Glow',
     _ => throw ArgumentError.value(id, 'id', 'Unknown market-guided look'),
   };
 
@@ -441,16 +451,32 @@ abstract final class IllustratedRoomCatalog {
       'Muted botanical color supports a calm room with gentle contrast.',
     'cool-airy' =>
       'Cool light tones keep the room open while deeper furniture adds focus.',
+    'soft-pink-earthy-neutrals' =>
+      'Soft pink and warm neutrals create a calm, welcoming living room.',
+    'coral-peach-layers' =>
+      'Coral and peach layers bring cheerful warmth to the room.',
+    'white-gentle-grey' =>
+      'Soft white and gentle grey keep the room bright and open.',
+    'pink-lavender-pairing' =>
+      'Pink and lavender create a soft, relaxed living room.',
+    'peach-coral-glow' =>
+      'Peach and coral add a lively, welcoming glow in natural light.',
     _ => throw ArgumentError.value(id, 'id', 'Unknown market-guided look'),
   };
 
   static String _lookProvenance(String id) => switch (id) {
-    'warm-natural' =>
-      'Inspired by Milkshake 8012, White Clay 8620 and Timber Glaze families.',
+    'warm-natural' => 'Inspired by warm neutrals and layered timber tones.',
     'soft-botanical' =>
       'Inspired by restrained pastel greens suited to local light and climate.',
     'cool-airy' =>
-      'Inspired by Gossamer 8052 and soft off-white ceiling combinations.',
+      'Inspired by airy blue-grey and soft off-white combinations.',
+    'soft-pink-earthy-neutrals' ||
+    'coral-peach-layers' ||
+    'white-gentle-grey' ||
+    'pink-lavender-pairing' ||
+    'peach-coral-glow' =>
+      'Approximate display colors sampled from the supplied living-room '
+          'inspiration page.',
     _ => throw ArgumentError.value(id, 'id', 'Unknown market-guided look'),
   };
 }

@@ -77,6 +77,11 @@ void main() {
       'warm-natural': ['#E6D8C3', '#F8F4EB', '#C5AD8A', '#7B5944'],
       'soft-botanical': ['#C4D3C1', '#F8F4EB', '#BEB2A2', '#9A7557'],
       'cool-airy': ['#D3E0E4', '#F7F5EF', '#B5BEC1', '#5F493F'],
+      'soft-pink-earthy-neutrals': ['#E5C8BE', '#F8F4EB', '#C5AD8A', '#E1CCB7'],
+      'coral-peach-layers': ['#E49473', '#F8F4EB', '#C5AD8A', '#F1BAA2'],
+      'white-gentle-grey': ['#C8C8C6', '#F8F4EB', '#C5AD8A', '#E8E6E2'],
+      'pink-lavender-pairing': ['#DFCAC9', '#F8F4EB', '#C5AD8A', '#D4C9CF'],
+      'peach-coral-glow': ['#F1B89B', '#F8F4EB', '#C5AD8A', '#EDA28E'],
     },
     'bedroom': {
       'default': 'warm-natural',
@@ -168,11 +173,10 @@ void main() {
       expect(room.focalPoint.y, focalPoints[room.id]!.$2);
       expect(room.focalPoint.x, inInclusiveRange(-1, 1));
       expect(room.focalPoint.y, inInclusiveRange(-1, 1));
-      expect(room.palettes.map((palette) => palette.id), [
-        'warm-natural',
-        'soft-botanical',
-        'cool-airy',
-      ]);
+      expect(
+        room.palettes.map((palette) => palette.id),
+        expected.keys.where((key) => key != 'default'),
+      );
 
       for (final palette in room.palettes) {
         expect(palette.name.trim(), isNotEmpty);
@@ -197,6 +201,70 @@ void main() {
       same(IllustratedRoomCatalog.study),
     );
     expect(IllustratedRoomCatalog.maybeById('future-room'), isNull);
+  });
+
+  test('catalog exposes five generic page-inspired look names', () {
+    const newIds = [
+      'soft-pink-earthy-neutrals',
+      'coral-peach-layers',
+      'white-gentle-grey',
+      'pink-lavender-pairing',
+      'peach-coral-glow',
+    ];
+    const expectedNames = [
+      'Soft Pink with Earthy Neutrals',
+      'Coral and Peach Layers',
+      'White with Gentle Grey',
+      'Pink and Lavender Pairing',
+      'Peach and Coral Glow',
+    ];
+    final newPalettes = IllustratedRoomCatalog.living.palettes
+        .where((palette) => newIds.contains(palette.id))
+        .toList(growable: false);
+
+    expect(newPalettes.map((palette) => palette.name), expectedNames);
+  });
+
+  test('catalog metadata omits paint branding, shade names and codes', () {
+    const disallowedTerms = [
+      'asian paints',
+      'milkshake',
+      'white clay',
+      'timber glaze',
+      'gossamer',
+      'pink plume',
+      'petal pink',
+      'coral rocks',
+      'peach carnation',
+      'grey flannel',
+      'quiet hush',
+      'pink essence',
+      'lavender laugh',
+      'peach blossom',
+      'rose glow',
+    ];
+    final paintCode = RegExp(r'\b(?:\d{4}|[0o]p\d{2})\b', caseSensitive: false);
+    for (final room in IllustratedRoomCatalog.all) {
+      for (final palette in room.palettes) {
+        final metadata = [
+          palette.name,
+          palette.guidance,
+          ?palette.provenance,
+        ].join(' ').toLowerCase();
+        for (final term in disallowedTerms) {
+          expect(
+            metadata,
+            isNot(contains(term)),
+            reason: '${room.id}/${palette.id}',
+          );
+        }
+        expect(
+          metadata,
+          isNot(matches(paintCode)),
+          reason: '${room.id}/${palette.id}',
+        );
+      }
+    }
   });
 
   test(

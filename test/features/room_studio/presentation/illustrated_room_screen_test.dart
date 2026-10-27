@@ -655,6 +655,79 @@ void main() {
     );
   });
 
+  testWidgets('living room exposes and applies all eight generic looks', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    try {
+      final harness = await _pumpEditor(
+        tester,
+        templateId: 'living',
+        disableAnimations: true,
+      );
+      await _ensureColorToolsVisible(tester);
+      await _tapKey(tester, 'room-rail-looks');
+
+      const paletteIds = [
+        'warm-natural',
+        'soft-botanical',
+        'cool-airy',
+        'soft-pink-earthy-neutrals',
+        'coral-peach-layers',
+        'white-gentle-grey',
+        'pink-lavender-pairing',
+        'peach-coral-glow',
+      ];
+      for (final id in paletteIds) {
+        expect(_key('room-palette-$id'), findsOneWidget);
+      }
+
+      await _tapKey(tester, 'room-palette-peach-coral-glow');
+      final draft = harness.container
+          .read(illustratedRoomProvider)
+          .draftFor('living')!;
+      expect(draft.sourcePaletteId, 'peach-coral-glow');
+      expect(draft.colors!.wall.hex, '#F1B89B');
+      expect(draft.colors!.ceiling.hex, '#F8F4EB');
+      expect(draft.colors!.floor.hex, '#C5AD8A');
+      expect(draft.colors!.furniture.hex, '#EDA28E');
+      expect(
+        tester.getSemantics(find.bySemanticsLabel('Peach and Coral Glow')),
+        matchesSemantics(
+          label: 'Peach and Coral Glow',
+          hasSelectedState: true,
+          isButton: true,
+          isSelected: true,
+          hasTapAction: true,
+        ),
+      );
+
+      await _tapKey(tester, 'room-surface-wall');
+      expect(
+        find.text('Suggestions come from the complete room looks.'),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Suggestions come from the three complete room looks.'),
+        findsNothing,
+      );
+      for (final hex in [
+        'E6D8C3',
+        'C4D3C1',
+        'D3E0E4',
+        'E5C8BE',
+        'E49473',
+        'C8C8C6',
+        'DFCAC9',
+        'F1B89B',
+      ]) {
+        expect(_key('room-suggestion-wall-$hex'), findsOneWidget);
+      }
+    } finally {
+      semantics.dispose();
+    }
+  });
+
   testWidgets(
     'colored Gallery export is single-flight, busy and non-mutating',
     (tester) async {

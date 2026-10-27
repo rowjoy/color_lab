@@ -281,7 +281,7 @@ class _SurfaceContent extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
-          'Suggestions come from the three complete room looks.',
+          'Suggestions come from the complete room looks.',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: context.appColors.textSecondary,
           ),
