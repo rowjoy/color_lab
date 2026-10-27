@@ -112,3 +112,73 @@ git log --diff-filter=A -1 --format=%H -- .superpowers/sdd/2026-10-27-tintatlas-
 ```
 
 The final SHA is returned in the implementer handoff. Only explicit Task 3 paths are staged. This report alone is force-added from ignored `.superpowers`; no other ignored ledger/brief is staged. No push, merge, or publication is performed.
+
+## Fix round 1 — lifecycle ownership and retained cancellation
+
+Reviewed baseline: `2c8a78482c7f801eef51d1eb3aec83fdf0637904` on `TintAtlas`. This round addresses the four Important review findings. The deferred Minor findings (empty-AI reopen cause ambiguity and no-op Restore revision) remain unchanged.
+
+### Changes and covering regressions
+
+- Session `build()` revives `_alive` when Riverpod reuses the notifier after invalidation. It preserves the monotonic ownership epoch and existing drain barrier. Disposal still closes old work immediately, discards queued intents, and waits for an accepted write; old completion or deferred null notification cannot publish into the new session. Tests: `rebuilt session saves a new analyzed project`, `rebuilt session saves a new manual project`, and `rebuilt session drains old accepted save without clearing or saving over new work with disposal alone` / `with deferred close`.
+- `cancelAnalysis()` invalidates late inference and retains the exact prepared candidate in the explicit Analyze/Edit manually state. Cancel download also cancels model setup. The separate, localized `Discard photo` action uses the existing candidate-discard boundary, as does Return to previous masks. Reanalysis cancellation with no candidate returns to its existing draft. Tests: `stopping analysis retains the prepared photo for manual fallback despite late success` / `late failure`; `Cancel analysis retains accessible manual choices before late success` / `late failure`; and the amended `Cancel download aborts model setup and ignores late analysis`. Semantics assertions cover the enabled Cancel analysis, Cancel download, Analyze this photo, Edit manually, and Discard photo actions. Old cancellation expectations in candidate visibility, import-guard supersession, and retained-old-draft tests now explicitly tap Discard photo when they intend to remove the candidate.
+- Open applies its ownership guard to typed and raw read/decode failures as well as success. The editor also captures draft identity so an early asynchronous failure cannot hide a newer completed edit. Tests: `stale raw Open failure leaves a newer color edit usable` and `stale typed Open failure leaves a newer color edit usable`; the existing stale-success regressions remain passing.
+- Editor Open rejects an incompatible acquisition, analysis, or refinement before advancing its operation token. A missing project cannot supersede active reanalysis and leave the editor busy. Test: `missing Open during reanalysis cannot strand the current operation`.
+
+No Settings behavior changed; its existing confirmation/preview/delete-drain regression passed in the complete focused suite. Schema v1, runtime-only `manualMode`, Room routes, project library scope, and the deferred Minor boundaries are unchanged. No Task 4 work or dependency change was made.
+
+### RED evidence
+
+Only the three test files were changed when the first ownership RED command ran; no production fix had been applied:
+
+```sh
+/Users/jamirulislam/Applications/flutter/bin/flutter test --no-pub test/features/room_studio/application/room_project_session_controller_test.dart test/features/room_studio/application/room_mask_controller_test.dart --name 'rebuilt session|stale .*Open failure|missing Open during reanalysis' --reporter expanded > /tmp/tintatlas-task3-fix1-ownership-red.log 2>&1
+```
+
+Result: exit 1, `+0 -6`. Both new-project rebuild tests and the accepted-write/deferred-close rebuild test expected a non-null new session but received null. Both stale Open failure cases expected `RoomMaskStage.ready` but received `RoomMaskStage.error`. The missing-Open/reanalysis test expected successful completion (`true`) but received `false` after Open invalidated its operation. The accepted-write regression was subsequently parameterized to cover disposal alone as well as deferred-close notification.
+
+```sh
+/Users/jamirulislam/Applications/flutter/bin/flutter test --no-pub test/features/room_studio/presentation/room_masks_integration_test.dart --name 'Cancel analysis retains accessible|Cancel download aborts' --reporter expanded > /tmp/tintatlas-task3-fix1-cancel-ui-red.log 2>&1
+```
+
+Result before production edits: exit 1, `+0 -3`. Cancel analysis with late success, Cancel analysis with late failure, and Cancel download each expected a retained candidate in `RoomMaskStage.acquiring` but received `RoomMaskStage.empty`.
+
+```sh
+/Users/jamirulislam/Applications/flutter/bin/flutter test --no-pub test/features/room_studio/application/room_mask_controller_test.dart --plain-name 'stopping analysis retains' --reporter expanded > /tmp/tintatlas-task3-fix1-cancel-controller-red.log 2>&1
+```
+
+Result before production edits: exit 1, test-file load failed because `RoomMaskController.cancelAnalysis` was not defined. This supplements the runtime cancellation RED above with the missing separate stop-analysis API; it is not a test-harness error.
+
+### GREEN and final gates
+
+```sh
+/Users/jamirulislam/Applications/flutter/bin/flutter gen-l10n
+/Users/jamirulislam/Applications/flutter/bin/flutter test --no-pub test/features/room_studio/application/room_project_session_controller_test.dart test/features/room_studio/application/room_mask_controller_test.dart test/features/room_studio/presentation/room_masks_integration_test.dart --name 'rebuilt session|stale .*Open failure|missing Open during reanalysis|stopping analysis retains|Cancel analysis retains accessible|Cancel download aborts' --reporter expanded > /tmp/tintatlas-task3-fix1-targeted-final.log 2>&1
+```
+
+Localization generation exited 0. The first targeted GREEN passed `+11` (`/tmp/tintatlas-task3-fix1-targeted-green.log`). The amended targeted run passed `00:01 +12: All tests passed!`, exit 0. The final Cancel download semantics assertion was then included in the complete focused and full runs below.
+
+```sh
+/Users/jamirulislam/Applications/flutter/bin/flutter test --no-pub test/features/room_studio/application/room_project_session_controller_test.dart test/features/room_studio/application/room_mask_controller_test.dart test/features/room_studio/presentation/room_masks_integration_test.dart test/features/settings/data_management_screen_test.dart --reporter expanded > /tmp/tintatlas-task3-fix1-focused.log 2>&1
+/Users/jamirulislam/Applications/flutter/bin/flutter test --no-pub --reporter expanded > /tmp/tintatlas-task3-fix1-full.log 2>&1
+/Users/jamirulislam/Applications/flutter/bin/flutter analyze --no-pub > /tmp/tintatlas-task3-fix1-analyze.log 2>&1
+```
+
+Results: focused exit 0, `00:10 +140: All tests passed!`; full suite run once this fix round, exit 0, `00:58 +1809: All tests passed!`; analyzer exit 0, `No issues found! (ran in 11.8s)`.
+
+```sh
+/Users/jamirulislam/Applications/flutter/bin/cache/dart-sdk/bin/dart format --output=none --set-exit-if-changed lib/features/room_studio/application/room_project_session_controller.dart lib/features/room_studio/application/room_mask_controller.dart lib/features/room_studio/presentation/room_mask_screen.dart lib/l10n/generated/app_localizations.dart lib/l10n/generated/app_localizations_en.dart test/features/room_studio/application/room_project_session_controller_test.dart test/features/room_studio/application/room_mask_controller_test.dart test/features/room_studio/presentation/room_masks_integration_test.dart
+git diff --check
+git diff -- lib/main.dart | shasum -a 256
+```
+
+Explicit formatter gate: exit 0, `Formatted 8 files (0 changed)`. An earlier formatting invocation formatted those explicit paths but exited 1 because the sandbox blocked the SDK telemetry timestamp; the unchanged command was rerun with normal escalation and exited 0. Verification was not weakened. Diff whitespace check passed. The protected user-owned `lib/main.dart` was never edited, formatted, or staged; its diff hash remains `c9bd56e83824d1dff5f750092e3d751bbb1841ad9377380c057bdffb4aacf437`.
+
+### Fix commit record
+
+Required message: `fix: preserve room session lifecycle ownership`. This report is included in that commit; its exact SHA is returned in the handoff and can be resolved with:
+
+```sh
+git log -1 --format=%H --grep='^fix: preserve room session lifecycle ownership$'
+```
+
+The commit gate verifies the ten explicit fix/report paths, `git diff --cached --check`, an empty `git diff --cached -- lib/main.dart`, and the unchanged protected hash. The only remaining unstaged modification is the user-owned `lib/main.dart`. No push, merge, or publication is performed.

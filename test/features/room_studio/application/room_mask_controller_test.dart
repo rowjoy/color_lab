@@ -24,6 +24,7 @@ import 'package:color_lab/features/room_studio/domain/room_layer.dart';
 import 'package:color_lab/features/room_studio/domain/room_layer_colors.dart';
 import 'package:color_lab/features/room_studio/domain/room_mask_state.dart';
 import 'package:color_lab/features/room_studio/domain/room_project.dart';
+import 'package:color_lab/features/room_studio/domain/room_project_repository.dart';
 import 'package:color_lab/features/room_studio/refine/mask_refinement.dart';
 import 'package:color_lab/features/room_studio/refine/mask_refinement_service.dart';
 import 'package:color_lab/features/room_studio/segmentation/room_segmentation_service.dart';
@@ -265,14 +266,93 @@ class Harness {
 
 class ProjectStore extends InMemoryRoomProjectRepository {
   Completer<void>? readGate;
+  Object? readError;
   @override
   Future<RoomProjectReadResult?> read(String projectId) async {
     await readGate?.future;
+    if (readError != null) throw readError!;
     return super.read(projectId);
   }
 }
 
 void main() {
+  for (final lateFailure in [false, true]) {
+    test(
+      'stopping analysis retains the prepared photo for manual fallback despite late ${lateFailure ? 'failure' : 'success'}',
+      () async {
+        final h = Harness();
+        final importing = h.import();
+        await tick();
+        final candidate = h.state.candidate!;
+        h.controller.cancelAnalysis();
+        expect(h.state.candidate, same(candidate));
+        expect(h.state.stage, RoomMaskStage.acquiring);
+        expect(h.state.draft, isNull);
+        expect(h.controller.createManualFallback(), isTrue);
+        final manual = h.state.draft!;
+        expect(manual.photo, same(candidate.photo));
+        expect(manual.masks.labels, List.filled(100, 0));
+        if (lateFailure) {
+          h.segmenter.requests.single.fail();
+        } else {
+          h.segmenter.requests.single.succeed(masks(3));
+        }
+        await importing;
+        expect(h.state.draft, same(manual));
+        expect(h.state.canEdit, isTrue);
+        expect(h.state.failure, isNull);
+        await h.saved();
+      },
+    );
+  }
+
+  for (final typed in [false, true]) {
+    test(
+      'stale ${typed ? 'typed' : 'raw'} Open failure leaves a newer color edit usable',
+      () async {
+        final h = Harness();
+        await h.ready();
+        await h.saved();
+        final id = h.container.read(roomProjectSessionProvider)!.projectId;
+        h.projects.readGate = Completer<void>();
+        h.projects.readError = typed
+            ? const RoomProjectStorageException()
+            : StateError('private decode failure');
+        final opening = h.controller.openProject(id);
+        await tick();
+        h.controller.setLayerColor(RoomLayer.wall, RgbColor(11, 22, 33));
+        await h.saved();
+        h.projects.readGate!.complete();
+        expect(await opening, isFalse);
+        expect(h.state.stage, RoomMaskStage.ready);
+        expect(h.state.canEdit, isTrue);
+        expect(h.state.failure, isNull);
+        expect(h.state.draft!.colors.wall, RgbColor(11, 22, 33));
+        expect(
+          h.container.read(roomProjectSessionProvider)!.durable!.colors.wall,
+          RgbColor(11, 22, 33),
+        );
+      },
+    );
+  }
+
+  test(
+    'missing Open during reanalysis cannot strand the current operation',
+    () async {
+      final h = Harness();
+      await h.ready(1);
+      await h.saved();
+      final refresh = h.controller.reanalyzeCurrentPhoto();
+      expect(await h.controller.openProject('missing-project'), isFalse);
+      h.segmenter.requests.last.succeed(masks(3));
+      expect(await refresh, isTrue);
+      expect(h.state.stage, RoomMaskStage.ready);
+      expect(h.state.editBusy, isFalse);
+      expect(h.state.canEdit, isTrue);
+      expect(h.state.draft!.masks.labels[0], 3);
+    },
+  );
+
   test(
     'late project open cannot detach the editor after a newer import starts',
     () async {

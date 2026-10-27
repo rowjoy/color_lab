@@ -712,6 +712,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get roomEditManually => 'Edit manually';
 
   @override
+  String get roomDiscardPhoto => 'Discard photo';
+
+  @override
   String get roomRetryAnalysis => 'Retry analysis';
 
   @override

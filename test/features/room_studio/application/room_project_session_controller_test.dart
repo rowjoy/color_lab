@@ -129,6 +129,66 @@ class _FailPointer extends RoomProjectFileIo {
 }
 
 void main() {
+  for (final manual in [false, true]) {
+    test(
+      'rebuilt session saves a new ${manual ? 'manual' : 'analyzed'} project',
+      () async {
+        final repo = _Repository();
+        final h = _Harness(repo);
+        await h.controller.createFromAnalysis(_draft());
+        final oldId = h.session.projectId;
+        h.container.invalidate(roomProjectSessionProvider);
+        expect(h.container.read(roomProjectSessionProvider), isNull);
+        if (manual) {
+          await h.controller.createManualFallback(
+            RoomPhotoCandidate(photoId: 'rebuilt-photo', photo: _photo()),
+          );
+        } else {
+          await h.controller.createFromAnalysis(_draft());
+        }
+        expect(h.container.read(roomProjectSessionProvider), isNotNull);
+        expect(h.session.projectId, isNot(oldId));
+        expect(h.session.saveStatus, RoomProjectSaveStatus.saved);
+        expect((await repo.listSnapshot()).records.length, 2);
+      },
+    );
+  }
+
+  for (final deferClose in [false, true]) {
+    test(
+      'rebuilt session drains old accepted save without clearing or saving over new work with ${deferClose ? 'deferred close' : 'disposal alone'}',
+      () async {
+        final repo = _Repository();
+        final h = _Harness(repo);
+        await h.controller.createFromAnalysis(_draft());
+        final gate = Completer<void>();
+        repo.beforeSave = () => gate.future;
+        final old = h.controller.commitVisibleDraft(_draft(revision: 1));
+        await _until(() => repo.submitted.length == 2);
+        final queued = h.controller.commitVisibleDraft(_draft(revision: 2));
+        final closing = deferClose
+            ? h.controller.closeProject(deferNotification: true)
+            : Future<void>.value();
+        h.container.invalidate(roomProjectSessionProvider);
+        h.container.read(roomProjectSessionProvider);
+        final creating = h.controller.createFromAnalysis(_draft());
+        expect(h.container.read(roomProjectSessionProvider), isNotNull);
+        final newId = h.session.projectId;
+        await Future<void>.delayed(Duration.zero);
+        expect(h.session.projectId, newId);
+        expect(repo.submitted.length, 2);
+        gate.complete();
+        await Future.wait([old, queued, closing, creating]);
+        expect(repo.maxActive, 1);
+        expect(repo.submitted.length, 3);
+        expect(h.session.projectId, newId);
+        expect(h.session.durable!.maskRevision, 0);
+        expect(h.session.durable!.revision, 1);
+        expect(h.session.saveStatus, RoomProjectSaveStatus.saved);
+      },
+    );
+  }
+
   test(
     'a completed edit during Open wins even if its save finishes before decoding',
     () async {

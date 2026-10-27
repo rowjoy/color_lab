@@ -68,6 +68,9 @@ class RoomProjectSessionController extends Notifier<RoomProjectSession?> {
 
   @override
   RoomProjectSession? build() {
+    // Riverpod reuses this notifier after invalidation. Retain the old work's
+    // drain barrier and monotonic ownership epoch, but revive this lifecycle.
+    _alive = true;
     ref.onDispose(() {
       _alive = false;
       unawaited(closeProject());
@@ -334,11 +337,13 @@ class RoomProjectSessionController extends Notifier<RoomProjectSession?> {
       _work = work;
       _publish(work);
       return draft;
-    } on RoomProjectUnsavedChanges {
-      rethrow;
-    } on RoomProjectStorageException {
-      rethrow;
-    } catch (_) {
+    } catch (error) {
+      // A stale read/decode failure has no more authority than a stale result.
+      if (!current()) return null;
+      if (error is RoomProjectUnsavedChanges ||
+          error is RoomProjectStorageException) {
+        rethrow;
+      }
       throw const RoomProjectStorageException(
         RoomProjectStorageFailure.corrupt,
       );

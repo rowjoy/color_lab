@@ -382,6 +382,93 @@ Future<void> _zoom(WidgetTester tester) async {
 }
 
 void main() {
+  for (final lateFailure in [false, true]) {
+    testWidgets(
+      'Cancel analysis retains accessible manual choices before late ${lateFailure ? 'failure' : 'success'}',
+      (tester) async {
+        final segmenter = _Segmenter();
+        final container = await _launch(tester, segmenter: segmenter);
+        await _open(tester);
+        await _tap(tester, _key('room-mask-gallery'));
+        final candidate = container.read(roomMaskProvider).candidate!;
+        final semantics = tester.ensureSemantics();
+        try {
+          await tester.ensureVisible(find.text('Cancel analysis'));
+          await tester.pump();
+          expect(
+            tester.getSemantics(find.text('Cancel analysis')),
+            matchesSemantics(
+              label: 'Cancel analysis',
+              isButton: true,
+              hasEnabledState: true,
+              isEnabled: true,
+              hasTapAction: true,
+            ),
+          );
+          await _tap(tester, find.text('Cancel analysis'));
+          expect(
+            container.read(roomMaskProvider).stage,
+            RoomMaskStage.acquiring,
+          );
+          expect(container.read(roomMaskProvider).candidate, same(candidate));
+          expect(container.read(roomMaskProvider).draft, isNull);
+          await tester.ensureVisible(_key('room-mask-continue-analysis'));
+          await tester.pump();
+          expect(
+            tester.getSemantics(_key('room-mask-continue-analysis')),
+            matchesSemantics(
+              label: 'Analyze this photo',
+              isButton: true,
+              hasEnabledState: true,
+              isEnabled: true,
+              hasTapAction: true,
+            ),
+          );
+          await tester.ensureVisible(_key('room-mask-manual'));
+          await tester.pump();
+          expect(
+            tester.getSemantics(_key('room-mask-manual')),
+            matchesSemantics(
+              label: 'Edit manually',
+              isButton: true,
+              hasEnabledState: true,
+              isEnabled: true,
+              hasTapAction: true,
+            ),
+          );
+          expect(find.text('Discard photo'), findsOneWidget);
+          await tester.ensureVisible(find.text('Discard photo'));
+          await tester.pump();
+          expect(
+            tester.getSemantics(find.text('Discard photo')),
+            matchesSemantics(
+              label: 'Discard photo',
+              isButton: true,
+              hasEnabledState: true,
+              isEnabled: true,
+              hasTapAction: true,
+            ),
+          );
+          await _tap(tester, _key('room-mask-manual'));
+          final manual = container.read(roomMaskProvider).draft!;
+          expect(manual.photo, same(candidate.photo));
+          expect(manual.masks.labels, List.filled(100, 0));
+          if (lateFailure) {
+            segmenter.requests.single.fail();
+          } else {
+            segmenter.requests.single.succeed(3);
+          }
+          await _frames(tester);
+          expect(container.read(roomMaskProvider).draft, same(manual));
+          expect(container.read(roomMaskProvider).canEdit, isTrue);
+          expect(container.read(roomMaskProvider).failure, isNull);
+        } finally {
+          semantics.dispose();
+        }
+      },
+    );
+  }
+
   testWidgets(
     'external revision conflict stays visible and Retry never claims Saved',
     (tester) async {
@@ -681,14 +768,41 @@ void main() {
     await _open(tester);
     await _tap(tester, _key('room-mask-gallery'));
     expect(find.text('Checking saved AI models…'), findsOneWidget);
-    await _tap(tester, find.text('Cancel download'));
+    final candidate = container.read(roomMaskProvider).candidate!;
+    final semantics = tester.ensureSemantics();
+    try {
+      await tester.ensureVisible(find.text('Cancel download'));
+      await tester.pump();
+      expect(
+        tester.getSemantics(find.text('Cancel download')),
+        matchesSemantics(
+          label: 'Cancel download',
+          isButton: true,
+          hasEnabledState: true,
+          isEnabled: true,
+          hasTapAction: true,
+        ),
+      );
+      await _tap(tester, find.text('Cancel download'));
+    } finally {
+      semantics.dispose();
+    }
     gate.complete(directory);
     await cancelled;
-    expect(container.read(roomMaskProvider).stage, RoomMaskStage.empty);
+    expect(container.read(roomMaskProvider).stage, RoomMaskStage.acquiring);
+    expect(container.read(roomMaskProvider).candidate, same(candidate));
+    expect(_key('room-mask-continue-analysis'), findsOneWidget);
+    expect(_key('room-mask-manual'), findsOneWidget);
     segmenter.requests.single.succeed(1);
     await _frames(tester);
     expect(container.read(roomMaskProvider).draft, isNull);
     expect(modelStore.progress.stage, RoomModelDownloadStage.cancelled);
+    await _tap(tester, _key('room-mask-manual'));
+    expect(
+      container.read(roomMaskProvider).draft!.photo,
+      same(candidate.photo),
+    );
+    expect(container.read(roomMaskProvider).canEdit, isTrue);
   });
 
   testWidgets('refresh AI masks retains the photo, corrections, and colors', (
@@ -862,6 +976,8 @@ void main() {
       expect(tester.widget<RoomMaskViewport>(retained).photo, same(old!.photo));
       await _tap(tester, find.text('Cancel analysis'));
       expect(container.read(roomMaskProvider).draft, same(old));
+      await _expectCandidate(tester, 50);
+      await _tap(tester, find.text('Discard photo'));
       expect(find.byType(RoomMaskViewport), findsOneWidget);
       expect(tester.element(find.byType(RoomMaskViewport)), same(oldViewport));
       expect(_key('room-mask-candidate-photo'), findsNothing);
@@ -993,6 +1109,7 @@ void main() {
       await _open(tester);
       await _tap(tester, _key('room-mask-gallery'));
       await _tap(tester, find.text('Cancel analysis'));
+      await _tap(tester, find.text('Discard photo'));
       store.clearGate = Completer<void>();
       await _tap(tester, _key('room-mask-gallery'));
       expect(
@@ -1692,6 +1809,8 @@ void main() {
       segmenter.requests.last.succeed(3);
       await _frames(tester);
       expect(container.read(roomMaskProvider).draft, same(old));
+      expect(container.read(roomMaskProvider).candidate, isNotNull);
+      await _tap(tester, find.text('Discard photo'));
       expect(container.read(roomMaskProvider).canEdit, isTrue);
     },
   );

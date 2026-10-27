@@ -280,14 +280,19 @@ class RoomMaskController extends Notifier<RoomMaskState> {
   }
 
   Future<bool> openProject(String projectId) async {
-    if (!_live) return false;
+    if (!_live ||
+        _refining ||
+        state.editBusy ||
+        state.stage == RoomMaskStage.acquiring ||
+        state.stage == RoomMaskStage.analyzing) {
+      return false;
+    }
+    final captured = state.draft;
     final operation = ++_operation;
+    bool current() => _current(operation) && identical(state.draft, captured);
     try {
-      final draft = await _session.openProject(
-        projectId,
-        isCurrent: () => _current(operation),
-      );
-      if (!_current(operation) || draft == null) return false;
+      final draft = await _session.openProject(projectId, isCurrent: current);
+      if (!current() || draft == null) return false;
       state = state.copyWith(
         stage: RoomMaskStage.ready,
         candidate: null,
@@ -297,7 +302,7 @@ class RoomMaskController extends Notifier<RoomMaskState> {
       );
       return true;
     } catch (_) {
-      if (_current(operation)) _fail(RoomMaskFailureKind.storage);
+      if (current()) _fail(RoomMaskFailureKind.storage);
       return false;
     }
   }
@@ -397,6 +402,22 @@ class RoomMaskController extends Notifier<RoomMaskState> {
     }
   }
 
+  /// Stop inference while retaining prepared pixels for Analyze/Edit manually.
+  void cancelAnalysis() {
+    if (!_live || state.stage != RoomMaskStage.analyzing) return;
+    _operation++;
+    if (state.candidate == null) {
+      _returnToDraft();
+      return;
+    }
+    state = state.copyWith(
+      stage: RoomMaskStage.acquiring,
+      failure: null,
+      editBusy: false,
+    );
+  }
+
+  /// Explicitly discard an import candidate and restore the previous draft.
   void cancelCandidate() {
     if (!_live) return;
     _operation++;

@@ -1331,6 +1331,12 @@ abstract class AppLocalizations {
   /// **'Edit manually'**
   String get roomEditManually;
 
+  /// Explicitly discard a prepared Room photo, separate from stopping analysis or model download.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard photo'**
+  String get roomDiscardPhoto;
+
   /// Retry AI analysis while preserving manual corrections through reanalysis.
   ///
   /// In en, this message translates to:

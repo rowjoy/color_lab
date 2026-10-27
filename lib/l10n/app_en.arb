@@ -519,6 +519,8 @@
   "@roomManualModeNotice": {"description": "Honest notice for an editable Room with no available AI masks."},
   "roomEditManually": "Edit manually",
   "@roomEditManually": {"description": "Create an aligned blank mask project from the prepared photo when AI fails."},
+  "roomDiscardPhoto": "Discard photo",
+  "@roomDiscardPhoto": {"description": "Explicitly discard a prepared Room photo, separate from stopping analysis or model download."},
   "roomRetryAnalysis": "Retry analysis",
   "@roomRetryAnalysis": {"description": "Retry AI analysis while preserving manual corrections through reanalysis."},
   "roomAnalysisFailed": "Room analysis could not finish. Try again or choose another photo.",

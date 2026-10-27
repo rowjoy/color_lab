@@ -105,12 +105,17 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
     }
   }
 
-  void _cancelCandidate() {
+  void _cancelCandidate({bool retainPhoto = false}) {
     // Logical cancellation releases the action before physical inference ends.
     // The old future's finally cannot clear a subsequent action's guard.
     setState(() => _importOperation = null);
     ref.read(roomModelStoreProvider).cancel();
-    ref.read(roomMaskProvider.notifier).cancelCandidate();
+    final controller = ref.read(roomMaskProvider.notifier);
+    if (retainPhoto) {
+      controller.cancelAnalysis();
+    } else {
+      controller.cancelCandidate();
+    }
   }
 
   Future<void> _restore(RoomMaskDraft draft) async {
@@ -397,8 +402,10 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
                   ? 'Cancel download'
                   : analyzing
                   ? 'Cancel analysis'
+                  : state.candidate != null
+                  ? context.l10n.roomDiscardPhoto
                   : 'Cancel import',
-              onPressed: _cancelCandidate,
+              onPressed: () => _cancelCandidate(retainPhoto: analyzing),
             ),
           ],
           if (state.stage == RoomMaskStage.error) ...[
