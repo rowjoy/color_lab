@@ -119,7 +119,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/rooms/project/:projectId',
         redirect: (context, state) => Uri(
           path: '/room/masks',
-          queryParameters: {'project': state.pathParameters['projectId']!},
+          queryParameters: {
+            'project': state.pathParameters['projectId']!,
+            if (state.uri.queryParameters['compare'] == '1') 'compare': '1',
+          },
         ).toString(),
       ),
       GoRoute(
@@ -133,13 +136,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               child: RoomProjectOpenScreen(
                 projectId: setupProjectId,
                 isSetupContinuation: true,
+                compareRequested: state.uri.queryParameters['compare'] == '1',
               ),
             );
           }
           final projectId = state.uri.queryParameters['project'];
           return projectId == null
               ? const RoomModelSetupGate(child: RoomMaskScreen())
-              : RoomProjectOpenScreen(projectId: projectId);
+              : RoomProjectOpenScreen(
+                  projectId: projectId,
+                  compareRequested: state.uri.queryParameters['compare'] == '1',
+                );
         },
       ),
       GoRoute(

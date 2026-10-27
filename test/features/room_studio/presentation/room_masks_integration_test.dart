@@ -26,6 +26,7 @@ import 'package:color_lab/features/room_studio/models/room_model_store.dart';
 import 'package:color_lab/features/room_studio/application/room_color_provider.dart';
 import 'package:color_lab/features/room_studio/application/room_image_export_service.dart';
 import 'package:color_lab/features/room_studio/application/room_recolor_provider.dart';
+import 'package:color_lab/features/room_studio/application/room_variant_controller.dart';
 import 'package:color_lab/features/room_studio/application/room_recolor_service.dart';
 import 'package:color_lab/features/room_studio/domain/mask_bitmap.dart';
 import 'package:color_lab/features/room_studio/domain/mask_stroke.dart';
@@ -382,6 +383,75 @@ Future<void> _zoom(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets(
+    'comparison Share exports only selected full-key frame while Original and divider are transient',
+    (tester) async {
+      final segmenter = _Segmenter();
+      final recolorer = _Recolorer();
+      final exporter = _Exporter();
+      final c = await _launch(
+        tester,
+        segmenter: segmenter,
+        recolorer: recolorer,
+        exporter: exporter,
+      );
+      await _open(tester);
+      await _ready(tester, segmenter, label: 1);
+      await _waitSaved(tester, c);
+      final baselineId = c.read(roomProjectSessionProvider)!.activeVariantId;
+      recolorer.requests.single.succeed();
+      await _frames(tester);
+      c.read(roomVariantProvider.notifier).createVariant('B');
+      await _frames(tester);
+      await _waitSaved(tester, c);
+      c.read(roomVariantProvider.notifier).pinComparisonBaseline(baselineId);
+      await _frames(tester);
+      await _waitSaved(tester, c);
+      final key = c.read(roomRecolorKeyProvider)!;
+      final active = recolorer.requests.lastWhere((r) => r.key == key);
+      final baseline = recolorer.requests.lastWhere(
+        (r) => r.key == c.read(roomComparisonKeyProvider),
+      );
+      baseline.succeed();
+      await _frames(tester);
+      expect(
+        tester.widget<PrimaryButton>(_key('room-recolor-share')).onPressed,
+        isNull,
+      );
+      final selectedPng = _photo(180).previewBytes;
+      active.result.complete(
+        RoomRecolorFrame(
+          key: active.key,
+          width: 10,
+          height: 10,
+          rgbaBytes: active.photo.rgbaBytes,
+          pngBytes: selectedPng,
+        ),
+      );
+      await _frames(tester);
+      final saved = c.read(roomProjectSessionProvider)!.durable!;
+      expect(_key('room-comparison-active-image'), findsOneWidget);
+      await _tap(tester, _key('room-recolor-before'));
+      expect(_key('room-comparison-original-image'), findsOneWidget);
+      await _tap(tester, _key('room-recolor-share'));
+      expect(exporter.bytes, selectedPng);
+      expect(c.read(roomRecolorPreviewProvider).requireValue!.key, key);
+      expect(c.read(roomProjectSessionProvider)!.durable, same(saved));
+      await _tap(tester, _key('room-recolor-after'));
+      final divider = _key('room-comparison-divider');
+      await tester.ensureVisible(divider);
+      await tester.drag(divider, const Offset(40, 0));
+      await _frames(tester);
+      expect(c.read(roomProjectSessionProvider)!.durable, same(saved));
+      c.read(roomVariantProvider.notifier).selectVariant(baselineId);
+      await _frames(tester);
+      expect(
+        tester.widget<PrimaryButton>(_key('room-recolor-share')).onPressed,
+        isNull,
+      );
+      expect(_key('room-recolor-previous-image'), findsNothing);
+    },
+  );
   for (final lateFailure in [false, true]) {
     testWidgets(
       'Cancel analysis retains accessible manual choices before late ${lateFailure ? 'failure' : 'success'}',

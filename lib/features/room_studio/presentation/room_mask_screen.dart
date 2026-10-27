@@ -27,10 +27,16 @@ import 'room_model_download_status.dart';
 import '../models/room_model_store.dart';
 import 'room_recolor_viewport.dart';
 import 'room_project_save_status.dart';
+import 'room_variant_controls.dart';
 
 class RoomMaskScreen extends ConsumerStatefulWidget {
-  const RoomMaskScreen({super.key, this.projectId});
+  const RoomMaskScreen({
+    super.key,
+    this.projectId,
+    this.compareRequested = false,
+  });
   final String? projectId;
+  final bool compareRequested;
 
   @override
   ConsumerState<RoomMaskScreen> createState() => _RoomMaskScreenState();
@@ -50,13 +56,13 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
     super.initState();
     ref.listenManual(roomRecolorPreviewProvider, (_, next) {
       final frame = next.value;
-      final current = ref.read(roomMaskProvider).draft;
+      final current = roomActiveRecolorKey(
+        ref.read(roomProjectSessionProvider),
+      );
       if (mounted &&
           frame != null &&
           current != null &&
-          frame.key.photoId == current.photoId &&
-          frame.key.maskRevision == current.maskRevision &&
-          frame.key.colorRevision == current.colorRevision &&
+          frame.key == current &&
           !identical(_lastFrame, frame)) {
         setState(() => _lastFrame = frame);
       }
@@ -86,7 +92,10 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
     context.push(
       Uri(
         path: '/room/masks',
-        queryParameters: {'setupProject': widget.projectId!},
+        queryParameters: {
+          'setupProject': widget.projectId!,
+          if (widget.compareRequested) 'compare': '1',
+        },
       ).toString(),
     );
     return false;
@@ -219,11 +228,7 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
         preview.hasError ||
         frame == null ||
         frame.key !=
-            RoomRecolorKey(
-              photoId: draft.photoId,
-              maskRevision: draft.maskRevision,
-              colorRevision: draft.colorRevision,
-            )) {
+            roomActiveRecolorKey(ref.read(roomProjectSessionProvider))) {
       return;
     }
     final box = anchor.findRenderObject() as RenderBox?;
@@ -264,20 +269,17 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
     final receipt = acquisition.pendingReceipt;
     final draft = state.draft;
     final preview = ref.watch(roomRecolorPreviewProvider);
-    final recolorKey = draft == null
-        ? null
-        : RoomRecolorKey(
-            photoId: draft.photoId,
-            maskRevision: draft.maskRevision,
-            colorRevision: draft.colorRevision,
-          );
+    final recolorKey = roomActiveRecolorKey(session);
+    final comparing = roomBaselineRecolorKey(session) != null;
     final previewFrame = preview.value;
     final currentFrame = recolorKey != null && previewFrame?.key == recolorKey
         ? previewFrame
         : null;
     final displayFrame =
         currentFrame ??
-        (_lastFrame?.key.photoId == draft?.photoId ? _lastFrame : null);
+        (recolorKey != null && (_lastFrame?.key.sameView(recolorKey) ?? false)
+            ? _lastFrame
+            : null);
     final canShare =
         currentFrame != null &&
         !preview.isLoading &&
@@ -317,6 +319,10 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
             ],
           ),
           const SizedBox(height: AppSpacing.xl),
+          if (widget.compareRequested && session != null) ...[
+            const RoomVariantControls(),
+            const SizedBox(height: AppSpacing.xl),
+          ],
           PrimaryButton(
             key: const ValueKey('room-mask-gallery'),
             label: 'Choose room photo',
@@ -500,15 +506,22 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  RoomRecolorViewport(
-                    sourcePngBytes: draft.photo.previewBytes,
-                    width: draft.photo.width,
-                    height: draft.photo.height,
-                    currentKey: recolorKey!,
-                    frame: displayFrame,
-                    showAfter: _showAfter,
-                    updating: preview.isLoading,
-                  ),
+                  if (!widget.compareRequested && session != null) ...[
+                    const RoomVariantControls(),
+                    const SizedBox(height: AppSpacing.md),
+                  ],
+                  if (comparing)
+                    RoomComparisonPreview(showOriginal: !_showAfter)
+                  else if (recolorKey != null)
+                    RoomRecolorViewport(
+                      sourcePngBytes: draft.photo.previewBytes,
+                      width: draft.photo.width,
+                      height: draft.photo.height,
+                      currentKey: recolorKey,
+                      frame: displayFrame,
+                      showAfter: _showAfter,
+                      updating: preview.isLoading,
+                    ),
                   const SizedBox(height: AppSpacing.md),
                   Wrap(
                     spacing: AppSpacing.sm,

@@ -74,6 +74,21 @@ final class RoomMaskDraft {
   final bool manualMode;
 
   bool get hasEdits => changedFromAiCount > 0;
+
+  RoomMaskDraft withColors(RoomLayerColors next) => next == colors
+      ? this
+      : RoomMaskDraft(
+          photoId: photoId,
+          photo: photo,
+          aiMasks: aiMasks,
+          masks: masks,
+          history: history,
+          maskRevision: maskRevision,
+          changedFromAiCount: changedFromAiCount,
+          colors: next,
+          colorRevision: colorRevision + 1,
+          manualMode: manualMode,
+        );
 }
 
 @immutable

@@ -16,8 +16,10 @@ class RoomProjectOpenScreen extends ConsumerStatefulWidget {
     super.key,
     required this.projectId,
     this.isSetupContinuation = false,
+    this.compareRequested = false,
   });
   final String projectId;
+  final bool compareRequested;
 
   /// Only the setup gate mounts this continuation after explicit permission.
   final bool isSetupContinuation;
@@ -51,7 +53,10 @@ class _RoomProjectOpenScreenState extends ConsumerState<RoomProjectOpenScreen> {
             context.replace(
               Uri(
                 path: '/room/masks',
-                queryParameters: {'project': next.projectId},
+                queryParameters: {
+                  'project': next.projectId,
+                  if (widget.compareRequested) 'compare': '1',
+                },
               ).toString(),
             );
           }
@@ -143,7 +148,10 @@ class _RoomProjectOpenScreenState extends ConsumerState<RoomProjectOpenScreen> {
       _scheduleOpen();
     }
     if (_opened && (session?.projectId == widget.projectId || _retargeting)) {
-      return RoomMaskScreen(projectId: widget.projectId);
+      return RoomMaskScreen(
+        projectId: widget.projectId,
+        compareRequested: widget.compareRequested,
+      );
     }
     return Scaffold(
       body: AdaptivePage(

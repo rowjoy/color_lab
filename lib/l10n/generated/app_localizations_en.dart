@@ -877,6 +877,107 @@ class AppLocalizationsEn extends AppLocalizations {
   String get roomProjectWorking => 'Working…';
 
   @override
+  String get roomVariantsTitle => 'Color variants';
+
+  @override
+  String get roomVariantCreate => 'Create variant';
+
+  @override
+  String get roomVariantRename => 'Rename variant';
+
+  @override
+  String get roomVariantDelete => 'Delete variant';
+
+  @override
+  String get roomVariantPin => 'Pin as baseline';
+
+  @override
+  String get roomVariantName => 'Variant name';
+
+  @override
+  String get roomVariantApply => 'Apply';
+
+  @override
+  String get roomVariantInvalidName =>
+      'Use a name with 1–80 characters and no control characters.';
+
+  @override
+  String get roomVariantDuplicateName =>
+      'Choose a different name. Each variant needs a unique name.';
+
+  @override
+  String get roomVariantLimit =>
+      'This project already has 32 variants. Delete one before creating another.';
+
+  @override
+  String get roomVariantFinal => 'Keep at least one variant in this project.';
+
+  @override
+  String get roomVariantUnavailable =>
+      'This variant cannot be changed right now. Return to the project and try again.';
+
+  @override
+  String get roomComparisonClear => 'Clear comparison';
+
+  @override
+  String get roomComparisonNeedVariant =>
+      'Create another variant to compare two color choices.';
+
+  @override
+  String get roomComparisonSelectOther =>
+      'Select a different variant to compare with the pinned baseline.';
+
+  @override
+  String get roomComparisonGuide =>
+      'Pin a baseline and select another variant to compare. Color edits apply to the selected variant.';
+
+  @override
+  String get roomComparisonTitle => 'Compare variants';
+
+  @override
+  String get roomComparisonOriginal => 'Original room photo';
+
+  @override
+  String get roomComparisonDivider => 'Comparison divider';
+
+  @override
+  String get roomComparisonFailed =>
+      'Comparison could not update. Your variants are safe.';
+
+  @override
+  String get roomComparisonUpdating => 'Updating comparison…';
+
+  @override
+  String roomVariantLabel(String letter, String name) {
+    return '$letter · $name';
+  }
+
+  @override
+  String roomVariantSelected(String label) {
+    return '$label · Selected';
+  }
+
+  @override
+  String roomVariantBaseline(String label) {
+    return 'Baseline: $label';
+  }
+
+  @override
+  String roomComparisonActive(String name) {
+    return 'Selected: $name';
+  }
+
+  @override
+  String roomComparisonBaseline(String name) {
+    return 'Baseline: $name';
+  }
+
+  @override
+  String roomComparisonPosition(int percent) {
+    return '$percent% selected variant';
+  }
+
+  @override
   String aboutAndLicenses(String appName) {
     return 'About $appName & licenses';
   }

@@ -4,6 +4,10 @@ import 'dart:typed_data';
 import 'package:color_lab/core/color/color_engine.dart';
 import 'package:color_lab/features/picker/domain/prepared_photo.dart';
 import 'package:color_lab/features/room_studio/application/room_mask_controller.dart';
+import 'package:color_lab/features/room_studio/application/room_projects_providers.dart';
+import 'package:color_lab/features/room_studio/application/room_project_session_controller.dart';
+import 'package:color_lab/features/room_studio/domain/room_project.dart';
+import 'package:color_lab/features/room_studio/application/room_variant_controller.dart';
 import 'package:color_lab/features/room_studio/application/room_recolor_provider.dart';
 import 'package:color_lab/features/room_studio/application/room_recolor_service.dart';
 import 'package:color_lab/features/room_studio/domain/mask_bitmap.dart';
@@ -14,6 +18,9 @@ import 'package:color_lab/features/room_studio/domain/room_mask_state.dart';
 import 'package:color_lab/features/room_studio/recolor/room_recolor_frame.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../../support/in_memory_room_project_repository.dart';
+import '../../../support/room_project_fixtures.dart';
 
 PreparedPhoto _photo() => PreparedPhoto(
   width: 1,
@@ -90,10 +97,204 @@ final class _Service implements RoomRecolorService {
 
 Future<void> _tick() => Future<void>.delayed(Duration.zero);
 
+class _PreviewSession extends RoomProjectSessionController {
+  @override
+  RoomProjectSession build() {
+    final draft = ref.watch(roomMaskProvider).draft!;
+    return RoomProjectSession(
+      projectId: 'project',
+      name: 'Room',
+      durable: null,
+      visible: draft,
+      saveStatus: RoomProjectSaveStatus.saved,
+      saveError: null,
+      pendingSaveCount: 0,
+      acknowledgedRevision: 0,
+      variantSet: RoomVariantSet(
+        variants: [RoomColorVariant(id: 'a', name: 'A', colors: draft.colors)],
+        activeVariantId: 'a',
+      ),
+    );
+  }
+}
+
 void main() {
+  test(
+    'session Open renders one coherent project before the editor mirror catches up',
+    () async {
+      final service = _Service();
+      final source = roomProjectFixture(revision: 1);
+      final other = source.copyWith(
+        projectId: 'other',
+        maskBytes: Uint8List.fromList([4, 3, 2, 1]),
+      );
+      final repo = InMemoryRoomProjectRepository(initial: [source, other]);
+      final c = ProviderContainer(
+        overrides: [
+          roomProjectRepositoryProvider.overrideWith((ref) async => repo),
+          roomRecolorServiceProvider.overrideWithValue(service),
+        ],
+      );
+      addTearDown(c.dispose);
+      await c.read(roomMaskProvider.notifier).openProject('project-1');
+      final subscription = c.listen(roomRecolorPreviewProvider, (_, _) {});
+      addTearDown(subscription.close);
+      await _tick();
+      // Session publication precedes installing the returned editor draft.
+      await c.read(roomProjectSessionProvider.notifier).openProject('other');
+      await _tick();
+      expect(service.requests.last.key.projectId, 'other');
+      expect(service.requests.last.masks.labels, [4, 3, 2, 1]);
+      expect(c.read(roomMaskProvider).draft!.masks.labels, [1, 2, 3, 4]);
+    },
+  );
+  test(
+    'mismatched worker full key fails instead of publishing another variant',
+    () async {
+      final service = _Service();
+      final repo = InMemoryRoomProjectRepository(
+        initial: [roomProjectFixture(revision: 1)],
+      );
+      final c = ProviderContainer(
+        overrides: [
+          roomProjectRepositoryProvider.overrideWith((ref) async => repo),
+          roomRecolorServiceProvider.overrideWithValue(service),
+        ],
+      );
+      addTearDown(c.dispose);
+      await c.read(roomMaskProvider.notifier).openProject('project-1');
+      final result = c.read(roomRecolorPreviewProvider.future);
+      await _tick();
+      service.requests.single.result.complete(
+        _frame(c.read(roomComparisonKeyProvider)!),
+      );
+      await expectLater(result, throwsStateError);
+      expect(c.read(roomRecolorPreviewProvider).hasError, isTrue);
+    },
+  );
+  for (final failedSide in ['active', 'baseline']) {
+    test(
+      'active and baseline generations isolate late $failedSide error across variants',
+      () async {
+        final service = _Service();
+        final repo = InMemoryRoomProjectRepository(
+          initial: [roomProjectFixture(revision: 1)],
+        );
+        final c = ProviderContainer(
+          overrides: [
+            roomProjectRepositoryProvider.overrideWith((ref) async => repo),
+            roomRecolorServiceProvider.overrideWithValue(service),
+          ],
+        );
+        addTearDown(c.dispose);
+        await c.read(roomMaskProvider.notifier).openProject('project-1');
+        final active = c.listen(roomRecolorPreviewProvider, (_, _) {});
+        final baseline = c.listen(roomComparisonPreviewProvider, (_, _) {});
+        addTearDown(active.close);
+        addTearDown(baseline.close);
+        await _tick();
+        final old = List<_Request>.of(service.requests);
+        expect(old.map((r) => r.key.variantId).toSet(), {
+          'variant-a',
+          'variant-b',
+        });
+        await c.read(roomVariantProvider.notifier).selectVariant('variant-b');
+        await c
+            .read(roomVariantProvider.notifier)
+            .pinComparisonBaseline('variant-a');
+        await _tick();
+        for (var i = 0; i < old.length; i++) {
+          if ((i == 0) == (failedSide == 'active')) {
+            old[i].result.completeError(StateError('old side failed'));
+          } else {
+            old[i].result.complete(_frame(old[i].key));
+          }
+        }
+        await _tick();
+        expect(c.read(roomRecolorPreviewProvider).isLoading, isTrue);
+        expect(c.read(roomRecolorPreviewProvider).hasError, isFalse);
+        expect(c.read(roomComparisonPreviewProvider).isLoading, isTrue);
+        expect(c.read(roomComparisonPreviewProvider).hasError, isFalse);
+        final latestActive = service.requests.lastWhere(
+          (r) => r.key == c.read(roomRecolorKeyProvider),
+        );
+        final latestBaseline = service.requests.lastWhere(
+          (r) => r.key == c.read(roomComparisonKeyProvider),
+        );
+        latestActive.result.complete(_frame(latestActive.key, 22));
+        await _tick();
+        expect(
+          c.read(roomRecolorPreviewProvider).requireValue!.rgbaBytes.first,
+          22,
+        );
+        expect(c.read(roomComparisonPreviewProvider).isLoading, isTrue);
+        latestBaseline.result.complete(_frame(latestBaseline.key, 33));
+        await _tick();
+        expect(
+          c.read(roomComparisonPreviewProvider).requireValue!.rgbaBytes.first,
+          33,
+        );
+        expect(
+          c.read(roomRecolorPreviewProvider).requireValue!.key.variantId,
+          'variant-b',
+        );
+      },
+    );
+  }
+  test(
+    'same-photo project change rejects late old project results on both sides',
+    () async {
+      final service = _Service();
+      final source = roomProjectFixture(revision: 1);
+      final repo = InMemoryRoomProjectRepository(
+        initial: [
+          source,
+          source.copyWith(projectId: 'other'),
+        ],
+      );
+      final c = ProviderContainer(
+        overrides: [
+          roomProjectRepositoryProvider.overrideWith((ref) async => repo),
+          roomRecolorServiceProvider.overrideWithValue(service),
+        ],
+      );
+      addTearDown(c.dispose);
+      await c.read(roomMaskProvider.notifier).openProject('project-1');
+      final a = c.listen(roomRecolorPreviewProvider, (_, _) {});
+      final b = c.listen(roomComparisonPreviewProvider, (_, _) {});
+      addTearDown(a.close);
+      addTearDown(b.close);
+      await _tick();
+      final old = List<_Request>.of(service.requests);
+      await c.read(roomMaskProvider.notifier).openProject('other');
+      await _tick();
+      for (final r in old) {
+        r.result.complete(_frame(r.key));
+      }
+      await _tick();
+      expect(c.read(roomRecolorPreviewProvider).isLoading, isTrue);
+      expect(c.read(roomComparisonPreviewProvider).isLoading, isTrue);
+      for (final r in service.requests.where(
+        (r) => r.key.projectId == 'other',
+      )) {
+        r.result.complete(_frame(r.key));
+      }
+      await _tick();
+      expect(
+        c.read(roomRecolorPreviewProvider).requireValue!.key.projectId,
+        'other',
+      );
+      expect(
+        c.read(roomComparisonPreviewProvider).requireValue!.key.projectId,
+        'other',
+      );
+    },
+  );
   test('real isolate service returns a detached matching frame', () async {
     final draft = _draft();
     final key = RoomRecolorKey(
+      projectId: 'project',
+      variantId: 'a',
       photoId: draft.photoId,
       maskRevision: draft.maskRevision,
       colorRevision: draft.colorRevision,
@@ -119,6 +320,7 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         roomMaskProvider.overrideWith(() => controller),
+        roomProjectSessionProvider.overrideWith(_PreviewSession.new),
         roomRecolorServiceProvider.overrideWithValue(service),
       ],
     );
@@ -156,6 +358,7 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         roomMaskProvider.overrideWith(() => controller),
+        roomProjectSessionProvider.overrideWith(_PreviewSession.new),
         roomRecolorServiceProvider.overrideWithValue(service),
       ],
     );
@@ -189,6 +392,7 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         roomMaskProvider.overrideWith(() => controller),
+        roomProjectSessionProvider.overrideWith(_PreviewSession.new),
         roomRecolorServiceProvider.overrideWithValue(service),
       ],
     );

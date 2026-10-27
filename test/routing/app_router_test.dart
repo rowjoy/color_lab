@@ -57,6 +57,75 @@ import '../support/in_memory_room_project_repository.dart';
 import '../support/room_project_fixtures.dart';
 
 void main() {
+  for (final single in [false, true]) {
+    testWidgets(
+      'library Compare opens selected project with ${single ? 'one variant guidance' : 'persisted baseline'} and restores query and Back',
+      (tester) async {
+        final source = roomProjectFixture(revision: 1);
+        final project = single
+            ? source.copyWith(
+                variants: [source.variants.first],
+                comparisonBaselineVariantId: null,
+              )
+            : source;
+        final repo = InMemoryRoomProjectRepository(initial: [project]);
+        final original = await _launch(tester, projects: repo);
+        original.router.go('/rooms/projects');
+        await tester.pumpAndSettle();
+        await _tapKey(tester, 'room-project-menu-project-1');
+        await tester.pumpAndSettle();
+        await _tapKey(tester, 'room-project-compare');
+        await _waitForProject(tester);
+        expect(original.router.state.uri.queryParameters['compare'], '1');
+        expect(
+          original.router.state.uri.queryParameters['project'],
+          'project-1',
+        );
+        expect(
+          find.byKey(const ValueKey('room-variant-controls')),
+          findsOneWidget,
+        );
+        if (single) {
+          expect(
+            find.text('Create another variant to compare two color choices.'),
+            findsOneWidget,
+          );
+        } else {
+          expect(
+            original.container
+                .read(roomProjectSessionProvider)!
+                .comparisonBaselineVariantId,
+            'variant-b',
+          );
+        }
+        final restoration = await tester.getRestorationData();
+        await tester.pumpWidget(const SizedBox.shrink());
+        original.dispose();
+        await tester.restoreFrom(restoration);
+        final restored = await _launch(
+          tester,
+          projects: repo,
+          expectedScreen: find.byType(RoomProjectOpenScreen),
+        );
+        addTearDown(restored.dispose);
+        await _waitForProject(tester);
+        expect(restored.router.state.uri.queryParameters['compare'], '1');
+        expect(
+          restored.container.read(roomProjectSessionProvider)!.activeVariantId,
+          'variant-a',
+        );
+        expect(
+          restored.container
+              .read(roomProjectSessionProvider)!
+              .comparisonBaselineVariantId,
+          single ? null : 'variant-b',
+        );
+        expect(await tester.binding.handlePopRoute(), isTrue);
+        await tester.pumpAndSettle();
+        expect(restored.router.state.uri.path, '/rooms/projects');
+      },
+    );
+  }
   for (final setupId in ['project-1', 'unsafe!']) {
     testWidgets(
       'setup detour owner $setupId cannot bypass permission with a project query',

@@ -12,8 +12,13 @@ Uint8List _png(int red, int green, int blue) {
   return Uint8List.fromList(img.encodePng(image));
 }
 
-RoomRecolorKey _key(String photo, int mask, int color) =>
-    RoomRecolorKey(photoId: photo, maskRevision: mask, colorRevision: color);
+RoomRecolorKey _key(String photo, int mask, int color) => RoomRecolorKey(
+  projectId: 'project',
+  variantId: 'a',
+  photoId: photo,
+  maskRevision: mask,
+  colorRevision: color,
+);
 
 RoomRecolorFrame _frame(RoomRecolorKey key, Uint8List png) => RoomRecolorFrame(
   key: key,
@@ -55,6 +60,78 @@ Uint8List _shownBytes(WidgetTester tester, String key) {
 }
 
 void main() {
+  testWidgets(
+    'new current variant clears decoded pixels of the previous variant',
+    (tester) async {
+      final source = _png(5, 6, 7);
+      final first = _key('photo', 2, 3);
+      await _mount(
+        tester,
+        source: source,
+        currentKey: first,
+        frame: _frame(first, _png(70, 80, 90)),
+      );
+      for (
+        var i = 0;
+        i < 30 && tester.widget<RawImage>(find.byType(RawImage)).image == null;
+        i++
+      ) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 5)),
+        );
+        await tester.pump();
+      }
+      expect(tester.widget<RawImage>(find.byType(RawImage)).image, isNotNull);
+      final next = RoomRecolorKey(
+        projectId: 'project',
+        photoId: 'photo',
+        variantId: 'b',
+        maskRevision: 2,
+        colorRevision: 3,
+      );
+      await _mount(
+        tester,
+        source: source,
+        currentKey: next,
+        frame: _frame(next, _png(20, 30, 40)),
+      );
+      expect(
+        tester.widget<RawImage>(find.byType(RawImage)).image,
+        isNull,
+        reason:
+            'Old variant pixels must be dropped while the next variant decodes',
+      );
+    },
+  );
+  for (final projectChange in [true, false]) {
+    testWidgets(
+      'previous frame cannot cross ${projectChange ? 'project' : 'variant'} even with same photo',
+      (tester) async {
+        final source = _png(10, 20, 30);
+        await _mount(
+          tester,
+          source: source,
+          currentKey: _key('photo', 2, 3),
+          frame: _frame(
+            RoomRecolorKey(
+              projectId: projectChange ? 'other' : 'project',
+              variantId: projectChange ? 'a' : 'b',
+              photoId: 'photo',
+              maskRevision: 1,
+              colorRevision: 2,
+            ),
+            _png(200, 1, 1),
+          ),
+          updating: true,
+        );
+        expect(_shownBytes(tester, 'room-recolor-before-image'), source);
+        expect(
+          find.byKey(const ValueKey('room-recolor-previous-image')),
+          findsNothing,
+        );
+      },
+    );
+  }
   testWidgets('Before shows source and current After shows result', (
     tester,
   ) async {

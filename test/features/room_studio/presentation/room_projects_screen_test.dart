@@ -238,7 +238,7 @@ void main() {
   );
 
   testWidgets(
-    'duplicate creates an honest copy name and Compare is unavailable',
+    'duplicate creates an honest copy name and Compare is actionable',
     (tester) async {
       final project = roomProjectFixture(revision: 1);
       final repo = InMemoryRoomProjectRepository(initial: [project]);
@@ -253,10 +253,10 @@ void main() {
       final compare = tester.widget<OutlinedButton>(
         find.byKey(const ValueKey('room-project-compare')),
       );
-      expect(compare.onPressed, isNull);
+      expect(compare.onPressed, isNotNull);
       expect(
         find.textContaining('Comparison is not available yet'),
-        findsOneWidget,
+        findsNothing,
       );
       await tester.tap(find.byKey(const ValueKey('room-project-duplicate')));
       await tester.pumpAndSettle();

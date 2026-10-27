@@ -37,6 +37,7 @@ final class RoomProjectSession {
     required this.saveError,
     required this.pendingSaveCount,
     required this.acknowledgedRevision,
+    required this.variantSet,
     this.recoveryWarning,
   });
 
@@ -49,6 +50,11 @@ final class RoomProjectSession {
   final int pendingSaveCount;
   final int acknowledgedRevision;
   final RoomProjectRecoveryWarning? recoveryWarning;
+  final RoomVariantSet variantSet;
+  List<RoomColorVariant> get variants => variantSet.variants;
+  String get activeVariantId => variantSet.activeVariantId;
+  String? get comparisonBaselineVariantId =>
+      variantSet.comparisonBaselineVariantId;
 
   bool get hasUnsavedChanges => saveStatus != RoomProjectSaveStatus.saved;
 }
@@ -91,8 +97,11 @@ class RoomProjectSessionController extends Notifier<RoomProjectSession?> {
     final work = _ProjectWork(
       projectId: id(),
       name: names.roomProjectDefaultName,
-      variantId: id(),
-      variantName: names.roomProjectDefaultVariant,
+      variantSet: _initialVariants(
+        id(),
+        names.roomProjectDefaultVariant,
+        draft,
+      ),
       visible: draft,
       barrier: barrier,
     );
@@ -137,11 +146,29 @@ class RoomProjectSessionController extends Notifier<RoomProjectSession?> {
     }
     _lifecycle++;
     work.visible = draft;
+    work.variantSet = work.variantSet.updateColors(draft.colors);
     if (work.error != null) {
       _publish(work);
       return Future.value();
     }
     return _enqueue(work, draft);
+  }
+
+  /// Variant commands share the draft queue and capture metadata immediately.
+  /// A save failure retains this visible set; Retry never adopts an external CAS.
+  Future<void> commitVariants(RoomVariantSet variants) {
+    final work = _work;
+    if (work == null || !_current(work)) {
+      throw const RoomVariantException(RoomVariantFailure.unavailable);
+    }
+    _lifecycle++;
+    work.variantSet = variants;
+    work.visible = work.visible.withColors(variants.active.colors);
+    if (work.error != null) {
+      _publish(work);
+      return Future.value();
+    }
+    return _enqueue(work, work.visible);
   }
 
   Future<void> retrySave() {
@@ -185,14 +212,19 @@ class RoomProjectSessionController extends Notifier<RoomProjectSession?> {
       throw ArgumentError('Invalid project name');
     }
     _lifecycle++;
-    final intent = _SaveIntent(work.visible, name: name, updatedAt: updatedAt);
+    final intent = _SaveIntent(
+      work.visible,
+      work.variantSet,
+      name: name,
+      updatedAt: updatedAt,
+    );
     await _enqueueIntent(work, intent);
     if (intent.saved case final saved?) return saved;
     throw intent.failure ?? const RoomProjectStorageException();
   }
 
   Future<void> _enqueue(_ProjectWork work, RoomMaskDraft draft) {
-    return _enqueueIntent(work, _SaveIntent(draft));
+    return _enqueueIntent(work, _SaveIntent(draft, work.variantSet));
   }
 
   Future<void> _enqueueIntent(_ProjectWork work, _SaveIntent intent) {
@@ -245,14 +277,10 @@ class RoomProjectSessionController extends Notifier<RoomProjectSession?> {
           maskBytes: intent.draft.masks.labels,
           maskRevision: intent.draft.maskRevision,
           colorRevision: intent.draft.colorRevision,
-          variants: [
-            RoomColorVariant(
-              id: work.variantId,
-              name: work.variantName,
-              colors: intent.draft.colors,
-            ),
-          ],
-          activeVariantId: work.variantId,
+          variants: intent.variants.variants,
+          activeVariantId: intent.variants.activeVariantId,
+          comparisonBaselineVariantId:
+              intent.variants.comparisonBaselineVariantId,
           createdAt: work.createdAt,
           updatedAt: work.createdAt,
         );
@@ -264,12 +292,10 @@ class RoomProjectSessionController extends Notifier<RoomProjectSession?> {
         maskBytes: intent.draft.masks.labels,
         maskRevision: intent.draft.maskRevision,
         colorRevision: intent.draft.colorRevision,
-        variants: [
-          for (final variant in base.variants)
-            variant.id == base.activeVariantId
-                ? variant.copyWith(colors: intent.draft.colors)
-                : variant,
-        ],
+        variants: intent.variants.variants,
+        activeVariantId: intent.variants.activeVariantId,
+        comparisonBaselineVariantId:
+            intent.variants.comparisonBaselineVariantId,
         updatedAt: now.isBefore(base.updatedAt) ? base.updatedAt : now,
       );
       final repository = await ref.read(roomProjectRepositoryProvider.future);
@@ -361,15 +387,16 @@ class RoomProjectSessionController extends Notifier<RoomProjectSession?> {
       if (!current()) return null;
       final closing = closeProject();
       final snapshot = result.snapshot;
-      final variant = snapshot.variants.firstWhere(
-        (v) => v.id == snapshot.activeVariantId,
-      );
       final work =
           _ProjectWork(
               projectId: snapshot.projectId,
               name: snapshot.name,
-              variantId: variant.id,
-              variantName: variant.name,
+              variantSet: RoomVariantSet(
+                variants: snapshot.variants,
+                activeVariantId: snapshot.activeVariantId,
+                comparisonBaselineVariantId:
+                    snapshot.comparisonBaselineVariantId,
+              ),
               visible: draft,
               barrier: closing,
             )
@@ -437,6 +464,7 @@ class RoomProjectSessionController extends Notifier<RoomProjectSession?> {
       name: work.name,
       durable: work.durable,
       visible: work.visible,
+      variantSet: work.variantSet,
       saveStatus: work.status,
       saveError: work.error,
       pendingSaveCount:
@@ -451,12 +479,12 @@ final class _ProjectWork {
   _ProjectWork({
     required this.projectId,
     required this.name,
-    required this.variantId,
-    required this.variantName,
+    required this.variantSet,
     required this.visible,
     required this.barrier,
   });
-  final String projectId, variantId, variantName;
+  final String projectId;
+  RoomVariantSet variantSet;
   String name;
   final DateTime createdAt = DateTime.now().toUtc();
   final Future<void> barrier;
@@ -474,8 +502,9 @@ final class _ProjectWork {
 }
 
 final class _SaveIntent {
-  _SaveIntent(this.draft, {this.name, this.updatedAt});
+  _SaveIntent(this.draft, this.variants, {this.name, this.updatedAt});
   final RoomMaskDraft draft;
+  final RoomVariantSet variants;
   final String? name;
   final DateTime? updatedAt;
   RoomProjectSnapshot? saved;
@@ -484,6 +513,12 @@ final class _SaveIntent {
 }
 
 typedef _PreparedAssets = ({Uint8List photo, Uint8List thumbnail});
+
+RoomVariantSet _initialVariants(String id, String name, RoomMaskDraft draft) =>
+    RoomVariantSet(
+      variants: [RoomColorVariant(id: id, name: name, colors: draft.colors)],
+      activeVariantId: id,
+    );
 
 _PreparedAssets _prepareAssets(PreparedPhoto photo) {
   if (photo.width > RoomProjectLimits.maxDimension ||

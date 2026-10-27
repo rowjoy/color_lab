@@ -11,6 +11,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
 
 final _key = RoomRecolorKey(
+  projectId: 'project',
+  variantId: 'a',
   photoId: 'photo-1',
   maskRevision: 2,
   colorRevision: 3,
@@ -43,14 +45,32 @@ void main() {
   test('frame key has value equality and rejects invalid revisions', () {
     expect(
       _key,
-      RoomRecolorKey(photoId: 'photo-1', maskRevision: 2, colorRevision: 3),
+      RoomRecolorKey(
+        projectId: 'project',
+        variantId: 'a',
+        photoId: 'photo-1',
+        maskRevision: 2,
+        colorRevision: 3,
+      ),
     );
     expect(
-      () => RoomRecolorKey(photoId: '', maskRevision: 0, colorRevision: 0),
+      () => RoomRecolorKey(
+        projectId: 'project',
+        variantId: 'a',
+        photoId: '',
+        maskRevision: 0,
+        colorRevision: 0,
+      ),
       throwsArgumentError,
     );
     expect(
-      () => RoomRecolorKey(photoId: 'p', maskRevision: -1, colorRevision: 0),
+      () => RoomRecolorKey(
+        projectId: 'project',
+        variantId: 'a',
+        photoId: 'p',
+        maskRevision: -1,
+        colorRevision: 0,
+      ),
       throwsArgumentError,
     );
   });

@@ -49,6 +49,151 @@ final class RoomColorVariant {
       );
 }
 
+/// Safe command failures; presentation supplies localized recovery copy.
+enum RoomVariantFailure {
+  invalidName,
+  duplicateName,
+  invalidId,
+  missing,
+  limit,
+  finalVariant,
+  unavailable,
+}
+
+final class RoomVariantException implements Exception {
+  const RoomVariantException(this.failure);
+  final RoomVariantFailure failure;
+}
+
+/// Lightweight visible metadata. No photo, mask, or undo data is copied here.
+final class RoomVariantSet {
+  RoomVariantSet({
+    required List<RoomColorVariant> variants,
+    required this.activeVariantId,
+    this.comparisonBaselineVariantId,
+  }) : variants = List.unmodifiable(variants) {
+    if (variants.isEmpty || variants.length > RoomProjectLimits.maxVariants) {
+      throw const RoomVariantException(RoomVariantFailure.limit);
+    }
+    if (variants.map((v) => v.id).toSet().length != variants.length) {
+      throw const RoomVariantException(RoomVariantFailure.invalidId);
+    }
+    if (variants.map((v) => v.name.toLowerCase()).toSet().length !=
+        variants.length) {
+      throw const RoomVariantException(RoomVariantFailure.duplicateName);
+    }
+    _require(activeVariantId);
+    if (comparisonBaselineVariantId != null) {
+      _require(comparisonBaselineVariantId!);
+    }
+  }
+  final List<RoomColorVariant> variants;
+  final String activeVariantId;
+  final String? comparisonBaselineVariantId;
+  RoomColorVariant get active => _require(activeVariantId);
+  RoomColorVariant? get baseline => comparisonBaselineVariantId == null
+      ? null
+      : _require(comparisonBaselineVariantId!);
+
+  RoomColorVariant _require(String id) {
+    for (final variant in variants) {
+      if (variant.id == id) return variant;
+    }
+    throw const RoomVariantException(RoomVariantFailure.missing);
+  }
+
+  String _name(String value, [String? excluding]) {
+    final name = value.trim();
+    if (!RoomProjectLimits.validName(name)) {
+      throw const RoomVariantException(RoomVariantFailure.invalidName);
+    }
+    if (variants.any(
+      (v) => v.id != excluding && v.name.toLowerCase() == name.toLowerCase(),
+    )) {
+      throw const RoomVariantException(RoomVariantFailure.duplicateName);
+    }
+    return name;
+  }
+
+  RoomVariantSet create(String id, String name) {
+    final normalized = _name(name);
+    if (variants.length == RoomProjectLimits.maxVariants) {
+      throw const RoomVariantException(RoomVariantFailure.limit);
+    }
+    if (!RoomProjectLimits.validId(id) || variants.any((v) => v.id == id)) {
+      throw const RoomVariantException(RoomVariantFailure.invalidId);
+    }
+    return RoomVariantSet(
+      variants: [
+        ...variants,
+        RoomColorVariant(id: id, name: normalized, colors: active.colors),
+      ],
+      activeVariantId: id,
+      comparisonBaselineVariantId: comparisonBaselineVariantId,
+    );
+  }
+
+  RoomVariantSet rename(String id, String name) {
+    _require(id);
+    final normalized = _name(name, id);
+    return RoomVariantSet(
+      variants: [
+        for (final v in variants) v.id == id ? v.copyWith(name: normalized) : v,
+      ],
+      activeVariantId: activeVariantId,
+      comparisonBaselineVariantId: comparisonBaselineVariantId,
+    );
+  }
+
+  RoomVariantSet select(String id) {
+    _require(id);
+    return RoomVariantSet(
+      variants: variants,
+      activeVariantId: id,
+      comparisonBaselineVariantId: comparisonBaselineVariantId,
+    );
+  }
+
+  RoomVariantSet updateColors(RoomLayerColors colors) => RoomVariantSet(
+    variants: [
+      for (final v in variants)
+        v.id == activeVariantId ? v.copyWith(colors: colors) : v,
+    ],
+    activeVariantId: activeVariantId,
+    comparisonBaselineVariantId: comparisonBaselineVariantId,
+  );
+
+  /// Deleting the active variant selects the first survivor in persisted order.
+  RoomVariantSet delete(String id) {
+    _require(id);
+    if (variants.length == 1) {
+      throw const RoomVariantException(RoomVariantFailure.finalVariant);
+    }
+    final remaining = variants.where((v) => v.id != id).toList();
+    return RoomVariantSet(
+      variants: remaining,
+      activeVariantId: activeVariantId == id
+          ? remaining.first.id
+          : activeVariantId,
+      comparisonBaselineVariantId: comparisonBaselineVariantId == id
+          ? null
+          : comparisonBaselineVariantId,
+    );
+  }
+
+  RoomVariantSet pin(String id) {
+    _require(id);
+    return RoomVariantSet(
+      variants: variants,
+      activeVariantId: activeVariantId,
+      comparisonBaselineVariantId: id,
+    );
+  }
+
+  RoomVariantSet clearComparison() =>
+      RoomVariantSet(variants: variants, activeVariantId: activeVariantId);
+}
+
 /// One immutable working-resolution aggregate. Storage revision is independent
 /// of mask/color revisions. Explicit correction intent belongs to schema v2.
 final class RoomProjectSnapshot {

@@ -65,10 +65,10 @@ class _RoomProjectsScreenState extends ConsumerState<RoomProjectsScreen> {
                 ],
                 OutlinedButton(
                   key: const ValueKey('room-project-compare'),
-                  onPressed: null,
+                  onPressed: () =>
+                      Navigator.pop(sheetContext, _ProjectMenu.compare),
                   child: Text(context.l10n.roomProjectCompare),
                 ),
-                Text(context.l10n.roomProjectCompareUnavailable),
                 const SizedBox(height: 16),
                 OutlinedButton(
                   key: const ValueKey('room-project-delete'),
@@ -82,6 +82,12 @@ class _RoomProjectsScreenState extends ConsumerState<RoomProjectsScreen> {
         ),
       );
       if (!mounted || selection == null) return;
+      if (selection == _ProjectMenu.compare) {
+        context.push(
+          '/rooms/project/${Uri.encodeComponent(project.projectId)}?compare=1',
+        );
+        return;
+      }
       if (selection == _ProjectMenu.duplicate) {
         var name = project.name;
         while (context.l10n.roomProjectCopyName(name).length > 80 &&
@@ -417,7 +423,7 @@ class RoomProjectCard extends ConsumerWidget {
   }
 }
 
-enum _ProjectMenu { rename, duplicate, delete }
+enum _ProjectMenu { rename, duplicate, compare, delete }
 
 class _ProjectActionDialog extends ConsumerStatefulWidget {
   const _ProjectActionDialog({required this.project, required this.deleting});

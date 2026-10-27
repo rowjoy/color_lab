@@ -1595,6 +1595,168 @@ abstract class AppLocalizations {
   /// **'Working…'**
   String get roomProjectWorking;
 
+  /// Room variant and comparison control.
+  ///
+  /// In en, this message translates to:
+  /// **'Color variants'**
+  String get roomVariantsTitle;
+
+  /// Room variant and comparison control.
+  ///
+  /// In en, this message translates to:
+  /// **'Create variant'**
+  String get roomVariantCreate;
+
+  /// Room variant and comparison control.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename variant'**
+  String get roomVariantRename;
+
+  /// Room variant and comparison control.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete variant'**
+  String get roomVariantDelete;
+
+  /// Room variant and comparison control.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin as baseline'**
+  String get roomVariantPin;
+
+  /// Room variant and comparison control.
+  ///
+  /// In en, this message translates to:
+  /// **'Variant name'**
+  String get roomVariantName;
+
+  /// Room variant and comparison control.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get roomVariantApply;
+
+  /// Room variant and comparison control.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a name with 1–80 characters and no control characters.'**
+  String get roomVariantInvalidName;
+
+  /// Room variant and comparison control.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a different name. Each variant needs a unique name.'**
+  String get roomVariantDuplicateName;
+
+  /// Room variant and comparison control.
+  ///
+  /// In en, this message translates to:
+  /// **'This project already has 32 variants. Delete one before creating another.'**
+  String get roomVariantLimit;
+
+  /// Room variant and comparison control.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep at least one variant in this project.'**
+  String get roomVariantFinal;
+
+  /// Room variant and comparison control.
+  ///
+  /// In en, this message translates to:
+  /// **'This variant cannot be changed right now. Return to the project and try again.'**
+  String get roomVariantUnavailable;
+
+  /// Room variant and comparison control.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear comparison'**
+  String get roomComparisonClear;
+
+  /// Room variant and comparison control.
+  ///
+  /// In en, this message translates to:
+  /// **'Create another variant to compare two color choices.'**
+  String get roomComparisonNeedVariant;
+
+  /// Room variant and comparison control.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a different variant to compare with the pinned baseline.'**
+  String get roomComparisonSelectOther;
+
+  /// Room variant and comparison control.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin a baseline and select another variant to compare. Color edits apply to the selected variant.'**
+  String get roomComparisonGuide;
+
+  /// Room variant and comparison control.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare variants'**
+  String get roomComparisonTitle;
+
+  /// Room variant and comparison control.
+  ///
+  /// In en, this message translates to:
+  /// **'Original room photo'**
+  String get roomComparisonOriginal;
+
+  /// Room variant and comparison control.
+  ///
+  /// In en, this message translates to:
+  /// **'Comparison divider'**
+  String get roomComparisonDivider;
+
+  /// Room variant and comparison control.
+  ///
+  /// In en, this message translates to:
+  /// **'Comparison could not update. Your variants are safe.'**
+  String get roomComparisonFailed;
+
+  /// Room variant and comparison control.
+  ///
+  /// In en, this message translates to:
+  /// **'Updating comparison…'**
+  String get roomComparisonUpdating;
+
+  /// Room variant and comparison control.
+  ///
+  /// In en, this message translates to:
+  /// **'{letter} · {name}'**
+  String roomVariantLabel(String letter, String name);
+
+  /// Room variant and comparison control.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} · Selected'**
+  String roomVariantSelected(String label);
+
+  /// Room variant and comparison control.
+  ///
+  /// In en, this message translates to:
+  /// **'Baseline: {label}'**
+  String roomVariantBaseline(String label);
+
+  /// Room variant and comparison control.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected: {name}'**
+  String roomComparisonActive(String name);
+
+  /// Room variant and comparison control.
+  ///
+  /// In en, this message translates to:
+  /// **'Baseline: {name}'**
+  String roomComparisonBaseline(String name);
+
+  /// Room variant and comparison control.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% selected variant'**
+  String roomComparisonPosition(int percent);
+
   /// Label that opens product information and open-source licenses.
   ///
   /// In en, this message translates to:

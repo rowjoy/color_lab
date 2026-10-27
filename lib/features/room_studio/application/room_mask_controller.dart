@@ -502,6 +502,19 @@ class RoomMaskController extends Notifier<RoomMaskState> {
     return true;
   }
 
+  /// The session already captured this variant command. Mirror its draft into
+  /// the editor without generating another save or changing mask/history state.
+  void adoptVariantDraft(RoomMaskDraft draft) {
+    if (!_live ||
+        state.editBusy ||
+        state.stage != RoomMaskStage.ready ||
+        state.draft?.photoId != draft.photoId ||
+        state.draft?.maskRevision != draft.maskRevision) {
+      return;
+    }
+    state = state.copyWith(draft: draft);
+  }
+
   void setTool(RoomMaskTool tool) {
     if (!_live) return;
     final next = state.showOverlay ? tool : RoomMaskTool.move;

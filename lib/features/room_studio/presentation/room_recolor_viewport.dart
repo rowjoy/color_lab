@@ -28,7 +28,7 @@ class RoomRecolorViewport extends StatelessWidget {
   Widget build(BuildContext context) {
     final isCurrent = frame?.key == currentKey;
     final isPrevious =
-        updating && frame != null && frame!.key.photoId == currentKey.photoId;
+        updating && frame != null && frame!.key.sameView(currentKey);
     final useResult = showAfter && (isCurrent || isPrevious);
     final bytes = useResult ? frame!.pngBytes : sourcePngBytes;
     final imageKey = useResult
@@ -52,7 +52,7 @@ class RoomRecolorViewport extends StatelessWidget {
               bytes,
               key: ValueKey(imageKey),
               fit: BoxFit.contain,
-              gaplessPlayback: true,
+              gaplessPlayback: false,
               semanticLabel: label,
             ),
           ),
