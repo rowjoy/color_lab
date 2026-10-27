@@ -678,6 +678,51 @@ class AppLocalizationsEn extends AppLocalizations {
       'Photos, saved colors and preferences stay on your device. No account or cloud upload is needed.';
 
   @override
+  String get roomProjectDefaultName => 'My room';
+
+  @override
+  String get roomProjectDefaultVariant => 'Original colors';
+
+  @override
+  String get roomProjectSaving => 'Saving project…';
+
+  @override
+  String get roomProjectSaved => 'Project saved';
+
+  @override
+  String get roomProjectSaveFailed =>
+      'Project not saved. Your edits are still here. Retry to save them.';
+
+  @override
+  String get roomProjectSaveConflict =>
+      'Project changed elsewhere. Your edits are still here, but could not be saved. Reopen the project to use its saved version.';
+
+  @override
+  String get roomProjectSaveLimit =>
+      'This project has reached its storage limit. Your latest edits are still here but are not saved.';
+
+  @override
+  String get roomProjectRetrySave => 'Retry save';
+
+  @override
+  String get roomManualModeNotice =>
+      'Manual mode: automatic masks are unavailable. Mark surfaces to preview colors, or retry analysis.';
+
+  @override
+  String get roomEditManually => 'Edit manually';
+
+  @override
+  String get roomRetryAnalysis => 'Retry analysis';
+
+  @override
+  String get roomAnalysisFailed =>
+      'Room analysis could not finish. Try again or choose another photo.';
+
+  @override
+  String get roomProjectReplaceUnsaved =>
+      'This project has unsaved edits. If you continue and open the new photo, those edits will be discarded. Its last saved version stays on this device.';
+
+  @override
   String aboutAndLicenses(String appName) {
     return 'About $appName & licenses';
   }

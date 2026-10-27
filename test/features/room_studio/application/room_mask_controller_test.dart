@@ -15,12 +15,15 @@ import 'package:color_lab/features/picker/domain/photo_acquisition.dart';
 import 'package:color_lab/features/picker/domain/prepared_photo.dart';
 import 'package:color_lab/features/room_studio/application/room_color_provider.dart';
 import 'package:color_lab/features/room_studio/application/room_mask_controller.dart';
+import 'package:color_lab/features/room_studio/application/room_project_session_controller.dart';
+import 'package:color_lab/features/room_studio/application/room_projects_providers.dart';
 import 'package:color_lab/features/room_studio/domain/mask_bitmap.dart';
 import 'package:color_lab/features/room_studio/domain/mask_stroke.dart';
 import 'package:color_lab/features/room_studio/domain/mask_undo.dart';
 import 'package:color_lab/features/room_studio/domain/room_layer.dart';
 import 'package:color_lab/features/room_studio/domain/room_layer_colors.dart';
 import 'package:color_lab/features/room_studio/domain/room_mask_state.dart';
+import 'package:color_lab/features/room_studio/domain/room_project.dart';
 import 'package:color_lab/features/room_studio/refine/mask_refinement.dart';
 import 'package:color_lab/features/room_studio/refine/mask_refinement_service.dart';
 import 'package:color_lab/features/room_studio/segmentation/room_segmentation_service.dart';
@@ -35,6 +38,7 @@ import '../../../support/in_memory_acquisition_intent_store.dart';
 import '../../../support/in_memory_app_preferences_repository.dart';
 import '../../../support/in_memory_color_history_repository.dart';
 import '../../../support/in_memory_saved_palette_repository.dart';
+import '../../../support/in_memory_room_project_repository.dart';
 
 PreparedPhoto photo([int marker = 1]) => PreparedPhoto(
   width: 10,
@@ -188,6 +192,7 @@ class Harness {
     var sequence = 0;
     container = ProviderContainer(
       overrides: [
+        roomProjectRepositoryProvider.overrideWith((ref) async => projects),
         acquisitionIntentStoreProvider.overrideWith((ref) async => store),
         photoPickerServiceProvider.overrideWithValue(picker),
         roomSegmentationServiceProvider.overrideWith((ref) {
@@ -216,6 +221,7 @@ class Harness {
   final store = Store();
   final segmenter = Segmenter();
   final refiner = Refiner();
+  final projects = ProjectStore();
   late final ProviderContainer container;
   RoomMaskController get controller =>
       container.read(roomMaskProvider.notifier);
@@ -244,9 +250,202 @@ class Harness {
       stroke: value ?? stroke(),
     );
   }
+
+  Future<void> saved() async {
+    for (var i = 0; i < 300; i++) {
+      if (container.read(roomProjectSessionProvider)?.saveStatus ==
+          RoomProjectSaveStatus.saved) {
+        return;
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+    }
+    fail('Project did not save');
+  }
+}
+
+class ProjectStore extends InMemoryRoomProjectRepository {
+  Completer<void>? readGate;
+  @override
+  Future<RoomProjectReadResult?> read(String projectId) async {
+    await readGate?.future;
+    return super.read(projectId);
+  }
 }
 
 void main() {
+  test(
+    'late project open cannot detach the editor after a newer import starts',
+    () async {
+      final h = Harness();
+      final original = await h.ready();
+      await h.saved();
+      final saved = h.container.read(roomProjectSessionProvider)!.durable!;
+      await h.projects.save(
+        saved.copyWith(projectId: 'another-project', photoId: 'another-photo'),
+        expectedRevision: 0,
+      );
+      h.projects.readGate = Completer<void>();
+      final opening = h.controller.openProject('another-project');
+      await tick();
+      final importing = h.import();
+      await tick();
+      h.projects.readGate!.complete();
+      expect(await opening, isFalse);
+      h.segmenter.requests.last.fail();
+      await importing;
+      h.controller.cancelCandidate();
+      expect(h.state.draft, same(original));
+      expect(
+        h.container.read(roomProjectSessionProvider)!.projectId,
+        saved.projectId,
+      );
+      h.controller.setLayerColor(RoomLayer.wall, RgbColor(10, 20, 30));
+      await h.saved();
+      expect(
+        h.container.read(roomProjectSessionProvider)!.durable!.colors.wall,
+        RgbColor(10, 20, 30),
+      );
+    },
+  );
+
+  test(
+    'disposing editor invalidates pending autosaves before they can recreate data',
+    () async {
+      final h = Harness();
+      await h.ready();
+      await h.saved();
+      final id = h.container.read(roomProjectSessionProvider)!.projectId;
+      final gate = Completer<void>();
+      var calls = 0;
+      h.projects.beforeSave = () {
+        calls++;
+        return gate.future;
+      };
+      h.controller.setLayerColor(RoomLayer.wall, RgbColor(1, 2, 3));
+      await tick();
+      h.controller.setLayerColor(RoomLayer.wall, RgbColor(4, 5, 6));
+      h.container.invalidate(roomMaskProvider);
+      h.container.read(roomMaskProvider);
+      await tick();
+      expect(h.container.read(roomProjectSessionProvider), isNull);
+      gate.complete();
+      await h.projects.delete(id);
+      await tick();
+      expect(calls, 1);
+      expect(await h.projects.read(id), isNull);
+    },
+  );
+
+  test(
+    'manual fallback explicitly saves failed analysis photo and retry rebases corrections',
+    () async {
+      final h = Harness();
+      final importing = h.import();
+      await tick();
+      h.segmenter.requests.single.fail(
+        RoomSegmentationFailureKind.modelUnavailable,
+      );
+      await importing;
+      final candidate = h.state.candidate!;
+      expect(h.controller.createManualFallback(), isTrue);
+      expect(h.state.canEdit, isTrue);
+      expect(h.state.draft!.photo, same(candidate.photo));
+      expect(h.state.draft!.photoId, candidate.photoId);
+      expect(h.state.draft!.manualMode, isTrue);
+      expect(h.state.draft!.aiMasks.labels, List.filled(100, 0));
+      expect(h.state.draft!.masks.labels, List.filled(100, 0));
+      await h.saved();
+      h.controller.setTool(RoomMaskTool.add);
+      expect(await h.paint(), isTrue);
+      final retry = h.controller.retryAnalysis();
+      h.segmenter.requests.last.succeed(masks(3));
+      await retry;
+      expect(h.state.draft!.manualMode, isFalse);
+      expect(h.state.draft!.masks.labels[55], 1);
+      expect(h.state.draft!.masks.labels[0], 3);
+      await h.saved();
+      final saved = h.container.read(roomProjectSessionProvider)!.durable!;
+      expect(saved.revision, 3);
+      expect(saved.maskRevision, 2);
+      expect(saved.aiMaskBytes[55], 3);
+      expect(saved.maskBytes[55], 1);
+    },
+  );
+
+  test(
+    'only completed durable mutations save; cancelled and failed refinements do not',
+    () async {
+      final h = Harness();
+      await h.ready(3);
+      await h.saved();
+      final id = h.container.read(roomProjectSessionProvider)!.projectId;
+      Future<int> revision() async =>
+          (await h.projects.read(id))!.snapshot.revision;
+      h.controller.setLayer(RoomLayer.floor);
+      h.controller.setBrushFraction(.08);
+      h.controller.setShowOverlay(false);
+      h.controller.setShowOverlay(true);
+      h.controller.setLayer(RoomLayer.wall);
+      h.controller.setTool(RoomMaskTool.add);
+      expect(await revision(), 1);
+      h.refiner.gate = Completer<void>();
+      final cancelled = h.paint();
+      h.controller.setTool(RoomMaskTool.move);
+      h.refiner.gate!.complete();
+      expect(await cancelled, isFalse);
+      expect(await revision(), 1);
+      h.refiner.gate = null;
+      h.controller.setTool(RoomMaskTool.add);
+      expect(await h.paint(), isTrue);
+      await h.saved();
+      expect(await revision(), 2);
+      final draft = h.state.draft!;
+      expect(
+        await h.controller.undo(
+          photoId: draft.photoId,
+          maskRevision: draft.maskRevision,
+        ),
+        isTrue,
+      );
+      await h.saved();
+      expect(await revision(), 3);
+      h.controller.setLayerColor(RoomLayer.wall, RgbColor(1, 2, 3));
+      await h.saved();
+      expect(await revision(), 4);
+      h.controller.setLayerColor(RoomLayer.wall, RgbColor(1, 2, 3));
+      expect(await revision(), 4);
+      h.controller.restoreAiMasks(
+        photoId: draft.photoId,
+        maskRevision: h.state.draft!.maskRevision,
+      );
+      await h.saved();
+      expect(await revision(), 5);
+      h.refiner.fail = true;
+      expect(await h.paint(), isFalse);
+      expect(await revision(), 5);
+    },
+  );
+
+  test(
+    'controller reopen restores persisted edits with empty undo and no extra save',
+    () async {
+      final h = Harness();
+      await h.ready(3);
+      h.controller.setTool(RoomMaskTool.add);
+      await h.paint();
+      h.controller.setLayerColor(RoomLayer.floor, RgbColor(4, 5, 6));
+      await h.saved();
+      final saved = h.container.read(roomProjectSessionProvider)!.durable!;
+      await h.controller.closeProject();
+      expect(h.state.draft, isNull);
+      expect(await h.controller.openProject(saved.projectId), isTrue);
+      expect(h.state.canEdit, isTrue);
+      expect(h.state.draft!.history.canUndo, isFalse);
+      expect(h.state.draft!.masks.labels, saved.maskBytes);
+      expect(h.state.draft!.colors.floor, RgbColor(4, 5, 6));
+      expect((await h.projects.read(saved.projectId))!.snapshot.revision, 3);
+    },
+  );
   test(
     'refresh keeps manual Add and Erase, colors, and rebased undo',
     () async {

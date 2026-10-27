@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/theme.dart';
+import '../../../l10n/l10n.dart';
 
 Future<bool> confirmRestoreAiMasks(BuildContext context) => _confirm(
   context,
@@ -11,11 +12,15 @@ Future<bool> confirmRestoreAiMasks(BuildContext context) => _confirm(
   confirmationKey: 'confirm-room-mask-restore',
 );
 
-Future<bool> confirmReplaceRoomPhoto(BuildContext context) => _confirm(
+Future<bool> confirmReplaceRoomPhoto(
+  BuildContext context, {
+  bool hasUnsavedChanges = false,
+}) => _confirm(
   context,
   title: 'Replace room photo?',
-  message:
-      'After a new photo is analyzed successfully, it replaces these masks and their undo history. Your current masks stay available if you cancel or analysis fails.',
+  message: hasUnsavedChanges
+      ? context.l10n.roomProjectReplaceUnsaved
+      : 'After a new photo is analyzed successfully, it replaces these masks and their undo history. Your current masks stay available if you cancel or analysis fails.',
   action: 'Choose photo',
   confirmationKey: 'confirm-room-mask-replace',
 );

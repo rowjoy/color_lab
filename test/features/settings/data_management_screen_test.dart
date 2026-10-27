@@ -3,6 +3,10 @@ import 'package:color_lab/core/theme/theme.dart';
 import 'package:color_lab/data/storage/local_data_manager.dart';
 import 'package:color_lab/features/settings/application/local_data_providers.dart';
 import 'package:color_lab/features/settings/presentation/data_management_screen.dart';
+import 'package:color_lab/features/room_studio/application/room_mask_controller.dart';
+import 'package:color_lab/features/room_studio/application/room_project_session_controller.dart';
+import 'package:color_lab/features/room_studio/application/room_projects_providers.dart';
+import 'package:color_lab/features/room_studio/domain/room_layer.dart';
 import 'package:color_lab/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,6 +16,8 @@ import 'package:color_lab/core/color/color_engine.dart';
 import 'package:color_lab/features/history/application/history_providers.dart';
 import 'package:color_lab/features/history/domain/saved_color.dart';
 import '../../support/in_memory_color_history_repository.dart';
+import '../../support/in_memory_room_project_repository.dart';
+import '../../support/room_project_fixtures.dart';
 
 class TestManager implements LocalDataManager {
   int records = 3;
@@ -41,6 +47,108 @@ class TestManager implements LocalDataManager {
 }
 
 void main() {
+  testWidgets(
+    'only confirmed Room deletion closes and drains autosaves before erase',
+    (tester) async {
+      final repository = InMemoryRoomProjectRepository(
+        initial: [roomProjectFixture(revision: 1)],
+      );
+      final manager = TestManager()
+        ..afterDelete = () => repository.delete('project-1');
+      final container = ProviderContainer(
+        overrides: [
+          localDataManagerProvider.overrideWithValue(manager),
+          roomProjectRepositoryProvider.overrideWith((ref) async => repository),
+        ],
+      );
+      final gate = Completer<void>();
+      addTearDown(() {
+        if (!gate.isCompleted) gate.complete();
+        container.dispose();
+      });
+      final controller = container.read(roomMaskProvider.notifier);
+      var opened = false;
+      final opening = controller
+          .openProject('project-1')
+          .then((value) => opened = value);
+      for (var i = 0; i < 200 && !opened; i++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 10)),
+        );
+        await tester.pump();
+      }
+      expect(opened, isTrue);
+      await opening;
+      var saves = 0;
+      repository.beforeSave = () {
+        saves++;
+        return gate.future;
+      };
+      controller.setLayerColor(RoomLayer.wall, RgbColor(1, 2, 3));
+      await tester.pump();
+      controller.setLayerColor(RoomLayer.wall, RgbColor(4, 5, 6));
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const DataManagementScreen(),
+          ),
+        ),
+      );
+      await tester.tap(find.byKey(const ValueKey('category-roomProjects')));
+      await tester.pump();
+      Future<void> dialogFrame() async {
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+      }
+
+      Future<void> preview() async {
+        await tester.ensureVisible(find.byKey(const ValueKey('preview-data')));
+        await tester.tap(find.byKey(const ValueKey('preview-data')));
+        await dialogFrame();
+      }
+
+      await preview();
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(
+        container.read(roomProjectSessionProvider)!.visible.colorRevision,
+        5,
+      );
+      expect(manager.attempts, 0);
+      await preview();
+      await tester.tap(find.byKey(const ValueKey('review-data')));
+      await dialogFrame();
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(container.read(roomProjectSessionProvider), isNotNull);
+      expect(manager.attempts, 0);
+      await preview();
+      await tester.tap(find.byKey(const ValueKey('review-data')));
+      await dialogFrame();
+      await tester.tap(find.byKey(const ValueKey('confirm-data')));
+      await tester.pump();
+      expect(
+        manager.attempts,
+        0,
+        reason: 'Accepted save must settle before deletion starts',
+      );
+      expect(container.read(roomProjectSessionProvider), isNull);
+      expect(container.read(roomMaskProvider).draft, isNull);
+      gate.complete();
+      await tester.pumpAndSettle();
+      expect(manager.deletes, 1);
+      expect(saves, 1);
+      expect((await repository.listSnapshot()).records, isEmpty);
+      expect(
+        container.read(roomProjectRepositoryProvider).requireValue,
+        same(repository),
+      );
+    },
+  );
+
   Future<void> launch(WidgetTester tester, TestManager manager) =>
       tester.pumpWidget(
         ProviderScope(

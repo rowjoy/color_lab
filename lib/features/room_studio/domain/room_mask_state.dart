@@ -44,6 +44,7 @@ final class RoomMaskDraft {
     required this.changedFromAiCount,
     this.colors = const RoomLayerColors(),
     this.colorRevision = 0,
+    this.manualMode = false,
   }) {
     if (aiMasks.width != photo.width ||
         aiMasks.height != photo.height ||
@@ -68,6 +69,9 @@ final class RoomMaskDraft {
   final int changedFromAiCount;
   final RoomLayerColors colors;
   final int colorRevision;
+
+  /// Transient/inferable presentation state; never added to schema v1.
+  final bool manualMode;
 
   bool get hasEdits => changedFromAiCount > 0;
 }

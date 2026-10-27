@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../room_studio/application/room_mask_controller.dart';
 import '../../../data/storage/local_data_manager.dart';
 import '../../../l10n/l10n.dart';
 import '../application/local_data_providers.dart';
@@ -92,6 +93,10 @@ class _DataManagementScreenState extends ConsumerState<DataManagementScreen> {
       }
       if (!await _confirm(destructive: true, preview: preview) || !mounted) {
         return;
+      }
+      if (selected.contains(LocalDataCategory.roomProjects)) {
+        await ref.read(roomMaskProvider.notifier).closeProject();
+        if (!mounted) return;
       }
       await manager.delete(selected);
       if (!mounted) return;

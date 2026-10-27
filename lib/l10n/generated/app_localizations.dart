@@ -1271,6 +1271,84 @@ abstract class AppLocalizations {
   /// **'Photos, saved colors and preferences stay on your device. No account or cloud upload is needed.'**
   String get settingsPrivacySubtitle;
 
+  /// Initial name of a newly saved real-photo Room project.
+  ///
+  /// In en, this message translates to:
+  /// **'My room'**
+  String get roomProjectDefaultName;
+
+  /// Initial color variant name for a real-photo Room project.
+  ///
+  /// In en, this message translates to:
+  /// **'Original colors'**
+  String get roomProjectDefaultVariant;
+
+  /// Accessible live status while completed Room edits are saving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving project…'**
+  String get roomProjectSaving;
+
+  /// Status only when all visible completed Room edits are acknowledged on disk.
+  ///
+  /// In en, this message translates to:
+  /// **'Project saved'**
+  String get roomProjectSaved;
+
+  /// Safe Room storage error; the visible draft remains editable.
+  ///
+  /// In en, this message translates to:
+  /// **'Project not saved. Your edits are still here. Retry to save them.'**
+  String get roomProjectSaveFailed;
+
+  /// A stale Room save never silently overwrites another committed revision.
+  ///
+  /// In en, this message translates to:
+  /// **'Project changed elsewhere. Your edits are still here, but could not be saved. Reopen the project to use its saved version.'**
+  String get roomProjectSaveConflict;
+
+  /// Bounded Room storage cannot accept another revision.
+  ///
+  /// In en, this message translates to:
+  /// **'This project has reached its storage limit. Your latest edits are still here but are not saved.'**
+  String get roomProjectSaveLimit;
+
+  /// Retry persisting the latest visible Room draft, separate from AI analysis.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry save'**
+  String get roomProjectRetrySave;
+
+  /// Honest notice for an editable Room with no available AI masks.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual mode: automatic masks are unavailable. Mark surfaces to preview colors, or retry analysis.'**
+  String get roomManualModeNotice;
+
+  /// Create an aligned blank mask project from the prepared photo when AI fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit manually'**
+  String get roomEditManually;
+
+  /// Retry AI analysis while preserving manual corrections through reanalysis.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry analysis'**
+  String get roomRetryAnalysis;
+
+  /// Recoverable AI failure after preparing a room photo.
+  ///
+  /// In en, this message translates to:
+  /// **'Room analysis could not finish. Try again or choose another photo.'**
+  String get roomAnalysisFailed;
+
+  /// Explicit consequence before replacing a Room draft whose latest edits are not acknowledged.
+  ///
+  /// In en, this message translates to:
+  /// **'This project has unsaved edits. If you continue and open the new photo, those edits will be discarded. Its last saved version stays on this device.'**
+  String get roomProjectReplaceUnsaved;
+
   /// Label that opens product information and open-source licenses.
   ///
   /// In en, this message translates to:

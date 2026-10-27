@@ -18,6 +18,8 @@ import 'package:color_lab/features/settings/application/theme_mode_provider.dart
 import 'package:color_lab/features/settings/domain/app_preferences.dart';
 import 'package:color_lab/features/room_studio/application/illustrated_room_controller.dart';
 import 'package:color_lab/features/room_studio/application/room_mask_controller.dart';
+import 'package:color_lab/features/room_studio/application/room_project_session_controller.dart';
+import 'package:color_lab/features/room_studio/application/room_projects_providers.dart';
 import 'package:color_lab/features/room_studio/application/room_model_download_providers.dart';
 import 'package:color_lab/features/room_studio/application/room_model_setup_controller.dart';
 import 'package:color_lab/features/room_studio/models/room_model_store.dart';
@@ -45,6 +47,7 @@ import 'package:image/image.dart' as img;
 import '../../../support/in_memory_acquisition_intent_store.dart';
 import '../../../support/in_memory_app_preferences_repository.dart';
 import '../../../support/in_memory_color_history_repository.dart';
+import '../../../support/in_memory_room_project_repository.dart';
 
 class _Picker implements PhotoPickerService {
   PreparedPhoto? next = _photo(), recovered;
@@ -211,9 +214,13 @@ Future<ProviderContainer> _launch(
   InMemoryAcquisitionIntentStore? store,
   AppPreferences? preferences,
   RoomModelStore? modelStore,
+  InMemoryRoomProjectRepository? projects,
 }) async {
   final container = ProviderContainer(
     overrides: [
+      roomProjectRepositoryProvider.overrideWith(
+        (ref) async => projects ?? InMemoryRoomProjectRepository(),
+      ),
       roomModelSetupProvider.overrideWith(_ReadySetup.new),
       acquisitionIntentStoreProvider.overrideWith(
         (ref) async => store ?? InMemoryAcquisitionIntentStore(),
@@ -375,6 +382,272 @@ Future<void> _zoom(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets(
+    'external revision conflict stays visible and Retry never claims Saved',
+    (tester) async {
+      final projects = InMemoryRoomProjectRepository();
+      final segmenter = _Segmenter();
+      final container = await _launch(
+        tester,
+        segmenter: segmenter,
+        projects: projects,
+      );
+      await _open(tester);
+      await _ready(tester, segmenter);
+      await _waitSaved(tester, container);
+      final saved = container.read(roomProjectSessionProvider)!.durable!;
+      await projects.save(
+        saved.copyWith(name: 'Changed elsewhere'),
+        expectedRevision: 1,
+      );
+      container
+          .read(roomMaskProvider.notifier)
+          .setLayerColor(RoomLayer.wall, RgbColor(10, 20, 30));
+      await _frames(tester);
+      expect(
+        find.text(
+          'Project changed elsewhere. Your edits are still here, but could not be saved. Reopen the project to use its saved version.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Project saved'), findsNothing);
+      expect(container.read(roomMaskProvider).canEdit, isTrue);
+      await _tap(tester, _key('room-project-retry-save'));
+      expect(
+        container.read(roomProjectSessionProvider)!.saveStatus,
+        RoomProjectSaveStatus.conflict,
+      );
+      expect(
+        (await projects.read(saved.projectId))!.snapshot.name,
+        'Changed elsewhere',
+      );
+      expect(find.text('Project saved'), findsNothing);
+    },
+  );
+
+  testWidgets('replacing a failed-save draft explains the unsaved consequence', (
+    tester,
+  ) async {
+    final projects = InMemoryRoomProjectRepository();
+    final segmenter = _Segmenter();
+    final container = await _launch(
+      tester,
+      segmenter: segmenter,
+      projects: projects,
+    );
+    await _open(tester);
+    await _ready(tester, segmenter);
+    await _waitSaved(tester, container);
+    projects.saveError = StateError('private disk failure');
+    container
+        .read(roomMaskProvider.notifier)
+        .setLayerColor(RoomLayer.wall, RgbColor(1, 2, 3));
+    await _frames(tester);
+    await _tap(tester, _key('room-mask-gallery'));
+    expect(
+      find.text(
+        'This project has unsaved edits. If you continue and open the new photo, those edits will be discarded. Its last saved version stays on this device.',
+      ),
+      findsOneWidget,
+    );
+    await _tap(tester, find.text('Cancel'));
+    expect(
+      container.read(roomProjectSessionProvider)!.visible.colors.wall,
+      RgbColor(1, 2, 3),
+    );
+    expect(
+      container.read(roomProjectSessionProvider)!.saveStatus,
+      RoomProjectSaveStatus.failed,
+    );
+  });
+
+  testWidgets(
+    'manual mode keeps the photo and separates Retry analysis from Retry save',
+    (tester) async {
+      final projects = InMemoryRoomProjectRepository();
+      final gate = Completer<void>();
+      projects.beforeSave = () => gate.future;
+      projects.saveError = StateError('/private/room.png');
+      final segmenter = _Segmenter();
+      final container = await _launch(
+        tester,
+        segmenter: segmenter,
+        projects: projects,
+      );
+      final semantics = tester.ensureSemantics();
+      await _open(tester);
+      await _tap(tester, _key('room-mask-gallery'));
+      final candidate = container.read(roomMaskProvider).candidate!;
+      segmenter.requests.single.fail();
+      await _frames(tester);
+      await _tap(tester, _key('room-mask-manual'));
+      expect(container.read(roomMaskProvider).canEdit, isTrue);
+      expect(
+        container.read(roomMaskProvider).draft!.photo,
+        same(candidate.photo),
+      );
+      expect(
+        find.text(
+          'Manual mode: automatic masks are unavailable. Mark surfaces to preview colors, or retry analysis.',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.text(
+          'No supported surfaces were found. You can mark them manually.',
+        ),
+        findsNothing,
+      );
+      expect(find.text('Saving project…'), findsOneWidget);
+      expect(find.text('Retry analysis'), findsOneWidget);
+      await _tap(tester, _key('room-mask-tool-add'));
+      await _dot(tester, container);
+      gate.complete();
+      for (
+        var i = 0;
+        i < 100 &&
+            container.read(roomProjectSessionProvider)!.saveStatus ==
+                RoomProjectSaveStatus.saving;
+        i++
+      ) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 10)),
+        );
+        await tester.pump();
+      }
+      await _frames(tester);
+      expect(
+        find.text(
+          'Project not saved. Your edits are still here. Retry to save them.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Project saved'), findsNothing);
+      expect(find.textContaining('/private/'), findsNothing);
+      await tester.ensureVisible(_key('room-project-retry-save'));
+      await tester.pump();
+      expect(
+        tester.getSemantics(_key('room-project-retry-save')),
+        matchesSemantics(
+          isButton: true,
+          hasEnabledState: true,
+          isEnabled: true,
+          hasTapAction: true,
+          label: 'Retry save',
+        ),
+      );
+      projects.saveError = null;
+      await _tap(tester, _key('room-project-retry-save'));
+      await _waitSaved(tester, container);
+      expect(find.text('Project saved'), findsOneWidget);
+      expect(
+        container.read(roomProjectSessionProvider)!.durable!.maskBytes[55],
+        1,
+      );
+      await _tap(tester, _key('room-mask-refresh'));
+      expect(segmenter.requests.length, 2);
+      segmenter.requests.last.succeed(3);
+      await _worker(tester, container);
+      expect(container.read(roomMaskProvider).draft!.masks.labels[55], 1);
+      expect(container.read(roomMaskProvider).draft!.masks.labels[0], 3);
+      expect(
+        find.text(
+          'Manual mode: automatic masks are unavailable. Mark surfaces to preview colors, or retry analysis.',
+        ),
+        findsNothing,
+      );
+      semantics.dispose();
+    },
+  );
+
+  testWidgets(
+    'completed edits save in background; inactive and cancelled gestures never persist',
+    (tester) async {
+      final projects = InMemoryRoomProjectRepository();
+      final segmenter = _Segmenter();
+      final container = await _launch(
+        tester,
+        segmenter: segmenter,
+        projects: projects,
+      );
+      await _open(tester);
+      await _ready(tester, segmenter);
+      await _waitSaved(tester, container);
+      final initial = container.read(roomProjectSessionProvider)!.durable!;
+      await _tap(tester, _key('room-mask-tool-add'));
+      final viewport = find.byType(RoomMaskViewport);
+      await tester.ensureVisible(viewport);
+      final gesture = await tester.startGesture(tester.getCenter(viewport));
+      await _frames(tester);
+      expect(container.read(roomProjectSessionProvider)!.durable!.revision, 1);
+      await gesture.cancel();
+      await _frames(tester);
+      expect(container.read(roomMaskProvider).draft!.maskRevision, 0);
+      final gate = Completer<void>();
+      projects.beforeSave = () => gate.future;
+      container
+          .read(roomMaskProvider.notifier)
+          .setLayerColor(RoomLayer.wall, RgbColor(20, 30, 40));
+      expect(
+        container.read(roomProjectSessionProvider)!.saveStatus,
+        RoomProjectSaveStatus.saving,
+      );
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      final hiddenStroke = tester.widget<RoomMaskViewport>(viewport).onStroke;
+      hiddenStroke(
+        MaskStroke(
+          layer: RoomLayer.wall,
+          mode: MaskEditMode.add,
+          segments: [
+            [MaskPoint(.55, .55)],
+          ],
+          diameterFraction: .05,
+        ),
+      );
+      gate.complete();
+      await _waitSaved(tester, container);
+      expect(container.read(roomProjectSessionProvider)!.durable!.revision, 2);
+      expect(container.read(roomMaskProvider).draft!.maskRevision, 0);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      final router = container.read(appRouterProvider);
+      router.go('/rooms');
+      await _frames(tester);
+      hiddenStroke(
+        MaskStroke(
+          layer: RoomLayer.wall,
+          mode: MaskEditMode.add,
+          segments: [
+            [MaskPoint(.55, .55)],
+          ],
+          diameterFraction: .05,
+        ),
+      );
+      await _frames(tester);
+      expect(container.read(roomProjectSessionProvider)!.durable!.revision, 2);
+      await container.read(roomMaskProvider.notifier).closeProject();
+      var opened = false;
+      final opening = container
+          .read(roomMaskProvider.notifier)
+          .openProject(initial.projectId)
+          .then((value) => opened = value);
+      for (var i = 0; i < 200 && !opened; i++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 10)),
+        );
+        await tester.pump();
+      }
+      expect(opened, isTrue);
+      await opening;
+      router.go('/room/masks');
+      await _frames(tester);
+      expect(
+        container.read(roomMaskProvider).draft!.colors.wall,
+        RgbColor(20, 30, 40),
+      );
+      expect(find.text('Project saved'), findsOneWidget);
+    },
+  );
+
   testWidgets('Cancel download aborts model setup and ignores late analysis', (
     tester,
   ) async {
@@ -1648,4 +1921,27 @@ void main() {
       },
     );
   }
+}
+
+Future<void> _waitSaved(
+  WidgetTester tester,
+  ProviderContainer container,
+) async {
+  for (
+    var i = 0;
+    i < 300 &&
+        container.read(roomProjectSessionProvider)?.saveStatus !=
+            RoomProjectSaveStatus.saved;
+    i++
+  ) {
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 10)),
+    );
+    await tester.pump();
+  }
+  expect(
+    container.read(roomProjectSessionProvider)?.saveStatus,
+    RoomProjectSaveStatus.saved,
+  );
+  await _frames(tester);
 }

@@ -12,6 +12,7 @@ import '../../mixer/presentation/mixer_color_picker.dart';
 import '../../shell/presentation/studio_page.dart';
 import '../application/room_image_export_service.dart';
 import '../application/room_mask_controller.dart';
+import '../application/room_project_session_controller.dart';
 import '../application/room_model_download_providers.dart';
 import '../application/room_recolor_provider.dart';
 import '../domain/room_layer.dart';
@@ -24,6 +25,7 @@ import 'room_mask_viewport.dart';
 import 'room_model_download_status.dart';
 import '../models/room_model_store.dart';
 import 'room_recolor_viewport.dart';
+import 'room_project_save_status.dart';
 
 class RoomMaskScreen extends ConsumerStatefulWidget {
   const RoomMaskScreen({super.key});
@@ -81,7 +83,11 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
       final captured = ref.read(roomMaskProvider).draft;
       if (captured != null) {
         setState(() => _confirming = true);
-        final accepted = await confirmReplaceRoomPhoto(context);
+        final accepted = await confirmReplaceRoomPhoto(
+          context,
+          hasUnsavedChanges:
+              ref.read(roomProjectSessionProvider)?.hasUnsavedChanges ?? false,
+        );
         if (!mounted) return;
         setState(() => _confirming = false);
         if (!accepted || !_active || !_sameDraft(captured)) return;
@@ -225,6 +231,7 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(roomMaskProvider);
+    final session = ref.watch(roomProjectSessionProvider);
     final modelProgress =
         ref.watch(roomModelDownloadProgressProvider).value ??
         ref.read(roomModelStoreProvider).progress;
@@ -377,6 +384,14 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
                   if (_active) controller.analyzeCandidate();
                 },
               ),
+            if (acquiring && state.candidate != null)
+              SecondaryButton(
+                key: const ValueKey('room-mask-manual'),
+                label: context.l10n.roomEditManually,
+                onPressed: () {
+                  if (_active) controller.createManualFallback();
+                },
+              ),
             SecondaryButton(
               label: analyzing && modelProgress.busy
                   ? 'Cancel download'
@@ -392,17 +407,26 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
               child: Text(
                 modelProgress.stage == RoomModelDownloadStage.failed
                     ? context.l10n.roomSetupFailure
-                    : 'Room analysis could not finish. Try again or choose another photo.',
+                    : context.l10n.roomAnalysisFailed,
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-            if (state.candidate != null)
+            if (state.candidate != null) ...[
               PrimaryButton(
-                label: 'Retry analysis',
+                label: context.l10n.roomRetryAnalysis,
                 onPressed: () {
                   if (_active) controller.retryAnalysis();
                 },
               ),
+              const SizedBox(height: AppSpacing.sm),
+              SecondaryButton(
+                key: const ValueKey('room-mask-manual'),
+                label: context.l10n.roomEditManually,
+                onPressed: () {
+                  if (_active) controller.createManualFallback();
+                },
+              ),
+            ],
             SecondaryButton(
               label: 'Choose another photo',
               onPressed: canImport
@@ -422,6 +446,27 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  if (session != null &&
+                      session.visible.photoId == draft.photoId) ...[
+                    RoomProjectSaveStatusView(
+                      session: session,
+                      onRetry: () {
+                        if (_active) {
+                          ref
+                              .read(roomProjectSessionProvider.notifier)
+                              .retrySave();
+                        }
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                  ],
+                  if (draft.manualMode) ...[
+                    Semantics(
+                      liveRegion: true,
+                      child: Text(context.l10n.roomManualModeNotice),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                  ],
                   Text(
                     'Photo preview',
                     style: Theme.of(context).textTheme.titleLarge,
@@ -503,6 +548,8 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
                     key: const ValueKey('room-mask-refresh'),
                     label: refreshing
                         ? 'Refreshing AI masks…'
+                        : draft.manualMode
+                        ? context.l10n.roomRetryAnalysis
                         : 'Refresh AI masks',
                     icon: Icons.refresh_rounded,
                     isLoading: refreshing,
@@ -569,9 +616,10 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  if (RoomLayer.values.every(
-                    (layer) => draft.aiMasks.count(layer) == 0,
-                  ))
+                  if (!draft.manualMode &&
+                      RoomLayer.values.every(
+                        (layer) => draft.aiMasks.count(layer) == 0,
+                      ))
                     const Text(
                       'No supported surfaces were found. You can mark them manually.',
                     ),

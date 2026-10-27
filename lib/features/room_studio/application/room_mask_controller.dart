@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -12,12 +14,11 @@ import '../domain/room_mask_state.dart';
 import '../refine/mask_refinement.dart';
 import '../refine/mask_refinement_service.dart';
 import '../segmentation/room_segmentation_service.dart';
-
-var _photoSequence = 0;
+import 'room_project_session_controller.dart';
+import 'room_projects_providers.dart';
 
 final roomPhotoIdFactoryProvider = Provider<String Function()>(
-  (ref) =>
-      () => 'room-photo-${_photoSequence++}',
+  (ref) => ref.read(roomProjectIdFactoryProvider),
 );
 
 /// Session lifetime ownership, independent of screen subscriptions or colors.
@@ -31,6 +32,13 @@ class RoomMaskController extends Notifier<RoomMaskState> {
   int? _claimOperation;
   int _editSelection = 0;
   bool _refining = false;
+  RoomProjectSessionController? _projectSession;
+
+  RoomProjectSessionController get _session {
+    final session = ref.read(roomProjectSessionProvider.notifier);
+    _projectSession = session;
+    return session;
+  }
 
   @override
   RoomMaskState build() {
@@ -38,6 +46,10 @@ class RoomMaskController extends Notifier<RoomMaskState> {
     ref.onDispose(() {
       _alive = false;
       _operation++;
+      unawaited(
+        _projectSession?.closeProject(deferNotification: true) ??
+            Future.value(),
+      );
     });
     // Dependencies are read only for explicit actions, never watched here.
     return const RoomMaskState.initial();
@@ -211,6 +223,7 @@ class RoomMaskController extends Notifier<RoomMaskState> {
           changedFromAiCount: 0,
         ),
       );
+      unawaited(_session.createFromAnalysis(state.draft!));
     } catch (error) {
       if (!_current(operation)) return;
       _fail(
@@ -232,10 +245,72 @@ class RoomMaskController extends Notifier<RoomMaskState> {
 
   Future<void> retryAnalysis() async {
     if (_live &&
+        state.stage == RoomMaskStage.ready &&
+        state.draft?.manualMode == true) {
+      await reanalyzeCurrentPhoto();
+      return;
+    }
+    if (_live &&
         state.stage == RoomMaskStage.error &&
         state.candidate != null) {
       await analyzeCandidate();
     }
+  }
+
+  /// Explicit recovery after a valid photo's analysis failed (or was deferred).
+  bool createManualFallback() {
+    if (!_live ||
+        state.candidate == null ||
+        (state.stage != RoomMaskStage.error &&
+            state.stage != RoomMaskStage.acquiring)) {
+      return false;
+    }
+    _operation++;
+    final session = _session;
+    unawaited(session.createManualFallback(state.candidate!));
+    final draft = ref.read(roomProjectSessionProvider)!.visible;
+    state = state.copyWith(
+      stage: RoomMaskStage.ready,
+      candidate: null,
+      failure: null,
+      draft: draft,
+      editBusy: _refining,
+    );
+    return true;
+  }
+
+  Future<bool> openProject(String projectId) async {
+    if (!_live) return false;
+    final operation = ++_operation;
+    try {
+      final draft = await _session.openProject(
+        projectId,
+        isCurrent: () => _current(operation),
+      );
+      if (!_current(operation) || draft == null) return false;
+      state = state.copyWith(
+        stage: RoomMaskStage.ready,
+        candidate: null,
+        failure: null,
+        draft: draft,
+        editBusy: _refining,
+      );
+      return true;
+    } catch (_) {
+      if (_current(operation)) _fail(RoomMaskFailureKind.storage);
+      return false;
+    }
+  }
+
+  Future<void> closeProject() {
+    if (!_live) return Future.value();
+    _operation++;
+    state = const RoomMaskState.initial();
+    return _session.closeProject();
+  }
+
+  void _commitDraft() {
+    unawaited(_session.commitVisibleDraft(state.draft!));
   }
 
   /// Re-runs the current photo without replacing its colors or manual edits.
@@ -298,6 +373,7 @@ class RoomMaskController extends Notifier<RoomMaskState> {
           colorRevision: draft.colorRevision,
         ),
       );
+      _commitDraft();
       return true;
     } catch (error) {
       if (!currentDraft()) return false;
@@ -371,8 +447,10 @@ class RoomMaskController extends Notifier<RoomMaskState> {
         changedFromAiCount: draft.changedFromAiCount,
         colors: colors,
         colorRevision: draft.colorRevision + 1,
+        manualMode: draft.manualMode,
       ),
     );
+    _commitDraft();
     return true;
   }
 
@@ -478,8 +556,10 @@ class RoomMaskController extends Notifier<RoomMaskState> {
         changedFromAiCount: result.changedFromAiCount,
         colors: draft.colors,
         colorRevision: draft.colorRevision,
+        manualMode: draft.manualMode,
       );
       state = state.copyWith(draft: next, editBusy: false);
+      _commitDraft();
       return true;
     } catch (_) {
       if (currentDraft() && selection == _editSelection) {
@@ -514,8 +594,10 @@ class RoomMaskController extends Notifier<RoomMaskState> {
         changedFromAiCount: 0,
         colors: draft.colors,
         colorRevision: draft.colorRevision,
+        manualMode: draft.manualMode,
       ),
     );
+    _commitDraft();
     return true;
   }
 
