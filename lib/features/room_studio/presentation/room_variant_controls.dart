@@ -8,6 +8,7 @@ import '../application/room_recolor_provider.dart';
 import '../application/room_variant_controller.dart';
 import '../domain/room_mask_state.dart';
 import '../domain/room_project.dart';
+import 'room_recolor_viewport.dart';
 
 String _failureText(BuildContext context, RoomVariantFailure failure) =>
     switch (failure) {
@@ -430,21 +431,21 @@ class _RoomComparisonPreviewState extends ConsumerState<RoomComparisonPreview> {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    Image.memory(
-                      baseline.value!.pngBytes,
-                      key: const ValueKey('room-comparison-baseline-image'),
-                      fit: BoxFit.contain,
+                    RoomRecolorImage(
+                      frame: baseline.value!,
+                      imageKey: const ValueKey(
+                        'room-comparison-baseline-image',
+                      ),
                       semanticLabel: baselineLabel,
-                      gaplessPlayback: false,
                     ),
                     ClipRect(
                       clipper: _DividerClipper(_divider),
-                      child: Image.memory(
-                        active.value!.pngBytes,
-                        key: const ValueKey('room-comparison-active-image'),
-                        fit: BoxFit.contain,
+                      child: RoomRecolorImage(
+                        frame: active.value!,
+                        imageKey: const ValueKey(
+                          'room-comparison-active-image',
+                        ),
                         semanticLabel: activeLabel,
-                        gaplessPlayback: false,
                       ),
                     ),
                     Positioned(
@@ -488,8 +489,7 @@ class _RoomComparisonPreviewState extends ConsumerState<RoomComparisonPreview> {
           if (active.hasError || baseline.hasError)
             OutlinedButton(
               onPressed: () {
-                ref.invalidate(roomRecolorPreviewProvider);
-                ref.invalidate(roomComparisonPreviewProvider);
+                ref.read(roomRecolorCoordinatorProvider.notifier).retry();
               },
               child: Text(context.l10n.tryAgain),
             ),

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -18,7 +20,6 @@ import '../application/room_model_setup_controller.dart';
 import '../application/room_recolor_provider.dart';
 import '../domain/room_layer.dart';
 import '../domain/room_mask_state.dart';
-import '../recolor/room_recolor_frame.dart';
 import 'room_layer_color_controls.dart';
 import 'room_mask_dialogs.dart';
 import 'room_mask_fullscreen_editor.dart';
@@ -49,24 +50,36 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
   bool _showAfter = true;
   bool _sharing = false;
   (String, int)? _refreshedMasks;
-  RoomRecolorFrame? _lastFrame;
+  late final RoomRecolorCoordinator _previews;
+  Object? _previewOwner;
 
   @override
   void initState() {
     super.initState();
-    ref.listenManual(roomRecolorPreviewProvider, (_, next) {
-      final frame = next.value;
-      final current = roomActiveRecolorKey(
-        ref.read(roomProjectSessionProvider),
-      );
-      if (mounted &&
-          frame != null &&
-          current != null &&
-          frame.key == current &&
-          !identical(_lastFrame, frame)) {
-        setState(() => _lastFrame = frame);
-      }
-    }, fireImmediately: true);
+    _previews = ref.read(roomRecolorCoordinatorProvider.notifier);
+    scheduleMicrotask(() {
+      if (!mounted) return;
+      _previewOwner = _previews.attachOwner(isVisible: () => _active);
+      _syncPreviewVisibility();
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncPreviewVisibility();
+  }
+
+  void _syncPreviewVisibility() {
+    final owner = _previewOwner;
+    if (owner != null) _previews.setOwnerVisible(owner, _active);
+  }
+
+  @override
+  void dispose() {
+    final owner = _previewOwner;
+    if (owner != null) _previews.detachOwner(owner);
+    super.dispose();
   }
 
   bool get _active =>
@@ -275,11 +288,7 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
     final currentFrame = recolorKey != null && previewFrame?.key == recolorKey
         ? previewFrame
         : null;
-    final displayFrame =
-        currentFrame ??
-        (recolorKey != null && (_lastFrame?.key.sameView(recolorKey) ?? false)
-            ? _lastFrame
-            : null);
+    final displayFrame = ref.watch(roomRecolorDisplayProvider);
     final canShare =
         currentFrame != null &&
         !preview.isLoading &&
@@ -555,8 +564,7 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
                     SecondaryButton(
                       key: const ValueKey('room-recolor-retry'),
                       label: 'Retry preview',
-                      onPressed: () =>
-                          ref.invalidate(roomRecolorPreviewProvider),
+                      onPressed: _previews.retry,
                     ),
                   ],
                   const SizedBox(height: AppSpacing.xl),

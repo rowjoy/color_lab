@@ -52,8 +52,8 @@ final class RoomRecolorFrame {
     required this.height,
     required Uint8List rgbaBytes,
     required Uint8List pngBytes,
-  }) : rgbaBytes = Uint8List.fromList(rgbaBytes).asUnmodifiableView(),
-       pngBytes = Uint8List.fromList(pngBytes).asUnmodifiableView() {
+  }) : _rgbaBytes = Uint8List.fromList(rgbaBytes).asUnmodifiableView(),
+       _pngBytes = Uint8List.fromList(pngBytes).asUnmodifiableView() {
     if (width < 1 ||
         height < 1 ||
         rgbaBytes.length != width * height * 4 ||
@@ -65,6 +65,50 @@ final class RoomRecolorFrame {
   final RoomRecolorKey key;
   final int width;
   final int height;
-  final Uint8List rgbaBytes;
-  final Uint8List pngBytes;
+  Uint8List? _rgbaBytes;
+  Uint8List? _pngBytes;
+  int _leases = 0;
+  bool _ownerReleased = false;
+  void Function()? _onReleased;
+  Uint8List get rgbaBytes => _rgbaBytes ?? (throw StateError('Frame released'));
+  Uint8List get pngBytes => _pngBytes ?? (throw StateError('Frame released'));
+  bool get isDisposed => _rgbaBytes == null;
+  int get retainedByteCount =>
+      (_rgbaBytes?.length ?? 0) + (_pngBytes?.length ?? 0);
+
+  /// Widgets borrow; the scheduler/coordinator transfers the initial owner.
+  /// Arrays already handed to Flutter or Share are never modified on release.
+  RoomRecolorLease lease({void Function()? onReleased}) {
+    if (isDisposed) throw StateError('Frame released');
+    _leases++;
+    _onReleased ??= onReleased;
+    return RoomRecolorLease._(this);
+  }
+
+  void dispose() {
+    if (_ownerReleased) return;
+    _ownerReleased = true;
+    _release();
+  }
+
+  void _release() {
+    if (!_ownerReleased || _leases != 0 || isDisposed) return;
+    _rgbaBytes = null;
+    _pngBytes = null;
+    final onReleased = _onReleased;
+    _onReleased = null;
+    onReleased?.call();
+  }
+}
+
+final class RoomRecolorLease {
+  RoomRecolorLease._(this._frame);
+  RoomRecolorFrame? _frame;
+  void dispose() {
+    final frame = _frame;
+    if (frame == null) return;
+    _frame = null;
+    frame._leases--;
+    frame._release();
+  }
 }

@@ -36,6 +36,7 @@ import 'package:color_lab/features/room_studio/domain/room_mask_state.dart';
 import 'package:color_lab/features/room_studio/presentation/illustrated_room_screen.dart';
 import 'package:color_lab/features/room_studio/presentation/room_mask_viewport.dart';
 import 'package:color_lab/features/room_studio/recolor/room_recolor_frame.dart';
+import 'package:color_lab/features/room_studio/recolor/room_photo_recolorer.dart';
 import 'package:color_lab/features/room_studio/segmentation/room_segmentation_service.dart';
 import 'package:color_lab/features/history/domain/saved_color.dart';
 import 'package:color_lab/core/widgets/widgets.dart';
@@ -46,6 +47,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
 
 import '../../../support/in_memory_acquisition_intent_store.dart';
+import '../../../support/controlled_room_recolor_worker.dart';
 import '../../../support/in_memory_app_preferences_repository.dart';
 import '../../../support/in_memory_color_history_repository.dart';
 import '../../../support/in_memory_room_project_repository.dart';
@@ -142,10 +144,9 @@ class _RecolorRequest {
   void fail() => result.completeError(StateError('preview failed'));
 }
 
-class _Recolorer implements RoomRecolorService {
+class _Recolorer {
   final requests = <_RecolorRequest>[];
 
-  @override
   Future<RoomRecolorFrame> render({
     required RoomRecolorKey key,
     required PreparedPhoto photo,
@@ -210,7 +211,7 @@ Future<ProviderContainer> _launch(
   WidgetTester tester, {
   _Picker? picker,
   _Segmenter? segmenter,
-  RoomRecolorService? recolorer,
+  _Recolorer? recolorer,
   RoomImageExportService? exporter,
   InMemoryAcquisitionIntentStore? store,
   AppPreferences? preferences,
@@ -240,8 +241,23 @@ Future<ProviderContainer> _launch(
       roomSegmentationServiceProvider.overrideWithValue(
         segmenter ?? _Segmenter(),
       ),
-      if (recolorer != null)
-        roomRecolorServiceProvider.overrideWithValue(recolorer),
+      roomRecolorWorkerFactoryProvider.overrideWithValue(
+        () => CallbackRecolorWorker(
+          (input) async => recolorer == null
+              ? recolorRoomPhoto(
+                  key: input.key,
+                  photo: input.photo,
+                  masks: input.masks,
+                  colors: input.colors,
+                )
+              : recolorer.render(
+                  key: input.key,
+                  photo: input.photo,
+                  masks: input.masks,
+                  colors: input.colors,
+                ),
+        ),
+      ),
       if (exporter != null)
         roomImageExportServiceProvider.overrideWithValue(exporter),
       if (modelStore != null)
@@ -384,6 +400,70 @@ Future<void> _zoom(WidgetTester tester) async {
 
 void main() {
   testWidgets(
+    'background dependency rebuild preserves visible owner on resume',
+    (tester) async {
+      final segmenter = _Segmenter();
+      final recolorer = _Recolorer();
+      final c = await _launch(
+        tester,
+        segmenter: segmenter,
+        recolorer: recolorer,
+      );
+      await _open(tester);
+      await _ready(tester, segmenter, label: 1);
+      recolorer.requests.single.succeed();
+      await _frames(tester);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      await c.read(themeModeProvider.notifier).setMode(ThemeMode.dark);
+      await _frames(tester);
+      expect(c.read(roomRecolorPreviewProvider).value, isNull);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await _frames(tester);
+      expect(recolorer.requests, hasLength(2));
+      recolorer.requests.last.succeed();
+      await _frames(tester);
+      expect(
+        c.read(roomRecolorPreviewProvider).requireValue!.key,
+        c.read(roomRecolorKeyProvider),
+      );
+    },
+  );
+  testWidgets(
+    'covered editor and background stop publication; return renders current state',
+    (tester) async {
+      final segmenter = _Segmenter();
+      final recolorer = _Recolorer();
+      final c = await _launch(
+        tester,
+        segmenter: segmenter,
+        recolorer: recolorer,
+      );
+      await _open(tester);
+      await _ready(tester, segmenter, label: 1);
+      await _waitSaved(tester, c);
+      final first = recolorer.requests.single;
+      c.read(appRouterProvider).push('/settings');
+      await _frames(tester);
+      first.succeed();
+      await _frames(tester);
+      expect(c.read(roomRecolorPreviewProvider).value, isNull);
+      final count = recolorer.requests.length;
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await _frames(tester);
+      expect(recolorer.requests, hasLength(count));
+      c.read(appRouterProvider).pop();
+      await _frames(tester);
+      expect(recolorer.requests, hasLength(count + 1));
+      recolorer.requests.last.succeed();
+      await _frames(tester);
+      expect(
+        c.read(roomRecolorPreviewProvider).requireValue!.key,
+        c.read(roomRecolorKeyProvider),
+      );
+    },
+  );
+  testWidgets(
     'comparison Share exports only selected full-key frame while Original and divider are transient',
     (tester) async {
       final segmenter = _Segmenter();
@@ -407,13 +487,24 @@ void main() {
       c.read(roomVariantProvider.notifier).pinComparisonBaseline(baselineId);
       await _frames(tester);
       await _waitSaved(tester, c);
+      // Drain the pre-comparison selected side, then complete the coherent pair.
+      // The following edit gets baseline-first service under lane fairness.
+      for (var i = 0; i < 3; i++) {
+        recolorer.requests.last.succeed();
+        await _frames(tester);
+      }
+      c
+          .read(roomMaskProvider.notifier)
+          .setLayerColor(RoomLayer.wall, RgbColor(150, 20, 30));
+      await _frames(tester);
+      await _waitSaved(tester, c);
       final key = c.read(roomRecolorKeyProvider)!;
-      final active = recolorer.requests.lastWhere((r) => r.key == key);
-      final baseline = recolorer.requests.lastWhere(
-        (r) => r.key == c.read(roomComparisonKeyProvider),
-      );
+      final baseline = recolorer.requests.last;
+      expect(baseline.key, c.read(roomComparisonKeyProvider));
       baseline.succeed();
       await _frames(tester);
+      final active = recolorer.requests.last;
+      expect(active.key, key);
       expect(
         tester.widget<PrimaryButton>(_key('room-recolor-share')).onPressed,
         isNull,
@@ -1334,13 +1425,21 @@ void main() {
 
       await _tap(tester, find.byTooltip('Back'));
       await _tap(tester, _key('open-room-masks'));
+      expect(_key('room-recolor-before-image'), findsOneWidget);
+      expect(
+        tester.widget<PrimaryButton>(_key('room-recolor-share')).onPressed,
+        isNull,
+      );
+      expect(recolorer.requests, hasLength(2));
+      recolorer.requests.last.succeed();
+      await _frames(tester);
       expect(_key('room-recolor-after-image'), findsOneWidget);
 
       container
           .read(roomMaskProvider.notifier)
           .setLayerColor(RoomLayer.wall, RgbColor.fromHex('#B25030'));
       await _frames(tester);
-      expect(recolorer.requests, hasLength(2));
+      expect(recolorer.requests, hasLength(3));
       expect(_key('room-recolor-previous-image'), findsOneWidget);
       expect(find.text('Updating preview...'), findsOneWidget);
 

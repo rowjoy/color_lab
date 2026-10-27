@@ -29,6 +29,8 @@ import 'package:color_lab/features/room_studio/models/room_model_store.dart';
 import 'package:color_lab/features/room_studio/application/room_project_session_controller.dart';
 import 'package:color_lab/features/room_studio/application/room_projects_providers.dart';
 import 'package:color_lab/features/room_studio/application/room_recolor_provider.dart';
+import 'package:color_lab/features/room_studio/application/room_recolor_service.dart';
+import 'package:color_lab/features/room_studio/recolor/room_photo_recolorer.dart';
 import 'package:color_lab/features/room_studio/domain/room_layer.dart';
 import 'package:color_lab/features/room_studio/domain/room_mask_state.dart';
 import 'package:color_lab/features/room_studio/domain/room_project.dart';
@@ -48,6 +50,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image/image.dart' as img;
 
 import '../support/in_memory_acquisition_intent_store.dart';
+import '../support/controlled_room_recolor_worker.dart';
 import '../support/in_memory_app_preferences_repository.dart';
 import '../support/in_memory_color_history_repository.dart';
 import '../support/in_memory_game_profiles_repository.dart';
@@ -1110,7 +1113,19 @@ Future<_RouterHarness> _launch(
       roomProjectRepositoryProvider.overrideWith(
         (ref) async => projects ?? InMemoryRoomProjectRepository(),
       ),
-      roomRecolorPreviewProvider.overrideWith((ref) async => null),
+      roomRecolorPreviewProvider.overrideWithBuild(
+        (ref, notifier) => const AsyncData(null),
+      ),
+      roomRecolorWorkerFactoryProvider.overrideWithValue(
+        () => CallbackRecolorWorker(
+          (input) async => recolorRoomPhoto(
+            key: input.key,
+            photo: input.photo,
+            masks: input.masks,
+            colors: input.colors,
+          ),
+        ),
+      ),
       acquisitionIntentStoreProvider.overrideWith(
         (ref) async => InMemoryAcquisitionIntentStore(),
       ),

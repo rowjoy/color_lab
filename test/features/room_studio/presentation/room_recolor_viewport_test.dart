@@ -61,6 +61,41 @@ Uint8List _shownBytes(WidgetTester tester, String key) {
 
 void main() {
   testWidgets(
+    'display leases protect pixels until replacement and evict only their image',
+    (tester) async {
+      final source = _png(1, 2, 3);
+      final frame = _frame(_key('photo', 0, 0), _png(4, 5, 6));
+      await _mount(tester, source: source, currentKey: frame.key, frame: frame);
+      final unrelated = MemoryImage(source);
+      await tester.runAsync(
+        () => precacheImage(
+          unrelated,
+          tester.element(find.byType(RoomRecolorViewport)),
+        ),
+      );
+      expect(
+        PaintingBinding.instance.imageCache.containsKey(unrelated),
+        isTrue,
+      );
+      final obsolete = MemoryImage(frame.pngBytes);
+      frame.dispose();
+      expect(frame.isDisposed, isFalse);
+      expect(_shownBytes(tester, 'room-recolor-after-image'), frame.pngBytes);
+      await _mount(tester, source: source, currentKey: _key('other', 0, 0));
+      expect(frame.isDisposed, isTrue);
+      expect(frame.retainedByteCount, 0);
+      expect(
+        PaintingBinding.instance.imageCache.containsKey(obsolete),
+        isFalse,
+      );
+      expect(
+        PaintingBinding.instance.imageCache.containsKey(unrelated),
+        isTrue,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+  testWidgets(
     'new current variant clears decoded pixels of the previous variant',
     (tester) async {
       final source = _png(5, 6, 7);

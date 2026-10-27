@@ -14,6 +14,7 @@ import '../domain/room_mask_state.dart';
 import '../domain/room_project.dart';
 import '../domain/room_project_repository.dart';
 import 'room_projects_providers.dart';
+import 'room_recolor_scheduler.dart';
 
 enum RoomProjectSaveStatus { saving, saved, failed, conflict }
 
@@ -39,6 +40,7 @@ final class RoomProjectSession {
     required this.acknowledgedRevision,
     required this.variantSet,
     this.recoveryWarning,
+    this.lifetime = const _LegacySessionLifetime(),
   });
 
   final String projectId;
@@ -51,6 +53,9 @@ final class RoomProjectSession {
   final int acknowledgedRevision;
   final RoomProjectRecoveryWarning? recoveryWarning;
   final RoomVariantSet variantSet;
+
+  /// Distinct even when a project reopens with identical render keys.
+  final Object lifetime;
   List<RoomColorVariant> get variants => variantSet.variants;
   String get activeVariantId => variantSet.activeVariantId;
   String? get comparisonBaselineVariantId =>
@@ -69,6 +74,7 @@ final roomProjectSessionProvider =
 /// stops autosave until Retry. Retry uses the last acknowledged CAS token; a
 /// conflict cannot silently adopt another writer's revision.
 class RoomProjectSessionController extends Notifier<RoomProjectSession?> {
+  RoomRecolorScheduler? _recolorScheduler;
   _ProjectWork? _work;
   bool _alive = true;
   int _lifecycle = 0;
@@ -76,6 +82,7 @@ class RoomProjectSessionController extends Notifier<RoomProjectSession?> {
 
   @override
   RoomProjectSession? build() {
+    _recolorScheduler = ref.read(roomRecolorSchedulerProvider);
     // Riverpod reuses this notifier after invalidation. Retain the old work's
     // drain barrier and monotonic ownership epoch, but revive this lifecycle.
     _alive = true;
@@ -383,7 +390,11 @@ class RoomProjectSessionController extends Notifier<RoomProjectSession?> {
       }
       // Drain before changing ownership, then publish without an intervening
       // await. New editor commands or acquisition operations win at this gate.
-      await (_work?.active ?? _draining);
+      final previousProject = _work?.projectId;
+      final recolorBarrier = previousProject == null
+          ? Future<void>.value()
+          : _recolorScheduler!.cancelProject(previousProject);
+      await Future.wait<void>([_work?.active ?? _draining, recolorBarrier]);
       if (!current()) return null;
       final closing = closeProject();
       final snapshot = result.snapshot;
@@ -425,12 +436,16 @@ class RoomProjectSessionController extends Notifier<RoomProjectSession?> {
   Future<void> closeProject({bool deferNotification = false}) {
     _lifecycle++;
     final work = _work;
+    final recolorBarrier = work == null
+        ? Future<void>.value()
+        : _recolorScheduler!.cancelProject(work.projectId);
     _work = null;
     if (work != null) {
       work.closed = true;
       _discardPending(work);
       _draining = Future.wait<void>([
         _draining,
+        recolorBarrier,
         if (work.active != null) work.active!,
       ]).then((_) {});
     }
@@ -471,6 +486,7 @@ class RoomProjectSessionController extends Notifier<RoomProjectSession?> {
           work.pending.length + (work.activeIntent == null ? 0 : 1),
       acknowledgedRevision: work.acknowledgedRevision,
       recoveryWarning: work.warning,
+      lifetime: work.lifetime,
     );
   }
 }
@@ -484,6 +500,7 @@ final class _ProjectWork {
     required this.barrier,
   });
   final String projectId;
+  final Object lifetime = Object();
   RoomVariantSet variantSet;
   String name;
   final DateTime createdAt = DateTime.now().toUtc();
@@ -499,6 +516,10 @@ final class _ProjectWork {
   Future<void>? active;
   _SaveIntent? activeIntent;
   bool closed = false;
+}
+
+final class _LegacySessionLifetime {
+  const _LegacySessionLifetime();
 }
 
 final class _SaveIntent {

@@ -20,10 +20,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../support/in_memory_room_project_repository.dart';
+import '../../../support/controlled_room_recolor_worker.dart';
+import 'package:color_lab/features/room_studio/application/room_recolor_provider.dart';
 import '../../../support/room_project_fixtures.dart';
 
-class _Renderer implements RoomRecolorService {
-  @override
+class _Renderer {
   Future<RoomRecolorFrame> render({
     required RoomRecolorKey key,
     required PreparedPhoto photo,
@@ -53,7 +54,16 @@ Future<ProviderContainer> mount(
     overrides: [
       roomProjectRepositoryProvider.overrideWith((ref) async => repo),
       roomProjectIdFactoryProvider.overrideWithValue(() => 'new-${n++}'),
-      roomRecolorServiceProvider.overrideWithValue(_Renderer()),
+      roomRecolorWorkerFactoryProvider.overrideWithValue(
+        () => CallbackRecolorWorker(
+          (input) => _Renderer().render(
+            key: input.key,
+            photo: input.photo,
+            masks: input.masks,
+            colors: input.colors,
+          ),
+        ),
+      ),
     ],
   );
   var opened = false;
@@ -68,6 +78,7 @@ Future<ProviderContainer> mount(
     );
   }
   expect(opened, isTrue);
+  c.read(roomRecolorCoordinatorProvider.notifier).attachOwner();
   addTearDown(c.dispose);
   await tester.pumpWidget(
     UncontrolledProviderScope(
@@ -270,6 +281,7 @@ void main() {
           );
         }
         expect(opened, isTrue);
+        c.read(roomRecolorCoordinatorProvider.notifier).attachOwner();
       }
       await tester.pumpAndSettle();
       final changed = c.read(roomProjectSessionProvider)!;
