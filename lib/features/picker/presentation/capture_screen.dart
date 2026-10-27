@@ -106,7 +106,11 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
   Widget build(BuildContext context) {
     final acquisition = ref.watch(photoAcquisitionProvider);
     final receipt = acquisition.pendingReceipt;
-    final error = acquisition.failure;
+    final error =
+        acquisition.recoveryFailure?.intent.destination ==
+            AcquisitionDestination.room
+        ? null
+        : acquisition.failure;
     final blocked =
         _picking ||
         acquisition.phase != AcquisitionPhase.ready ||

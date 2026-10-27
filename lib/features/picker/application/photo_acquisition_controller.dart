@@ -19,6 +19,7 @@ class PhotoAcquisitionController extends Notifier<AcquisitionState> {
   AcquisitionIntentRecord? _origin;
   PreparedPhoto? _lost;
   AcquisitionFailureKind? _recoveryFailure;
+  final _recoveryFailureOwners = <AcquisitionDestination>{};
   static int _sequence = 0;
 
   @override
@@ -30,6 +31,7 @@ class PhotoAcquisitionController extends Notifier<AcquisitionState> {
     AcquisitionPhase phase, {
     AcquisitionReceipt? receipt,
     AcquisitionFailureKind? failure,
+    AcquisitionRecoveryFailure? recoveryFailure,
     bool? untrusted,
   }) {
     if (!ref.mounted) return;
@@ -37,6 +39,7 @@ class PhotoAcquisitionController extends Notifier<AcquisitionState> {
       phase: phase,
       pendingReceipt: receipt,
       failure: failure,
+      recoveryFailure: recoveryFailure,
       hasUntrustedIntent: untrusted ?? state.hasUntrustedIntent,
     );
   }
@@ -103,7 +106,17 @@ class PhotoAcquisitionController extends Notifier<AcquisitionState> {
           await store.clear();
           if (!ref.mounted) return;
         }
-        _publish(AcquisitionPhase.ready, failure: _recoveryFailure);
+        final intent = _origin!.intent;
+        _publish(
+          AcquisitionPhase.ready,
+          failure: _recoveryFailure,
+          recoveryFailure: intent != null && _recoveryFailure != null
+              ? AcquisitionRecoveryFailure(
+                  intent: intent,
+                  kind: _recoveryFailure!,
+                )
+              : null,
+        );
       }
       _recovered = true;
       // The pending receipt is now the sole owner of these pixels.
@@ -114,6 +127,12 @@ class PhotoAcquisitionController extends Notifier<AcquisitionState> {
       _busy = false;
     }
   }
+
+  /// Recovery runs once per controller. Its first observer for a destination
+  /// retains the reservation even after leaving, so a late error cannot move
+  /// into a newer editor. This reserves presentation only, never photo pixels.
+  bool reserveRecoveryFailure(AcquisitionDestination destination) =>
+      ref.mounted && _recoveryFailureOwners.add(destination);
 
   Future<AcquisitionOutcome> request({
     required PhotoSource source,

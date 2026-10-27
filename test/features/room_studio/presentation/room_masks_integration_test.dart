@@ -59,7 +59,8 @@ import '../../../support/in_memory_room_project_repository.dart';
 class _Picker implements PhotoPickerService {
   PreparedPhoto? next = _photo(), recovered;
   Completer<void>? gate;
-  PhotoPickFailure? failure;
+  PhotoPickFailure? failure, recoveryFailure;
+  Completer<void>? recoveryGate;
   final sources = <PhotoSource>[];
   int recoveries = 0;
   int settingsCalls = 0;
@@ -77,6 +78,8 @@ class _Picker implements PhotoPickerService {
   @override
   Future<PreparedPhoto?> recoverLost() async {
     recoveries++;
+    await recoveryGate?.future;
+    if (recoveryFailure != null) throw recoveryFailure!;
     return recovered;
   }
 
@@ -777,6 +780,349 @@ void main() {
       },
     );
   }
+  for (final (kind, copy, action) in [
+    (
+      PhotoPickFailureKind.permissionDenied,
+      'Photo access is off. Allow access in Settings to continue.',
+      'Open Settings',
+    ),
+    (
+      PhotoPickFailureKind.cameraUnavailable,
+      'A camera is unavailable. Choose a photo from this device.',
+      'Choose photo',
+    ),
+    (
+      PhotoPickFailureKind.unavailable,
+      'The photo picker is unavailable. Try again.',
+      'Try again',
+    ),
+    (
+      PhotoPickFailureKind.unsupported,
+      'This format is not supported. Choose a JPEG, PNG, GIF, WebP, BMP, or TIFF image.',
+      'Choose another supported image',
+    ),
+    (
+      PhotoPickFailureKind.invalidImage,
+      'This image could not be read. Choose another supported image.',
+      'Choose another supported image',
+    ),
+    (
+      PhotoPickFailureKind.tooLarge,
+      'This image is too large to process. Choose a smaller image.',
+      'Choose a smaller image',
+    ),
+    (
+      PhotoPickFailureKind.processing,
+      'This photo could not be prepared. Choose another supported image.',
+      'Choose another supported image',
+    ),
+  ]) {
+    testWidgets(
+      'lost Room recovery $kind keeps its localized action and source',
+      (tester) async {
+        final picker = _Picker()
+          ..next = null
+          ..recoveryFailure = PhotoPickFailure(kind);
+        final store = InMemoryAcquisitionIntentStore(
+          initial: const AcquisitionIntentRecord.valid(
+            AcquisitionIntent(
+              requestId: 'lost-room-camera',
+              source: PhotoSource.camera,
+              destination: AcquisitionDestination.room,
+            ),
+          ),
+        );
+        final c = await _launch(tester, picker: picker, store: store);
+        await _open(tester);
+        expect(c.read(photoAcquisitionProvider).failure?.name, kind.name);
+        expect(find.text(copy), findsOneWidget);
+        expect(
+          picker.sources,
+          isEmpty,
+          reason: 'Recovery must never reopen a picker',
+        );
+        expect(_key('room-photo-recovery'), findsOneWidget);
+        expect(
+          find.descendant(
+            of: _key('room-photo-recovery'),
+            matching: find.text(action),
+          ),
+          findsOneWidget,
+        );
+        await _tap(tester, _key('room-photo-recovery'));
+        if (kind == PhotoPickFailureKind.permissionDenied) {
+          expect(picker.settingsCalls, 1);
+          expect(picker.sources, isEmpty);
+        } else {
+          expect(picker.sources, [
+            kind == PhotoPickFailureKind.unavailable
+                ? PhotoSource.camera
+                : PhotoSource.gallery,
+          ]);
+        }
+        expect(picker.recoveries, 1);
+      },
+    );
+  }
+
+  for (final origin in [
+    const AcquisitionIntentRecord.valid(
+      AcquisitionIntent(
+        requestId: 'capture-only',
+        source: PhotoSource.gallery,
+        destination: AcquisitionDestination.capture,
+      ),
+    ),
+    const AcquisitionIntentRecord.absent(),
+    const AcquisitionIntentRecord.untrusted(),
+  ]) {
+    testWidgets(
+      'lost recovery from ${origin.kind}/${origin.intent?.destination} stays out of Room',
+      (tester) async {
+        final picker = _Picker()
+          ..recoveryFailure = const PhotoPickFailure(
+            PhotoPickFailureKind.unsupported,
+          );
+        final c = await _launch(
+          tester,
+          picker: picker,
+          store: InMemoryAcquisitionIntentStore(initial: origin),
+        );
+        await _open(tester);
+        expect(
+          c.read(photoAcquisitionProvider).failure,
+          AcquisitionFailureKind.unsupported,
+        );
+        expect(_key('room-photo-recovery'), findsNothing);
+        expect(
+          find.textContaining('This format is not supported.'),
+          findsNothing,
+        );
+        expect(picker.sources, isEmpty);
+      },
+    );
+  }
+
+  testWidgets('lost Room recovery is not displayed as a Color Lab failure', (
+    tester,
+  ) async {
+    final picker = _Picker()
+      ..recoveryFailure = const PhotoPickFailure(
+        PhotoPickFailureKind.unsupported,
+      );
+    final c = await _launch(
+      tester,
+      picker: picker,
+      store: InMemoryAcquisitionIntentStore(
+        initial: const AcquisitionIntentRecord.valid(
+          AcquisitionIntent(
+            requestId: 'room-not-capture',
+            source: PhotoSource.gallery,
+            destination: AcquisitionDestination.room,
+          ),
+        ),
+      ),
+    );
+    c.read(appRouterProvider).go('/capture');
+    await _frames(tester);
+    expect(find.textContaining('This format is not supported.'), findsNothing);
+    expect(picker.sources, isEmpty);
+    await _open(tester);
+    expect(
+      find.textContaining('This format is not supported.'),
+      findsOneWidget,
+    );
+  });
+
+  for (final initiallyInactive in [false, true]) {
+    testWidgets(
+      'lost Room recovery reaches its first active owner after inactive=$initiallyInactive',
+      (tester) async {
+        final picker = _Picker()
+          ..recoveryGate = Completer<void>()
+          ..recoveryFailure = const PhotoPickFailure(
+            PhotoPickFailureKind.invalidImage,
+          );
+        final c = await _launch(
+          tester,
+          picker: picker,
+          store: InMemoryAcquisitionIntentStore(
+            initial: const AcquisitionIntentRecord.valid(
+              AcquisitionIntent(
+                requestId: 'first-room-owner',
+                source: PhotoSource.camera,
+                destination: AcquisitionDestination.room,
+              ),
+            ),
+          ),
+        );
+        if (initiallyInactive) {
+          tester.binding.handleAppLifecycleStateChanged(
+            AppLifecycleState.inactive,
+          );
+          addTearDown(
+            () => tester.binding.handleAppLifecycleStateChanged(
+              AppLifecycleState.resumed,
+            ),
+          );
+          c.read(appRouterProvider).go('/room/masks');
+          await _frames(tester);
+        } else {
+          await _open(tester);
+        }
+        expect(find.byType(RoomMaskScreen), findsOneWidget);
+        final original = c.read(roomMaskProvider);
+        picker.recoveryGate!.complete();
+        await _frames(tester);
+        if (initiallyInactive) {
+          expect(_key('room-photo-recovery'), findsNothing);
+          tester.binding.handleAppLifecycleStateChanged(
+            AppLifecycleState.resumed,
+          );
+          await _frames(tester);
+        }
+        expect(
+          find.text(
+            'This image could not be read. Choose another supported image.',
+          ),
+          findsOneWidget,
+        );
+        expect(_key('room-photo-recovery'), findsOneWidget);
+        expect(c.read(roomMaskProvider), same(original));
+        expect(picker.sources, isEmpty);
+      },
+    );
+  }
+
+  testWidgets(
+    'lost Room recovery action cannot reopen the picker for a newer session',
+    (tester) async {
+      final picker = _Picker()
+        ..next = null
+        ..recoveryFailure = const PhotoPickFailure(
+          PhotoPickFailureKind.unavailable,
+        );
+      final c = await _launch(
+        tester,
+        picker: picker,
+        store: InMemoryAcquisitionIntentStore(
+          initial: const AcquisitionIntentRecord.valid(
+            AcquisitionIntent(
+              requestId: 'stale-action-room',
+              source: PhotoSource.camera,
+              destination: AcquisitionDestination.room,
+            ),
+          ),
+        ),
+      );
+      await _open(tester);
+      final oldAction = tester
+          .widget<PrimaryButton>(_key('room-photo-recovery'))
+          .onPressed!;
+      unawaited(
+        c
+            .read(roomProjectSessionProvider.notifier)
+            .createManualFallback(
+              RoomPhotoCandidate(
+                photoId: 'replacement-session',
+                photo: _photo(),
+              ),
+            ),
+      );
+      await _waitSaved(tester, c);
+      await _frames(tester);
+      expect(_key('room-photo-recovery'), findsNothing);
+      oldAction();
+      await _frames(tester);
+      expect(picker.sources, isEmpty);
+    },
+  );
+
+  for (final change in [
+    'reopen',
+    'covered',
+    'background',
+    'session',
+    'session reset',
+  ]) {
+    testWidgets(
+      'lost Room recovery cannot publish after $change owner change',
+      (tester) async {
+        final picker = _Picker()
+          ..recoveryGate = Completer<void>()
+          ..recoveryFailure = const PhotoPickFailure(
+            PhotoPickFailureKind.unsupported,
+          );
+        final c = await _launch(
+          tester,
+          picker: picker,
+          store: InMemoryAcquisitionIntentStore(
+            initial: const AcquisitionIntentRecord.valid(
+              AcquisitionIntent(
+                requestId: 'late-room',
+                source: PhotoSource.camera,
+                destination: AcquisitionDestination.room,
+              ),
+            ),
+          ),
+        );
+        await _open(tester);
+        final router = c.read(appRouterProvider);
+        switch (change) {
+          case 'reopen':
+            final old = tester.state(find.byType(RoomMaskScreen));
+            router.go('/rooms');
+            await _frames(tester);
+            router.go('/room/masks');
+            await _frames(tester);
+            expect(tester.state(find.byType(RoomMaskScreen)), isNot(same(old)));
+          case 'covered':
+            router.push('/palettes');
+            await _frames(tester);
+            router.pop();
+            await _frames(tester);
+          case 'background':
+            tester.binding.handleAppLifecycleStateChanged(
+              AppLifecycleState.paused,
+            );
+            await _frames(tester);
+            tester.binding.handleAppLifecycleStateChanged(
+              AppLifecycleState.resumed,
+            );
+            await _frames(tester);
+          case 'session':
+          case 'session reset':
+            unawaited(
+              c
+                  .read(roomProjectSessionProvider.notifier)
+                  .createManualFallback(
+                    RoomPhotoCandidate(
+                      photoId: 'new-owner-photo',
+                      photo: _photo(),
+                    ),
+                  ),
+            );
+            await _waitSaved(tester, c);
+            expect(c.read(roomProjectSessionProvider), isNotNull);
+            if (change == 'session reset') {
+              await c.read(roomProjectSessionProvider.notifier).closeProject();
+              await _frames(tester);
+              expect(c.read(roomProjectSessionProvider), isNull);
+            }
+        }
+        picker.recoveryGate!.complete();
+        await _frames(tester);
+        expect(
+          c.read(photoAcquisitionProvider).failure,
+          AcquisitionFailureKind.unsupported,
+        );
+        expect(_key('room-photo-recovery'), findsNothing);
+        expect(picker.sources, isEmpty);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
   testWidgets(
     'permission recovery opens Settings without retrying acquisition',
     (tester) async {

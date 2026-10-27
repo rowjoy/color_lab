@@ -116,6 +116,71 @@ void main() {
     );
   }
 
+  for (final destination in AcquisitionDestination.values) {
+    test(
+      'recovered failure retains $destination intent through cleanup retry',
+      () async {
+        final intent = AcquisitionIntent(
+          requestId: 'lost-${destination.name}',
+          source: PhotoSource.camera,
+          destination: destination,
+        );
+        final store = Store(initial: AcquisitionIntentRecord.valid(intent))
+          ..failClear = true;
+        final adapter = Adapter()
+          ..recoveryFailure = const PhotoPickFailure(
+            PhotoPickFailureKind.unsupported,
+          );
+        final c = containerFor(store, adapter);
+        final controller = c.read(photoAcquisitionProvider.notifier);
+        await controller.ensureRecovered();
+        expect(
+          c.read(photoAcquisitionProvider).phase,
+          AcquisitionPhase.storageError,
+        );
+        store.failClear = false;
+        await controller.retryStorage();
+        final failure = c.read(photoAcquisitionProvider).recoveryFailure;
+        expect(failure?.kind, AcquisitionFailureKind.unsupported);
+        expect(failure?.intent.requestId, 'lost-${destination.name}');
+        expect(failure?.intent.source, PhotoSource.camera);
+        expect(failure?.intent.destination, destination);
+        expect((await store.load()).kind, IntentRecordKind.absent);
+        expect(adapter.recoverCalls, 1);
+        expect(adapter.pickCalls, 0);
+        adapter.picked = null;
+        await controller.request(
+          source: PhotoSource.gallery,
+          destination: destination,
+        );
+        expect(c.read(photoAcquisitionProvider).recoveryFailure, isNull);
+      },
+    );
+  }
+
+  for (final origin in [
+    const AcquisitionIntentRecord.absent(),
+    const AcquisitionIntentRecord.untrusted(),
+  ]) {
+    test(
+      'unknown ${origin.kind} recovery failure acquires no invented owner',
+      () async {
+        final adapter = Adapter()
+          ..recoveryFailure = const PhotoPickFailure(
+            PhotoPickFailureKind.invalidImage,
+          );
+        final c = containerFor(Store(initial: origin), adapter);
+        await c.read(photoAcquisitionProvider.notifier).ensureRecovered();
+        expect(
+          c.read(photoAcquisitionProvider).failure,
+          AcquisitionFailureKind.invalidImage,
+        );
+        expect(c.read(photoAcquisitionProvider).recoveryFailure, isNull);
+        expect(adapter.pickCalls, 0);
+      },
+    );
+  }
+
   Future<void> tick() => Future<void>.delayed(Duration.zero);
 
   test(

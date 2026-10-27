@@ -96,7 +96,7 @@ class RoomMaskController extends Notifier<RoomMaskState> {
         case Acquired(:final receipt):
           await _claim(receipt.requestId, operation, isActive);
         case AcquisitionFailed(:final kind):
-          _fail(_acquisitionFailure(kind));
+          _fail(acquisitionFailure(kind));
         case AcquisitionCancelled():
           _returnToDraft();
         case AcquisitionBusy():
@@ -166,7 +166,7 @@ class RoomMaskController extends Notifier<RoomMaskState> {
         _fail(
           failure == null
               ? RoomMaskFailureKind.acquisitionUnavailable
-              : _acquisitionFailure(failure),
+              : acquisitionFailure(failure),
         );
         return;
       }
@@ -662,7 +662,7 @@ class RoomMaskController extends Notifier<RoomMaskState> {
     return true;
   }
 
-  static RoomMaskFailureKind _acquisitionFailure(AcquisitionFailureKind kind) =>
+  static RoomMaskFailureKind acquisitionFailure(AcquisitionFailureKind kind) =>
       switch (kind) {
         AcquisitionFailureKind.permissionDenied =>
           RoomMaskFailureKind.permissionDenied,

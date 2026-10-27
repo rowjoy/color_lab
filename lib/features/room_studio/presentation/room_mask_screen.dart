@@ -52,6 +52,10 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
   bool _showAfter = true;
   late final RoomExportController _exports;
   PhotoSource _lastSource = PhotoSource.gallery;
+  bool _recoveryObserved = false;
+  Object? _recoveryOperation, _recoveryLifetime;
+  RoomMaskState? _recoveryMask;
+  AcquisitionRecoveryFailure? _recoveredFailure;
   (String, int)? _refreshedMasks;
   late final RoomRecolorCoordinator _previews;
   Object? _previewOwner;
@@ -67,9 +71,16 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
     )..addListener(_exportChanged);
     WidgetsBinding.instance.addObserver(this);
     ref.listenManual(
-      roomProjectSessionProvider,
-      (_, _) => _exports.reconcile(),
+      photoAcquisitionProvider,
+      (_, next) => _receiveRecoveryFailure(next),
     );
+    ref.listenManual(roomProjectSessionProvider, (_, next) {
+      _exports.reconcile();
+      if (!identical(_recoveryLifetime, next?.lifetime)) {
+        // Revoke permanently even if a later close returns to a null session.
+        _recoveryOperation = null;
+      }
+    });
   }
 
   @override
@@ -85,7 +96,10 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) {
+      _recoveryOperation = null;
       _exports.revoke(beforeHandoffOnly: true);
+    } else {
+      _observeRecoveryFailure();
     }
   }
 
@@ -93,7 +107,12 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
     final visible = _routeVisible;
     final becameVisible = visible && !_previewRouteVisible;
     _previewRouteVisible = visible;
-    if (!visible) _exports.revoke();
+    if (!visible) {
+      _recoveryOperation = null;
+      _exports.revoke();
+    } else {
+      _observeRecoveryFailure();
+    }
     final owner = _previewOwner;
     if (visible && (becameVisible || owner == null || !_previews.owns(owner))) {
       // A retained editor may return while the covering editor is still
@@ -102,6 +121,56 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
     } else if (owner != null) {
       _previews.setOwnerVisible(owner, visible);
     }
+  }
+
+  void _observeRecoveryFailure() {
+    if (_recoveryObserved || !_active) return;
+    _recoveryObserved = true;
+    if (ref
+        .read(photoAcquisitionProvider.notifier)
+        .reserveRecoveryFailure(AcquisitionDestination.room)) {
+      _recoveryOperation = Object();
+      _recoveryLifetime = ref.read(roomProjectSessionProvider)?.lifetime;
+      _recoveryMask = ref.read(roomMaskProvider);
+      _receiveRecoveryFailure(ref.read(photoAcquisitionProvider));
+    }
+  }
+
+  bool get _recoveryCurrent =>
+      mounted &&
+      _recoveryOperation != null &&
+      _active &&
+      identical(
+        _recoveryLifetime,
+        ref.read(roomProjectSessionProvider)?.lifetime,
+      ) &&
+      identical(_recoveryMask, ref.read(roomMaskProvider));
+
+  void _receiveRecoveryFailure(AcquisitionState state) {
+    final failure = state.recoveryFailure;
+    if (failure?.intent.destination != AcquisitionDestination.room ||
+        !_recoveryCurrent) {
+      return;
+    }
+    final operation = _recoveryOperation;
+    // Initial recovery can already be ready during didChangeDependencies.
+    // Revalidate the original owner after the frame before updating its UI.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_recoveryCurrent ||
+          !identical(operation, _recoveryOperation) ||
+          !identical(
+            failure,
+            ref.read(photoAcquisitionProvider).recoveryFailure,
+          )) {
+        return;
+      }
+      setState(() {
+        _recoveredFailure = failure;
+        _lastSource = failure!.intent.source;
+      });
+    });
+    // Resuming from inactive need not schedule a frame on its own.
+    WidgetsBinding.instance.ensureVisualUpdate();
   }
 
   @override
@@ -154,6 +223,7 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
     if (!_active || _confirming || _importOperation != null) return;
     if (!_analysisReady()) return;
     if (source != null) _lastSource = source;
+    _recoveryOperation = null;
     _exports.revoke();
     final operation = Object();
     setState(() => _importOperation = operation);
@@ -304,8 +374,19 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
     );
   }
 
-  Future<void> _recover(RoomFailureRecovery recovery) async {
+  Future<void> _recover(
+    RoomFailureRecovery recovery, {
+    AcquisitionRecoveryFailure? recoveredFailure,
+  }) async {
     if (!_active) return;
+    if (recoveredFailure != null &&
+        (!_recoveryCurrent ||
+            !identical(
+              recoveredFailure,
+              ref.read(photoAcquisitionProvider).recoveryFailure,
+            ))) {
+      return;
+    }
     switch (recovery) {
       case RoomFailureRecovery.settings:
         await ref.read(photoPickerServiceProvider).openSettings();
@@ -443,6 +524,16 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
     final controller = ref.read(roomMaskProvider.notifier);
     final acquisition = ref.watch(photoAcquisitionProvider);
     final receipt = acquisition.pendingReceipt;
+    final recoveredFailure =
+        _recoveryCurrent &&
+            identical(_recoveredFailure, acquisition.recoveryFailure)
+        ? _recoveredFailure
+        : null;
+    final failure = state.stage == RoomMaskStage.error
+        ? state.failure
+        : recoveredFailure == null
+        ? null
+        : RoomMaskController.acquisitionFailure(recoveredFailure.kind);
     final draft = state.draft;
     final preview = ref.watch(roomRecolorPreviewProvider);
     final recolorKey = roomActiveRecolorKey(session);
@@ -609,17 +700,20 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
               onPressed: () => _cancelCandidate(retainPhoto: analyzing),
             ),
           ],
-          if (state.stage == RoomMaskStage.error) ...[
+          if (state.stage == RoomMaskStage.error ||
+              recoveredFailure != null) ...[
             Semantics(
               liveRegion: true,
-              child: Text(roomFailureCopy(context.l10n, state.failure).$1),
+              child: Text(roomFailureCopy(context.l10n, failure).$1),
             ),
             const SizedBox(height: AppSpacing.md),
             PrimaryButton(
               key: const ValueKey('room-photo-recovery'),
-              label: roomFailureCopy(context.l10n, state.failure).$2,
-              onPressed: () =>
-                  _recover(roomFailureCopy(context.l10n, state.failure).$3),
+              label: roomFailureCopy(context.l10n, failure).$2,
+              onPressed: () => _recover(
+                roomFailureCopy(context.l10n, failure).$3,
+                recoveredFailure: recoveredFailure,
+              ),
             ),
             if (state.candidate != null) ...[
               const SizedBox(height: AppSpacing.sm),
@@ -631,7 +725,7 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
                 },
               ),
             ],
-            if (draft != null)
+            if (draft != null && state.stage == RoomMaskStage.error)
               SecondaryButton(
                 label: 'Return to previous masks',
                 onPressed: _cancelCandidate,

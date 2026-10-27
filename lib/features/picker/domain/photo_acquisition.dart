@@ -89,6 +89,14 @@ enum AcquisitionFailureKind {
   recovery,
 }
 
+/// A consumed native recovery failure retains only its trusted request owner.
+@immutable
+final class AcquisitionRecoveryFailure {
+  const AcquisitionRecoveryFailure({required this.intent, required this.kind});
+  final AcquisitionIntent intent;
+  final AcquisitionFailureKind kind;
+}
+
 @immutable
 sealed class AcquisitionOutcome {
   const AcquisitionOutcome();
@@ -126,15 +134,18 @@ final class AcquisitionState {
     required this.phase,
     this.pendingReceipt,
     this.failure,
+    this.recoveryFailure,
     this.hasUntrustedIntent = false,
   });
   const AcquisitionState.initial()
     : phase = AcquisitionPhase.uninitialized,
       pendingReceipt = null,
       failure = null,
+      recoveryFailure = null,
       hasUntrustedIntent = false;
   final AcquisitionPhase phase;
   final AcquisitionReceipt? pendingReceipt;
   final AcquisitionFailureKind? failure;
+  final AcquisitionRecoveryFailure? recoveryFailure;
   final bool hasUntrustedIntent;
 }
