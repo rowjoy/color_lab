@@ -29,13 +29,98 @@ class RoomVariantControls extends ConsumerStatefulWidget {
 
 class _RoomVariantControlsState extends ConsumerState<RoomVariantControls> {
   RoomVariantFailure? _failure;
+  bool _deleteChanged = false;
+  bool _confirmingDelete = false;
 
   Future<void> _command(Future<void> Function() action) async {
-    setState(() => _failure = null);
+    setState(() {
+      _failure = null;
+      _deleteChanged = false;
+    });
     try {
       await action();
     } on RoomVariantException catch (error) {
       if (mounted) setState(() => _failure = error.failure);
+    }
+  }
+
+  Future<void> _delete(RoomColorVariant variant) async {
+    if (_confirmingDelete) return;
+    final captured = ref.read(roomProjectSessionProvider);
+    if (captured == null ||
+        captured.variants.length < 2 ||
+        !captured.variants.any((v) => identical(v, variant))) {
+      return;
+    }
+    final survivor = captured.variants.firstWhere((v) => v.id != variant.id);
+    final switchesSelection = captured.activeVariantId == variant.id;
+    final clearsComparison = captured.comparisonBaselineVariantId == variant.id;
+    _confirmingDelete = true;
+    var confirmed = false;
+    try {
+      final accepted = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          scrollable: true,
+          title: Text(context.l10n.roomVariantDeleteTitle(variant.name)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(context.l10n.roomVariantDeleteConsequence(variant.name)),
+              if (switchesSelection) ...[
+                const SizedBox(height: 12),
+                Text(context.l10n.roomVariantDeleteSelection(survivor.name)),
+              ],
+              if (clearsComparison) ...[
+                const SizedBox(height: 12),
+                Text(context.l10n.roomVariantDeleteBaseline),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              key: const ValueKey('room-variant-delete-cancel'),
+              onPressed: () {
+                if (!confirmed) Navigator.pop(dialogContext, false);
+              },
+              child: Text(context.l10n.cancel),
+            ),
+            FilledButton(
+              key: const ValueKey('room-variant-delete-confirm'),
+              onPressed: () {
+                // A second tap can arrive before the dialog's exit animation.
+                if (confirmed) return;
+                confirmed = true;
+                Navigator.pop(dialogContext, true);
+              },
+              child: Text(context.l10n.roomVariantDelete),
+            ),
+          ],
+        ),
+      );
+      if (!mounted || accepted != true) return;
+      final current = ref.read(roomProjectSessionProvider);
+      // Acknowledgements may change durable state while this dialog is open.
+      // Reopen or any visible edit changes these immutable identities, so the
+      // displayed target, survivor and baseline consequences must be reviewed.
+      if (current == null ||
+          current.projectId != captured.projectId ||
+          !identical(current.variantSet, captured.variantSet) ||
+          !identical(current.visible, captured.visible) ||
+          current.name != captured.name ||
+          !current.variants.any((v) => identical(v, variant))) {
+        setState(() {
+          _failure = null;
+          _deleteChanged = true;
+        });
+        return;
+      }
+      await _command(
+        () => ref.read(roomVariantProvider.notifier).deleteVariant(variant.id),
+      );
+    } finally {
+      _confirmingDelete = false;
     }
   }
 
@@ -144,7 +229,14 @@ class _RoomVariantControlsState extends ConsumerState<RoomVariantControls> {
   @override
   Widget build(BuildContext context) {
     final set = ref.watch(roomVariantProvider);
-    if (set == null) return const SizedBox.shrink();
+    if (set == null) {
+      return _deleteChanged
+          ? Semantics(
+              liveRegion: true,
+              child: Text(context.l10n.roomVariantDeleteChanged),
+            )
+          : const SizedBox.shrink();
+    }
     final editor = ref.watch(roomMaskProvider);
     final enabled = editor.stage == RoomMaskStage.ready && !editor.editBusy;
     final controller = ref.read(roomVariantProvider.notifier);
@@ -212,9 +304,7 @@ class _RoomVariantControlsState extends ConsumerState<RoomVariantControls> {
                         TextButton(
                           key: ValueKey('room-variant-delete-${variant.id}'),
                           onPressed: enabled && set.variants.length > 1
-                              ? () => _command(
-                                  () => controller.deleteVariant(variant.id),
-                                )
+                              ? () => _delete(variant)
                               : null,
                           child: Text(context.l10n.roomVariantDelete),
                         ),
@@ -256,6 +346,11 @@ class _RoomVariantControlsState extends ConsumerState<RoomVariantControls> {
           Semantics(
             liveRegion: true,
             child: Text(_failureText(context, _failure!)),
+          ),
+        if (_deleteChanged)
+          Semantics(
+            liveRegion: true,
+            child: Text(context.l10n.roomVariantDeleteChanged),
           ),
       ],
     );

@@ -889,6 +889,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get roomVariantDelete => 'Delete variant';
 
   @override
+  String roomVariantDeleteTitle(String name) {
+    return 'Delete “$name”?';
+  }
+
+  @override
+  String roomVariantDeleteConsequence(String name) {
+    return 'This removes the “$name” color alternative. The project photo, masks, and other variants remain.';
+  }
+
+  @override
+  String roomVariantDeleteSelection(String name) {
+    return 'The selected variant will switch to “$name”.';
+  }
+
+  @override
+  String get roomVariantDeleteBaseline =>
+      'This is the pinned baseline. Comparison will be cleared.';
+
+  @override
+  String get roomVariantDeleteChanged =>
+      'The project or variants changed while this confirmation was open. Review the variant and try again.';
+
+  @override
   String get roomVariantPin => 'Pin as baseline';
 
   @override

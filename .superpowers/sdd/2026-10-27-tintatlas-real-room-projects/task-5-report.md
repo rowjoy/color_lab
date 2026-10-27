@@ -70,7 +70,7 @@ Result: exit 0, `00:17 +294: All tests passed!`. The earlier combined run was al
 
 After the coherent-render-input correction, the **same complete focused command** was rerun with output redirected to `/tmp/tintatlas-task5-focused-final-gate.log`: exit 0, `00:18 +295: All tests passed!`. This is the final source-state test gate. The final analyzer command shown below exited 0 with `No issues found! (ran in 5.7s)`.
 
-Coverage includes name/ID/count limits, uniqueness, missing IDs, final deletion, deterministic survivor/baseline rules, one-save FIFO snapshots, latest visible metadata, failed-save and conflict Retry, active project rename ordering, close/delete drain, color/mask ownership, real-file asset reuse/reopen, complete key equality/validation, mismatched/late results and errors on both sides and across projects, real split controls, pointer/keyboard/semantic operation, temporary original nonmutation, and selected-side Share. Controls and create/rename/delete dialogs are exercised at 320×568, 568×320, 840×800 and 1200×800 with 200% text. Library Compare is exercised with one/two variants, fresh-container restoration, query identity and Back.
+Coverage includes name/ID/count limits, uniqueness, missing IDs, final deletion, deterministic survivor/baseline rules, one-save FIFO snapshots, latest visible metadata, failed-save and conflict Retry, active project rename ordering, close/delete drain, color/mask ownership, real-file asset reuse/reopen, complete key equality/validation, mismatched/late results and errors on both sides and across projects, real split controls, pointer/keyboard/semantic operation, temporary original nonmutation, and selected-side Share. At this initial gate, controls (including the direct Delete action) and create/rename dialogs were exercised at 320×568, 568×320, 840×800 and 1200×800 with 200% text. Deletion did not yet have a confirmation dialog; the earlier claim of delete-dialog coverage was incorrect. Fix round 1 below supplies that behavior and actual layout evidence. Library Compare is exercised with one/two variants, fresh-container restoration, query identity and Back.
 
 ```sh
 /Users/jamirulislam/Applications/flutter/bin/flutter test --no-pub --reporter expanded > /tmp/tintatlas-task5-full.log 2>&1
@@ -114,3 +114,52 @@ git log --diff-filter=A -1 --format=%H -- .superpowers/sdd/2026-10-27-tintatlas-
 ```
 
 The exact SHA is returned in the implementer handoff. Staging is limited to the 25 explicit Dart paths above, `lib/l10n/app_en.arb`, and this report. Only this report is force-added from ignored `.superpowers`; the shared ledger and brief remain unstaged. The commit gate checks staged whitespace, an empty staged `lib/main.dart` diff and the protected unstaged hash.
+
+## Fix round 1 — disclose and confirm variant deletion
+
+Reviewed base: `e0438f37285a0d90038b3fa7f23628e9bc13ff78`, branch `TintAtlas`. This round addresses the Important finding that a single adjacent Delete tap immediately removed and autosaved a color alternative without consequence disclosure or recovery. It adds confirmation only; no Task 6 work or controller/storage changes are included. The protected unstaged `lib/main.dart` diff remains untouched.
+
+The new localized dialog names the target and explicitly states that the project photo, masks and other variants remain. If the target is active, it names the first surviving variant in persisted order; if it is the pinned baseline, it states that comparison clears. Both consequences appear when applicable. Cancel, system Back and outside dismissal are genuine zero-mutation paths. The final remaining variant's Delete action remains disabled, with the existing domain rejection unchanged.
+
+Confirmation captures the current project ID, immutable variant set, visible draft and exact target object. Immediately before issuing the command, it revalidates those identities and the project name. A reopen, project switch, target rename/color change/removal, selection change or other visible variant/draft change makes the confirmation stale: no delete command or save is issued, and a localized live-region message asks the user to review and try again. Mere save acknowledgement can change durable status while preserving these captured identities; it does not silently discard the valid confirmation. This conservative rule also prevents acting on outdated survivor/baseline consequences.
+
+One pending confirmation is admitted at a time. The Confirm callback guards an already-dispatched repeat activation before popping the dialog, and the accepted dialog result causes exactly one existing session-backed `deleteVariant` command. The test performs a real first tap, then re-invokes the captured callback to represent a duplicate activation already dispatched before the route leaves; a second coordinate tap would only miss because the first activation removes the dialog from hit testing immediately. No hit-test warning is suppressed. The test verifies one pending intent, one storage revision, and a retained underlying page.
+
+Fifteen new widget cases cover regular deletion copy and asset/color preservation; Cancel/Back/outside no-op behavior; active, baseline and combined consequences; six stale ownership/target scenarios; repeated confirmation; and compact portrait/landscape at 200% text with a 100-pixel keyboard inset. The existing CRUD/four-layout interaction cases now explicitly confirm deletion too. Both cancel and confirm remain reachable through real taps in the compact keyboard-inset cases, with no overflow. The report's original delete-dialog layout overstatement is corrected above.
+
+### RED and final GREEN evidence
+
+Only the test file changed before this RED command:
+
+```sh
+/Users/jamirulislam/Applications/flutter/bin/flutter test --no-pub test/features/room_studio/presentation/room_variant_controls_test.dart --plain-name 'delete' --reporter expanded > /tmp/tintatlas-task5-fix1-red.log 2>&1
+```
+
+Result: exit 1, `00:02 +0 -16: Some tests failed.` The new cases expected a confirmation dialog but found none; the amended existing CRUD test also found no Confirm action. This reproduces the review finding before implementation.
+
+After implementation and diagnostic cleanup, the final covering command was:
+
+```sh
+/Users/jamirulislam/Applications/flutter/bin/flutter test --no-pub test/features/room_studio/presentation/room_variant_controls_test.dart test/features/room_studio/application/room_variant_controller_test.dart test/features/room_studio/application/room_project_session_controller_test.dart test/features/room_studio/presentation/room_masks_integration_test.dart test/routing/app_router_test.dart --reporter expanded > /tmp/tintatlas-task5-fix1-focused-final.log 2>&1
+/Users/jamirulislam/Applications/flutter/bin/flutter analyze --no-pub > /tmp/tintatlas-task5-fix1-analyze-final.log 2>&1
+/Users/jamirulislam/Applications/flutter/bin/flutter gen-l10n
+```
+
+Focused result: exit 0, `00:16 +140: All tests passed!`, with no missed-hit warnings or uncaught exceptions. Final analyzer: exit 0, `No issues found! (ran in 4.3s)`. Localization generation: exit 0 with the existing `l10n.yaml`. Initial intermediate diagnostics (a brace-style info and the redundant second coordinate tap described above) were corrected before these clean final gates.
+
+```sh
+/Users/jamirulislam/Applications/flutter/bin/flutter test --no-pub --reporter expanded > /tmp/tintatlas-task5-fix1-full.log 2>&1
+/Users/jamirulislam/Applications/flutter/bin/cache/dart-sdk/bin/dart format --output=none --set-exit-if-changed lib/features/room_studio/presentation/room_variant_controls.dart lib/l10n/generated/app_localizations.dart lib/l10n/generated/app_localizations_en.dart test/features/room_studio/presentation/room_variant_controls_test.dart
+git diff --check
+git diff -- lib/main.dart | shasum -a 256
+```
+
+Full-suite result: exit 0, `01:03 +1926: All tests passed!`; it ran once in this fix round. Formatter result: exit 0, `Formatted 4 files (0 changed)`. Whitespace check: exit 0. The protected unstaged `lib/main.dart` diff SHA-256 remained `c9bd56e83824d1dff5f750092e3d751bbb1841ad9377380c057bdffb4aacf437`. No native accessibility/device certification is claimed; the dialog evidence is widget-level pointer, dismissal, layout and state ownership coverage.
+
+### Fix commit
+
+Required message: `fix: confirm room variant deletion`. The commit stages only `room_variant_controls.dart`, `app_en.arb`, the two generated localization files, `room_variant_controls_test.dart`, and this report. It verifies staged whitespace and an empty staged `lib/main.dart` diff. The exact fix SHA is returned in the handoff and can be resolved with:
+
+```sh
+git log -1 --format=%H --grep='^fix: confirm room variant deletion$'
+```

@@ -1619,6 +1619,36 @@ abstract class AppLocalizations {
   /// **'Delete variant'**
   String get roomVariantDelete;
 
+  /// Confirmation title naming the color alternative to delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete “{name}”?'**
+  String roomVariantDeleteTitle(String name);
+
+  /// Scope of deleting one color variant.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes the “{name}” color alternative. The project photo, masks, and other variants remain.'**
+  String roomVariantDeleteConsequence(String name);
+
+  /// Named deterministic survivor after deleting the active variant.
+  ///
+  /// In en, this message translates to:
+  /// **'The selected variant will switch to “{name}”.'**
+  String roomVariantDeleteSelection(String name);
+
+  /// Consequence of deleting the pinned comparison variant.
+  ///
+  /// In en, this message translates to:
+  /// **'This is the pinned baseline. Comparison will be cleared.'**
+  String get roomVariantDeleteBaseline;
+
+  /// Safe feedback when a deletion confirmation has become stale.
+  ///
+  /// In en, this message translates to:
+  /// **'The project or variants changed while this confirmation was open. Review the variant and try again.'**
+  String get roomVariantDeleteChanged;
+
   /// Room variant and comparison control.
   ///
   /// In en, this message translates to:
