@@ -195,13 +195,14 @@ signing, icons, ad configuration, and the Task 9 gate were not changed.
 | Authoritative focused GREEN | `0`, `+95` | All original failure files plus shared-library isolation passed together with `--concurrency=1 --reporter compact`. |
 | Supplemental shell-contract RED | failure before repair | Default-concurrency run reached `+1604 -12` and exposed a teardown stall; the bounded single-thread JSON rerun traced it to the five exact stale Task 7 test paths authorized above. |
 | Supplemental shell-contract GREEN | `0`, `+84` | Color details, Formula, Harmonies, Mixer, and Room Masks integration files passed together with `--concurrency=1 --reporter compact`. |
+| Independent-review concurrency/localization fixes | `0`, `+298` | Games plus localization passed after selective stale-attempt rollback, durable switch coordination, ambiguous-write reconciliation, and generated Games/Level Map copy; scoped re-review found all four findings addressed with no new Critical/Important breakage. |
 | `flutter pub get` | `0` | Dependencies resolved from the pinned project constraints; no dependency or lockfile change was produced. |
 | `flutter gen-l10n` | `0` | `l10n.yaml` drove generation; committed English localization output is current. |
 | Exact `dart format --output=none --set-exit-if-changed lib test tool` | `1`, 388 scanned / 1 reported | Only protected user-owned `lib/main.dart` was reported. The command did not mutate it; its diff SHA-256 remained `c9bd56e83824d1dff5f750092e3d751bbb1841ad9377380c057bdffb4aacf437`. |
 | Eligible-tree format check excluding protected `lib/main.dart` | `0`, 387 / 387 unchanged | `rg --files lib test tool -g '*.dart' -g '!lib/main.dart' \| xargs dart format --output=none --set-exit-if-changed`. The clean CI checkout runs the exact full-tree command because the protected local diff is not committed. |
-| `flutter analyze --no-pub` | `0` | `No issues found!` in 4.4 seconds. |
-| `flutter test --no-pub --reporter expanded` | `0`, `+1650` | Full suite completed in 1 minute 2 seconds with `All tests passed!`; no skip or test deletion was added. |
-| `flutter build apk --debug --no-pub` | `0` | `build/app/outputs/flutter-apk/app-debug.apk`; 217,348,770 bytes; SHA-256 `fb667758eabb915b3b1e103669eb558d5126a8682af9908caf19099bb6080e59`. Debug-only build; no signing or release secrets. |
+| `flutter analyze --no-pub` | `0` | Post-fix run: `No issues found!` in 4.1 seconds. |
+| `flutter test --no-pub --reporter expanded` | `0`, `+1654` | Post-fix full suite completed in 1 minute 6 seconds with `All tests passed!`; no skip or test deletion was added. |
+| `flutter build apk --debug --no-pub` | `0` | Post-fix `build/app/outputs/flutter-apk/app-debug.apk`; 217,348,103 bytes; SHA-256 `1defd0e913a34a7534be429d15ce25af5ffc2ff5cdb5bef752452b747df264aa`. Debug-only build; no signing or release secrets. |
 | `git diff --check` | `0` | No whitespace errors. |
 | Protected diff recheck | exact match | `lib/main.dart` remained unstaged with the recorded SHA-256 above. |
 
@@ -221,7 +222,7 @@ not a remote CI claim. The iOS archive/device gate remains blocked as recorded.
 | BASE-03 inventory schemas/routes/models/exports | pass | `schema-registry.md`. |
 | BASE-04 verification ledger | pass | This document and deterministic coverage CLI. |
 | BASE-05 dependency/size/performance budgets | partial, measured fields recorded | `performance-budgets.md`; hardware-only rows are blocked with owners. |
-| BASE-06 repeatable clean verification | pass locally; remote run pending | All eligible Task 10 files pass generation, format, analyze, `+1650` tests, and debug APK build. CI is pinned and committed; only the protected uncommitted `lib/main.dart` diff prevents the literal full-tree format command from returning zero in this shared checkout. |
+| BASE-06 repeatable clean verification | pass locally; remote run pending | All eligible Task 10 files pass generation, format, analyze, `+1654` tests, and debug APK build. CI is pinned and committed; only the protected uncommitted `lib/main.dart` diff prevents the literal full-tree format command from returning zero in this shared checkout. |
 | BRAND-01 screen TintAtlas | blocked before asset/store lock | Exact-name adjacent web conflict; product owner/clearance reviewer must accept or rename. See `identity-decision.md`. |
 | IDENTITY-01 confirm publication history | blocked | Store-account owner must attest history; `newListing` cannot be inferred. |
 | SUPPORT-01 support contract | provisional | API 24/iOS 13 and architectures documented; physical device/archive gates remain blocked. See `support-matrix.md`. |
