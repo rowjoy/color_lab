@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/theme.dart';
+import 'color_label_scope.dart';
 
 class ColorSwatchTile extends StatelessWidget {
   const ColorSwatchTile({
@@ -71,55 +72,62 @@ class ColorChip extends StatelessWidget {
   final String? label;
   final VoidCallback? onTap;
   @override
-  Widget build(BuildContext context) => Semantics(
-    button: onTap != null,
-    onTap: onTap,
-    label:
+  Widget build(BuildContext context) {
+    final displayLabel =
         label ??
-        'Color #${color.toARGB32().toRadixString(16).substring(2).toUpperCase()}',
-    excludeSemantics: true,
-    child: Material(
-      color: context.appColors.surfaceElevated,
-      borderRadius: BorderRadius.circular(AppRadii.pill),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            minHeight: AppSpacing.huge,
-            minWidth: AppSpacing.huge,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.sm),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: AppSpacing.xxxl,
-                  height: AppSpacing.xxxl,
-                  decoration: BoxDecoration(
-                    color: color,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: context.appColors.outline),
-                  ),
-                ),
-                if (label != null) ...[
-                  const SizedBox(width: AppSpacing.sm),
-                  Flexible(
-                    child: Text(
-                      label!,
-                      style: Theme.of(context).textTheme.bodyMedium,
+        (ColorLabelScope.of(context)
+            ? '#${color.toARGB32().toRadixString(16).substring(2).toUpperCase()}'
+            : null);
+    return Semantics(
+      button: onTap != null,
+      onTap: onTap,
+      label:
+          label ??
+          'Color #${color.toARGB32().toRadixString(16).substring(2).toUpperCase()}',
+      excludeSemantics: true,
+      child: Material(
+        color: context.appColors.surfaceElevated,
+        borderRadius: BorderRadius.circular(AppRadii.pill),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              minHeight: AppSpacing.huge,
+              minWidth: AppSpacing.huge,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: AppSpacing.xxxl,
+                    height: AppSpacing.xxxl,
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: context.appColors.outline),
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.sm),
+                  if (displayLabel != null) ...[
+                    const SizedBox(width: AppSpacing.sm),
+                    Flexible(
+                      child: Text(
+                        displayLabel,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class PaletteBar extends StatelessWidget {

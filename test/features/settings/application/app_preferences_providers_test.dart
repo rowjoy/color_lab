@@ -49,6 +49,31 @@ void main() {
   }
 
   test(
+    'accessibility writes merge and failed save retains committed values',
+    () async {
+      final repository = _MemoryRepository();
+      final container = containerFor(repository);
+      await container.read(appPreferencesProvider.future);
+      final controller = container.read(appPreferencesProvider.notifier);
+      await Future.wait([
+        controller.setMotion(MotionPreference.reduce),
+        controller.setHighContrast(true),
+        controller.setAlwaysShowColorLabels(true),
+      ]);
+      final saved = container.read(appPreferencesProvider).requireValue;
+      expect(saved.motion, MotionPreference.reduce);
+      expect(saved.highContrast, true);
+      expect(saved.alwaysShowColorLabels, true);
+      repository.failSave = true;
+      await expectLater(
+        controller.setHighContrast(false),
+        throwsA(isA<PreferencesStorageException>()),
+      );
+      expect(container.read(appPreferencesProvider).requireValue, saved);
+    },
+  );
+
+  test(
     'theme defaults while loading and follows durable preferences',
     () async {
       final repository = _MemoryRepository()

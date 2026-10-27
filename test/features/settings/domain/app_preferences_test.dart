@@ -9,9 +9,12 @@ void main() {
     expect(preferences.themeMode, ThemeMode.system);
     expect(preferences.onboardingCompleted, false);
     expect(preferences.toMap(), {
-      'schemaVersion': 1,
+      'schemaVersion': 2,
       'themeMode': 'system',
       'onboardingCompleted': false,
+      'motion': 'system',
+      'highContrast': false,
+      'alwaysShowColorLabels': false,
     });
   });
 
@@ -63,11 +66,31 @@ void main() {
   );
 
   test('missing and unsupported schema versions report safe storage error', () {
-    for (final version in [null, 0, 2, '1']) {
+    for (final version in [null, 0, 3, '1']) {
       expect(
         () => AppPreferences.fromMap({'schemaVersion': version}),
         throwsA(isA<PreferencesStorageException>()),
       );
     }
   });
+
+  test(
+    'v1 defaults and v2 accessibility fields survive copy and round trip',
+    () {
+      final old = AppPreferences.fromMap({'schemaVersion': 1});
+      expect(old.motion, MotionPreference.system);
+      expect(old.highContrast, false);
+      expect(old.alwaysShowColorLabels, false);
+      final updated = old.copyWith(
+        motion: MotionPreference.reduce,
+        highContrast: true,
+        alwaysShowColorLabels: true,
+      );
+      expect(AppPreferences.fromMap(updated.toMap()), updated);
+      expect(
+        updated.copyWith(themeMode: ThemeMode.dark).motion,
+        MotionPreference.reduce,
+      );
+    },
+  );
 }

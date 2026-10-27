@@ -1,6 +1,10 @@
 import 'dart:async';
 
 import 'package:color_lab/app.dart';
+import 'package:color_lab/core/theme/theme.dart';
+import 'package:color_lab/core/widgets/color_widgets.dart';
+import 'package:color_lab/core/widgets/color_label_scope.dart';
+import 'package:color_lab/features/settings/presentation/privacy_screen.dart';
 import 'package:color_lab/features/history/application/history_providers.dart';
 import 'package:color_lab/features/picker/application/photo_picker_service.dart';
 import 'package:color_lab/features/picker/application/acquisition_intent_providers.dart';
@@ -121,7 +125,7 @@ void main() {
   ) async {
     await launch(tester, InMemoryAppPreferencesRepository());
     await openSettings(tester);
-    for (final label in ['Capture', 'Palette', 'Lab', 'Room']) {
+    for (final label in ['home', 'rooms', 'learn', 'games']) {
       expect(
         find.byKey(ValueKey('nav-$label')).hitTestable(),
         findsNothing,
@@ -139,7 +143,9 @@ void main() {
     });
     final repository = InMemoryAppPreferencesRepository()..saveGate = gate;
     final container = await launch(tester, repository);
-    final tabPosition = tester.getCenter(find.byKey(const ValueKey('nav-Lab')));
+    final tabPosition = tester.getCenter(
+      find.byKey(const ValueKey('nav-learn')),
+    );
     await openSettings(tester);
     await tester.tap(find.text(l10n.themeDark));
     await tester.pump();
@@ -149,7 +155,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
     expect(
       container.read(appRouterProvider).routeInformationProvider.value.uri.path,
-      '/capture',
+      '/home',
     );
     expect(find.text(l10n.savingAppearance), findsOneWidget);
     gate.complete();
@@ -163,7 +169,9 @@ void main() {
       tester,
       InMemoryAppPreferencesRepository()..failSave = true,
     );
-    final tabPosition = tester.getCenter(find.byKey(const ValueKey('nav-Lab')));
+    final tabPosition = tester.getCenter(
+      find.byKey(const ValueKey('nav-learn')),
+    );
     await openSettings(tester);
     await tester.tap(find.text(l10n.themeDark));
     await tester.pumpAndSettle();
@@ -173,8 +181,78 @@ void main() {
     await tester.pumpAndSettle();
     expect(
       container.read(appRouterProvider).routeInformationProvider.value.uri.path,
-      '/capture',
+      '/home',
     );
     expect(find.text(l10n.settingsSaveError), findsOneWidget);
   });
+
+  testWidgets(
+    'accessibility preferences drive root motion, theme and optional labels',
+    (tester) async {
+      final container = await launch(
+        tester,
+        InMemoryAppPreferencesRepository(
+          initial: const AppPreferences(
+            onboardingCompleted: true,
+            motion: MotionPreference.reduce,
+            highContrast: true,
+            alwaysShowColorLabels: true,
+          ),
+        ),
+      );
+      container.read(appRouterProvider).go('/settings/privacy');
+      await tester.pumpAndSettle();
+      final context = tester.element(find.byType(PrivacyScreen));
+      expect(MediaQuery.of(context).disableAnimations, true);
+      expect(ColorLabelScope.of(context), true);
+      expect(
+        Theme.of(context).colorScheme.outline,
+        AppTheme.highContrastLight.colorScheme.outline,
+      );
+      final material = tester.widget<MaterialApp>(find.byType(MaterialApp));
+      expect(material.themeAnimationDuration, Duration.zero);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            appPreferencesRepositoryProvider.overrideWith(
+              (ref) async => InMemoryAppPreferencesRepository(
+                initial: const AppPreferences(alwaysShowColorLabels: true),
+              ),
+            ),
+          ],
+          child: const MaterialApp(
+            home: ColorLabelScope(
+              alwaysShow: true,
+              child: Scaffold(body: ColorChip(color: Color(0xFFFF0000))),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('#FF0000'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'system reduced motion remains enabled with the system preference',
+    (tester) async {
+      tester.platformDispatcher.accessibilityFeaturesTestValue =
+          const FakeAccessibilityFeatures(disableAnimations: true);
+      addTearDown(
+        tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
+      );
+      final container = await launch(
+        tester,
+        InMemoryAppPreferencesRepository(),
+      );
+      container.read(appRouterProvider).go('/settings/privacy');
+      await tester.pumpAndSettle();
+      expect(
+        MediaQuery.of(
+          tester.element(find.byType(PrivacyScreen)),
+        ).disableAnimations,
+        true,
+      );
+    },
+  );
 }

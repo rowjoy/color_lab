@@ -37,7 +37,7 @@ abstract final class SchemaRegistry {
     id: 'app-preferences',
     storageName: 'app_preferences_v1',
     backend: StorageBackend.hiveBox,
-    currentVersion: 1,
+    currentVersion: 2,
     scope: LocalDataScope.sharedLibrary,
   );
   static const savedColors = SchemaDescriptor(

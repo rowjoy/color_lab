@@ -21,6 +21,10 @@ import '../features/shell/presentation/app_shell.dart';
 import '../features/onboarding/presentation/onboarding_screen.dart';
 import '../features/settings/application/app_preferences_providers.dart';
 import '../features/settings/presentation/preferences_startup_screen.dart';
+import '../features/settings/presentation/privacy_screen.dart';
+import '../features/settings/presentation/data_management_screen.dart';
+import '../features/settings/presentation/model_storage_screen.dart';
+import '../features/settings/presentation/settings_page.dart';
 import '../features/mixer/presentation/mixer_screen.dart';
 import '../features/formula/presentation/formula_screen.dart';
 import '../features/harmonies/presentation/harmonies_screen.dart';
@@ -61,6 +65,34 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
+      GoRoute(
+        path: '/settings/privacy',
+        builder: (context, state) => const PrivacyScreen(),
+      ),
+      GoRoute(
+        path: '/settings/data',
+        builder: (context, state) => const DataManagementScreen(),
+      ),
+      GoRoute(
+        path: '/settings/models',
+        builder: (context, state) => const ModelStorageScreen(),
+      ),
+      GoRoute(
+        path: '/settings/licenses',
+        builder: (context, state) => SettingsPage(
+          title: context.l10n.settingsLicensesEntry,
+          children: [
+            Text(context.l10n.appName),
+            TextButton(
+              onPressed: () => showLicensePage(
+                context: context,
+                applicationName: context.l10n.appName,
+              ),
+              child: Text(context.l10n.aboutAndLicenses(context.l10n.appName)),
+            ),
+          ],
+        ),
+      ),
       GoRoute(path: '/room', redirect: (context, state) => '/rooms'),
       GoRoute(
         path: '/room/study',

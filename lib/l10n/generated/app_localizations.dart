@@ -95,6 +95,240 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[Locale('en')];
 
+  /// Category for explicitly resetting preferences and replaying onboarding.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance, accessibility, and welcome preferences'**
+  String get dataPreferences;
+
+  /// Dismiss a confirmation without making changes.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// Settings: Accessibility
+  ///
+  /// In en, this message translates to:
+  /// **'Accessibility'**
+  String get settingsAccessibility;
+
+  /// Settings: Reduce motion
+  ///
+  /// In en, this message translates to:
+  /// **'Reduce motion'**
+  String get settingsReduceMotion;
+
+  /// Settings: High contrast
+  ///
+  /// In en, this message translates to:
+  /// **'High contrast'**
+  String get settingsHighContrast;
+
+  /// Settings: Always show color labels
+  ///
+  /// In en, this message translates to:
+  /// **'Always show color labels'**
+  String get settingsColorLabels;
+
+  /// Settings: Privacy
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy'**
+  String get settingsPrivacyEntry;
+
+  /// Settings: Manage local data
+  ///
+  /// In en, this message translates to:
+  /// **'Manage local data'**
+  String get settingsDataEntry;
+
+  /// Settings: Model storage
+  ///
+  /// In en, this message translates to:
+  /// **'Model storage'**
+  String get settingsModelsEntry;
+
+  /// Settings: Licenses
+  ///
+  /// In en, this message translates to:
+  /// **'Licenses'**
+  String get settingsLicensesEntry;
+
+  /// Settings: Photos are processed on this device. Camera and photo access are optional and requested only when you choose those tools. Room photo analysis needs an optional model download; downloading models uses the network but does not upload your photos.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos are processed on this device. Camera and photo access are optional and requested only when you choose those tools. Room photo analysis needs an optional model download; downloading models uses the network but does not upload your photos.'**
+  String get privacyBody;
+
+  /// Settings: Saved colors, palettes, illustrated rooms, and game profiles stay on this device. Game profiles share the same color libraries. Switching or deleting a profile does not delete those libraries.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved colors, palettes, illustrated rooms, and game profiles stay on this device. Game profiles share the same color libraries. Switching or deleting a profile does not delete those libraries.'**
+  String get privacyLibraries;
+
+  /// Settings: You control which local data to delete. Exported images and photo acquisition metadata are excluded from these controls. Models can be downloaded again when you choose Room photo analysis.
+  ///
+  /// In en, this message translates to:
+  /// **'You control which local data to delete. Exported images and photo acquisition metadata are excluded from these controls. Models can be downloaded again when you choose Room photo analysis.'**
+  String get privacyControls;
+
+  /// Settings: Select the data to review. Nothing is selected by default. Exported files and photo acquisition metadata are never included.
+  ///
+  /// In en, this message translates to:
+  /// **'Select the data to review. Nothing is selected by default. Exported files and photo acquisition metadata are never included.'**
+  String get dataIntro;
+
+  /// Settings: Saved colors
+  ///
+  /// In en, this message translates to:
+  /// **'Saved colors'**
+  String get dataSavedColors;
+
+  /// Settings: Saved palettes
+  ///
+  /// In en, this message translates to:
+  /// **'Saved palettes'**
+  String get dataSavedPalettes;
+
+  /// Settings: Illustrated room designs
+  ///
+  /// In en, this message translates to:
+  /// **'Illustrated room designs'**
+  String get dataIllustratedRooms;
+
+  /// Settings: All game profiles and legacy progress
+  ///
+  /// In en, this message translates to:
+  /// **'All game profiles and legacy progress'**
+  String get dataGames;
+
+  /// Settings: Downloaded Room models
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded Room models'**
+  String get dataModels;
+
+  /// Settings: Room photo projects
+  ///
+  /// In en, this message translates to:
+  /// **'Room photo projects'**
+  String get dataRoomProjects;
+
+  /// Settings: Coloring projects
+  ///
+  /// In en, this message translates to:
+  /// **'Coloring projects'**
+  String get dataColoringProjects;
+
+  /// Settings: Learning progress
+  ///
+  /// In en, this message translates to:
+  /// **'Learning progress'**
+  String get dataLearningProgress;
+
+  /// Settings: Not available yet
+  ///
+  /// In en, this message translates to:
+  /// **'Not available yet'**
+  String get dataUnavailable;
+
+  /// Settings: Review selected data
+  ///
+  /// In en, this message translates to:
+  /// **'Review selected data'**
+  String get dataPreview;
+
+  /// Settings: Review deletion
+  ///
+  /// In en, this message translates to:
+  /// **'Review deletion'**
+  String get dataReviewTitle;
+
+  /// Settings: Continue to confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'Continue to confirmation'**
+  String get dataContinue;
+
+  /// Settings: Delete selected data?
+  ///
+  /// In en, this message translates to:
+  /// **'Delete selected data?'**
+  String get dataConfirmTitle;
+
+  /// Settings: This cannot be undone. Only the reviewed categories will be deleted. Deleting all game data allows a fresh default profile to be created.
+  ///
+  /// In en, this message translates to:
+  /// **'This cannot be undone. Only the reviewed categories will be deleted. Deleting all game data allows a fresh default profile to be created.'**
+  String get dataConfirmBody;
+
+  /// Settings: Delete reviewed data
+  ///
+  /// In en, this message translates to:
+  /// **'Delete reviewed data'**
+  String get dataDelete;
+
+  /// Settings: Unable to complete this operation. Your selection is retained. Review the data again before retrying. A storage error during deletion may leave some selected data removed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to complete this operation. Your selection is retained. Review the data again before retrying. A storage error during deletion may leave some selected data removed.'**
+  String get dataError;
+
+  /// Settings: Selected data deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected data deleted.'**
+  String get dataSuccess;
+
+  /// Settings: Room photo models are optional. Opening this screen does not download them. Removing models cancels any active download. Only model files and partial downloads are removed.
+  ///
+  /// In en, this message translates to:
+  /// **'Room photo models are optional. Opening this screen does not download them. Removing models cancels any active download. Only model files and partial downloads are removed.'**
+  String get modelsIntro;
+
+  /// Settings: Remove downloaded models
+  ///
+  /// In en, this message translates to:
+  /// **'Remove downloaded models'**
+  String get modelsRemove;
+
+  /// Settings: Remove Room models?
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Room models?'**
+  String get modelsConfirm;
+
+  /// Settings: No downloaded models.
+  ///
+  /// In en, this message translates to:
+  /// **'No downloaded models.'**
+  String get modelsEmpty;
+
+  /// Settings: Model storage is unavailable. Try again.
+  ///
+  /// In en, this message translates to:
+  /// **'Model storage is unavailable. Try again.'**
+  String get modelsError;
+
+  /// Settings: Room models removed.
+  ///
+  /// In en, this message translates to:
+  /// **'Room models removed.'**
+  String get modelsRemoved;
+
+  /// Exact preview record count and estimated size.
+  ///
+  /// In en, this message translates to:
+  /// **'{records} records · approximately {bytes} bytes'**
+  String dataPreviewSummary(int records, int bytes);
+
+  /// Installed model inventory.
+  ///
+  /// In en, this message translates to:
+  /// **'{files} model files · {bytes} bytes'**
+  String modelsSummary(int files, int bytes);
+
   /// Compact product name shown inside the app.
   ///
   /// In en, this message translates to:
@@ -644,7 +878,7 @@ abstract class AppLocalizations {
   /// Body for the color discovery tour slide.
   ///
   /// In en, this message translates to:
-  /// **'Turn a camera moment or a favorite photo into a color worth keeping.'**
+  /// **'Explore colors from a camera moment or favorite photo. Try wall colors in Rooms, including illustrated rooms you can use offline.'**
   String get onboardingCuriousEyeBody;
 
   /// Supporting note for the color discovery tour slide.
@@ -668,7 +902,7 @@ abstract class AppLocalizations {
   /// Body for the saved library tour slide.
   ///
   /// In en, this message translates to:
-  /// **'Save the shades you love in a personal library, ready to revisit offline.'**
+  /// **'Save shades and palettes in My Work. Explore color in Learn and practice with Games. Your libraries are shared across local game profiles.'**
   String get onboardingPersonalBody;
 
   /// Supporting note for the saved library tour slide.
@@ -692,13 +926,13 @@ abstract class AppLocalizations {
   /// Body for the privacy and control tour slide.
   ///
   /// In en, this message translates to:
-  /// **'Color exploration stays on your device. We ask for camera or photo access only when you choose to use it.'**
+  /// **'Photos are processed on this device. Camera and photo permissions are optional. Room photo analysis offers an optional model download when you choose it.'**
   String get onboardingControlBody;
 
   /// Supporting note for the privacy and control tour slide.
   ///
   /// In en, this message translates to:
-  /// **'No permission is needed to take this tour.'**
+  /// **'Skip anytime. Replay this tour from Settings. No permission is needed to take this tour.'**
   String get onboardingControlNote;
 
   /// Recoverable error shown when onboarding completion cannot be saved.

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:color_lab/features/settings/domain/app_preferences.dart';
 
 import 'package:color_lab/features/settings/application/app_preferences_providers.dart';
 import 'package:color_lab/features/settings/application/theme_mode_provider.dart';
@@ -28,6 +29,13 @@ void main() {
         );
         await first.read(appPreferencesProvider.notifier).completeOnboarding();
         await first.read(themeModeProvider.notifier).setMode(ThemeMode.dark);
+        await first
+            .read(appPreferencesProvider.notifier)
+            .setMotion(MotionPreference.reduce);
+        await first.read(appPreferencesProvider.notifier).setHighContrast(true);
+        await first
+            .read(appPreferencesProvider.notifier)
+            .setAlwaysShowColorLabels(true);
         final firstRepository = await first.read(
           appPreferencesRepositoryProvider.future,
         );
@@ -44,6 +52,9 @@ void main() {
         try {
           final restored = await restarted.read(appPreferencesProvider.future);
           expect(restored.onboardingCompleted, isTrue);
+          expect(restored.motion, MotionPreference.reduce);
+          expect(restored.highContrast, true);
+          expect(restored.alwaysShowColorLabels, true);
           expect(restarted.read(themeModeProvider), ThemeMode.dark);
           await restarted
               .read(themeModeProvider.notifier)

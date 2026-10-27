@@ -12,7 +12,7 @@ Current durable data uses Hive beneath the application-documents `color_lab` dir
 
 | Schema / box | Root identity | Current version and record | Owner / deletion boundary |
 | --- | --- | --- | --- |
-| `app_preferences_v1` | key `preferences` | `schemaVersion: 1`; `themeMode`, `onboardingCompleted` | Installation-local settings. Reset settings only; must not delete projects, colors, palettes, or games. |
+| `app_preferences_v1` | key `preferences` | `schemaVersion: 2`; `themeMode`, `onboardingCompleted`, `motion`, `highContrast`, `alwaysShowColorLabels`. Version 1 reads use safe accessibility defaults; the next edit writes v2. | Installation-local settings. Explicit reset returns to onboarding; unsupported schemas remain untouched. Never deletes projects, colors, palettes, or games. |
 | `color_history_v1` | one record per canonical HEX key | `version: 1`; `id`, `hex`, `name`, `isFavorite`, `createdAt`, `source` | Shared My Work color library. A game-profile deletion must not touch it. |
 | `color_palettes_v1` | `${mode.name}-${HEX-without-#}` | `version: 1`; `id`, `name`, `base`, `mode`, `colors`, `createdAt` | Shared My Work palette library. Consumers copy color snapshots rather than retaining fragile foreign keys. |
 | `illustrated_room_designs_v1` | one record per generated design ID | `version: 1`; `id`, `name`, `templateId`, wall/ceiling/floor/furniture colors, `createdAt`, `updatedAt` | Shared My Work illustrated designs. Template migrations must preserve the visible result. |
@@ -32,14 +32,22 @@ Routes are currently path-addressed; no GoRouter `name:` contracts exist. Preser
 
 | Area | Paths |
 | --- | --- |
-| Current indexed roots | `/capture`, `/palette`, `/lab`, `/room`, `/games` |
+| Current indexed roots | `/home`, `/rooms`, `/learn`, `/games` |
+| My Work and settings | `/my-work`, `/settings/privacy`, `/settings/data`, `/settings/models`, `/settings/licenses` |
+| Nested/compatible tools | `/capture`, `/palette`, `/lab`, `/room` (redirect to `/rooms`) |
 | Startup/onboarding | `/startup`, `/onboarding`, `/welcome` |
 | Photo acquisition | `/camera`, `/photo` |
 | Real/illustrated rooms | `/room/study` (redirect), `/room/illustrated`, `/room/illustrated/:templateId`, `/room/masks` |
 | Color learning/tools | `/vision`, `/matching`, `/harmonies`, `/palettes`, `/formula`, `/mixer` |
 | Games | `/bubble-shooter`, `/rainbow-rings`, `/water-sort`, `/fruit-pop`, `/games/badges`, `/games/leaderboard`, `/games/:gameId/map` |
 
-The initial location is `/capture`. Startup/onboarding guards can redirect to `/startup` and `/onboarding`. Task 7 may introduce Home/Rooms/Learn/Games roots, but it must preserve safe handling of every path above and document any redirect or compatibility alias.
+The initial location is `/home`. Startup/onboarding guards can redirect to `/startup` and `/onboarding`. Settings pages return to their pushed caller or fall back to Home for direct entry.
+
+### Explicit local data controls
+
+Task 8 uses the active repositories' serialized maintenance operations. A preview freezes exact record keys and content fingerprints; deletion consumes that authorization, requires the same categories, and validates every selected owner before writing. Reserved Room-photo-project, Coloring-project, and Learning-progress categories are disabled. User exports and acquisition metadata are excluded. All-game deletion explicitly covers both game boxes and may be followed by a fresh default profile. Shared libraries stay independent.
+
+Model inventory is read-only. Model removal cancels and drains active work, blocks new preparation during removal, and touches only pinned model files and partials beneath `room_models`; directory symlinks are rejected. Data-management preview fails safely while a model download is active, leaving explicit cancellation/removal to Model storage. No repository is closed/reopened to perform deletion. Storage I/O failures can leave partially removed selected data across independent owners; the UI retains its selection and last preview, reports failure, and requires a fresh review.
 
 ## Bundled runtime assets
 

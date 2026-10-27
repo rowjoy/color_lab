@@ -11,6 +11,135 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get dataPreferences =>
+      'Appearance, accessibility, and welcome preferences';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get settingsAccessibility => 'Accessibility';
+
+  @override
+  String get settingsReduceMotion => 'Reduce motion';
+
+  @override
+  String get settingsHighContrast => 'High contrast';
+
+  @override
+  String get settingsColorLabels => 'Always show color labels';
+
+  @override
+  String get settingsPrivacyEntry => 'Privacy';
+
+  @override
+  String get settingsDataEntry => 'Manage local data';
+
+  @override
+  String get settingsModelsEntry => 'Model storage';
+
+  @override
+  String get settingsLicensesEntry => 'Licenses';
+
+  @override
+  String get privacyBody =>
+      'Photos are processed on this device. Camera and photo access are optional and requested only when you choose those tools. Room photo analysis needs an optional model download; downloading models uses the network but does not upload your photos.';
+
+  @override
+  String get privacyLibraries =>
+      'Saved colors, palettes, illustrated rooms, and game profiles stay on this device. Game profiles share the same color libraries. Switching or deleting a profile does not delete those libraries.';
+
+  @override
+  String get privacyControls =>
+      'You control which local data to delete. Exported images and photo acquisition metadata are excluded from these controls. Models can be downloaded again when you choose Room photo analysis.';
+
+  @override
+  String get dataIntro =>
+      'Select the data to review. Nothing is selected by default. Exported files and photo acquisition metadata are never included.';
+
+  @override
+  String get dataSavedColors => 'Saved colors';
+
+  @override
+  String get dataSavedPalettes => 'Saved palettes';
+
+  @override
+  String get dataIllustratedRooms => 'Illustrated room designs';
+
+  @override
+  String get dataGames => 'All game profiles and legacy progress';
+
+  @override
+  String get dataModels => 'Downloaded Room models';
+
+  @override
+  String get dataRoomProjects => 'Room photo projects';
+
+  @override
+  String get dataColoringProjects => 'Coloring projects';
+
+  @override
+  String get dataLearningProgress => 'Learning progress';
+
+  @override
+  String get dataUnavailable => 'Not available yet';
+
+  @override
+  String get dataPreview => 'Review selected data';
+
+  @override
+  String get dataReviewTitle => 'Review deletion';
+
+  @override
+  String get dataContinue => 'Continue to confirmation';
+
+  @override
+  String get dataConfirmTitle => 'Delete selected data?';
+
+  @override
+  String get dataConfirmBody =>
+      'This cannot be undone. Only the reviewed categories will be deleted. Deleting all game data allows a fresh default profile to be created.';
+
+  @override
+  String get dataDelete => 'Delete reviewed data';
+
+  @override
+  String get dataError =>
+      'Unable to complete this operation. Your selection is retained. Review the data again before retrying. A storage error during deletion may leave some selected data removed.';
+
+  @override
+  String get dataSuccess => 'Selected data deleted.';
+
+  @override
+  String get modelsIntro =>
+      'Room photo models are optional. Opening this screen does not download them. Removing models cancels any active download. Only model files and partial downloads are removed.';
+
+  @override
+  String get modelsRemove => 'Remove downloaded models';
+
+  @override
+  String get modelsConfirm => 'Remove Room models?';
+
+  @override
+  String get modelsEmpty => 'No downloaded models.';
+
+  @override
+  String get modelsError => 'Model storage is unavailable. Try again.';
+
+  @override
+  String get modelsRemoved => 'Room models removed.';
+
+  @override
+  String dataPreviewSummary(int records, int bytes) {
+    return '$records records · approximately $bytes bytes';
+  }
+
+  @override
+  String modelsSummary(int files, int bytes) {
+    return '$files model files · $bytes bytes';
+  }
+
+  @override
   String get appName => 'TintAtlas';
 
   @override
@@ -310,7 +439,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingCuriousEyeBody =>
-      'Turn a camera moment or a favorite photo into a color worth keeping.';
+      'Explore colors from a camera moment or favorite photo. Try wall colors in Rooms, including illustrated rooms you can use offline.';
 
   @override
   String get onboardingCuriousEyeNote =>
@@ -324,7 +453,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingPersonalBody =>
-      'Save the shades you love in a personal library, ready to revisit offline.';
+      'Save shades and palettes in My Work. Explore color in Learn and practice with Games. Your libraries are shared across local game profiles.';
 
   @override
   String get onboardingPersonalNote => 'Your saved colors stay on this device.';
@@ -337,11 +466,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingControlBody =>
-      'Color exploration stays on your device. We ask for camera or photo access only when you choose to use it.';
+      'Photos are processed on this device. Camera and photo permissions are optional. Room photo analysis offers an optional model download when you choose it.';
 
   @override
   String get onboardingControlNote =>
-      'No permission is needed to take this tour.';
+      'Skip anytime. Replay this tour from Settings. No permission is needed to take this tour.';
 
   @override
   String get tourFinishError =>

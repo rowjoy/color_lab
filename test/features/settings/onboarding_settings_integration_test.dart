@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:color_lab/app.dart';
 import 'package:color_lab/core/color/color_engine.dart';
-import 'package:color_lab/core/config/app_identity.dart';
 import 'package:color_lab/core/widgets/widgets.dart';
 import 'package:color_lab/features/history/application/history_providers.dart';
 import 'package:color_lab/features/history/domain/saved_color.dart';
@@ -360,7 +359,7 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.ensureVisible(find.text('Replay welcome tour'));
     expect(find.text('Replay welcome tour').hitTestable(), findsOneWidget);
-    final about = find.text('About ${AppIdentity.displayName} & licenses');
+    final about = find.text('Licenses');
     await tester.ensureVisible(about);
     expect(about, findsOneWidget);
   });

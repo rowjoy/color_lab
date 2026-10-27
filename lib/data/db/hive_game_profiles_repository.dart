@@ -1,4 +1,6 @@
 import 'dart:async';
+import '../storage/local_data_manager.dart';
+import '../storage/hive_data_lease.dart';
 
 import 'package:hive/hive.dart';
 // Hive 2 has no public independent-registry factory. A private registry keeps
@@ -11,7 +13,8 @@ import '../../features/games/domain/game_profiles_state.dart';
 import '../../features/games/domain/game_progression_engine.dart';
 
 /// Durable schema-v2 storage for every local player profile.
-final class HiveGameProfilesRepository implements GameProfilesRepository {
+final class HiveGameProfilesRepository
+    implements GameProfilesRepository, LocalDataOwner {
   /// Takes ownership of both boxes, including closing them on [close].
   HiveGameProfilesRepository.fromBoxes({
     required Box<dynamic> profilesBox,
@@ -63,6 +66,19 @@ final class HiveGameProfilesRepository implements GameProfilesRepository {
   final Box<dynamic> _profilesBox;
   final Box<dynamic> _legacyBox;
 
+  @override
+  Future<T> withMaintenance<T>(Future<T> Function(LocalDataLease) action) =>
+      _enqueue(() async {
+        await _ensureDurable();
+        return action(
+          HiveDataLease(
+            {'profiles': _profilesBox, 'legacy': _legacyBox},
+            beforeWrite: () => _needsFlush = true,
+            flush: _ensureDurable,
+          ),
+        );
+      });
+
   Future<void> _pending = Future<void>.value();
   Future<void>? _closing;
   bool _acceptingWork = true;
@@ -87,6 +103,7 @@ final class HiveGameProfilesRepository implements GameProfilesRepository {
     if (!_needsFlush) return;
     try {
       await _profilesBox.flush();
+      await _legacyBox.flush();
       _needsFlush = false;
     } on Object catch (error) {
       throw GameProfilesStorageException(error);

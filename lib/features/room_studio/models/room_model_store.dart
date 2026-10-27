@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:path_provider/path_provider.dart';
+import '../../../data/storage/local_data_manager.dart';
 
 const roomModelArtifacts = [
   RoomModelArtifact(
@@ -87,7 +88,7 @@ final class _Load {
 
 /// No I/O occurs until prepare()/load(). Files live in persistent app-private support
 /// storage, never temporary cache. Only pinned, complete bytes reach inference.
-final class RoomModelStore {
+final class RoomModelStore implements LocalDataOwner {
   RoomModelStore({
     Future<Directory> Function()? directory,
     List<RoomModelArtifact> artifacts = roomModelArtifacts,
@@ -121,6 +122,97 @@ final class RoomModelStore {
   _Load? _active;
   bool _closed = false;
   int _cancellationGeneration = 0;
+  Future<void> _maintenance = Future.value();
+  bool _maintaining = false;
+
+  /// Enumerates only pinned model files and their partials. Never creates files,
+  /// verifies a model for inference, or initiates a network request.
+  Future<LocalDataManifest> inventory() async {
+    final files = await _ownedFiles();
+    final entries = <String, String>{};
+    var bytes = 0;
+    for (final file in files) {
+      final size = await file.length();
+      final digest = await crypto.sha256.bind(file.openRead()).first;
+      entries[file.path] = '$size:$digest';
+      bytes += size;
+    }
+    return LocalDataManifest(entries, bytes);
+  }
+
+  Future<List<File>> _ownedFiles() async {
+    final root = await _directory();
+    final modelRoot = Directory('${root.path}/room_models');
+    // Never follow a redirected cache directory or file into user storage.
+    if (await FileSystemEntity.type(modelRoot.path, followLinks: false) ==
+        FileSystemEntityType.link) {
+      throw const LocalDataException();
+    }
+    final files = <File>[];
+    for (final artifact in _artifacts) {
+      final directory = '${modelRoot.path}/${artifact.sha256}';
+      if (await FileSystemEntity.type(directory, followLinks: false) ==
+          FileSystemEntityType.link) {
+        throw const LocalDataException();
+      }
+      for (final suffix in ['', '.part']) {
+        final file = File('$directory/${artifact.name}$suffix');
+        final type = await FileSystemEntity.type(file.path, followLinks: false);
+        if (type == FileSystemEntityType.link) throw const LocalDataException();
+        if (type == FileSystemEntityType.file) files.add(file);
+      }
+    }
+    return files;
+  }
+
+  Future<T> _exclusive<T>(Future<T> Function() action) {
+    final result = _maintenance.then((_) async {
+      if (_closed) throw const LocalDataException();
+      _maintaining = true;
+      try {
+        return await action();
+      } finally {
+        _maintaining = false;
+      }
+    });
+    _maintenance = result.then<void>(
+      (_) {},
+      onError: (Object _, StackTrace _) {},
+    );
+    return result;
+  }
+
+  @override
+  Future<T> withMaintenance<T>(
+    Future<T> Function(LocalDataLease) action,
+  ) => _exclusive(() async {
+    // Exact previews must not silently cancel downloads. A busy cache can
+    // be removed explicitly from Model storage or reviewed after completion.
+    if (_active != null) throw const LocalDataException();
+    return action(_ModelLease(this));
+  });
+
+  Future<void> _erase(LocalDataManifest manifest) async {
+    if (!manifest.sameAs(await inventory())) throw const LocalDataException();
+    cancel();
+    for (final file in await _ownedFiles()) {
+      if (manifest.entries.containsKey(file.path)) await file.delete();
+    }
+    _emit(RoomModelDownloadStage.idle, 0);
+  }
+
+  /// Exclusive explicit removal cancels and drains old I/O before enumerating
+  /// its files. New prepares fail while removal owns the cache.
+  Future<void> remove() => _exclusive(() async {
+    final active = _active;
+    cancel();
+    try {
+      await active?.result.future;
+    } catch (_) {
+      /* cancelled work */
+    }
+    await _erase(await inventory());
+  });
 
   int get _totalBytes => _artifacts.fold(0, (sum, a) => sum + a.bytes);
   RoomModelDownloadProgress get progress => _progress;
@@ -152,7 +244,7 @@ final class RoomModelStore {
   }
 
   Future<List<File>> _prepareFiles() {
-    if (_closed) {
+    if (_closed || _maintaining) {
       return Future.error(const RoomModelDownloadException(cancelled: true));
     }
     final previous = _active;
@@ -337,4 +429,13 @@ final class RoomModelStore {
     }
     await _changes.close();
   }
+}
+
+final class _ModelLease implements LocalDataLease {
+  _ModelLease(this.store);
+  final RoomModelStore store;
+  @override
+  Future<LocalDataManifest> inventory() => store.inventory();
+  @override
+  Future<void> erase(LocalDataManifest manifest) => store._erase(manifest);
 }

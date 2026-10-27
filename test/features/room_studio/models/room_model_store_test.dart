@@ -79,6 +79,48 @@ void main() {
   ];
 
   test(
+    'inventory is read only and removal leaves unrelated files intact',
+    () async {
+      final subject = store();
+      expect((await subject.inventory()).entries, isEmpty);
+      expect(requests, isEmpty);
+      await subject.prepare();
+      final unrelated = File('${root.path}/room_models/keep.txt');
+      await unrelated.writeAsString('export');
+      expect((await subject.inventory()).entries, hasLength(2));
+      await subject.remove();
+      expect((await subject.inventory()).entries, isEmpty);
+      expect(await unrelated.readAsString(), 'export');
+    },
+  );
+
+  test(
+    'remove cancels and awaits active download so old operation cannot recreate files',
+    () async {
+      final started = Completer<void>();
+      final release = Completer<void>();
+      respond = (request) async {
+        started.complete();
+        await release.future;
+        request.response.write('hello');
+        await request.response.close();
+      };
+      final subject = store();
+      final load = subject.prepare();
+      final expectation = expectLater(
+        load,
+        throwsA(isA<RoomModelDownloadException>()),
+      );
+      await started.future;
+      await subject.remove();
+      release.complete();
+      await expectation;
+      expect((await subject.inventory()).entries, isEmpty);
+      expect(await partials(), isEmpty);
+    },
+  );
+
+  test(
     'preparation downloads verified files before inference loads bytes',
     () async {
       final subject = store();

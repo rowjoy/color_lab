@@ -201,7 +201,7 @@ void main() {
         find.byKey(const ValueKey('screen-Home')),
       );
       expect(Theme.of(pageContext).brightness, Brightness.dark);
-      await tester.tapAt(const Offset(10, 10));
+      await tester.tap(find.byTooltip('Close settings'));
       await tester.pumpAndSettle();
       await openRoute(tester, container, '/lab');
       final slider = find.byType(Slider).first;

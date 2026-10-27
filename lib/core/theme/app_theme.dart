@@ -5,6 +5,29 @@ import 'tokens.dart';
 abstract final class AppTheme {
   static final light = _build(Brightness.light, AppColors.light);
   static final dark = _build(Brightness.dark, AppColors.dark);
+  static final highContrastLight = _build(
+    Brightness.light,
+    AppColors.light.copyWith(
+      background: Colors.white,
+      surface: Colors.white,
+      textPrimary: Colors.black,
+      textSecondary: const Color(0xFF242424),
+      outline: Colors.black,
+      primary: const Color(0xFF39268A),
+      focusRing: const Color(0xFF39268A),
+    ),
+  );
+  static final highContrastDark = _build(
+    Brightness.dark,
+    AppColors.dark.copyWith(
+      background: Colors.black,
+      surface: Colors.black,
+      textPrimary: Colors.white,
+      textSecondary: const Color(0xFFE6E6E6),
+      outline: Colors.white,
+      focusRing: const Color(0xFFD5CBFF),
+    ),
+  );
 
   static ThemeData _build(Brightness brightness, AppColors colors) {
     final scheme =

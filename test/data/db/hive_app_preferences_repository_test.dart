@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:color_lab/data/storage/local_data_manager.dart';
 
 import 'package:color_lab/data/db/hive_app_preferences_repository.dart';
 import 'package:color_lab/features/settings/domain/app_preferences.dart';
@@ -55,6 +56,56 @@ void main() {
     directory = await Directory.systemTemp.createTemp('preferences-test-');
   });
   tearDown(() => directory.delete(recursive: true));
+
+  test('reads v1 untouched and next edit writes v2 in the same box', () async {
+    final box = await HiveImpl().openBox<dynamic>(
+      'app_preferences_v1',
+      path: directory.path,
+    );
+    final raw = {
+      'schemaVersion': 1,
+      'themeMode': 'dark',
+      'onboardingCompleted': true,
+    };
+    await box.put('preferences', raw);
+    final repository = HiveAppPreferencesRepository.fromBox(box: box);
+    final loaded = await repository.load();
+    expect(box.get('preferences'), raw);
+    expect(loaded.motion, MotionPreference.system);
+    await repository.save(loaded.copyWith(highContrast: true));
+    expect((box.get('preferences') as Map)['schemaVersion'], 2);
+    await repository.close();
+    final reopened = await HiveAppPreferencesRepository.open(
+      directory: directory.path,
+    );
+    expect((await reopened.load()).highContrast, true);
+    await reopened.close();
+  });
+
+  test(
+    'explicit preferences deletion resets known data but rejects unknown schemas',
+    () async {
+      final box = await HiveImpl().openBox<dynamic>(
+        'app_preferences_v1',
+        path: directory.path,
+      );
+      final repository = HiveAppPreferencesRepository.fromBox(box: box);
+      final manager = ExactLocalDataManager(
+        owners: {LocalDataCategory.preferences: () async => repository},
+      );
+      await repository.save(dark);
+      await manager.preview({LocalDataCategory.preferences});
+      await manager.delete({LocalDataCategory.preferences});
+      expect(await repository.load(), const AppPreferences());
+      await box.put('preferences', {'schemaVersion': 999});
+      await expectLater(
+        manager.preview({LocalDataCategory.preferences}),
+        throwsA(isA<LocalDataException>()),
+      );
+      expect(box.get('preferences'), {'schemaVersion': 999});
+      await repository.close();
+    },
+  );
 
   test(
     'empty file defaults and dark completed state survives actual reopen',

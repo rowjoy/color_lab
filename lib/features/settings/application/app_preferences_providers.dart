@@ -94,6 +94,13 @@ class AppPreferencesController extends AsyncNotifier<AppPreferences> {
   Future<void> setThemeMode(ThemeMode mode) =>
       _mutate((current) => current.copyWith(themeMode: mode));
 
+  Future<void> setMotion(MotionPreference motion) =>
+      _mutate((current) => current.copyWith(motion: motion));
+  Future<void> setHighContrast(bool enabled) =>
+      _mutate((current) => current.copyWith(highContrast: enabled));
+  Future<void> setAlwaysShowColorLabels(bool enabled) =>
+      _mutate((current) => current.copyWith(alwaysShowColorLabels: enabled));
+
   Future<void> completeOnboarding() =>
       _mutate((current) => current.copyWith(onboardingCompleted: true));
 

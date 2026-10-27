@@ -30,6 +30,28 @@ import '../support/in_memory_room_design_repository.dart';
 import '../support/in_memory_saved_palette_repository.dart';
 
 void main() {
+  for (final route in [
+    '/settings/privacy',
+    '/settings/data',
+    '/settings/licenses',
+  ]) {
+    testWidgets('$route supports pushed Back and direct-entry Home fallback', (
+      tester,
+    ) async {
+      final harness = await _launch(tester);
+      addTearDown(harness.dispose);
+      harness.router.push(route);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Back'));
+      await tester.pumpAndSettle();
+      expect(harness.router.state.uri.path, '/home');
+      harness.router.go(route);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Back'));
+      await tester.pumpAndSettle();
+      expect(harness.router.state.uri.path, '/home');
+    });
+  }
   testWidgets('completed onboarding lands on Home with exactly four roots', (
     tester,
   ) async {

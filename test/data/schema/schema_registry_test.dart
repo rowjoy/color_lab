@@ -32,7 +32,7 @@ void main() {
         'app-preferences': (
           'app_preferences_v1',
           StorageBackend.hiveBox,
-          1,
+          2,
           LocalDataScope.sharedLibrary,
         ),
         'saved-colors': (
@@ -103,7 +103,7 @@ void main() {
       'game_profiles_v2',
       'game_progress_v1',
     });
-    expect(hive['app_preferences_v1']!.currentVersion, 1);
+    expect(hive['app_preferences_v1']!.currentVersion, 2);
     expect(hive['color_history_v1']!.currentVersion, 1);
     expect(hive['color_palettes_v1']!.currentVersion, 1);
     expect(hive['illustrated_room_designs_v1']!.currentVersion, 1);

@@ -48,6 +48,27 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  testWidgets(
+    'tour explains Rooms, Learn and Games, optional models, privacy and replay',
+    (tester) async {
+      await launch(
+        tester,
+        size: const Size(320, 568),
+        textScale: 2,
+        dark: true,
+      );
+      expect(find.textContaining('illustrated rooms'), findsOneWidget);
+      await next(tester);
+      expect(find.textContaining('Learn'), findsOneWidget);
+      expect(find.textContaining('Games'), findsOneWidget);
+      await next(tester);
+      expect(find.textContaining('processed on this device'), findsOneWidget);
+      expect(find.textContaining('optional model download'), findsOneWidget);
+      expect(find.textContaining('Replay this tour'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('Next, Back, and swipe move through all three tour steps', (
     tester,
   ) async {

@@ -1,4 +1,6 @@
 import 'dart:async';
+import '../storage/local_data_manager.dart';
+import '../storage/hive_data_lease.dart';
 
 import 'package:hive/hive.dart';
 // Hive 2 has no public independent-registry factory. A private registry prevents
@@ -13,7 +15,8 @@ import '../schema/corrupt_record.dart';
 import '../schema/repository_snapshot.dart';
 import '../schema/schema_registry.dart';
 
-final class HivePaletteRepository implements SavedPaletteRepository {
+final class HivePaletteRepository
+    implements SavedPaletteRepository, LocalDataOwner {
   HivePaletteRepository._(this._box, this._clock);
 
   /// Takes ownership of the box, including its close lifecycle.
@@ -45,6 +48,18 @@ final class HivePaletteRepository implements SavedPaletteRepository {
   }
 
   final Box<dynamic> _box;
+
+  @override
+  Future<T> withMaintenance<T>(Future<T> Function(LocalDataLease) action) =>
+      _serialize(
+        () => action(
+          HiveDataLease(
+            {'records': _box},
+            beforeWrite: () => _needsFlush = true,
+            flush: _ensureDurable,
+          ),
+        ),
+      );
   final DateTime Function() _clock;
   Future<void> _pending = Future<void>.value();
   Future<void>? _closing;

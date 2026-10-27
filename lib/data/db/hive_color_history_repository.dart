@@ -1,4 +1,6 @@
 import 'dart:async';
+import '../storage/local_data_manager.dart';
+import '../storage/hive_data_lease.dart';
 
 import 'package:hive/hive.dart';
 // Hive 2 exposes no public factory for an independent Hive registry. Each
@@ -14,7 +16,8 @@ import '../schema/corrupt_record.dart';
 import '../schema/repository_snapshot.dart';
 import '../schema/schema_registry.dart';
 
-final class HiveColorHistoryRepository implements ColorHistoryRepository {
+final class HiveColorHistoryRepository
+    implements ColorHistoryRepository, LocalDataOwner {
   HiveColorHistoryRepository._(this._box, this._clock);
 
   /// Takes ownership of an already opened box and closes it on [close].
@@ -49,6 +52,18 @@ final class HiveColorHistoryRepository implements ColorHistoryRepository {
   }
 
   final Box<dynamic> _box;
+
+  @override
+  Future<T> withMaintenance<T>(Future<T> Function(LocalDataLease) action) =>
+      _serialize(
+        () => action(
+          HiveDataLease(
+            {'records': _box},
+            beforeWrite: () => _needsFlush = true,
+            flush: _ensureDurable,
+          ),
+        ),
+      );
   final DateTime Function() _clock;
   Future<void> _pending = Future<void>.value();
   Future<void>? _closing;

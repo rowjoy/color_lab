@@ -1,4 +1,6 @@
 import 'dart:async';
+import '../storage/local_data_manager.dart';
+import '../storage/hive_data_lease.dart';
 
 import 'package:hive/hive.dart';
 // Hive 2 has no public independent-registry factory. Separate registries keep
@@ -9,7 +11,8 @@ import 'package:hive/src/hive_impl.dart';
 import '../../features/settings/domain/app_preferences.dart';
 import '../../features/settings/domain/app_preferences_repository.dart';
 
-final class HiveAppPreferencesRepository implements AppPreferencesRepository {
+final class HiveAppPreferencesRepository
+    implements AppPreferencesRepository, LocalDataOwner {
   /// Takes ownership of [box], including closing it on [close].
   HiveAppPreferencesRepository.fromBox({required Box<dynamic> box})
     : _box = box;
@@ -32,6 +35,19 @@ final class HiveAppPreferencesRepository implements AppPreferencesRepository {
   }
 
   final Box<dynamic> _box;
+
+  @override
+  Future<T> withMaintenance<T>(Future<T> Function(LocalDataLease) action) =>
+      _serialize(() {
+        _read(); // Unsupported preference records remain untouched.
+        return action(
+          HiveDataLease(
+            {'preferences': _box},
+            beforeWrite: () => _needsFlush = true,
+            flush: _ensureDurable,
+          ),
+        );
+      });
   Future<void> _pending = Future<void>.value();
   Future<void>? _closing;
   bool _needsFlush = false;
