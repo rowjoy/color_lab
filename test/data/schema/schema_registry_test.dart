@@ -74,7 +74,7 @@ void main() {
         'room-projects': (
           'room_projects',
           StorageBackend.fileTree,
-          1,
+          2,
           LocalDataScope.sharedLibrary,
         ),
         'room-model-cache': (
@@ -122,7 +122,7 @@ void main() {
 
     expect(roomProjects.storageName, 'room_projects');
     expect(roomProjects.backend, StorageBackend.fileTree);
-    expect(roomProjects.currentVersion, 1);
+    expect(roomProjects.currentVersion, 2);
     expect(roomProjects.scope, LocalDataScope.sharedLibrary);
     expect(modelCache.storageName, 'room_models');
     expect(modelCache.backend, StorageBackend.appPrivateCache);

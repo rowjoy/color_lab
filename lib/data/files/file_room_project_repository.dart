@@ -535,7 +535,7 @@ final class FileRoomProjectRepository
         _absolute(assets),
       ).list(followLinks: false)) {
         final name = entry.path.split(Platform.pathSeparator).last;
-        if (RegExp(r'^[a-f0-9]{64}\.(png|mask)$').hasMatch(name) &&
+        if (RegExp(r'^[a-f0-9]{64}\.(png|mask|intent\.bin)$').hasMatch(name) &&
             !referenced.contains('assets/$name')) {
           await _removeTree('$assets/$name', allowLink: true);
         }

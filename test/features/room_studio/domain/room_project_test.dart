@@ -25,7 +25,7 @@ void main() {
       expect(snapshot.colors.wall!.hex, '#ABCDEF');
       expect(snapshot.maskRevision, 2);
       expect(snapshot.colorRevision, 3);
-      expect(snapshot.schemaVersion, 1);
+      expect(snapshot.schemaVersion, 2);
       expect(snapshot.comparisonBaselineVariantId, 'variant-b');
       expect(
         snapshot

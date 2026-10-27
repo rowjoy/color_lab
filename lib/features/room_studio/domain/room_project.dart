@@ -1,8 +1,9 @@
 import 'dart:typed_data';
 
 import 'room_layer_colors.dart';
+import 'mask_intent_bitmap.dart';
 
-/// Schema-v1 bounds apply before copying pixels or reading untrusted assets.
+/// Room project bounds apply before copying pixels or reading untrusted assets.
 abstract final class RoomProjectLimits {
   static const maxDimension = 4096;
   static const maxPixels = 16777216;
@@ -195,7 +196,7 @@ final class RoomVariantSet {
 }
 
 /// One immutable working-resolution aggregate. Storage revision is independent
-/// of mask/color revisions. Explicit correction intent belongs to schema v2.
+/// of mask/color revisions. Intent never derives from AI/current differences.
 final class RoomProjectSnapshot {
   factory RoomProjectSnapshot({
     required String projectId,
@@ -207,6 +208,7 @@ final class RoomProjectSnapshot {
     required Uint8List photoPng,
     required Uint8List aiMaskBytes,
     required Uint8List maskBytes,
+    MaskIntentBitmap? intent,
     required int maskRevision,
     required int colorRevision,
     required List<RoomColorVariant> variants,
@@ -235,6 +237,8 @@ final class RoomProjectSnapshot {
                 thumbnailPng.length > RoomProjectLimits.maxAssetBytes)) ||
         aiMaskBytes.length != width * height ||
         maskBytes.length != width * height ||
+        (intent != null &&
+            (intent.width != width || intent.height != height)) ||
         aiMaskBytes.any((label) => label > 4) ||
         maskBytes.any((label) => label > 4) ||
         variants.isEmpty ||
@@ -260,6 +264,7 @@ final class RoomProjectSnapshot {
       Uint8List.fromList(photoPng).asUnmodifiableView(),
       Uint8List.fromList(aiMaskBytes).asUnmodifiableView(),
       Uint8List.fromList(maskBytes).asUnmodifiableView(),
+      intent ?? MaskIntentBitmap.untouched(width: width, height: height),
       maskRevision,
       colorRevision,
       List.unmodifiable(variants),
@@ -283,6 +288,7 @@ final class RoomProjectSnapshot {
     this.photoPng,
     this.aiMaskBytes,
     this.maskBytes,
+    this.intent,
     this.maskRevision,
     this.colorRevision,
     this.variants,
@@ -293,7 +299,7 @@ final class RoomProjectSnapshot {
     this.updatedAt,
   );
 
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
   final String projectId;
   final String photoId;
   final String name;
@@ -303,6 +309,7 @@ final class RoomProjectSnapshot {
   final Uint8List photoPng;
   final Uint8List aiMaskBytes;
   final Uint8List maskBytes;
+  final MaskIntentBitmap intent;
   final int maskRevision;
   final int colorRevision;
   final List<RoomColorVariant> variants;
@@ -326,6 +333,7 @@ final class RoomProjectSnapshot {
     Uint8List? photoPng,
     Uint8List? aiMaskBytes,
     Uint8List? maskBytes,
+    MaskIntentBitmap? intent,
     int? maskRevision,
     int? colorRevision,
     List<RoomColorVariant>? variants,
@@ -344,6 +352,7 @@ final class RoomProjectSnapshot {
     photoPng: photoPng ?? this.photoPng,
     aiMaskBytes: aiMaskBytes ?? this.aiMaskBytes,
     maskBytes: maskBytes ?? this.maskBytes,
+    intent: intent ?? this.intent,
     maskRevision: maskRevision ?? this.maskRevision,
     colorRevision: colorRevision ?? this.colorRevision,
     variants: variants ?? this.variants,

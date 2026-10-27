@@ -6,6 +6,7 @@ import 'package:image/image.dart' as img;
 
 import '../../../core/color/color_models.dart';
 import '../domain/room_layer_colors.dart';
+import '../domain/mask_intent_bitmap.dart';
 import '../domain/room_project.dart';
 
 final class RoomProjectAssetReference {
@@ -28,6 +29,7 @@ final class RoomProjectAssetReference {
 /// afterwards, so a manifest cannot ask the repository to allocate arbitrary data.
 final class RoomProjectManifest {
   RoomProjectManifest._({
+    required this.schemaVersion,
     required this.projectId,
     required this.photoId,
     required this.name,
@@ -43,6 +45,7 @@ final class RoomProjectManifest {
     required this.updatedAt,
     required this.assets,
   });
+  final int schemaVersion;
   final String projectId;
   final String photoId;
   final String name;
@@ -76,9 +79,9 @@ final class RoomProjectDecoding {
   final bool thumbnailUnavailable;
 }
 
-/// Frozen schema v1. Unknown fields/versions fail closed and never trigger a
-/// migration or destructive reset. Photos are prepared pixels, without source
-/// EXIF/GPS/text metadata; final platform export has its own verification gate.
+/// Strict v1/v2 reader and v2-only writer. V1 gains untouched intent in memory
+/// without inferring corrections or writing during reads. Unknown data fails
+/// closed. Photos are prepared pixels, without source EXIF/GPS/text metadata; final platform export has its own verification gate.
 final class RoomProjectCodec {
   const RoomProjectCodec();
 
@@ -101,7 +104,7 @@ final class RoomProjectCodec {
     }
 
     final data = <String, Object?>{
-      'schemaVersion': 1,
+      'schemaVersion': 2,
       'projectId': snapshot.projectId,
       'photoId': snapshot.photoId,
       'name': snapshot.name,
@@ -131,6 +134,7 @@ final class RoomProjectCodec {
         'photo': asset(snapshot.photoPng, 'png'),
         'aiMask': asset(snapshot.aiMaskBytes, 'mask'),
         'mask': asset(snapshot.maskBytes, 'mask'),
+        'intent': asset(snapshot.intent.bytes, 'intent.bin'),
         'thumbnail': asset(snapshot.thumbnailPng, 'png'),
       },
     };
@@ -161,7 +165,8 @@ final class RoomProjectCodec {
         'updatedAt',
         'assets',
       });
-      if (data['schemaVersion'] is! int || data['schemaVersion'] != 1) {
+      final version = data['schemaVersion'];
+      if (version is! int || (version != 1 && version != 2)) {
         _invalid();
       }
       final projectId = _id(data['projectId']);
@@ -231,11 +236,12 @@ final class RoomProjectCodec {
       final created = _date(data['createdAt']);
       final updated = _date(data['updatedAt']);
       if (updated.isBefore(created)) _invalid();
-      final rawAssets = _map(data['assets'], const {
+      final rawAssets = _map(data['assets'], {
         'photo',
         'aiMask',
         'mask',
         'thumbnail',
+        if (version == 2) 'intent',
       });
       final assets = <String, RoomProjectAssetReference?>{};
       for (final key in rawAssets.keys) {
@@ -251,12 +257,14 @@ final class RoomProjectCodec {
           RoomProjectLimits.maxAssetBytes,
         );
         final isMask = key == 'aiMask' || key == 'mask';
-        if (isMask && length != width * height) _invalid();
+        final isIntent = key == 'intent';
+        if ((isMask || isIntent) && length != width * height) _invalid();
         final hash = raw['sha256'];
         if (hash is! String || !RegExp(r'^[a-f0-9]{64}$').hasMatch(hash)) {
           _invalid();
         }
-        final path = 'assets/$hash.${isMask ? 'mask' : 'png'}';
+        final suffix = isIntent ? 'intent.bin' : (isMask ? 'mask' : 'png');
+        final path = 'assets/$hash.$suffix';
         if (raw['path'] != path) _invalid();
         assets[key] = RoomProjectAssetReference(
           path: path,
@@ -265,6 +273,7 @@ final class RoomProjectCodec {
         );
       }
       return RoomProjectManifest._(
+        schemaVersion: version,
         projectId: projectId,
         photoId: photoId,
         name: name,
@@ -329,6 +338,16 @@ final class RoomProjectCodec {
           photoPng: photo,
           aiMaskBytes: ai,
           maskBytes: mask,
+          intent: manifest.schemaVersion == 1
+              ? MaskIntentBitmap.untouched(
+                  width: manifest.width,
+                  height: manifest.height,
+                )
+              : MaskIntentBitmap.fromBytes(
+                  width: manifest.width,
+                  height: manifest.height,
+                  bytes: verified('intent'),
+                ),
           maskRevision: manifest.maskRevision,
           colorRevision: manifest.colorRevision,
           variants: manifest.variants,
@@ -346,7 +365,7 @@ final class RoomProjectCodec {
   }
 
   static Never _invalid() =>
-      throw const FormatException('Invalid Room project v1 data.');
+      throw const FormatException('Invalid Room project data.');
   static Map<String, dynamic> _map(Object? value, Set<String> keys) {
     if (value is! Map<String, dynamic> ||
         value.length != keys.length ||

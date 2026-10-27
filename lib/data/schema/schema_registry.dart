@@ -86,7 +86,7 @@ abstract final class SchemaRegistry {
     id: 'room-projects',
     storageName: 'room_projects',
     backend: StorageBackend.fileTree,
-    currentVersion: 1,
+    currentVersion: 2,
     scope: LocalDataScope.sharedLibrary,
   );
   static const roomModelCache = SchemaDescriptor(

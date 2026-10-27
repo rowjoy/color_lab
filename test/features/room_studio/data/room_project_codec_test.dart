@@ -4,6 +4,8 @@ import 'dart:ui' as ui;
 
 import 'package:color_lab/features/room_studio/data/room_project_codec.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:crypto/crypto.dart';
+import 'package:color_lab/features/room_studio/domain/mask_intent_bitmap.dart';
 
 import '../../../support/room_project_fixtures.dart';
 import '../../../support/frozen_room_project_fixtures.dart';
@@ -52,7 +54,7 @@ void main() {
           expect(decoded.maskBytes, [0, 1, 0, 0, 0, 0]);
           expect(decoded.thumbnailPng, isNull);
         }
-        for (final version in [0, 2, 999]) {
+        for (final version in [0, 3, 999]) {
           final changed =
               jsonDecode(utf8.decode(manifest)) as Map<String, dynamic>;
           changed['schemaVersion'] = version;
@@ -73,11 +75,175 @@ void main() {
   );
 
   test(
-    'v1 roundtrip uses canonical UTC/HEX and immutable asset references',
+    'frozen v1 migrates without inferring corrections or changing appearance',
+    () async {
+      final files = await frozenRoomFiles();
+      for (final id in ['v1-healthy', 'v1-manual']) {
+        final prefix = 'projects/$id/';
+        final oldBytes =
+            files['${prefix}revisions/${id == 'v1-healthy' ? 3 : 1}/manifest.json']!;
+        final old = jsonDecode(utf8.decode(oldBytes)) as Map<String, dynamic>;
+        final decoded = codec.decode(codec.readManifest(oldBytes), {
+          for (final entry in files.entries)
+            if (entry.key.startsWith('${prefix}assets/'))
+              entry.key.substring(prefix.length): entry.value,
+        }).snapshot;
+        expect(decoded.schemaVersion, 2);
+        expect(decoded.intent.bytes, [0, 0, 0, 0, 0, 0]);
+        final encoded = codec.encode(decoded);
+        final rewritten =
+            jsonDecode(utf8.decode(encoded.manifestBytes))
+                as Map<String, dynamic>;
+        expect(rewritten['schemaVersion'], 2);
+        for (final key in old.keys.where(
+          (key) => key != 'schemaVersion' && key != 'assets',
+        )) {
+          expect(rewritten[key], old[key], reason: key);
+        }
+        for (final key in ['photo', 'aiMask', 'mask', 'thumbnail']) {
+          expect(rewritten['assets'][key], old['assets'][key], reason: key);
+        }
+        final ref = rewritten['assets']['intent'];
+        expect(ref['length'], 6);
+        expect(
+          ref['path'],
+          'assets/${sha256.convert(Uint8List(6))}.intent.bin',
+        );
+        final reopened = codec
+            .decode(codec.readManifest(encoded.manifestBytes), encoded.assets)
+            .snapshot;
+        expect(reopened.photoPng, decoded.photoPng);
+        expect(reopened.aiMaskBytes, decoded.aiMaskBytes);
+        expect(reopened.maskBytes, decoded.maskBytes);
+        expect(reopened.thumbnailPng, decoded.thumbnailPng);
+      }
+    },
+  );
+
+  test(
+    'v2 rewrite reopens detached explicit intent including erased and matching AI pixels',
+    () {
+      final source = Uint8List.fromList([2, 1, 4, 5]);
+      final snapshot = roomProjectFixture(revision: 1).copyWith(
+        intent: MaskIntentBitmap.fromBytes(width: 2, height: 2, bytes: source),
+      );
+      final encoded = codec.encode(snapshot);
+      source.fillRange(0, 4, 0);
+      final decoded = codec
+          .decode(codec.readManifest(encoded.manifestBytes), encoded.assets)
+          .snapshot;
+      expect(decoded.intent.bytes, [2, 1, 4, 5]);
+      expect(decoded.aiMaskBytes, [1, 1, 0, 4]);
+      expect(decoded.maskBytes, [1, 2, 3, 4]);
+      expect(() => decoded.intent.bytes[0] = 0, throwsUnsupportedError);
+    },
+  );
+
+  test(
+    'v2 intent is required and strictly validates reference and core bytes',
+    () {
+      final encoded = codec.encode(roomProjectFixture(revision: 1));
+      Map<String, dynamic> v2() {
+        final data =
+            jsonDecode(utf8.decode(encoded.manifestBytes))
+                as Map<String, dynamic>;
+        final zeros = Uint8List(4);
+        final hash = sha256.convert(zeros).toString();
+        data['schemaVersion'] = 2;
+        data['assets']['intent'] = <String, dynamic>{
+          'path': 'assets/$hash.intent.bin',
+          'length': 4,
+          'sha256': hash,
+        };
+        return data;
+      }
+
+      final good = v2();
+      final assets = Map<String, Uint8List>.of(encoded.assets)
+        ..[good['assets']['intent']['path'] as String] = Uint8List(4);
+      final decoded = codec
+          .decode(codec.readManifest(bytes(good)), assets)
+          .snapshot;
+      expect(decoded.intent.bytes, [0, 0, 0, 0]);
+      for (final bad in [
+        null,
+        1,
+        <String, dynamic>{},
+        {...good['assets']['intent'], 'extra': true},
+      ]) {
+        final data = v2();
+        data['assets']['intent'] = bad;
+        expect(() => codec.readManifest(bytes(data)), throwsFormatException);
+      }
+      final missing = v2();
+      missing['assets'].remove('intent');
+      expect(() => codec.readManifest(bytes(missing)), throwsFormatException);
+      final extra = v2();
+      extra['assets']['history'] = [];
+      expect(() => codec.readManifest(bytes(extra)), throwsFormatException);
+      for (final key in ['length', 'path', 'sha256']) {
+        for (final value
+            in key == 'length'
+                ? [0, 3, 5, 4.0, '4']
+                : key == 'path'
+                ? [
+                    '../intent.bin',
+                    'assets/${'a' * 64}.intent.bin',
+                    good['assets']['intent']['path'].replaceAll(
+                      '.intent.bin',
+                      '.mask',
+                    ),
+                  ]
+                : ['A' * 64, 'a' * 64, null]) {
+          final data = v2();
+          data['assets']['intent'][key] = value;
+          expect(
+            () => codec.readManifest(bytes(data)),
+            throwsFormatException,
+            reason: '$key=$value',
+          );
+        }
+      }
+      for (final invalid in [
+        null,
+        Uint8List(3),
+        Uint8List.fromList([1, 0, 0, 0]),
+      ]) {
+        final changed = Map<String, Uint8List>.of(assets);
+        final path = good['assets']['intent']['path'] as String;
+        if (invalid == null) {
+          changed.remove(path);
+        } else {
+          changed[path] = invalid;
+        }
+        expect(
+          () => codec.decode(codec.readManifest(bytes(good)), changed),
+          throwsFormatException,
+        );
+      }
+      for (final value in [6, 255]) {
+        final data = v2();
+        final invalid = Uint8List.fromList([value, 0, 0, 0]);
+        final hash = sha256.convert(invalid).toString();
+        final path = 'assets/$hash.intent.bin';
+        data['assets']['intent'] = {'path': path, 'length': 4, 'sha256': hash};
+        expect(
+          () => codec.decode(codec.readManifest(bytes(data)), {
+            ...assets,
+            path: invalid,
+          }),
+          throwsFormatException,
+        );
+      }
+    },
+  );
+
+  test(
+    'v2 roundtrip uses canonical UTC/HEX and immutable asset references',
     () {
       final encoded = codec.encode(roomProjectFixture(revision: 1));
       final data = jsonDecode(utf8.decode(encoded.manifestBytes));
-      expect(data['schemaVersion'], 1);
+      expect(data['schemaVersion'], 2);
       expect(data['createdAt'], '2026-10-27T01:00:00.000Z');
       expect(data['variants'][0]['colors']['wall'], '#ABCDEF');
       final decoded = codec.decode(
@@ -95,7 +261,7 @@ void main() {
     },
   );
 
-  test('missing/unknown required v1 data and future schemas fail closed', () {
+  test('missing/unknown required data and future schemas fail closed', () {
     for (final key in [
       'schemaVersion',
       'projectId',
@@ -120,7 +286,7 @@ void main() {
         reason: key,
       );
     }
-    for (final version in [0, 2, '1', 1.0]) {
+    for (final version in [0, 3, '1', 1.0, '2', 2.0]) {
       final data = manifest()..['schemaVersion'] = version;
       expect(() => codec.readManifest(bytes(data)), throwsFormatException);
     }

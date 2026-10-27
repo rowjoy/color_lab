@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:color_lab/core/color/color_models.dart';
 import 'package:color_lab/features/room_studio/domain/room_layer_colors.dart';
 import 'package:color_lab/features/room_studio/domain/room_project.dart';
+import 'package:color_lab/features/room_studio/domain/mask_intent_bitmap.dart';
 import 'package:image/image.dart' as img;
 
 Uint8List roomProjectPng({int width = 2, int height = 2}) =>
@@ -36,6 +37,7 @@ RoomProjectSnapshot roomProjectOnePixelFixture({
 }) => roomProjectFixture(revision: revision).copyWith(
   width: 1,
   height: 1,
+  intent: MaskIntentBitmap.untouched(width: 1, height: 1),
   photoPng: photoPng,
   aiMaskBytes: Uint8List.fromList([1]),
   maskBytes: Uint8List.fromList([1]),

@@ -8,6 +8,7 @@ import 'package:color_lab/data/storage/local_data_manager.dart';
 import 'package:color_lab/features/room_studio/domain/room_project.dart';
 import 'package:color_lab/features/room_studio/domain/room_project_repository.dart';
 import 'package:crypto/crypto.dart';
+import 'package:color_lab/features/room_studio/domain/mask_intent_bitmap.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../support/room_project_fixtures.dart';
@@ -176,6 +177,245 @@ void main() {
         4,
       );
       await frozenRoomFiles(); // The immutable source fixture still matches every hash.
+    },
+  );
+
+  test(
+    'opening frozen v1 is read-only and next acknowledged save writes v2 reusing appearance assets',
+    () async {
+      await repository.close();
+      await copyFrozenRooms(root);
+      final frozen = await frozenRoomFiles();
+      repository = await open();
+      for (final id in ['v1-healthy', 'v1-manual']) {
+        final before = (await repository.read(id))!;
+        final base = projectPath(id);
+        for (final entry in frozen.entries.where(
+          (e) => e.key.startsWith('projects/$id/'),
+        )) {
+          expect(
+            await File('${root.path}/room_projects/${entry.key}').readAsBytes(),
+            entry.value,
+          );
+        }
+        expect(before.snapshot.schemaVersion, 2);
+        expect(before.snapshot.intent.bytes, [0, 0, 0, 0, 0, 0]);
+        final priorAssets = {
+          await for (final entity in Directory('$base/assets').list())
+            entity.path: await File(entity.path).readAsBytes(),
+        };
+        final saved = await repository.save(
+          before.snapshot,
+          expectedRevision: before.acknowledgedRevision,
+        );
+        final manifest = jsonDecode(
+          await File(
+            '$base/revisions/${saved.revision}/manifest.json',
+          ).readAsString(),
+        );
+        expect(manifest['schemaVersion'], 2);
+        expect(manifest['assets']['intent']['length'], 6);
+        expect(manifest['assets']['intent']['path'], endsWith('.intent.bin'));
+        for (final entry in priorAssets.entries) {
+          expect(await File(entry.key).readAsBytes(), entry.value);
+        }
+        expect(
+          await Directory('$base/assets').list().length,
+          priorAssets.length + 1,
+        );
+        expect(saved.revision, before.acknowledgedRevision + 1);
+        expect(saved.projectId, before.snapshot.projectId);
+        expect(saved.photoId, before.snapshot.photoId);
+        expect(saved.createdAt, before.snapshot.createdAt);
+        expect(saved.updatedAt, before.snapshot.updatedAt);
+        expect(saved.photoPng, before.snapshot.photoPng);
+        expect(saved.aiMaskBytes, before.snapshot.aiMaskBytes);
+        expect(saved.maskBytes, before.snapshot.maskBytes);
+        expect(saved.activeVariantId, before.snapshot.activeVariantId);
+        expect(
+          saved.comparisonBaselineVariantId,
+          before.snapshot.comparisonBaselineVariantId,
+        );
+        expect(
+          saved.variants.map(
+            (v) => (
+              v.id,
+              v.name,
+              v.colors.wall?.hex,
+              v.colors.ceiling?.hex,
+              v.colors.floor?.hex,
+              v.colors.furniture?.hex,
+            ),
+          ),
+          before.snapshot.variants.map(
+            (v) => (
+              v.id,
+              v.name,
+              v.colors.wall?.hex,
+              v.colors.ceiling?.hex,
+              v.colors.floor?.hex,
+              v.colors.furniture?.hex,
+            ),
+          ),
+        );
+        await reopen();
+        final reopened = (await repository.read(id))!.snapshot;
+        expect(reopened.intent.bytes, [0, 0, 0, 0, 0, 0]);
+        expect(reopened.maskBytes, before.snapshot.maskBytes);
+      }
+    },
+  );
+
+  test(
+    'missing first v2 intent recovers frozen v1 and next save retains acknowledged CAS',
+    () async {
+      await repository.close();
+      await copyFrozenRooms(root);
+      repository = await open();
+      final old = (await repository.read('v1-healthy'))!;
+      await repository.save(old.snapshot, expectedRevision: 3);
+      final base = projectPath('v1-healthy');
+      final data = jsonDecode(
+        await File('$base/revisions/4/manifest.json').readAsString(),
+      );
+      await File('$base/${data['assets']['intent']['path']}').delete();
+      await reopen();
+      final recovered = (await repository.read('v1-healthy'))!;
+      expect(recovered.snapshot.revision, 3);
+      expect(recovered.acknowledgedRevision, 4);
+      expect(recovered.warning!.rejectedRevisions, [4]);
+      expect(recovered.snapshot.intent.bytes, [0, 0, 0, 0, 0, 0]);
+      await expectLater(
+        repository.save(recovered.snapshot, expectedRevision: 3),
+        throwsA(isA<RoomProjectConflict>()),
+      );
+      final saved = await repository.save(
+        recovered.snapshot,
+        expectedRevision: 4,
+      );
+      expect(saved.revision, 5);
+      await reopen();
+      expect((await repository.read('v1-healthy'))!.snapshot.revision, 5);
+    },
+  );
+
+  for (final corruption in ['missing', 'hash', 'invalid-value']) {
+    test(
+      'corrupt v2 intent $corruption falls back through mixed acknowledged ancestry with CAS intact',
+      () async {
+        await repository.close();
+        await copyFrozenRooms(root);
+        repository = await open();
+        final old = (await repository.read('v1-healthy'))!;
+        final fourth = await repository.save(old.snapshot, expectedRevision: 3);
+        final fifth = await repository.save(
+          fourth.copyWith(
+            name: 'Fifth',
+            intent: MaskIntentBitmap.fromBytes(
+              width: 3,
+              height: 2,
+              bytes: Uint8List.fromList([1, 2, 3, 4, 5, 0]),
+            ),
+          ),
+          expectedRevision: 4,
+        );
+        final base = projectPath('v1-healthy');
+        // A newer v2 orphan must never be promoted over acknowledged ancestry.
+        io.failBeforePointer = true;
+        await expectLater(
+          repository.save(fifth.copyWith(name: 'Orphan'), expectedRevision: 5),
+          throwsA(isA<RoomProjectStorageException>()),
+        );
+        io.failBeforePointer = false;
+        final newest = File('$base/revisions/5/manifest.json');
+        final data = jsonDecode(await newest.readAsString());
+        expect(data['assets'].containsKey('intent'), isTrue);
+        final intentPath = '$base/${data['assets']['intent']['path']}';
+        if (corruption == 'missing') {
+          await File(intentPath).delete();
+        } else if (corruption == 'hash') {
+          await File(intentPath).writeAsBytes([1, 0, 0, 0, 0, 0]);
+        } else {
+          final invalid = Uint8List.fromList([6, 0, 0, 0, 0, 0]);
+          final hash = sha256.convert(invalid).toString();
+          data['assets']['intent'] = {
+            'path': 'assets/$hash.intent.bin',
+            'length': 6,
+            'sha256': hash,
+          };
+          await File('$base/assets/$hash.intent.bin').writeAsBytes(invalid);
+          final encoded = utf8.encode(jsonEncode(data));
+          await newest.writeAsBytes(encoded);
+          final pointerFile = File('$base/current');
+          final pointer = jsonDecode(await pointerFile.readAsString());
+          pointer['ancestry'][0]['manifestSha256'] = sha256
+              .convert(encoded)
+              .toString();
+          pointer.remove('checksum');
+          pointer['checksum'] = sha256
+              .convert(utf8.encode(jsonEncode(pointer)))
+              .toString();
+          await pointerFile.writeAsString(jsonEncode(pointer));
+        }
+        final pointerBefore = await File('$base/current').readAsBytes();
+        await reopen();
+        final recovered = (await repository.read('v1-healthy'))!;
+        expect(recovered.snapshot.revision, 4);
+        expect(recovered.acknowledgedRevision, 5);
+        expect(recovered.warning!.rejectedRevisions, [5]);
+        expect(recovered.snapshot.intent.bytes, [0, 0, 0, 0, 0, 0]);
+        expect(recovered.snapshot.maskBytes, old.snapshot.maskBytes);
+        expect(await File('$base/current').readAsBytes(), pointerBefore);
+        expect(await Directory('$base/revisions/6').exists(), isFalse);
+        expect(await File('$base/quarantine/revision-5.json').exists(), isTrue);
+        final listed = await repository.listSnapshot();
+        expect(
+          listed.records.map((r) => r.projectId),
+          containsAll(['v1-healthy', 'v1-manual']),
+        );
+        expect(listed.corruptRecords, isEmpty);
+        await expectLater(
+          repository.save(
+            recovered.snapshot,
+            expectedRevision: recovered.snapshot.revision,
+          ),
+          throwsA(isA<RoomProjectConflict>()),
+        );
+        final saved = await repository.save(
+          recovered.snapshot,
+          expectedRevision: 5,
+        );
+        expect(saved.revision, 6);
+        expect(
+          jsonDecode(
+            await File('$base/revisions/6/manifest.json').readAsString(),
+          )['schemaVersion'],
+          2,
+        );
+        await reopen();
+        expect((await repository.read('v1-healthy'))!.snapshot.revision, 6);
+      },
+    );
+  }
+
+  test(
+    'cleanup collects only unreferenced intent assets and retains acknowledged intent',
+    () async {
+      await saveFirst();
+      final base = projectPath();
+      final manifest = jsonDecode(
+        await File('$base/revisions/1/manifest.json').readAsString(),
+      );
+      expect(manifest['assets'].containsKey('intent'), isTrue);
+      final keep = File('$base/${manifest['assets']['intent']['path']}');
+      final orphan = Uint8List.fromList([5, 5, 5, 5]);
+      final orphanFile = File(
+        '$base/assets/${sha256.convert(orphan)}.intent.bin',
+      );
+      await orphanFile.writeAsBytes(orphan);
+      await reopen();
+      expect(await keep.readAsBytes(), [0, 0, 0, 0]);
+      expect(await orphanFile.exists(), isFalse);
     },
   );
 
