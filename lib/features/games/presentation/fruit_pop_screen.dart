@@ -1045,7 +1045,7 @@ class _FruitPopScreenState extends ConsumerState<FruitPopScreen>
                                           if (invalid) {
                                             tile = TweenAnimationBuilder<double>(
                                               key: ValueKey(
-                                                'invalid-${_invalidSwapNonce}-$index',
+                                                'invalid-$_invalidSwapNonce-$index',
                                               ),
                                               tween: Tween(begin: 0, end: 1),
                                               duration: const Duration(

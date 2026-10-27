@@ -132,6 +132,8 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    container.read(appRouterProvider).go('/capture');
+    await tester.pumpAndSettle();
     return container;
   }
 
@@ -501,7 +503,7 @@ void main() {
         await tester.ensureVisible(find.text('Continue in Room'));
         await tester.tap(find.text('Continue in Room'));
         await tester.pumpAndSettle();
-        expect(container.read(appRouterProvider).state.uri.path, '/room');
+        expect(container.read(appRouterProvider).state.uri.path, '/rooms');
         expect(
           container.read(photoAcquisitionProvider).pendingReceipt,
           same(receipt),
@@ -634,8 +636,11 @@ void main() {
     tester,
   ) async {
     final recovery = Completer<PreparedPhoto?>();
-    await launch(tester, EntryPhotoService()..recovery = recovery);
-    await tester.tap(find.byKey(const ValueKey('nav-Palette')));
+    final container = await launch(
+      tester,
+      EntryPhotoService()..recovery = recovery,
+    );
+    await tester.tap(find.byKey(const ValueKey('nav-learn')));
     await tester.pumpAndSettle();
     final image = img.Image(width: 1, height: 1)
       ..setPixelRgba(0, 0, 255, 0, 0, 255);
@@ -649,9 +654,9 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('screen-Palette')), findsOneWidget);
+    expect(find.byKey(const ValueKey('screen-Learn')), findsOneWidget);
     expect(find.text('Photo study'), findsNothing);
-    await tester.tap(find.byKey(const ValueKey('nav-Capture')));
+    container.read(appRouterProvider).go('/capture');
     await tester.pumpAndSettle();
     expect(find.text('Continue recovered photo'), findsOneWidget);
   });

@@ -4,7 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/home/presentation/home_screen.dart';
 import '../features/lab/presentation/lab_screen.dart';
+import '../features/learning/presentation/learn_screen.dart';
+import '../features/my_work/presentation/my_work_screen.dart';
 import '../features/palette/presentation/palette_screen.dart';
 import '../features/picker/presentation/capture_screen.dart';
 import '../features/picker/domain/prepared_photo.dart';
@@ -35,10 +38,18 @@ import '../features/games/presentation/invalid_game_launch_screen.dart';
 import '../features/games/presentation/leaderboard_screen.dart';
 import '../features/games/presentation/rainbow_rings_screen.dart';
 import '../features/games/presentation/water_sort_screen.dart';
+import '../l10n/l10n.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
+  final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
+  final homeNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'home');
+  final roomsNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'rooms');
+  final learnNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'learn');
+  final gamesNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'games');
   final router = GoRouter(
-    initialLocation: '/capture',
+    navigatorKey: rootNavigatorKey,
+    restorationScopeId: 'tintatlas-router',
+    initialLocation: '/home',
     redirect: (context, state) {
       final preferences = ref.read(appPreferencesProvider);
       final path = state.uri.path;
@@ -46,10 +57,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (!preferences.requireValue.onboardingCompleted) {
         return path == '/onboarding' ? null : '/onboarding';
       }
-      if (path == '/startup' || path == '/onboarding') return '/capture';
+      if (path == '/startup' || path == '/onboarding') return '/home';
       return null;
     },
     routes: [
+      GoRoute(path: '/room', redirect: (context, state) => '/rooms'),
       GoRoute(
         path: '/room/study',
         redirect: (context, state) => '/room/illustrated/study',
@@ -122,6 +134,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/mixer', builder: (context, state) => const MixerScreen()),
       GoRoute(
+        path: '/my-work',
+        builder: (context, state) => const MyWorkScreen(),
+      ),
+      GoRoute(
         path: '/startup',
         builder: (context, state) => const PreferencesStartupScreen(),
       ),
@@ -142,7 +158,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             if (context.canPop()) {
               context.pop();
             } else {
-              context.go('/capture');
+              context.go('/home');
             }
           },
         ),
@@ -181,24 +197,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       StatefulShellRoute.indexedStack(
+        restorationScopeId: 'tintatlas-shell',
         builder: (context, state, shell) => AppShell(navigationShell: shell),
         branches: [
-          _branch('/capture', const CaptureScreen()),
-          _branch('/palette', const PaletteScreen()),
-          _branch('/lab', const LabScreen()),
-          _branch('/room', const RoomScreen()),
-          _gamesBranch(),
+          _homeBranch(homeNavigatorKey),
+          _roomsBranch(roomsNavigatorKey),
+          _learnBranch(learnNavigatorKey),
+          _gamesBranch(gamesNavigatorKey),
         ],
       ),
     ],
-    errorBuilder: (context, state) => Scaffold(
-      body: Center(
-        child: TextButton(
-          onPressed: () => context.go('/capture'),
-          child: const Text('Return to Color Lab'),
-        ),
-      ),
-    ),
+    errorBuilder: (context, state) => const _RouteUnavailableScreen(),
   );
   // Refresh guards in place: theme writes must not replace indexed navigators.
   ref.listen(appPreferencesProvider, (previous, next) => router.refresh());
@@ -206,23 +215,105 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   return router;
 });
 
-StatefulShellBranch _branch(String path, Widget screen) => StatefulShellBranch(
-  routes: [GoRoute(path: path, builder: (context, state) => screen)],
-);
+StatefulShellBranch _homeBranch(GlobalKey<NavigatorState> navigatorKey) =>
+    StatefulShellBranch(
+      navigatorKey: navigatorKey,
+      restorationScopeId: 'home-branch',
+      initialLocation: '/home',
+      routes: [
+        GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
+        GoRoute(
+          path: '/capture',
+          builder: (context, state) => const CaptureScreen(),
+        ),
+      ],
+    );
 
-StatefulShellBranch _gamesBranch() => StatefulShellBranch(
-  routes: [
-    GoRoute(
-      path: '/games',
-      builder: (context, state) => GamesScreen(
-        onLaunchGame: (launch) => _pushGame(context, launch),
-        onOpenMap: (gameId) => _pushMap(context, gameId),
-        onOpenBadges: () => _push(context, '/games/badges'),
-        onOpenLeaderboard: () => _push(context, '/games/leaderboard'),
+StatefulShellBranch _roomsBranch(GlobalKey<NavigatorState> navigatorKey) =>
+    StatefulShellBranch(
+      navigatorKey: navigatorKey,
+      restorationScopeId: 'rooms-branch',
+      initialLocation: '/rooms',
+      routes: [
+        GoRoute(
+          path: '/rooms',
+          builder: (context, state) => const RoomScreen(),
+        ),
+      ],
+    );
+
+StatefulShellBranch _learnBranch(GlobalKey<NavigatorState> navigatorKey) =>
+    StatefulShellBranch(
+      navigatorKey: navigatorKey,
+      restorationScopeId: 'learn-branch',
+      initialLocation: '/learn',
+      routes: [
+        GoRoute(
+          path: '/learn',
+          builder: (context, state) => const LearnScreen(),
+        ),
+        GoRoute(
+          path: '/palette',
+          builder: (context, state) => const PaletteScreen(),
+        ),
+        GoRoute(path: '/lab', builder: (context, state) => const LabScreen()),
+      ],
+    );
+
+StatefulShellBranch _gamesBranch(GlobalKey<NavigatorState> navigatorKey) =>
+    StatefulShellBranch(
+      navigatorKey: navigatorKey,
+      restorationScopeId: 'games-branch',
+      initialLocation: '/games',
+      routes: [
+        GoRoute(
+          path: '/games',
+          builder: (context, state) => GamesScreen(
+            onLaunchGame: (launch) => _pushGame(context, launch),
+            onOpenMap: (gameId) => _pushMap(context, gameId),
+            onOpenBadges: () => _push(context, '/games/badges'),
+            onOpenLeaderboard: () => _push(context, '/games/leaderboard'),
+          ),
+        ),
+      ],
+    );
+
+class _RouteUnavailableScreen extends StatelessWidget {
+  const _RouteUnavailableScreen();
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    key: const ValueKey('route-unavailable'),
+    body: SafeArea(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                context.l10n.routeUnavailableTitle,
+                style: Theme.of(context).textTheme.headlineSmall,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                context.l10n.routeUnavailableBody,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              FilledButton(
+                key: const ValueKey('route-recovery-home'),
+                onPressed: () => context.go('/home'),
+                child: Text(context.l10n.returnHome),
+              ),
+            ],
+          ),
+        ),
       ),
     ),
-  ],
-);
+  );
+}
 
 Widget _buildGameScreen(
   BuildContext context,

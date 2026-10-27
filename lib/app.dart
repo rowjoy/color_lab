@@ -23,6 +23,7 @@ class _ColorLabAppState extends ConsumerState<ColorLabApp> {
     final animateTheme = _preferencesWereLoaded && loaded;
     _preferencesWereLoaded = loaded;
     return MaterialApp.router(
+      restorationScopeId: 'tintatlas-app',
       onGenerateTitle: (context) => context.l10n.appName,
       debugShowCheckedModeBanner: false,
       localizationsDelegates: AppLocalizations.localizationsDelegates,

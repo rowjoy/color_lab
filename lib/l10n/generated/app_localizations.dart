@@ -185,6 +185,24 @@ abstract class AppLocalizations {
   /// **'Capture'**
   String get captureDestination;
 
+  /// Home navigation destination label.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get homeDestination;
+
+  /// Rooms navigation destination label.
+  ///
+  /// In en, this message translates to:
+  /// **'Rooms'**
+  String get roomsDestination;
+
+  /// Color learning navigation destination label.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn'**
+  String get learnDestination;
+
   /// Palette navigation destination label.
   ///
   /// In en, this message translates to:
@@ -220,6 +238,354 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Appearance settings'**
   String get appearanceSettings;
+
+  /// Eyebrow on the Home screen.
+  ///
+  /// In en, this message translates to:
+  /// **'ROOM-FIRST COLOR'**
+  String get homeEyebrow;
+
+  /// Primary Home screen heading.
+  ///
+  /// In en, this message translates to:
+  /// **'See your space in a new color.'**
+  String get homeTitle;
+
+  /// Home screen product explanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Try an illustrated room instantly, then explore color learning and games at your own pace.'**
+  String get homeDescription;
+
+  /// Sample-room quick-start heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Start with a sample room'**
+  String get homeSampleTitle;
+
+  /// Sample-room quick-start explanation.
+  ///
+  /// In en, this message translates to:
+  /// **'No photo, permission, or AI model download is needed.'**
+  String get homeSampleBody;
+
+  /// Button that opens the sample living room.
+  ///
+  /// In en, this message translates to:
+  /// **'Try a living room'**
+  String get homeTrySampleRoom;
+
+  /// Recent-activity section title on Home.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get homeContinueTitle;
+
+  /// Home placeholder when no resumable activity exists.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to continue yet. Your next room, lesson, or game will appear here.'**
+  String get homeContinueEmpty;
+
+  /// Disabled Continue placeholder action.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to continue yet'**
+  String get homeNothingToContinue;
+
+  /// Home card title for Room Studio.
+  ///
+  /// In en, this message translates to:
+  /// **'Rooms'**
+  String get homeRoomsTitle;
+
+  /// Home Rooms card description.
+  ///
+  /// In en, this message translates to:
+  /// **'Visualize your own photo or recolor an illustrated room.'**
+  String get homeRoomsBody;
+
+  /// Home card title for color learning.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn Color'**
+  String get homeLearnTitle;
+
+  /// Home Learn card description.
+  ///
+  /// In en, this message translates to:
+  /// **'Study color through guided tools and practical experiments.'**
+  String get homeLearnBody;
+
+  /// Home card title for games.
+  ///
+  /// In en, this message translates to:
+  /// **'Color Games'**
+  String get homeGamesTitle;
+
+  /// Home Games card description.
+  ///
+  /// In en, this message translates to:
+  /// **'Practice, solve, and relax with optional color-focused play.'**
+  String get homeGamesBody;
+
+  /// Home card title for the local shared library.
+  ///
+  /// In en, this message translates to:
+  /// **'My Work'**
+  String get homeMyWorkTitle;
+
+  /// Home My Work card description.
+  ///
+  /// In en, this message translates to:
+  /// **'Find your saved colors, palettes, and illustrated designs.'**
+  String get homeMyWorkBody;
+
+  /// Eyebrow on the Learn screen.
+  ///
+  /// In en, this message translates to:
+  /// **'COLOR LEARNING'**
+  String get learnEyebrow;
+
+  /// Primary Learn screen heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn color by trying it.'**
+  String get learnTitle;
+
+  /// Learn screen explanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Use real tools to explore perception, relationships, mixing, and practical color choices.'**
+  String get learnDescription;
+
+  /// Guided learning section heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn with color'**
+  String get learnGuidedTitle;
+
+  /// Color experiment section heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Experiment'**
+  String get learnExperimentTitle;
+
+  /// Link to the vision plate learning tool.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore vision plates'**
+  String get learnOpenVision;
+
+  /// Link to color matching practice.
+  ///
+  /// In en, this message translates to:
+  /// **'Practice color matching'**
+  String get learnOpenMatching;
+
+  /// Link to the camera and photo color tool.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture a color'**
+  String get learnOpenCapture;
+
+  /// Link to the saved color library.
+  ///
+  /// In en, this message translates to:
+  /// **'Open saved colors'**
+  String get learnOpenPalette;
+
+  /// Link to the HSL Color Lab.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Color Lab'**
+  String get learnOpenLab;
+
+  /// Link to the color mixer.
+  ///
+  /// In en, this message translates to:
+  /// **'Mix colors'**
+  String get learnOpenMixer;
+
+  /// Link to the color formula tool.
+  ///
+  /// In en, this message translates to:
+  /// **'Build a color formula'**
+  String get learnOpenFormula;
+
+  /// Link to the harmony tool.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore color harmonies'**
+  String get learnOpenHarmonies;
+
+  /// Link from Learn to My Work.
+  ///
+  /// In en, this message translates to:
+  /// **'Review My Work'**
+  String get learnOpenMyWork;
+
+  /// Eyebrow on the My Work screen.
+  ///
+  /// In en, this message translates to:
+  /// **'SAVED ON THIS DEVICE'**
+  String get myWorkEyebrow;
+
+  /// My Work screen heading.
+  ///
+  /// In en, this message translates to:
+  /// **'My Work'**
+  String get myWorkTitle;
+
+  /// My Work local ownership explanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Your shared color library stays on this installation and is separate from game profiles.'**
+  String get myWorkDescription;
+
+  /// Saved colors section title in My Work.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved colors'**
+  String get myWorkColorsTitle;
+
+  /// Saved palettes section title in My Work.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved palettes'**
+  String get myWorkPalettesTitle;
+
+  /// Saved room designs section title in My Work.
+  ///
+  /// In en, this message translates to:
+  /// **'Illustrated room designs'**
+  String get myWorkRoomDesignsTitle;
+
+  /// Loading title for saved colors.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading saved colors'**
+  String get myWorkColorsLoading;
+
+  /// Loading title for saved palettes.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading saved palettes'**
+  String get myWorkPalettesLoading;
+
+  /// Loading title for saved room designs.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading room designs'**
+  String get myWorkRoomDesignsLoading;
+
+  /// Independent library loading explanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Your other libraries remain available while this section loads.'**
+  String get myWorkLoadingBody;
+
+  /// Friendly saved colors load error.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved colors couldn\'t be loaded'**
+  String get myWorkColorsError;
+
+  /// Friendly saved palettes load error.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved palettes couldn\'t be loaded'**
+  String get myWorkPalettesError;
+
+  /// Friendly saved room designs load error.
+  ///
+  /// In en, this message translates to:
+  /// **'Room designs couldn\'t be loaded'**
+  String get myWorkRoomDesignsError;
+
+  /// Independent library error recovery explanation.
+  ///
+  /// In en, this message translates to:
+  /// **'This section can be retried without changing your other work.'**
+  String get myWorkErrorBody;
+
+  /// Empty saved colors title.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved colors yet'**
+  String get myWorkColorsEmpty;
+
+  /// Empty saved colors guidance.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture, enter, or explore a color to keep it here.'**
+  String get myWorkColorsEmptyBody;
+
+  /// Empty saved palettes title.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved palettes yet'**
+  String get myWorkPalettesEmpty;
+
+  /// Empty saved palettes guidance.
+  ///
+  /// In en, this message translates to:
+  /// **'Save a harmony when you find a combination you like.'**
+  String get myWorkPalettesEmptyBody;
+
+  /// Empty saved room designs title.
+  ///
+  /// In en, this message translates to:
+  /// **'No illustrated designs yet'**
+  String get myWorkRoomDesignsEmpty;
+
+  /// Empty saved room designs guidance.
+  ///
+  /// In en, this message translates to:
+  /// **'Recolor an illustrated room and save the design to keep it here.'**
+  String get myWorkRoomDesignsEmptyBody;
+
+  /// Action from empty saved colors.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore colors'**
+  String get myWorkExploreColors;
+
+  /// Action from empty saved palettes.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a palette'**
+  String get myWorkCreatePalette;
+
+  /// Action from empty saved room designs.
+  ///
+  /// In en, this message translates to:
+  /// **'Try an illustrated room'**
+  String get myWorkTryRoom;
+
+  /// Fallback label for an unavailable saved room template.
+  ///
+  /// In en, this message translates to:
+  /// **'Room template temporarily unavailable'**
+  String get myWorkUnavailableRoom;
+
+  /// Unknown-route recovery heading.
+  ///
+  /// In en, this message translates to:
+  /// **'That page isn\'t available'**
+  String get routeUnavailableTitle;
+
+  /// Unknown-route recovery guidance.
+  ///
+  /// In en, this message translates to:
+  /// **'Return Home and choose another TintAtlas tool.'**
+  String get routeUnavailableBody;
+
+  /// Button that recovers to the Home root.
+  ///
+  /// In en, this message translates to:
+  /// **'Return Home'**
+  String get returnHome;
 
   /// Button that skips the welcome tour.
   ///

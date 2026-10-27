@@ -90,7 +90,7 @@ void main() {
     await tester.pump();
   }
 
-  testWidgets('starts in Capture and opens each destination', (tester) async {
+  testWidgets('starts in Home and opens each destination', (tester) async {
     await launch(tester);
     expect(find.text(AppIdentity.displayName), findsOneWidget);
     expect(
@@ -98,18 +98,25 @@ void main() {
       AppIdentity.displayName,
     );
     expect(find.text('Color Lab'), findsNothing);
-    expect(find.text('See the world'), findsOneWidget);
-    for (final destination in ['Palette', 'Lab', 'Room', 'Capture']) {
+    expect(find.byKey(const ValueKey('screen-Home')), findsOneWidget);
+    for (final destination in ['rooms', 'learn', 'games', 'home']) {
       await tester.tap(find.byKey(ValueKey('nav-$destination')));
-      await tester.pumpAndSettle();
-      expect(find.byKey(ValueKey('screen-$destination')), findsOneWidget);
+      await finishRouteTransition(tester);
+      final screenName = switch (destination) {
+        'rooms' => 'Rooms',
+        'learn' => 'Learn',
+        'games' => 'Games',
+        _ => 'Home',
+      };
+      expect(find.byKey(ValueKey('screen-$screenName')), findsOneWidget);
     }
   });
 
   testWidgets('manual color entry validates and opens actual color values', (
     tester,
   ) async {
-    await launch(tester);
+    final container = await launch(tester);
+    await openRoute(tester, container, '/capture');
     await tester.ensureVisible(find.text('Explore a color'));
     await tester.tap(find.text('Explore a color'));
     await tester.pumpAndSettle();
@@ -149,9 +156,7 @@ void main() {
     await tester.pumpAndSettle();
     container.read(themeModeProvider.notifier).setMode(ThemeMode.dark);
     await tester.pumpAndSettle();
-    final context = tester.element(
-      find.byKey(const ValueKey('screen-Capture')),
-    );
+    final context = tester.element(find.byKey(const ValueKey('screen-Home')));
     expect(Theme.of(context).brightness, Brightness.dark);
     container.read(themeModeProvider.notifier).setMode(ThemeMode.light);
     await tester.pumpAndSettle();
@@ -162,6 +167,7 @@ void main() {
     tester,
   ) async {
     final container = await launch(tester);
+    await openRoute(tester, container, '/capture');
     await tester.ensureVisible(find.text('Explore a color'));
     await tester.tap(find.text('Explore a color'));
     await tester.pumpAndSettle();
@@ -178,8 +184,7 @@ void main() {
     await tester.ensureVisible(find.byTooltip('Close color details'));
     await tester.tap(find.byTooltip('Close color details'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('nav-Palette')));
-    await tester.pumpAndSettle();
+    await openRoute(tester, container, '/palette');
     expect(find.byKey(const ValueKey('saved-#FF0000')), findsOneWidget);
     expect(find.text('Red'), findsOneWidget);
   });
@@ -187,19 +192,18 @@ void main() {
   testWidgets(
     'appearance menu changes theme and lab study survives tab switches',
     (tester) async {
-      await launch(tester);
+      final container = await launch(tester);
       await tester.tap(find.byTooltip('Appearance settings'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Dark'));
       await tester.pumpAndSettle();
       final pageContext = tester.element(
-        find.byKey(const ValueKey('screen-Capture')),
+        find.byKey(const ValueKey('screen-Home')),
       );
       expect(Theme.of(pageContext).brightness, Brightness.dark);
       await tester.tapAt(const Offset(10, 10));
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('nav-Lab')));
-      await tester.pumpAndSettle();
+      await openRoute(tester, container, '/lab');
       final slider = find.byType(Slider).first;
       await tester.ensureVisible(slider);
       await tester.drag(slider, const Offset(50, 0));
@@ -208,10 +212,10 @@ void main() {
         find.byType(ColorSwatchTile),
       );
       expect(study.hex, isNot('#B2A4D4'));
-      await tester.tap(find.byKey(const ValueKey('nav-Palette')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('nav-Lab')));
-      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('nav-rooms')));
+      await finishRouteTransition(tester);
+      await tester.tap(find.byKey(const ValueKey('nav-learn')));
+      await finishRouteTransition(tester);
       expect(
         tester.widget<ColorSwatchTile>(find.byType(ColorSwatchTile)).hex,
         study.hex,
@@ -229,9 +233,9 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
     await launch(tester);
-    for (final destination in ['Palette', 'Lab', 'Room', 'Capture']) {
+    for (final destination in ['rooms', 'learn', 'games', 'home']) {
       await tester.tap(find.byKey(ValueKey('nav-$destination')));
-      await tester.pumpAndSettle();
+      await finishRouteTransition(tester);
       expect(tester.takeException(), isNull, reason: destination);
     }
   });
@@ -242,13 +246,14 @@ void main() {
     tester.platformDispatcher.accessibilityFeaturesTestValue =
         FakeAccessibilityFeatures(disableAnimations: true);
     addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
-    await launch(tester);
+    final container = await launch(tester);
+    await openRoute(tester, container, '/capture');
     await tester.ensureVisible(find.text('Explore a color'));
     await tester.tap(find.text('Explore a color'));
     await tester.pump();
     await tester.pump();
     expect(find.text('View color').hitTestable(), findsOneWidget);
-    await tester.tapAt(const Offset(10, 10));
+    expect(await tester.binding.handlePopRoute(), isTrue);
     await tester.pump();
     await tester.pump();
     expect(find.text('View color'), findsNothing);
@@ -257,9 +262,8 @@ void main() {
   testWidgets(
     'Lab preserves the chosen hue while saturation passes through gray',
     (tester) async {
-      await launch(tester);
-      await tester.tap(find.byKey(const ValueKey('nav-Lab')));
-      await tester.pumpAndSettle();
+      final container = await launch(tester);
+      await openRoute(tester, container, '/lab');
       var sliders = tester.widgetList<Slider>(find.byType(Slider)).toList();
       final originalHue = sliders[0].value;
       sliders[1].onChanged!(0);

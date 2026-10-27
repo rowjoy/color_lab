@@ -62,6 +62,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get captureDestination => 'Capture';
 
   @override
+  String get homeDestination => 'Home';
+
+  @override
+  String get roomsDestination => 'Rooms';
+
+  @override
+  String get learnDestination => 'Learn';
+
+  @override
   String get paletteDestination => 'Palette';
 
   @override
@@ -80,6 +89,195 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appearanceSettings => 'Appearance settings';
+
+  @override
+  String get homeEyebrow => 'ROOM-FIRST COLOR';
+
+  @override
+  String get homeTitle => 'See your space in a new color.';
+
+  @override
+  String get homeDescription =>
+      'Try an illustrated room instantly, then explore color learning and games at your own pace.';
+
+  @override
+  String get homeSampleTitle => 'Start with a sample room';
+
+  @override
+  String get homeSampleBody =>
+      'No photo, permission, or AI model download is needed.';
+
+  @override
+  String get homeTrySampleRoom => 'Try a living room';
+
+  @override
+  String get homeContinueTitle => 'Continue';
+
+  @override
+  String get homeContinueEmpty =>
+      'Nothing to continue yet. Your next room, lesson, or game will appear here.';
+
+  @override
+  String get homeNothingToContinue => 'Nothing to continue yet';
+
+  @override
+  String get homeRoomsTitle => 'Rooms';
+
+  @override
+  String get homeRoomsBody =>
+      'Visualize your own photo or recolor an illustrated room.';
+
+  @override
+  String get homeLearnTitle => 'Learn Color';
+
+  @override
+  String get homeLearnBody =>
+      'Study color through guided tools and practical experiments.';
+
+  @override
+  String get homeGamesTitle => 'Color Games';
+
+  @override
+  String get homeGamesBody =>
+      'Practice, solve, and relax with optional color-focused play.';
+
+  @override
+  String get homeMyWorkTitle => 'My Work';
+
+  @override
+  String get homeMyWorkBody =>
+      'Find your saved colors, palettes, and illustrated designs.';
+
+  @override
+  String get learnEyebrow => 'COLOR LEARNING';
+
+  @override
+  String get learnTitle => 'Learn color by trying it.';
+
+  @override
+  String get learnDescription =>
+      'Use real tools to explore perception, relationships, mixing, and practical color choices.';
+
+  @override
+  String get learnGuidedTitle => 'Learn with color';
+
+  @override
+  String get learnExperimentTitle => 'Experiment';
+
+  @override
+  String get learnOpenVision => 'Explore vision plates';
+
+  @override
+  String get learnOpenMatching => 'Practice color matching';
+
+  @override
+  String get learnOpenCapture => 'Capture a color';
+
+  @override
+  String get learnOpenPalette => 'Open saved colors';
+
+  @override
+  String get learnOpenLab => 'Open Color Lab';
+
+  @override
+  String get learnOpenMixer => 'Mix colors';
+
+  @override
+  String get learnOpenFormula => 'Build a color formula';
+
+  @override
+  String get learnOpenHarmonies => 'Explore color harmonies';
+
+  @override
+  String get learnOpenMyWork => 'Review My Work';
+
+  @override
+  String get myWorkEyebrow => 'SAVED ON THIS DEVICE';
+
+  @override
+  String get myWorkTitle => 'My Work';
+
+  @override
+  String get myWorkDescription =>
+      'Your shared color library stays on this installation and is separate from game profiles.';
+
+  @override
+  String get myWorkColorsTitle => 'Saved colors';
+
+  @override
+  String get myWorkPalettesTitle => 'Saved palettes';
+
+  @override
+  String get myWorkRoomDesignsTitle => 'Illustrated room designs';
+
+  @override
+  String get myWorkColorsLoading => 'Loading saved colors';
+
+  @override
+  String get myWorkPalettesLoading => 'Loading saved palettes';
+
+  @override
+  String get myWorkRoomDesignsLoading => 'Loading room designs';
+
+  @override
+  String get myWorkLoadingBody =>
+      'Your other libraries remain available while this section loads.';
+
+  @override
+  String get myWorkColorsError => 'Saved colors couldn\'t be loaded';
+
+  @override
+  String get myWorkPalettesError => 'Saved palettes couldn\'t be loaded';
+
+  @override
+  String get myWorkRoomDesignsError => 'Room designs couldn\'t be loaded';
+
+  @override
+  String get myWorkErrorBody =>
+      'This section can be retried without changing your other work.';
+
+  @override
+  String get myWorkColorsEmpty => 'No saved colors yet';
+
+  @override
+  String get myWorkColorsEmptyBody =>
+      'Capture, enter, or explore a color to keep it here.';
+
+  @override
+  String get myWorkPalettesEmpty => 'No saved palettes yet';
+
+  @override
+  String get myWorkPalettesEmptyBody =>
+      'Save a harmony when you find a combination you like.';
+
+  @override
+  String get myWorkRoomDesignsEmpty => 'No illustrated designs yet';
+
+  @override
+  String get myWorkRoomDesignsEmptyBody =>
+      'Recolor an illustrated room and save the design to keep it here.';
+
+  @override
+  String get myWorkExploreColors => 'Explore colors';
+
+  @override
+  String get myWorkCreatePalette => 'Create a palette';
+
+  @override
+  String get myWorkTryRoom => 'Try an illustrated room';
+
+  @override
+  String get myWorkUnavailableRoom => 'Room template temporarily unavailable';
+
+  @override
+  String get routeUnavailableTitle => 'That page isn\'t available';
+
+  @override
+  String get routeUnavailableBody =>
+      'Return Home and choose another TintAtlas tool.';
+
+  @override
+  String get returnHome => 'Return Home';
 
   @override
   String get skip => 'Skip';

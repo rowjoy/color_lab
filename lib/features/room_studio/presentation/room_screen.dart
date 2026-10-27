@@ -16,7 +16,7 @@ class RoomScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final legacyWall = ref.watch(roomColorProvider);
     return StudioPage(
-      name: 'Room',
+      name: 'Rooms',
       children: [
         Text('Room studio', style: Theme.of(context).textTheme.headlineMedium),
         const SizedBox(height: AppSpacing.md),

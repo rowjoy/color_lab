@@ -107,7 +107,7 @@ void main() {
         onCamera: () => cameras++,
       );
       expect(find.byType(OnboardingScreen), findsOneWidget);
-      expect(find.byKey(const ValueKey('nav-Capture')), findsNothing);
+      expect(find.byKey(const ValueKey('nav-home')), findsNothing);
       container.read(appRouterProvider).go('/camera');
       await tester.pumpAndSettle();
       expect(find.byType(OnboardingScreen), findsOneWidget);
@@ -117,7 +117,7 @@ void main() {
       await tester.tap(find.text('Skip'));
       await tester.pumpAndSettle();
       expect(repository.value.onboardingCompleted, isTrue);
-      expect(find.text('See the world'), findsOneWidget);
+      expect(find.byKey(const ValueKey('screen-Home')), findsOneWidget);
       expect(cameras, 0);
       expect(picker.picks, 0);
     },
@@ -151,7 +151,7 @@ void main() {
       repository.failSave = false;
       await tester.tap(find.text('Skip'));
       await tester.pumpAndSettle();
-      expect(find.text('See the world'), findsOneWidget);
+      expect(find.byKey(const ValueKey('screen-Home')), findsOneWidget);
       expect(picker.recoveries, 1);
       expect(picker.picks, 0);
       expect(cameras, 0);
@@ -175,7 +175,7 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     await launch(tester, repository);
     expect(find.byType(OnboardingScreen), findsNothing);
-    expect(find.text('See the world'), findsOneWidget);
+    expect(find.byKey(const ValueKey('screen-Home')), findsOneWidget);
   });
 
   testWidgets(
@@ -189,45 +189,44 @@ void main() {
       await tester.pumpAndSettle();
       expect(repository.value.onboardingCompleted, isFalse);
       expect(find.byType(OnboardingScreen), findsOneWidget);
-      expect(find.text('See the world'), findsNothing);
+      expect(find.byKey(const ValueKey('screen-Home')), findsNothing);
       repository.failSave = false;
       await tester.tap(find.text('Skip'));
       await tester.pumpAndSettle();
       expect(repository.value.onboardingCompleted, isTrue);
-      expect(find.text('See the world'), findsOneWidget);
+      expect(find.byKey(const ValueKey('screen-Home')), findsOneWidget);
     },
   );
 
-  testWidgets(
-    'startup waits for stored dark appearance before building Capture',
-    (tester) async {
-      final gate = Completer<void>();
-      final repository = InMemoryAppPreferencesRepository(
-        initial: const AppPreferences(
-          themeMode: ThemeMode.dark,
-          onboardingCompleted: true,
-        ),
-      )..loadGate = gate;
-      final container = await launch(tester, repository, settle: false);
-      expect(find.byKey(const ValueKey('screen-Capture')), findsNothing);
-      gate.complete();
-      await tester.pumpAndSettle();
-      expect(
-        Theme.of(
-          tester.element(find.byKey(const ValueKey('screen-Capture'))),
-        ).brightness,
-        Brightness.dark,
-      );
-      final router = container.read(appRouterProvider);
-      container.read(themeModeProvider.notifier).setMode(ThemeMode.light);
-      await tester.pumpAndSettle();
-      expect(repository.value.themeMode, ThemeMode.light);
-      expect(container.read(appRouterProvider), same(router));
-    },
-  );
+  testWidgets('startup waits for stored dark appearance before building Home', (
+    tester,
+  ) async {
+    final gate = Completer<void>();
+    final repository = InMemoryAppPreferencesRepository(
+      initial: const AppPreferences(
+        themeMode: ThemeMode.dark,
+        onboardingCompleted: true,
+      ),
+    )..loadGate = gate;
+    final container = await launch(tester, repository, settle: false);
+    expect(find.byKey(const ValueKey('screen-Home')), findsNothing);
+    gate.complete();
+    await tester.pumpAndSettle();
+    expect(
+      Theme.of(
+        tester.element(find.byKey(const ValueKey('screen-Home'))),
+      ).brightness,
+      Brightness.dark,
+    );
+    final router = container.read(appRouterProvider);
+    container.read(themeModeProvider.notifier).setMode(ThemeMode.light);
+    await tester.pumpAndSettle();
+    expect(repository.value.themeMode, ThemeMode.light);
+    expect(container.read(appRouterProvider), same(router));
+  });
 
   testWidgets(
-    'first Capture frame uses saved dark theme without a light-theme flash',
+    'first Home frame uses saved dark theme without a light-theme flash',
     (tester) async {
       tester.platformDispatcher.platformBrightnessTestValue = Brightness.light;
       addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
@@ -243,14 +242,14 @@ void main() {
       for (
         var frame = 0;
         frame < 20 &&
-            find.byKey(const ValueKey('screen-Capture')).evaluate().isEmpty;
+            find.byKey(const ValueKey('screen-Home')).evaluate().isEmpty;
         frame++
       ) {
         await tester.pump();
       }
-      final capture = find.byKey(const ValueKey('screen-Capture'));
-      expect(capture, findsOneWidget);
-      expect(Theme.of(tester.element(capture)).brightness, Brightness.dark);
+      final home = find.byKey(const ValueKey('screen-Home'));
+      expect(home, findsOneWidget);
+      expect(Theme.of(tester.element(home)).brightness, Brightness.dark);
       await tester.pumpAndSettle();
     },
   );
@@ -265,7 +264,7 @@ void main() {
       repository.failLoad = false;
       await tester.tap(find.text('Try again'));
       await tester.pumpAndSettle();
-      expect(find.text('See the world'), findsOneWidget);
+      expect(find.byKey(const ValueKey('screen-Home')), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
@@ -291,7 +290,7 @@ void main() {
     expect(repository.value.themeMode, ThemeMode.dark);
     expect(
       Theme.of(
-        tester.element(find.byKey(const ValueKey('screen-Capture'))),
+        tester.element(find.byKey(const ValueKey('screen-Home'))),
       ).brightness,
       Brightness.dark,
     );
@@ -316,7 +315,7 @@ void main() {
             source: ColorSource.camera,
           );
       final savedColors = container.read(colorHistoryProvider).requireValue;
-      await tester.tap(find.byKey(const ValueKey('nav-Lab')));
+      container.read(appRouterProvider).go('/lab');
       await tester.pumpAndSettle();
       tester.widgetList<Slider>(find.byType(Slider)).first.onChanged!(123);
       await tester.pumpAndSettle();

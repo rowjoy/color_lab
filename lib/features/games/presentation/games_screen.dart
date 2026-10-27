@@ -704,8 +704,16 @@ final class _FruitGameMark extends StatelessWidget {
   Widget build(BuildContext context) => const Column(
     mainAxisSize: MainAxisSize.min,
     children: [
-      Text('🍎🥕', style: TextStyle(fontSize: 25, height: 1.05)),
-      Text('🍇🥦', style: TextStyle(fontSize: 19, height: 1.05)),
+      Text(
+        '🍎🥕',
+        textScaler: TextScaler.noScaling,
+        style: TextStyle(fontSize: 25, height: 1.05),
+      ),
+      Text(
+        '🍇🥦',
+        textScaler: TextScaler.noScaling,
+        style: TextStyle(fontSize: 19, height: 1.05),
+      ),
     ],
   );
 }

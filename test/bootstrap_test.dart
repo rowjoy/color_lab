@@ -78,7 +78,7 @@ void main() {
 
     expect(
       container.read(appRouterProvider).routeInformationProvider.value.uri.path,
-      '/capture',
+      '/home',
     );
     expect(find.text('Room Studio setup'), findsNothing);
     expect(
