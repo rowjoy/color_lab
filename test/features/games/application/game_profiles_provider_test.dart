@@ -571,6 +571,110 @@ void main() {
       );
     },
   );
+
+  test(
+    'stale attempt rollback preserves queued rename and prepared caches',
+    () async {
+      final owner = PlayerProfile(
+        id: 'profile-owner',
+        name: 'Owner',
+        createdAt: epoch,
+        updatedAt: epoch,
+      );
+      final guest = PlayerProfile(
+        id: 'profile-guest',
+        name: 'Guest',
+        createdAt: epoch,
+        updatedAt: epoch,
+      );
+      final repository = InMemoryGameProfilesRepository(
+        initialState: GameProfilesState(
+          activeProfileId: owner.id,
+          profiles: {owner.id: owner, guest.id: guest},
+          legacyMigrationComplete: true,
+        ),
+      );
+      final container = _containerFor(repository, clock: () => epoch);
+      addTearDown(container.dispose);
+      await container.read(gameProfilesProvider.future);
+      final controller = container.read(gameProfilesProvider.notifier);
+
+      final launchGate = Completer<void>();
+      repository.writeGate = launchGate;
+      final launchFuture = controller.prepareAndResumeGame(
+        profileId: owner.id,
+        gameId: GameId.waterSort,
+      );
+      await _waitUntil(() => repository.writeAttempts == 1);
+      final renameFuture = controller.renameProfile(
+        profileId: owner.id,
+        name: 'Renamed',
+      );
+      final prepareFuture = controller.prepareGame(
+        profileId: owner.id,
+        gameId: GameId.fruitPop,
+      );
+      final switchFuture = controller.setActiveProfile(profileId: guest.id);
+
+      launchGate.complete();
+      final launch = await launchFuture;
+      await Future.wait([renameFuture, prepareFuture, switchFuture]);
+      await controller.discardStaleNewAttempt(
+        originalProfile: owner,
+        launch: launch,
+      );
+
+      final durable = repository.durableState;
+      final persistedOwner = durable.profiles[owner.id]!;
+      expect(durable.activeProfileId, guest.id);
+      expect(persistedOwner.name, 'Renamed');
+      expect(
+        persistedOwner.gameProgress[GameId.fruitPop]?.generatedThrough,
+        15,
+      );
+      final waterSort = persistedOwner.gameProgress[GameId.waterSort]!;
+      expect(waterSort.generatedThrough, 1);
+      expect(waterSort.descriptors, contains(1));
+      expect(waterSort.attempts, 0);
+      expect(waterSort.attemptSequence, 0);
+      expect(waterSort.activeAttempt, isNull);
+      expect(persistedOwner.gamesPlayed, 0);
+    },
+  );
+
+  test(
+    'prepare and resume reconciles a post-write error from durable state',
+    () async {
+      final repository = InMemoryGameProfilesRepository(
+        initialState: _profileState(epoch),
+      )..failAfterWriteAttempt = 1;
+      final container = _containerFor(repository, clock: () => epoch);
+      addTearDown(container.dispose);
+      await container.read(gameProfilesProvider.future);
+      final controller = container.read(gameProfilesProvider.notifier);
+
+      final launch = await controller.prepareAndResumeGame(
+        profileId: 'profile-1',
+        gameId: GameId.waterSort,
+      );
+
+      expect(launch.attemptId, 'profile-1:waterSort:1');
+      expect(launch.descriptor.level, 1);
+      final durable = repository.durableState;
+      expect(
+        durable
+            .profiles['profile-1']!
+            .gameProgress[GameId.waterSort]!
+            .activeAttempt
+            ?.attemptId,
+        launch.attemptId,
+      );
+      expect(
+        container.read(gameProfilesProvider).requireValue.toMap(),
+        durable.toMap(),
+      );
+    },
+  );
 }
 
 ProviderContainer _containerFor(

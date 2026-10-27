@@ -53,9 +53,11 @@ void main() {
     final harness = await _pumpHub(tester, repository: repository);
     addTearDown(harness.dispose);
     await tester.pumpAndSettle();
+    final l10n = await AppLocalizations.delegate.load(const Locale('en'));
 
-    expect(find.text('Create your player'), findsOneWidget);
-    expect(find.text('Create Player'), findsOneWidget);
+    expect(find.text(l10n.gamesCreatePlayerTitle), findsOneWidget);
+    expect(find.text(l10n.gamesCreatePlayerBody), findsOneWidget);
+    expect(find.text(l10n.gamesCreatePlayerAction), findsOneWidget);
     expect(find.byKey(const ValueKey('create-player')), findsOneWidget);
     for (final gameId in GameId.values) {
       expect(
@@ -281,6 +283,8 @@ void main() {
       );
       addTearDown(harness.dispose);
       await tester.pumpAndSettle();
+      final l10n = await AppLocalizations.delegate.load(const Locale('en'));
+      expect(find.text(l10n.gamesContinueGame), findsOneWidget);
 
       repository.writeGate = Completer<void>();
       await _tapPlay(tester, 'waterSort');
@@ -382,6 +386,145 @@ void main() {
     },
   );
 
+  testWidgets(
+    'a separately gated profile switch blocks old-player navigation',
+    (tester) async {
+      final owner = _profile(
+        id: 'profile-owner',
+        name: 'Owner',
+        coins: 0,
+        gamesPlayed: 0,
+        gamesWon: 0,
+        bestScore: 0,
+        completedByGame: {GameId.waterSort: 0},
+      );
+      final guest = _profile(
+        id: 'profile-guest',
+        name: 'Guest',
+        coins: 0,
+        gamesPlayed: 0,
+        gamesWon: 0,
+        bestScore: 0,
+        completedByGame: const {},
+      );
+      final repository = InMemoryGameProfilesRepository(
+        initialState: GameProfilesState(
+          activeProfileId: owner.id,
+          profiles: {owner.id: owner, guest.id: guest},
+          legacyMigrationComplete: true,
+        ),
+      );
+      final launches = <GameLaunch>[];
+      final harness = await _pumpHub(
+        tester,
+        repository: repository,
+        onLaunchGame: launches.add,
+      );
+      addTearDown(harness.dispose);
+      await tester.pumpAndSettle();
+
+      final launchGate = Completer<void>();
+      final switchGate = Completer<void>();
+      repository.writeGate = launchGate;
+      await _tapPlay(tester, 'waterSort');
+      await _pumpUntil(tester, () => repository.writeAttempts == 1);
+      final switchFuture = harness.container
+          .read(gameProfilesProvider.notifier)
+          .setActiveProfile(profileId: guest.id);
+      repository.writeGate = switchGate;
+      launchGate.complete();
+      await _pumpUntil(tester, () => repository.writeAttempts == 2);
+      // Advance past the old one-event-loop workaround while the independent
+      // switch write is still held at its durable boundary.
+      await tester.pump(const Duration(milliseconds: 1));
+
+      expect(
+        launches,
+        isEmpty,
+        reason: 'The requested profile switch is not durable yet.',
+      );
+
+      switchGate.complete();
+      await switchFuture;
+      await tester.pumpAndSettle();
+      expect(launches, isEmpty);
+      expect(repository.durableState.activeProfileId, guest.id);
+      expect(
+        repository
+            .durableState
+            .profiles[owner.id]!
+            .gameProgress[GameId.waterSort]!
+            .activeAttempt,
+        isNull,
+      );
+    },
+  );
+
+  testWidgets('post-write launch error still cleans up after a queued switch', (
+    tester,
+  ) async {
+    final owner = _profile(
+      id: 'profile-owner',
+      name: 'Owner',
+      coins: 0,
+      gamesPlayed: 0,
+      gamesWon: 0,
+      bestScore: 0,
+      completedByGame: {GameId.waterSort: 0},
+    );
+    final guest = _profile(
+      id: 'profile-guest',
+      name: 'Guest',
+      coins: 0,
+      gamesPlayed: 0,
+      gamesWon: 0,
+      bestScore: 0,
+      completedByGame: const {},
+    );
+    final repository = InMemoryGameProfilesRepository(
+      initialState: GameProfilesState(
+        activeProfileId: owner.id,
+        profiles: {owner.id: owner, guest.id: guest},
+        legacyMigrationComplete: true,
+      ),
+    )..failAfterWriteAttempt = 1;
+    final launches = <GameLaunch>[];
+    final harness = await _pumpHub(
+      tester,
+      repository: repository,
+      onLaunchGame: launches.add,
+    );
+    addTearDown(harness.dispose);
+    await tester.pumpAndSettle();
+
+    final launchGate = Completer<void>();
+    final switchGate = Completer<void>();
+    repository.writeGate = launchGate;
+    await _tapPlay(tester, 'waterSort');
+    await _pumpUntil(tester, () => repository.writeAttempts == 1);
+    final switchFuture = harness.container
+        .read(gameProfilesProvider.notifier)
+        .setActiveProfile(profileId: guest.id);
+    repository.writeGate = switchGate;
+    launchGate.complete();
+    await _pumpUntil(tester, () => repository.writeAttempts == 2);
+    expect(launches, isEmpty);
+
+    switchGate.complete();
+    await switchFuture;
+    await tester.pumpAndSettle();
+    expect(launches, isEmpty);
+    expect(repository.durableState.activeProfileId, guest.id);
+    expect(
+      repository
+          .durableState
+          .profiles[owner.id]!
+          .gameProgress[GameId.waterSort]!
+          .activeAttempt,
+      isNull,
+    );
+  });
+
   for (final themeMode in [ThemeMode.light, ThemeMode.dark]) {
     testWidgets(
       'five-game hub fits 360dp at 2x text with semantics in ${themeMode.name}',
@@ -415,10 +558,14 @@ void main() {
         );
         addTearDown(harness.dispose);
         await tester.pumpAndSettle();
+        final l10n = await AppLocalizations.delegate.load(const Locale('en'));
 
         expect(tester.takeException(), isNull);
         expect(find.bySemanticsLabel('Active player Player'), findsOneWidget);
-        expect(find.byTooltip('Play Bubble Shooter'), findsOneWidget);
+        expect(
+          find.byTooltip(l10n.gamesPlayNamedGame('Bubble Shooter')),
+          findsOneWidget,
+        );
         expect(find.byTooltip('Open Bubble Shooter level map'), findsOneWidget);
         expect(find.byKey(const ValueKey('games-badges')), findsOneWidget);
         expect(find.byKey(const ValueKey('games-leaderboard')), findsOneWidget);

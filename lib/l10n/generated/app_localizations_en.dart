@@ -219,6 +219,53 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gamesDestination => 'Games';
 
   @override
+  String get gamesCreatePlayerTitle => 'Create your player';
+
+  @override
+  String get gamesCreatePlayerBody =>
+      'Choose a local name before playing. Your levels, coins, scores, and badges stay with this player on this device.';
+
+  @override
+  String get gamesCreatePlayerAction => 'Create Player';
+
+  @override
+  String gamesPlayNamedGame(String game) {
+    return 'Play $game';
+  }
+
+  @override
+  String gamesContinueNamedGame(String game) {
+    return 'Continue $game';
+  }
+
+  @override
+  String get gamesPlayGame => 'Play game';
+
+  @override
+  String get gamesContinueGame => 'Continue game';
+
+  @override
+  String get gamesStartingGame => 'Starting…';
+
+  @override
+  String gameReplayLevel(int level) {
+    return 'Replay level $level';
+  }
+
+  @override
+  String gamePlayCurrentLevel(int level) {
+    return 'Play current level $level';
+  }
+
+  @override
+  String gamePlayLevel(int level) {
+    return 'Play Level $level';
+  }
+
+  @override
+  String get gameBadgeEarned => 'Badge earned';
+
+  @override
   String destinationTab(String destination) {
     return '$destination tab';
   }

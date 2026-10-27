@@ -86,6 +86,7 @@ void main() {
       final harness = await _pumpMap(tester, repository: repository);
       addTearDown(harness.dispose);
       await tester.pumpAndSettle();
+      final l10n = await AppLocalizations.delegate.load(const Locale('en'));
 
       final completed = find.byKey(const ValueKey('level-node-1'));
       expect(find.byKey(const ValueKey('level-completed-1')), findsOneWidget);
@@ -104,7 +105,9 @@ void main() {
 
       expect(find.byKey(const ValueKey('level-current-4')), findsOneWidget);
       expect(find.byKey(const ValueKey('play-current-level')), findsOneWidget);
-      expect(find.text('Play Level 4'), findsOneWidget);
+      expect(find.text(l10n.gamePlayLevel(4)), findsOneWidget);
+      expect(find.byTooltip(l10n.gameReplayLevel(1)), findsOneWidget);
+      expect(find.byTooltip(l10n.gamePlayCurrentLevel(4)), findsOneWidget);
 
       expect(find.byKey(const ValueKey('level-locked-5')), findsOneWidget);
       expect(
@@ -245,6 +248,7 @@ void main() {
     final harness = await _pumpMap(tester, repository: repository);
     addTearDown(harness.dispose);
     await tester.pumpAndSettle();
+    final l10n = await AppLocalizations.delegate.load(const Locale('en'));
 
     await _reveal(tester, const ValueKey('level-node-30'));
     expect(find.byKey(const ValueKey('level-node-30')), findsOneWidget);
@@ -260,7 +264,7 @@ void main() {
       ),
       findsOneWidget,
     );
-    expect(find.text('Badge earned'), findsOneWidget);
+    expect(find.text(l10n.gameBadgeEarned), findsOneWidget);
     expect(find.text('Choose difficulty'), findsNothing);
   });
 
@@ -290,6 +294,7 @@ void main() {
     );
     addTearDown(harness.dispose);
     await tester.pumpAndSettle();
+    final l10n = await AppLocalizations.delegate.load(const Locale('en'));
 
     expect(
       find.bySemanticsLabel(
@@ -305,8 +310,8 @@ void main() {
       find.bySemanticsLabel(RegExp(r'Level 5.*locked', caseSensitive: false)),
       findsOneWidget,
     );
-    expect(find.byTooltip('Replay level 1'), findsOneWidget);
-    expect(find.byTooltip('Play current level 4'), findsOneWidget);
+    expect(find.byTooltip(l10n.gameReplayLevel(1)), findsOneWidget);
+    expect(find.byTooltip(l10n.gamePlayCurrentLevel(4)), findsOneWidget);
     expect(tester.takeException(), isNull);
 
     await tester.drag(find.byType(Scrollable).first, const Offset(0, -1400));

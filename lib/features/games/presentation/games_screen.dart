@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/theme.dart';
+import '../../../l10n/l10n.dart';
 import '../../shell/presentation/studio_page.dart';
 import '../application/game_profiles_provider.dart';
 import '../domain/game_id.dart';
@@ -35,12 +36,6 @@ class GamesScreen extends ConsumerStatefulWidget {
 final class _GamesScreenState extends ConsumerState<GamesScreen> {
   final Set<GameId> _startingGames = <GameId>{};
 
-  bool _isActiveProfile(String profileId) {
-    final profiles = ref.read(gameProfilesProvider);
-    return profiles.hasValue &&
-        profiles.requireValue.activeProfileId == profileId;
-  }
-
   Future<void> _startGame(
     PlayerProfile profile,
     GameUiMetadata metadata,
@@ -55,11 +50,8 @@ final class _GamesScreenState extends ConsumerState<GamesScreen> {
         profileId: profile.id,
         gameId: metadata.gameId,
       );
-      // Let an already-requested durable profile switch settle before a stale
-      // resume can navigate with the previous player's launch.
-      await Future<void>.delayed(Duration.zero);
       if (!mounted) return;
-      if (!_isActiveProfile(profile.id)) {
+      if (!controller.isProfileLaunchCurrent(profile.id)) {
         if (profile.gameProgress[metadata.gameId]?.activeAttempt == null) {
           await controller.discardStaleNewAttempt(
             originalProfile: profile,
@@ -171,12 +163,12 @@ final class _FirstPlayerCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Create your player',
+          context.l10n.gamesCreatePlayerTitle,
           style: Theme.of(context).textTheme.titleLarge,
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
-          'Choose a local name before playing. Your levels, coins, scores, and badges stay with this player on this device.',
+          context.l10n.gamesCreatePlayerBody,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color: context.appColors.textSecondary,
           ),
@@ -188,7 +180,7 @@ final class _FirstPlayerCard extends StatelessWidget {
             showPlayerProfileDialog(context, requiredProfile: true),
           ),
           icon: const Icon(Icons.person_add_alt_1_rounded),
-          label: const Text('Create Player'),
+          label: Text(context.l10n.gamesCreatePlayerAction),
         ),
       ],
     ),
@@ -408,13 +400,16 @@ final class _GameCard extends StatelessWidget {
     final accent = _gameAccent(metadata.gameId);
     final badgeProgress = (completed % 20) / 20;
     final radius = BorderRadius.circular(AppRadii.large);
+    final actionLabel = resume
+        ? context.l10n.gamesContinueNamedGame(metadata.label)
+        : context.l10n.gamesPlayNamedGame(metadata.label);
     return Tooltip(
-      message: 'Play ${metadata.label}',
+      message: actionLabel,
       child: Semantics(
         key: ValueKey('play-${metadata.gameId.storageId}'),
         button: true,
         enabled: !starting && onPlay != null,
-        label: 'Play ${metadata.label}',
+        label: actionLabel,
         child: Material(
           key: ValueKey('game-card-${metadata.gameId.storageId}'),
           color: context.appColors.surface,
@@ -589,10 +584,10 @@ final class _GameCard extends StatelessWidget {
                         const SizedBox(width: 7),
                         Text(
                           starting
-                              ? 'Starting…'
+                              ? context.l10n.gamesStartingGame
                               : resume
-                              ? 'Continue game'
-                              : 'Play game',
+                              ? context.l10n.gamesContinueGame
+                              : context.l10n.gamesPlayGame,
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,

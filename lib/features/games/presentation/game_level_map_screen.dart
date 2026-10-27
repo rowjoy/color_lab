@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/theme.dart';
+import '../../../l10n/l10n.dart';
 import '../../shell/presentation/studio_page.dart';
 import '../application/game_profiles_provider.dart';
 import '../domain/game_id.dart';
@@ -464,9 +465,9 @@ final class _LevelNode extends StatelessWidget {
         ? context.appColors.primary
         : context.appColors.textSecondary;
     final actionTooltip = completed
-        ? 'Replay level $level'
+        ? context.l10n.gameReplayLevel(level)
         : current
-        ? 'Play current level $level'
+        ? context.l10n.gamePlayCurrentLevel(level)
         : null;
     final material = Material(
       color: current
@@ -551,7 +552,7 @@ final class _LevelNode extends StatelessWidget {
             left: 0,
             right: 0,
             child: Text(
-              current ? 'Play Level $level' : 'Level $level',
+              current ? context.l10n.gamePlayLevel(level) : 'Level $level',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
                 color: Colors.white,
@@ -611,7 +612,7 @@ final class _LevelNode extends StatelessWidget {
                   ),
                   if (badgeEarned)
                     Text(
-                      'Badge earned',
+                      context.l10n.gameBadgeEarned,
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w800,

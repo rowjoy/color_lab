@@ -98,6 +98,8 @@ final gameLeaderboardProvider = Provider.family<List<LeaderboardEntry>, GameId>(
 
 final class GameProfilesController extends AsyncNotifier<GameProfilesState> {
   Future<void> _pending = Future<void>.value();
+  int _activeProfileIntentRevision = 0;
+  String? _activeProfileIntentId;
 
   @override
   Future<GameProfilesState> build() async {
@@ -192,11 +194,28 @@ final class GameProfilesController extends AsyncNotifier<GameProfilesState> {
         engine.deleteProfile(state: current, profileId: profileId),
   );
 
-  Future<PlayerProfile> setActiveProfile({required String profileId}) =>
-      _transact(
-        (engine, current) =>
-            engine.setActiveProfile(state: current, profileId: profileId),
-      );
+  Future<PlayerProfile> setActiveProfile({required String profileId}) {
+    final revision = ++_activeProfileIntentRevision;
+    _activeProfileIntentId = profileId;
+    return _transact(
+      (engine, current) =>
+          engine.setActiveProfile(state: current, profileId: profileId),
+    ).whenComplete(() {
+      if (_activeProfileIntentRevision == revision) {
+        _activeProfileIntentId = null;
+      }
+    });
+  }
+
+  /// Whether a launch still belongs to both the durable active player and the
+  /// latest profile-switch intent. The intent is recorded synchronously, so a
+  /// queued switch cannot be missed while its durable write is still pending.
+  bool isProfileLaunchCurrent(String profileId) {
+    final profiles = state;
+    return profiles.hasValue &&
+        profiles.requireValue.activeProfileId == profileId &&
+        (_activeProfileIntentId == null || _activeProfileIntentId == profileId);
+  }
 
   Future<PlayerGameProgress> prepareGame({
     required String profileId,
@@ -225,30 +244,58 @@ final class GameProfilesController extends AsyncNotifier<GameProfilesState> {
     required GameId gameId,
   }) {
     final startedAt = _utcNow();
-    return _transact((engine, current) {
-      late ProgressionChange<PlayerGameProgress> prepared;
+    return _enqueue((repository, engine) async {
+      GameLaunch? proposedLaunch;
       try {
-        prepared = engine.prepareGame(
-          state: current,
-          profileId: profileId,
-          gameId: gameId,
-          initialBatchSize: 1,
-        );
-      } on GameProgressionException catch (error) {
-        final existing = current.profiles[profileId]?.gameProgress[gameId];
-        if (error.code != GameProgressionError.generationFailed ||
-            existing?.descriptors.containsKey(existing.currentLevel) != true) {
-          rethrow;
+        final change = await repository.transact<GameLaunch>((current) {
+          late ProgressionChange<PlayerGameProgress> prepared;
+          try {
+            prepared = engine.prepareGame(
+              state: current,
+              profileId: profileId,
+              gameId: gameId,
+              initialBatchSize: 1,
+            );
+          } on GameProgressionException catch (error) {
+            final existing = current.profiles[profileId]?.gameProgress[gameId];
+            if (error.code != GameProgressionError.generationFailed ||
+                existing?.descriptors.containsKey(existing.currentLevel) !=
+                    true) {
+              rethrow;
+            }
+            prepared = ProgressionChange(state: current, value: existing!);
+          }
+          final launch = engine.resumeOrBeginCurrentAttempt(
+            state: prepared.state,
+            profileId: profileId,
+            gameId: gameId,
+            startedAt: startedAt,
+          );
+          proposedLaunch = launch.value;
+          return ProgressionChange(state: launch.state, value: launch.value);
+        });
+        _ensureMounted();
+        state = AsyncData(change.state);
+        return change.value;
+      } on Object catch (error, stackTrace) {
+        final launch = proposedLaunch;
+        if (launch == null) {
+          Error.throwWithStackTrace(error, stackTrace);
         }
-        prepared = ProgressionChange(state: current, value: existing!);
+
+        late GameProfilesState durable;
+        try {
+          durable = await repository.loadState();
+        } on Object {
+          Error.throwWithStackTrace(error, stackTrace);
+        }
+        _ensureMounted();
+        if (!_stateContainsLaunch(durable, launch)) {
+          Error.throwWithStackTrace(error, stackTrace);
+        }
+        state = AsyncData(durable);
+        return launch;
       }
-      final launch = engine.resumeOrBeginCurrentAttempt(
-        state: prepared.state,
-        profileId: profileId,
-        gameId: gameId,
-        startedAt: startedAt,
-      );
-      return ProgressionChange(state: launch.state, value: launch.value);
     });
   }
 
@@ -270,24 +317,54 @@ final class GameProfilesController extends AsyncNotifier<GameProfilesState> {
 
     final originalProgress = originalProfile.gameProgress[launch.gameId];
     final currentProgress = currentProfile.gameProgress[launch.gameId];
+    final currentAttempt = currentProgress?.activeAttempt;
     final startedHere =
         originalProgress?.activeAttempt == null &&
-        currentProgress?.activeAttempt?.attemptId == launch.attemptId &&
+        currentAttempt?.attemptId == launch.attemptId &&
+        currentAttempt?.level == launch.descriptor.level &&
+        currentAttempt?.playKind == launch.playKind &&
+        currentAttempt?.descriptorFingerprint ==
+            launch.descriptor.fingerprint &&
+        currentProgress?.descriptors[launch.descriptor.level] ==
+            launch.descriptor &&
         currentProfile.gamesPlayed == originalProfile.gamesPlayed + 1 &&
         currentProgress!.attempts == (originalProgress?.attempts ?? 0) + 1 &&
-        currentProfile.coins == originalProfile.coins &&
-        currentProfile.gamesWon == originalProfile.gamesWon &&
-        currentProfile.bestScore == originalProfile.bestScore &&
-        currentProfile.badges.length == originalProfile.badges.length;
+        currentProgress.attemptSequence ==
+            (originalProgress?.attemptSequence ?? 0) + 1 &&
+        currentAttempt!.sequence == currentProgress.attemptSequence;
     if (!startedHere) {
       return ProgressionChange(state: current, value: currentProfile);
     }
 
+    final progress = currentProgress.copyWith(
+      attempts: originalProgress?.attempts ?? 0,
+      attemptSequence: originalProgress?.attemptSequence ?? 0,
+      activeAttempt: null,
+    );
+    final gameProgress = <GameId, PlayerGameProgress>{
+      ...currentProfile.gameProgress,
+      launch.gameId: progress,
+    };
+    final restoredProfile = currentProfile.copyWith(
+      gamesPlayed: currentProfile.gamesPlayed - 1,
+      gameProgress: gameProgress,
+    );
     final profiles = <String, PlayerProfile>{...current.profiles};
-    profiles[originalProfile.id] = originalProfile;
+    profiles[originalProfile.id] = restoredProfile;
     final restored = current.copyWith(profiles: profiles);
-    return ProgressionChange(state: restored, value: originalProfile);
+    return ProgressionChange(state: restored, value: restoredProfile);
   });
+
+  bool _stateContainsLaunch(GameProfilesState profiles, GameLaunch launch) {
+    final progress =
+        profiles.profiles[launch.profileId]?.gameProgress[launch.gameId];
+    final attempt = progress?.activeAttempt;
+    return attempt?.attemptId == launch.attemptId &&
+        attempt?.level == launch.descriptor.level &&
+        attempt?.playKind == launch.playKind &&
+        attempt?.descriptorFingerprint == launch.descriptor.fingerprint &&
+        progress?.descriptors[launch.descriptor.level] == launch.descriptor;
+  }
 
   Future<GameLaunch> beginCurrentAttempt({
     required String profileId,

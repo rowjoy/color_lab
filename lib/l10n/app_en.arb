@@ -137,6 +137,45 @@
   "@roomDestination": {"description": "Room navigation destination label."},
   "gamesDestination": "Games",
   "@gamesDestination": {"description": "Games navigation destination label."},
+  "gamesCreatePlayerTitle": "Create your player",
+  "@gamesCreatePlayerTitle": {"description": "Games empty-state heading shown before the first local player exists."},
+  "gamesCreatePlayerBody": "Choose a local name before playing. Your levels, coins, scores, and badges stay with this player on this device.",
+  "@gamesCreatePlayerBody": {"description": "Games empty-state explanation for device-local named player progress."},
+  "gamesCreatePlayerAction": "Create Player",
+  "@gamesCreatePlayerAction": {"description": "Action that opens required first-player creation."},
+  "gamesPlayNamedGame": "Play {game}",
+  "@gamesPlayNamedGame": {
+    "description": "Accessible action label for starting a named game.",
+    "placeholders": {"game": {"type": "String"}}
+  },
+  "gamesContinueNamedGame": "Continue {game}",
+  "@gamesContinueNamedGame": {
+    "description": "Accessible action label for resuming a named game.",
+    "placeholders": {"game": {"type": "String"}}
+  },
+  "gamesPlayGame": "Play game",
+  "@gamesPlayGame": {"description": "Visible action label for starting a game."},
+  "gamesContinueGame": "Continue game",
+  "@gamesContinueGame": {"description": "Visible action label for resuming a game."},
+  "gamesStartingGame": "Starting…",
+  "@gamesStartingGame": {"description": "Visible progress label while a game launch is being saved."},
+  "gameReplayLevel": "Replay level {level}",
+  "@gameReplayLevel": {
+    "description": "Accessible action label for replaying a completed level.",
+    "placeholders": {"level": {"type": "int"}}
+  },
+  "gamePlayCurrentLevel": "Play current level {level}",
+  "@gamePlayCurrentLevel": {
+    "description": "Accessible action label for starting the current level.",
+    "placeholders": {"level": {"type": "int"}}
+  },
+  "gamePlayLevel": "Play Level {level}",
+  "@gamePlayLevel": {
+    "description": "Visible label beneath the current level node.",
+    "placeholders": {"level": {"type": "int"}}
+  },
+  "gameBadgeEarned": "Badge earned",
+  "@gameBadgeEarned": {"description": "Visible label for an earned level milestone badge."},
   "destinationTab": "{destination} tab",
   "@destinationTab": {
     "description": "Accessibility label for a root navigation tab.",

@@ -473,6 +473,78 @@ abstract class AppLocalizations {
   /// **'Games'**
   String get gamesDestination;
 
+  /// Games empty-state heading shown before the first local player exists.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your player'**
+  String get gamesCreatePlayerTitle;
+
+  /// Games empty-state explanation for device-local named player progress.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a local name before playing. Your levels, coins, scores, and badges stay with this player on this device.'**
+  String get gamesCreatePlayerBody;
+
+  /// Action that opens required first-player creation.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Player'**
+  String get gamesCreatePlayerAction;
+
+  /// Accessible action label for starting a named game.
+  ///
+  /// In en, this message translates to:
+  /// **'Play {game}'**
+  String gamesPlayNamedGame(String game);
+
+  /// Accessible action label for resuming a named game.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue {game}'**
+  String gamesContinueNamedGame(String game);
+
+  /// Visible action label for starting a game.
+  ///
+  /// In en, this message translates to:
+  /// **'Play game'**
+  String get gamesPlayGame;
+
+  /// Visible action label for resuming a game.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue game'**
+  String get gamesContinueGame;
+
+  /// Visible progress label while a game launch is being saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting…'**
+  String get gamesStartingGame;
+
+  /// Accessible action label for replaying a completed level.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay level {level}'**
+  String gameReplayLevel(int level);
+
+  /// Accessible action label for starting the current level.
+  ///
+  /// In en, this message translates to:
+  /// **'Play current level {level}'**
+  String gamePlayCurrentLevel(int level);
+
+  /// Visible label beneath the current level node.
+  ///
+  /// In en, this message translates to:
+  /// **'Play Level {level}'**
+  String gamePlayLevel(int level);
+
+  /// Visible label for an earned level milestone badge.
+  ///
+  /// In en, this message translates to:
+  /// **'Badge earned'**
+  String get gameBadgeEarned;
+
   /// Accessibility label for a root navigation tab.
   ///
   /// In en, this message translates to:
