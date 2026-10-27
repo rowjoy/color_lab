@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use_from_same_package
+
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -493,7 +495,7 @@ class RoomMaskController extends Notifier<RoomMaskState> {
         oldAi: draft.aiMasks,
         current: draft.masks,
         nextAi: result.masks,
-        history: draft.history,
+        history: draft.legacyHistory,
       ));
       if (!currentDraft()) return false;
       state = state.copyWith(
@@ -505,6 +507,7 @@ class RoomMaskController extends Notifier<RoomMaskState> {
           photo: draft.photo,
           aiMasks: result.masks,
           masks: merged.masks,
+          intent: draft.intent,
           history: merged.history,
           maskRevision: revision + 1,
           changedFromAiCount: merged.changedFromAiCount,
@@ -599,6 +602,7 @@ class RoomMaskController extends Notifier<RoomMaskState> {
         photo: draft.photo,
         aiMasks: draft.aiMasks,
         masks: draft.masks,
+        intent: draft.intent,
         history: draft.history,
         maskRevision: draft.maskRevision,
         changedFromAiCount: draft.changedFromAiCount,
@@ -695,7 +699,7 @@ class RoomMaskController extends Notifier<RoomMaskState> {
           .undo(
             current: draft.masks,
             ai: draft.aiMasks,
-            command: draft.history.last!,
+            command: draft.legacyHistory.last!,
           ),
     );
   }
@@ -714,14 +718,25 @@ class RoomMaskController extends Notifier<RoomMaskState> {
       final result = await work();
       if (!currentDraft() || selection != _editSelection) return false;
       if (!undo && result.undo == null) return false;
+      final transition = undo
+          ? draft.history.undo(masks: draft.masks, intent: draft.intent)
+          : null;
       final next = RoomMaskDraft(
         photoId: draft.photoId,
         photo: draft.photo,
         aiMasks: draft.aiMasks,
         masks: result.masks,
-        history: undo
-            ? draft.history.withoutLast()
-            : draft.history.push(result.undo!),
+        intent: transition?.result.intent ?? draft.intent,
+        history:
+            transition?.history ??
+            draft.history.push(
+              completeLegacyMaskUndo(
+                command: result.undo!,
+                before: draft.masks,
+                after: result.masks,
+                intent: draft.intent,
+              ),
+            ),
         maskRevision: draft.maskRevision + 1,
         changedFromAiCount: result.changedFromAiCount,
         colors: draft.colors,

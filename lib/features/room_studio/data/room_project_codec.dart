@@ -7,6 +7,8 @@ import 'package:image/image.dart' as img;
 import '../../../core/color/color_models.dart';
 import '../domain/room_layer_colors.dart';
 import '../domain/mask_intent_bitmap.dart';
+import '../domain/mask_edit_history.dart';
+import 'mask_edit_history_codec.dart';
 import '../domain/room_project.dart';
 
 final class RoomProjectAssetReference {
@@ -135,6 +137,10 @@ final class RoomProjectCodec {
         'aiMask': asset(snapshot.aiMaskBytes, 'mask'),
         'mask': asset(snapshot.maskBytes, 'mask'),
         'intent': asset(snapshot.intent.bytes, 'intent.bin'),
+        'history': asset(
+          MaskEditHistoryCodec.encode(snapshot.history),
+          'history.bin',
+        ),
         'thumbnail': asset(snapshot.thumbnailPng, 'png'),
       },
     };
@@ -236,12 +242,18 @@ final class RoomProjectCodec {
       final created = _date(data['createdAt']);
       final updated = _date(data['updatedAt']);
       if (updated.isBefore(created)) _invalid();
-      final rawAssets = _map(data['assets'], {
+      final rawAssetMap = data['assets'];
+      final hasHistory =
+          version == 2 &&
+          rawAssetMap is Map<String, dynamic> &&
+          rawAssetMap.containsKey('history');
+      final rawAssets = _map(rawAssetMap, {
         'photo',
         'aiMask',
         'mask',
         'thumbnail',
         if (version == 2) 'intent',
+        if (hasHistory) 'history',
       });
       final assets = <String, RoomProjectAssetReference?>{};
       for (final key in rawAssets.keys) {
@@ -258,12 +270,20 @@ final class RoomProjectCodec {
         );
         final isMask = key == 'aiMask' || key == 'mask';
         final isIntent = key == 'intent';
+        final isHistory = key == 'history';
+        if (isHistory &&
+            (length < MaskEditHistoryCodec.headerBytes ||
+                length > MaskEditHistoryCodec.maxEncodedBytes)) {
+          _invalid();
+        }
         if ((isMask || isIntent) && length != width * height) _invalid();
         final hash = raw['sha256'];
         if (hash is! String || !RegExp(r'^[a-f0-9]{64}$').hasMatch(hash)) {
           _invalid();
         }
-        final suffix = isIntent ? 'intent.bin' : (isMask ? 'mask' : 'png');
+        final suffix = isHistory
+            ? 'history.bin'
+            : (isIntent ? 'intent.bin' : (isMask ? 'mask' : 'png'));
         final path = 'assets/$hash.$suffix';
         if (raw['path'] != path) _invalid();
         assets[key] = RoomProjectAssetReference(
@@ -348,6 +368,16 @@ final class RoomProjectCodec {
                   height: manifest.height,
                   bytes: verified('intent'),
                 ),
+          history: manifest.assets.containsKey('history')
+              ? MaskEditHistoryCodec.decode(
+                  verified('history'),
+                  width: manifest.width,
+                  height: manifest.height,
+                )
+              : MaskEditHistory.empty(
+                  width: manifest.width,
+                  height: manifest.height,
+                ),
           maskRevision: manifest.maskRevision,
           colorRevision: manifest.colorRevision,
           variants: manifest.variants,
@@ -360,6 +390,8 @@ final class RoomProjectCodec {
         thumbnailUnavailable: thumbnailUnavailable,
       );
     } on ArgumentError {
+      _invalid();
+    } on StateError {
       _invalid();
     }
   }

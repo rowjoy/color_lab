@@ -2,6 +2,8 @@ import 'dart:typed_data';
 
 import 'room_layer_colors.dart';
 import 'mask_intent_bitmap.dart';
+import 'mask_bitmap.dart';
+import 'mask_edit_history.dart';
 
 /// Room project bounds apply before copying pixels or reading untrusted assets.
 abstract final class RoomProjectLimits {
@@ -209,6 +211,7 @@ final class RoomProjectSnapshot {
     required Uint8List aiMaskBytes,
     required Uint8List maskBytes,
     MaskIntentBitmap? intent,
+    MaskEditHistory? history,
     required int maskRevision,
     required int colorRevision,
     required List<RoomColorVariant> variants,
@@ -254,6 +257,14 @@ final class RoomProjectSnapshot {
         'Invalid Room project dimensions, identity, or metadata.',
       );
     }
+    final alignedIntent =
+        intent ?? MaskIntentBitmap.untouched(width: width, height: height);
+    final alignedHistory =
+        history ?? MaskEditHistory.empty(width: width, height: height);
+    alignedHistory.validateAgainst(
+      masks: MaskBitmap(width: width, height: height, labels: maskBytes),
+      intent: alignedIntent,
+    );
     return RoomProjectSnapshot._(
       projectId,
       photoId,
@@ -264,7 +275,8 @@ final class RoomProjectSnapshot {
       Uint8List.fromList(photoPng).asUnmodifiableView(),
       Uint8List.fromList(aiMaskBytes).asUnmodifiableView(),
       Uint8List.fromList(maskBytes).asUnmodifiableView(),
-      intent ?? MaskIntentBitmap.untouched(width: width, height: height),
+      alignedIntent,
+      alignedHistory,
       maskRevision,
       colorRevision,
       List.unmodifiable(variants),
@@ -289,6 +301,7 @@ final class RoomProjectSnapshot {
     this.aiMaskBytes,
     this.maskBytes,
     this.intent,
+    this.history,
     this.maskRevision,
     this.colorRevision,
     this.variants,
@@ -310,6 +323,7 @@ final class RoomProjectSnapshot {
   final Uint8List aiMaskBytes;
   final Uint8List maskBytes;
   final MaskIntentBitmap intent;
+  final MaskEditHistory history;
   final int maskRevision;
   final int colorRevision;
   final List<RoomColorVariant> variants;
@@ -334,6 +348,7 @@ final class RoomProjectSnapshot {
     Uint8List? aiMaskBytes,
     Uint8List? maskBytes,
     MaskIntentBitmap? intent,
+    MaskEditHistory? history,
     int? maskRevision,
     int? colorRevision,
     List<RoomColorVariant>? variants,
@@ -353,6 +368,7 @@ final class RoomProjectSnapshot {
     aiMaskBytes: aiMaskBytes ?? this.aiMaskBytes,
     maskBytes: maskBytes ?? this.maskBytes,
     intent: intent ?? this.intent,
+    history: history ?? this.history,
     maskRevision: maskRevision ?? this.maskRevision,
     colorRevision: colorRevision ?? this.colorRevision,
     variants: variants ?? this.variants,

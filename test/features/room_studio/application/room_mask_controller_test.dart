@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use_from_same_package
+
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -1524,7 +1526,7 @@ void main() {
   );
 
   test(
-    'byte budget eviction leaves dirty pixels after all retained undo is spent',
+    'over-budget exact commands retain visible pixels with no partial undo',
     () async {
       final h = Harness();
       h.picker.next = PreparedPhoto(
@@ -1563,18 +1565,18 @@ void main() {
         );
       }
       final draft = h.state.draft!;
-      expect(draft.history.commands.length, 1);
-      expect(draft.history.byteLength, 12800000);
+      expect(draft.history.commands, isEmpty);
+      expect(draft.history.byteLength, 0);
       expect(
         await h.controller.undo(
           photoId: draft.photoId,
           maskRevision: draft.maskRevision,
         ),
-        isTrue,
+        isFalse,
       );
       expect(h.state.draft!.history.canUndo, isFalse);
       expect(h.state.draft!.changedFromAiCount, 2560000);
-      expect(h.state.draft!.masks.count(RoomLayer.wall), 2560000);
+      expect(h.state.draft!.masks.count(RoomLayer.floor), 2560000);
       expect(h.state.draft!.hasEdits, isTrue);
     },
   );

@@ -9,7 +9,7 @@ import 'package:image/image.dart' as img;
 import '../../picker/domain/prepared_photo.dart';
 import '../data/room_project_codec.dart';
 import '../domain/mask_bitmap.dart';
-import '../domain/mask_undo.dart';
+import '../domain/mask_edit_history.dart';
 import '../domain/room_mask_state.dart';
 import '../domain/room_project.dart';
 import '../domain/room_project_repository.dart';
@@ -128,7 +128,10 @@ class RoomProjectSessionController extends Notifier<RoomProjectSession?> {
         photo: candidate.photo,
         aiMasks: empty,
         masks: empty,
-        history: MaskUndoHistory(),
+        history: MaskEditHistory.empty(
+          width: candidate.photo.width,
+          height: candidate.photo.height,
+        ),
         maskRevision: 0,
         changedFromAiCount: 0,
         manualMode: true,
@@ -282,6 +285,8 @@ class RoomProjectSessionController extends Notifier<RoomProjectSession?> {
           thumbnailPng: assets.thumbnail,
           aiMaskBytes: intent.draft.aiMasks.labels,
           maskBytes: intent.draft.masks.labels,
+          intent: intent.draft.intent,
+          history: intent.draft.history,
           maskRevision: intent.draft.maskRevision,
           colorRevision: intent.draft.colorRevision,
           variants: intent.variants.variants,
@@ -297,6 +302,8 @@ class RoomProjectSessionController extends Notifier<RoomProjectSession?> {
         name: intent.name,
         aiMaskBytes: intent.draft.aiMasks.labels,
         maskBytes: intent.draft.masks.labels,
+        intent: intent.draft.intent,
+        history: intent.draft.history,
         maskRevision: intent.draft.maskRevision,
         colorRevision: intent.draft.colorRevision,
         variants: intent.variants.variants,
@@ -598,7 +605,8 @@ RoomMaskDraft _reopenDraft(RoomProjectSnapshot snapshot) {
       height: snapshot.height,
       labels: snapshot.maskBytes,
     ),
-    history: MaskUndoHistory(),
+    intent: snapshot.intent,
+    history: snapshot.history,
     maskRevision: snapshot.maskRevision,
     colorRevision: snapshot.colorRevision,
     changedFromAiCount: changed,

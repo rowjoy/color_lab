@@ -13,6 +13,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../support/room_project_fixtures.dart';
 import '../../support/frozen_room_project_fixtures.dart';
+import '../../support/mask_edit_fixtures.dart';
+import 'package:color_lab/features/room_studio/domain/mask_bitmap.dart';
 
 final class _FaultIo extends RoomProjectFileIo {
   bool failBeforePointer = false;
@@ -221,7 +223,7 @@ void main() {
         }
         expect(
           await Directory('$base/assets').list().length,
-          priorAssets.length + 1,
+          priorAssets.length + 2,
         );
         expect(saved.revision, before.acknowledgedRevision + 1);
         expect(saved.projectId, before.snapshot.projectId);
@@ -418,6 +420,148 @@ void main() {
       expect(await orphanFile.exists(), isFalse);
     },
   );
+
+  test(
+    'new acknowledged revisions own history assets and legacy v1 remains untouched',
+    () async {
+      await repository.close();
+      await copyFrozenRooms(root);
+      repository = await open();
+      final before = (await repository.read('v1-healthy'))!;
+      final dynamic snapshot = before.snapshot;
+      expect(() => snapshot.history, returnsNormally);
+      expect(snapshot.history.undoStack, isEmpty);
+      final saved = await repository.save(before.snapshot, expectedRevision: 3);
+      final manifest = jsonDecode(
+        await File(
+          '${projectPath('v1-healthy')}/revisions/${saved.revision}/manifest.json',
+        ).readAsString(),
+      );
+      expect(manifest['assets'].containsKey('history'), isTrue);
+      await reopen();
+      final dynamic reopened = (await repository.read('v1-healthy'))!.snapshot;
+      expect(reopened.history.redoStack, isEmpty);
+      await frozenRoomFiles();
+    },
+  );
+
+  test(
+    'repository reopen preserves exact durable undo and redo stacks and collects unreferenced history',
+    () async {
+      final source = maskHistoryProjectFixture(revision: 0);
+      final saved = await repository.save(source, expectedRevision: 0);
+      await reopen();
+      final reopened = (await repository.read('project-1'))!.snapshot;
+      expect(reopened.history.byteLength, 16);
+      final masks = MaskBitmap(width: 2, height: 2, labels: reopened.maskBytes);
+      final undo = reopened.history.undo(masks: masks, intent: reopened.intent);
+      expect(undo.result.masks.labels, [1, 2, 3, 4]);
+      expect(undo.result.intent.bytes, [0, 0, 0, 0]);
+      final second = await repository.save(
+        reopened.copyWith(
+          maskBytes: undo.result.masks.labels,
+          intent: undo.result.intent,
+          history: undo.history,
+        ),
+        expectedRevision: 1,
+      );
+      await reopen();
+      final twice = (await repository.read('project-1'))!.snapshot;
+      expect(twice.history.undoStack, isEmpty);
+      expect(twice.history.redoStack, hasLength(2));
+      final redo = twice.history.redo(
+        masks: MaskBitmap(width: 2, height: 2, labels: twice.maskBytes),
+        intent: twice.intent,
+      );
+      expect(redo.result.masks.labels, saved.maskBytes);
+      expect(redo.result.intent.bytes, saved.intent.bytes);
+      expect(second.createdAt, source.createdAt);
+      expect(second.updatedAt, source.updatedAt);
+      final fake = Uint8List.fromList([84, 65, 69, 72, 1]);
+      final orphan = File(
+        '${projectPath()}/assets/${sha256.convert(fake)}.history.bin',
+      );
+      await orphan.writeAsBytes(fake);
+      await reopen();
+      expect(await orphan.exists(), isFalse);
+    },
+  );
+
+  for (final corruption in ['missing', 'trailing', 'oversized']) {
+    test(
+      'corrupt $corruption history quarantines only its revision and next save uses acknowledged CAS',
+      () async {
+        await saveFirst();
+        final source = maskHistoryProjectFixture();
+        await repository.save(source, expectedRevision: 1);
+        io.failBeforePointer = true;
+        await expectLater(
+          repository.save(source.copyWith(name: 'Orphan'), expectedRevision: 2),
+          throwsA(isA<RoomProjectStorageException>()),
+        );
+        io.failBeforePointer = false;
+        final base = projectPath();
+        final file = File('$base/revisions/2/manifest.json');
+        final manifest =
+            jsonDecode(await file.readAsString()) as Map<String, dynamic>;
+        final reference = manifest['assets']['history'];
+        if (corruption == 'missing') {
+          await File('$base/${reference['path']}').delete();
+        } else {
+          final old = await File('$base/${reference['path']}').readAsBytes();
+          final bad = Uint8List.fromList(
+            corruption == 'trailing' ? [...old, 0] : old,
+          );
+          if (corruption == 'oversized') {
+            ByteData.sublistView(bad).setUint32(24, 16777224);
+          }
+          final hash = sha256.convert(bad).toString();
+          final path = 'assets/$hash.history.bin';
+          await File('$base/$path').writeAsBytes(bad);
+          manifest['assets']['history'] = <String, dynamic>{
+            'path': path,
+            'length': bad.length,
+            'sha256': hash,
+          };
+          final encoded = utf8.encode(jsonEncode(manifest));
+          await file.writeAsBytes(encoded);
+          final pointerFile = File('$base/current');
+          final pointer = jsonDecode(await pointerFile.readAsString());
+          pointer['ancestry'][0]['manifestSha256'] = sha256
+              .convert(encoded)
+              .toString();
+          pointer.remove('checksum');
+          pointer['checksum'] = sha256
+              .convert(utf8.encode(jsonEncode(pointer)))
+              .toString();
+          await pointerFile.writeAsString(jsonEncode(pointer));
+        }
+        final before = await File('$base/current').readAsBytes();
+        await reopen();
+        final recovered = (await repository.read('project-1'))!;
+        expect(recovered.snapshot.revision, 1);
+        expect(recovered.acknowledgedRevision, 2);
+        expect(recovered.warning!.rejectedRevisions, [2]);
+        expect(recovered.snapshot.history.canUndo, isFalse);
+        expect(recovered.snapshot.history.canRedo, isFalse);
+        expect(await File('$base/current').readAsBytes(), before);
+        expect(await Directory('$base/revisions/3').exists(), isFalse);
+        expect(await File('$base/quarantine/revision-2.json').exists(), isTrue);
+        expect((await repository.listSnapshot()).records, hasLength(1));
+        await expectLater(
+          repository.save(recovered.snapshot, expectedRevision: 1),
+          throwsA(isA<RoomProjectConflict>()),
+        );
+        expect(
+          (await repository.save(
+            recovered.snapshot,
+            expectedRevision: 2,
+          )).revision,
+          3,
+        );
+      },
+    );
+  }
 
   for (final phase in [
     'asset-write',

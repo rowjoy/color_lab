@@ -9,6 +9,9 @@ import 'package:color_lab/features/room_studio/domain/mask_intent_bitmap.dart';
 
 import '../../../support/room_project_fixtures.dart';
 import '../../../support/frozen_room_project_fixtures.dart';
+import '../../../support/mask_edit_fixtures.dart';
+import 'package:color_lab/features/room_studio/domain/mask_bitmap.dart';
+import 'package:color_lab/features/room_studio/data/mask_edit_history_codec.dart';
 
 void main() {
   const codec = RoomProjectCodec();
@@ -179,7 +182,7 @@ void main() {
       missing['assets'].remove('intent');
       expect(() => codec.readManifest(bytes(missing)), throwsFormatException);
       final extra = v2();
-      extra['assets']['history'] = [];
+      extra['assets']['futureHistory'] = [];
       expect(() => codec.readManifest(bytes(extra)), throwsFormatException);
       for (final key in ['length', 'path', 'sha256']) {
         for (final value
@@ -232,6 +235,266 @@ void main() {
             ...assets,
             path: invalid,
           }),
+          throwsFormatException,
+        );
+      }
+    },
+  );
+
+  test(
+    'v2 writer persists bounded deterministic history as a required asset',
+    () {
+      final encoded = codec.encode(roomProjectFixture(revision: 1));
+      final data = jsonDecode(utf8.decode(encoded.manifestBytes));
+      expect(data['assets'].containsKey('history'), isTrue);
+      final reference = data['assets']['history'];
+      expect(reference['path'], endsWith('.history.bin'));
+      expect(reference['length'], 28);
+      expect(encoded.assets[reference['path']], [
+        84,
+        65,
+        69,
+        72,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+      ]);
+    },
+  );
+
+  test(
+    'v1 and Task 1 transitional v2 migrate to empty history and new v2 reopens both stacks exactly',
+    () async {
+      final files = await frozenRoomFiles();
+      final source = files['projects/v1-manual/revisions/1/manifest.json']!;
+      final old = codec.decode(codec.readManifest(source), {
+        for (final entry in files.entries)
+          if (entry.key.startsWith('projects/v1-manual/assets/'))
+            entry.key.substring('projects/v1-manual/'.length): entry.value,
+      }).snapshot;
+      expect(old.history.undoStack, isEmpty);
+      expect(old.history.redoStack, isEmpty);
+      final encoded = codec.encode(maskHistoryProjectFixture());
+      final data =
+          jsonDecode(utf8.decode(encoded.manifestBytes))
+              as Map<String, dynamic>;
+      final ref = data['assets']['history'];
+      expect(ref['length'], 68);
+      expect(
+        ref['path'],
+        'assets/${sha256.convert(encoded.assets[ref['path']]!)}.history.bin',
+      );
+      expect(
+        codec.encode(maskHistoryProjectFixture()).manifestBytes,
+        encoded.manifestBytes,
+      );
+      final decoded = codec
+          .decode(codec.readManifest(encoded.manifestBytes), encoded.assets)
+          .snapshot;
+      expect(decoded.history.undoStack, hasLength(1));
+      expect(decoded.history.redoStack, hasLength(1));
+      expect(decoded.history.byteLength, 16);
+      final undone = decoded.history.undo(
+        masks: MaskBitmap(width: 2, height: 2, labels: decoded.maskBytes),
+        intent: decoded.intent,
+      );
+      expect(undone.result.masks.labels, [1, 2, 3, 4]);
+      expect(undone.result.intent.bytes, [0, 0, 0, 0]);
+      final redo = decoded.history.redo(
+        masks: MaskBitmap(width: 2, height: 2, labels: decoded.maskBytes),
+        intent: decoded.intent,
+      );
+      expect(redo.result.masks.labels, [4, 0, 3, 4]);
+      expect(redo.result.intent.bytes, [5, 1, 0, 0]);
+      data['assets'].remove('history');
+      final transitional = codec
+          .decode(codec.readManifest(bytes(data)), encoded.assets)
+          .snapshot;
+      expect(transitional.history.undoStack, isEmpty);
+      expect(transitional.history.redoStack, isEmpty);
+      expect(transitional.maskBytes, [4, 2, 3, 4]);
+      expect(transitional.intent.bytes, [5, 0, 0, 0]);
+      final rewritten = jsonDecode(
+        utf8.decode(codec.encode(transitional).manifestBytes),
+      );
+      expect(rewritten['assets'].containsKey('history'), isTrue);
+      final v1 = jsonDecode(utf8.decode(source)) as Map<String, dynamic>;
+      v1['assets']['history'] = ref;
+      expect(() => codec.readManifest(bytes(v1)), throwsFormatException);
+    },
+  );
+
+  test(
+    'history binary fails closed on magic, version, bounds, deltas, ordering, truncation and trailing bytes',
+    () {
+      final encoded = codec.encode(maskHistoryProjectFixture());
+      final original =
+          jsonDecode(utf8.decode(encoded.manifestBytes))
+              as Map<String, dynamic>;
+      final valid = encoded.assets[original['assets']['history']['path']]!;
+      final cases = <Uint8List>[];
+      void mutate(void Function(Uint8List, ByteData) change) {
+        final copy = Uint8List.fromList(valid);
+        change(copy, ByteData.sublistView(copy));
+        cases.add(copy);
+      }
+
+      mutate((b, d) => b[0] = 0);
+      mutate((b, d) => d.setUint16(4, 2));
+      mutate((b, d) => d.setUint16(6, 1));
+      mutate((b, d) => d.setUint32(8, 1));
+      mutate((b, d) => d.setUint32(16, 21));
+      mutate((b, d) => d.setUint32(24, 16777224));
+      mutate((b, d) => d.setUint32(28, 1));
+      mutate((b, d) => d.setUint32(36, 0));
+      mutate((b, d) => d.setUint32(36, 0xffffffff));
+      mutate((b, d) => d.setUint32(40, 4));
+      mutate((b, d) => b[44] = 5);
+      mutate((b, d) => b[45] = 255);
+      mutate((b, d) => b[46] = 6);
+      mutate((b, d) => b[47] = 255);
+      mutate((b, d) {
+        b[44] = b[45];
+        b[46] = b[47];
+      });
+      mutate((b, d) {
+        d.setUint32(16, 2);
+        d.setUint32(20, 0);
+      });
+      mutate((b, d) {
+        d.setUint32(16, 0);
+        d.setUint32(20, 2);
+      });
+      cases.add(Uint8List.fromList(valid.sublist(0, valid.length - 1)));
+      cases.add(Uint8List.fromList([...valid, 0]));
+      cases.add(Uint8List(0));
+      cases.add(Uint8List(27));
+      for (var i = 0; i < cases.length; i++) {
+        final data =
+            jsonDecode(utf8.decode(encoded.manifestBytes))
+                as Map<String, dynamic>;
+        final bad = cases[i];
+        final hash = sha256.convert(bad).toString();
+        final path = 'assets/$hash.history.bin';
+        data['assets']['history'] = <String, dynamic>{
+          'path': path,
+          'length': bad.length,
+          'sha256': hash,
+        };
+        expect(
+          () => codec.decode(codec.readManifest(bytes(data)), {
+            ...encoded.assets,
+            path: bad,
+          }),
+          throwsFormatException,
+          reason: 'binary case $i',
+        );
+      }
+    },
+  );
+
+  test(
+    'history references verify exact path, digest, bounded length and data presence',
+    () {
+      final encoded = codec.encode(maskHistoryProjectFixture());
+      Map<String, dynamic> data() =>
+          jsonDecode(utf8.decode(encoded.manifestBytes))
+              as Map<String, dynamic>;
+      for (final bad in [
+        null,
+        1,
+        <String, dynamic>{},
+        <String, dynamic>{...data()['assets']['history'], 'extra': true},
+      ]) {
+        final changed = data();
+        changed['assets']['history'] = bad;
+        expect(() => codec.readManifest(bytes(changed)), throwsFormatException);
+      }
+      for (final entry in <(String, Object?)>[
+        ('length', 0),
+        ('length', 27),
+        ('length', 16777485),
+        ('length', 68.0),
+        ('path', '../history.bin'),
+        ('path', 'assets/${'a' * 64}.history.bin'),
+        ('sha256', 'A' * 64),
+      ]) {
+        final changed = data();
+        changed['assets']['history'][entry.$1] = entry.$2;
+        expect(() => codec.readManifest(bytes(changed)), throwsFormatException);
+      }
+      final parsed = codec.readManifest(encoded.manifestBytes);
+      final path = data()['assets']['history']['path'] as String;
+      expect(
+        () => codec.decode(
+          parsed,
+          Map<String, Uint8List>.of(encoded.assets)..remove(path),
+        ),
+        throwsFormatException,
+      );
+      expect(
+        () => codec.decode(parsed, {...encoded.assets, path: Uint8List(68)}),
+        throwsFormatException,
+      );
+    },
+  );
+
+  test(
+    'binary decode rejects unsorted and duplicate indices in a multi-pixel record',
+    () {
+      final valid = Uint8List(56);
+      valid.setRange(0, 4, [84, 65, 69, 72]);
+      final data = ByteData.sublistView(valid);
+      data.setUint16(4, 1);
+      data.setUint32(8, 2);
+      data.setUint32(12, 2);
+      data.setUint32(16, 1);
+      data.setUint32(24, 16);
+      data.setUint32(28, 2);
+      data.setUint32(32, 2);
+      data.setUint32(36, 2);
+      data.setUint32(40, 0);
+      data.setUint32(44, 2);
+      valid.setRange(48, 56, [1, 3, 4, 2, 0, 0, 5, 3]);
+      expect(
+        MaskEditHistoryCodec.decode(
+          valid,
+          width: 2,
+          height: 2,
+        ).undoStack.single.indices,
+        [0, 2],
+      );
+      for (final indices in [
+        [2, 0],
+        [0, 0],
+      ]) {
+        final bad = Uint8List.fromList(valid);
+        final view = ByteData.sublistView(bad);
+        view.setUint32(40, indices[0]);
+        view.setUint32(44, indices[1]);
+        expect(
+          () => MaskEditHistoryCodec.decode(bad, width: 2, height: 2),
           throwsFormatException,
         );
       }

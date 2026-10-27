@@ -1,7 +1,11 @@
+// ignore_for_file: deprecated_member_use_from_same_package
+
 import 'package:flutter/foundation.dart';
 
 import '../../picker/domain/prepared_photo.dart';
 import 'mask_bitmap.dart';
+import 'mask_edit_history.dart';
+import 'mask_intent_bitmap.dart';
 import 'mask_undo.dart';
 import 'room_layer.dart';
 import 'room_layer_colors.dart';
@@ -42,17 +46,38 @@ final class RoomMaskDraft {
     required this.photo,
     required this.aiMasks,
     required this.masks,
-    required this.history,
+    required Object history,
+    MaskIntentBitmap? intent,
     required this.maskRevision,
     required this.changedFromAiCount,
     this.colors = const RoomLayerColors(),
     this.colorRevision = 0,
     this.manualMode = false,
-  }) {
+  }) : intent =
+           intent ??
+           MaskIntentBitmap.untouched(width: masks.width, height: masks.height),
+       history = history is MaskEditHistory
+           ? history
+           : history is MaskUndoHistory
+           ? completeLegacyMaskHistory(
+               history: history,
+               masks: masks,
+               intent:
+                   intent ??
+                   MaskIntentBitmap.untouched(
+                     width: masks.width,
+                     height: masks.height,
+                   ),
+             )
+           : throw ArgumentError(
+               'An edit history or deprecated legacy adapter is required.',
+             ) {
     if (aiMasks.width != photo.width ||
         aiMasks.height != photo.height ||
         masks.width != photo.width ||
         masks.height != photo.height ||
+        this.intent.width != photo.width ||
+        this.intent.height != photo.height ||
         maskRevision < 0 ||
         colorRevision < 0 ||
         changedFromAiCount < 0 ||
@@ -61,13 +86,18 @@ final class RoomMaskDraft {
         'Aligned masks and valid revision/dirty count required',
       );
     }
+    this.history.validateAgainst(masks: masks, intent: this.intent);
   }
 
   final String photoId;
   final PreparedPhoto photo;
   final MaskBitmap aiMasks;
   final MaskBitmap masks;
-  final MaskUndoHistory history;
+  final MaskEditHistory history;
+  final MaskIntentBitmap intent;
+
+  /// Deprecated adapter for the old refresh/refinement producers, never persisted.
+  MaskUndoHistory get legacyHistory => MaskUndoHistory.fromEditHistory(history);
   final int maskRevision;
   final int changedFromAiCount;
   final RoomLayerColors colors;
@@ -78,6 +108,31 @@ final class RoomMaskDraft {
 
   bool get hasEdits => changedFromAiCount > 0;
 
+  RoomMaskDraft copyWith({
+    PreparedPhoto? photo,
+    MaskBitmap? aiMasks,
+    MaskBitmap? masks,
+    MaskIntentBitmap? intent,
+    MaskEditHistory? history,
+    int? maskRevision,
+    int? changedFromAiCount,
+    RoomLayerColors? colors,
+    int? colorRevision,
+    bool? manualMode,
+  }) => RoomMaskDraft(
+    photoId: photoId,
+    photo: photo ?? this.photo,
+    aiMasks: aiMasks ?? this.aiMasks,
+    masks: masks ?? this.masks,
+    intent: intent ?? this.intent,
+    history: history ?? this.history,
+    maskRevision: maskRevision ?? this.maskRevision,
+    changedFromAiCount: changedFromAiCount ?? this.changedFromAiCount,
+    colors: colors ?? this.colors,
+    colorRevision: colorRevision ?? this.colorRevision,
+    manualMode: manualMode ?? this.manualMode,
+  );
+
   RoomMaskDraft withColors(RoomLayerColors next) => next == colors
       ? this
       : RoomMaskDraft(
@@ -86,6 +141,7 @@ final class RoomMaskDraft {
           aiMasks: aiMasks,
           masks: masks,
           history: history,
+          intent: intent,
           maskRevision: maskRevision,
           changedFromAiCount: changedFromAiCount,
           colors: next,

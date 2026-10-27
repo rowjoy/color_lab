@@ -1,6 +1,10 @@
+// ignore_for_file: deprecated_member_use_from_same_package
+
 import 'dart:typed_data';
 
 import 'package:color_lab/features/room_studio/domain/mask_undo.dart';
+import 'package:color_lab/features/room_studio/domain/mask_bitmap.dart';
+import 'package:color_lab/features/room_studio/domain/mask_intent_bitmap.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 MaskUndoCommand command(int marker) => MaskUndoCommand(
@@ -155,4 +159,40 @@ void main() {
     expect(history.byteLength, 0);
     expect(history.canUndo, isFalse);
   });
+  test(
+    'deprecated legacy adapter reconstructs exact label history without inventing intent',
+    () {
+      final masks = MaskBitmap(
+        width: 3,
+        height: 1,
+        labels: Uint8List.fromList([4, 2, 3]),
+      );
+      final intent = MaskIntentBitmap.fromBytes(
+        width: 3,
+        height: 1,
+        bytes: Uint8List.fromList([0, 1, 5]),
+      );
+      final old = MaskUndoHistory().push(
+        MaskUndoCommand(
+          width: 3,
+          height: 1,
+          indices: Uint32List.fromList([0]),
+          previousLabels: Uint8List.fromList([1]),
+        ),
+      );
+      final migrated = completeLegacyMaskHistory(
+        history: old,
+        masks: masks,
+        intent: intent,
+      );
+      expect(migrated.byteLength, 8);
+      final undone = migrated.undo(masks: masks, intent: intent);
+      expect(undone.result.masks.labels, [1, 2, 3]);
+      expect(undone.result.intent.bytes, [0, 1, 5]);
+      expect(MaskUndoHistory.fromEditHistory(migrated).last!.previousLabels, [
+        1,
+      ]);
+      expect(migrated.undoStack.single.afterLabels, [4]);
+    },
+  );
 }
