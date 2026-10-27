@@ -8,6 +8,39 @@ import 'package:image/image.dart' as img;
 Uint8List roomProjectPng({int width = 2, int height = 2}) =>
     Uint8List.fromList(img.encodePng(img.Image(width: width, height: height)));
 
+/// A one-pixel scanline is also Adam7's sole non-empty pass. Recompute the
+/// IHDR CRC so method-boundary tests do not fail merely on a stale checksum.
+Uint8List roomProjectPngWithMethods({
+  int compression = 0,
+  int filter = 0,
+  int interlace = 0,
+}) {
+  final bytes = roomProjectPng(width: 1, height: 1);
+  bytes[26] = compression;
+  bytes[27] = filter;
+  bytes[28] = interlace;
+  var crc = 0xffffffff;
+  for (final byte in Uint8List.sublistView(bytes, 12, 29)) {
+    crc ^= byte;
+    for (var bit = 0; bit < 8; bit++) {
+      crc = (crc & 1) == 0 ? crc >>> 1 : (crc >>> 1) ^ 0xedb88320;
+    }
+  }
+  ByteData.sublistView(bytes).setUint32(29, crc ^ 0xffffffff);
+  return bytes;
+}
+
+RoomProjectSnapshot roomProjectOnePixelFixture({
+  required Uint8List photoPng,
+  int revision = 0,
+}) => roomProjectFixture(revision: revision).copyWith(
+  width: 1,
+  height: 1,
+  photoPng: photoPng,
+  aiMaskBytes: Uint8List.fromList([1]),
+  maskBytes: Uint8List.fromList([1]),
+);
+
 RoomProjectSnapshot roomProjectFixture({
   String projectId = 'project-1',
   String name = 'Living room',

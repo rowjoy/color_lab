@@ -13,7 +13,7 @@ That file was never edited, formatted, staged, or committed by this task.
 - Added immutable `RoomProjectSnapshot`, `RoomColorVariant`, `RoomProjectSummary`, typed recovery/read results, typed CAS conflicts, and safe storage failures. A snapshot has project/photo IDs, name, independent storage/mask/color revisions, working dimensions/PNG, AI/current label bytes, named color variants, active and nullable comparison-baseline IDs, nullable thumbnail, and UTC creation/update times.
 - Implemented the declared `RoomProjectRepository.listSnapshot/read/save/delete/close` API. `listSnapshot()` isolates corrupt projects and sorts healthy summaries by descending updated time, then ID. There is no alternate `list()` API.
 - Reused the existing `SchemaRegistry.roomProjects` descriptor and `LocalDataCategory.roomProjects`; neither was duplicated. The descriptor remains file-tree version 1, shared-library scope, storage name `room_projects`.
-- Added a strict schema-v1 codec. Unknown versions/fields, non-integer schema versions, unsafe IDs/paths, non-canonical timestamps/HEX, invalid variant references, duplicate variant IDs/names, invalid labels, and mismatched mask lengths fail closed. Manifest/asset/pointer sizes, dimensions, pixel counts, variant counts, and revisions are bounded before unsafe reads/allocations. PNG headers/chunks are checked before pixel decoding; source EXIF/GPS/text and APNG are excluded. The pinned `image` 4.12 decoder was inspected locally: it checks PNG checksums and inflates rows lazily.
+- Added a strict schema-v1 codec. Unknown versions/fields, non-integer schema versions, unsafe IDs/paths, non-canonical timestamps/HEX, invalid variant references, duplicate variant IDs/names, invalid labels, and mismatched mask lengths fail closed. Manifest/asset/pointer sizes, dimensions, pixel counts, variant counts, and revisions are bounded before unsafe reads/allocations. PNG headers/chunks are checked before pixel decoding; source EXIF/GPS/text and APNG are excluded. The pinned `image` 4.12 decoder inflates rows lazily. Its checksum validation is incomplete: explicit validation of every permitted chunk CRC was added in Fix round 1 below.
 - Added `FileRoomProjectRepository`, the production filesystem mutation boundary `RoomProjectFileIo`, and a serialized queue shared by repository handles for the same canonical root in the app isolate. Accepted operations drain before close; new operations after close fail. Saves, deletes, reads, and maintenance leases all use the owner queue. Escaped maintenance leases expire.
 - Added the in-memory repository and reusable prepared-PNG/project fixtures in test support for dependent session/controller tests.
 - Wired the actual Room file owner into Settings, with a minimal repository/library provider file that Task 3 can extend. Targeted refresh invalidates only Room library values and retains the repository owner. No Task 3 session/editor UI was added.
@@ -125,3 +125,54 @@ git log --diff-filter=A -1 --format=%H -- .superpowers/sdd/2026-10-27-tintatlas-
 ```
 
 The exact resulting SHA is also returned in the final implementer handoff. No push, publication, or merge is performed.
+
+## Fix round 1 — reject unsupported or CRC-invalid project PNGs
+
+Reviewed baseline: `e8c5445a4bdb012c952fa00cdee96548bcab9c3f` on `TintAtlas`. The protected `lib/main.dart` diff hash remained `c9bd56e83824d1dff5f750092e3d751bbb1841ad9377380c057bdffb4aacf437`; that file was not edited, formatted, or staged. The two deferred Minor findings were not changed in this round.
+
+The Important review finding was reproduced before production edits. The old codec accepted unsupported IHDR compression/interlace methods and an invalid IEND CRC because it relied on a permissive image decoder. Tests demonstrate that Flutter rejects those method fixtures even though the old storage codec accepted them. The old report's blanket checksum claim has been corrected above.
+
+The production fix is confined to `lib/features/room_studio/data/room_project_codec.dart`: require compression method 0, filter method 0, and interlace method 0 or 1; validate CRC-32 over each permitted chunk's type and data, including IEND, before delegating pixel decoding. A fixed 256-entry table avoids an eight-bit loop for every asset byte. No dependency or schema-version change was introduced. `docs/release/schema-registry.md` now records these precise validity requirements.
+
+The accepted header values follow the [PNG IHDR specification](https://www.w3.org/TR/png-3/#11IHDR). Standard Adam7 interlace 1 remains supported. A one-pixel fixture has only one nonempty Adam7 pass, so its scanline can be used with interlace 0 or 1 after updating the IHDR CRC. Both variants pass `ui.instantiateImageCodec` / `getNextFrame` and the storage codec roundtrip; native image/codec handles are disposed in the test helper.
+
+Tests were added first in:
+
+- `test/features/room_studio/data/room_project_codec_test.dart`: `rejects unsupported IHDR compression 1/255 with a valid CRC`, `rejects unsupported IHDR filter 1/255 with a valid CRC`, `rejects unsupported IHDR interlace 2/255 with a valid CRC`, supported interlace 0/1 rendering and roundtrip, and invalid IHDR/IDAT/IEND CRC cases for both photo and thumbnail assets.
+- `test/data/files/file_room_project_repository_test.dart`: `an unrenderable photo cannot replace a healthy filesystem commit`; `reopen recovers an unsupported photo PNG even with valid storage hashes`; `reopen recovers an unsupported thumbnail PNG even with valid storage hashes`. The latter two write malformed content assets into the real temporary file tree, update manifest asset references, and recompute manifest/pointer hashes. They therefore test semantic PNG recovery after filesystem reopen rather than merely catching a stale outer checksum. A bad photo falls back to acknowledged revision 1 with a warning; a bad thumbnail preserves current revision 2 with a null thumbnail and warning. Original malformed asset bytes remain available as evidence.
+- `test/support/room_project_fixtures.dart`: one-pixel PNG/snapshot fixtures and independent bitwise IHDR CRC recomputation. Method tests isolate unsupported values from checksum corruption.
+
+RED command, before changing production code:
+
+```sh
+/Users/jamirulislam/Applications/flutter/bin/flutter test --no-pub test/features/room_studio/data/room_project_codec_test.dart test/data/files/file_room_project_repository_test.dart --reporter expanded
+```
+
+Result: exit 1, `+38 -8: Some tests failed.`, log `/tmp/tintatlas-task2-fix1-red.log`. Eight observed failures were compression 1/255 acceptance, interlace 2/255 acceptance, invalid IEND CRC acceptance, successful replacement with an unrenderable photo, failure to fall back from the malformed on-disk photo, and retention of the unusable on-disk thumbnail. Unsupported filter methods and IHDR/IDAT CRC cases already failed closed through the delegated decoder, so those new tests passed at baseline; no pre-existing behavior was misreported as RED. Valid interlace 0 and 1 also passed independently through Flutter.
+
+The same amended codec/repository command after the fix exited 0 at `+46: All tests passed!`, log `/tmp/tintatlas-task2-fix1-green.log`.
+
+Complete Task 2 focused command:
+
+```sh
+/Users/jamirulislam/Applications/flutter/bin/flutter test --no-pub test/features/room_studio/domain/room_project_test.dart test/features/room_studio/data/room_project_codec_test.dart test/data/files/file_room_project_repository_test.dart test/data/storage/local_data_manager_test.dart test/features/settings/application/local_data_providers_test.dart test/features/settings/data_management_screen_test.dart --reporter expanded
+```
+
+Result: exit 0, `+68: All tests passed!`, log `/tmp/tintatlas-task2-fix1-focused.log`.
+
+```sh
+/Users/jamirulislam/Applications/flutter/bin/flutter analyze --no-pub
+/Users/jamirulislam/Applications/flutter/bin/cache/dart-sdk/bin/dart format --output=none --set-exit-if-changed lib/features/room_studio/data/room_project_codec.dart test/features/room_studio/data/room_project_codec_test.dart test/data/files/file_room_project_repository_test.dart test/support/room_project_fixtures.dart
+```
+
+Results: analyzer exit 0, `No issues found! (ran in 4.0s)` (`/tmp/tintatlas-task2-fix1-analyze.log`); formatter exit 0, `Formatted 4 files (0 changed)`. `git diff --check` passed.
+
+Full regression command for this fix round:
+
+```sh
+/Users/jamirulislam/Applications/flutter/bin/flutter test --no-pub --reporter expanded
+```
+
+Result: exit 0, `01:01 +1771: All tests passed!`; no test failures or uncaught test exceptions were reported. Log: `/tmp/tintatlas-task2-fix1-full.log`.
+
+Fix commit message: `fix: reject unsupported room project PNGs`. This section is included in that commit; the exact SHA is returned in the implementer handoff and can be resolved with `git log -1 --format=%H --grep='^fix: reject unsupported room project PNGs$'`. Only the codec, its two amended test files, the shared PNG test fixture, the schema clarification, and this report are staged for the fix.

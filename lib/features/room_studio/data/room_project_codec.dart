@@ -417,7 +417,10 @@ final class RoomProjectCodec {
         (width != null && width != w) ||
         (height != null && height != h) ||
         bytes[24] != 8 ||
-        !const [2, 6].contains(bytes[25])) {
+        !const [2, 6].contains(bytes[25]) ||
+        bytes[26] != 0 ||
+        bytes[27] != 0 ||
+        !const [0, 1].contains(bytes[28])) {
       _invalid();
     }
     var offset = 8;
@@ -433,6 +436,12 @@ final class RoomProjectCodec {
       // APNG, EXIF, GPS, text and unknown ancillary chunks are not prepared pixels.
       if (!const {'IHDR', 'IDAT', 'IEND'}.contains(kind) ||
           (kind == 'IHDR' && offset != 8)) {
+        _invalid();
+      }
+      // Check every permitted chunk, including IEND; the pixel decoder does
+      // not enforce every header method or every chunk checksum itself.
+      if (_pngCrc(bytes, offset + 4, offset + 8 + length) !=
+          view.getUint32(offset + 8 + length)) {
         _invalid();
       }
       if (kind == 'IDAT') idat = true;
@@ -452,5 +461,21 @@ final class RoomProjectCodec {
     } catch (_) {
       _invalid();
     }
+  }
+
+  static final _crcTable = List<int>.generate(256, (index) {
+    var value = index;
+    for (var bit = 0; bit < 8; bit++) {
+      value = (value & 1) == 0 ? value >>> 1 : (value >>> 1) ^ 0xedb88320;
+    }
+    return value;
+  }, growable: false);
+
+  static int _pngCrc(Uint8List bytes, int start, int end) {
+    var crc = 0xffffffff;
+    for (var index = start; index < end; index++) {
+      crc = (crc >>> 8) ^ _crcTable[(crc ^ bytes[index]) & 0xff];
+    }
+    return crc ^ 0xffffffff;
   }
 }

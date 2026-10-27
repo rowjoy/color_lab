@@ -7,6 +7,7 @@ import 'package:color_lab/data/files/file_room_project_repository.dart';
 import 'package:color_lab/data/storage/local_data_manager.dart';
 import 'package:color_lab/features/room_studio/domain/room_project.dart';
 import 'package:color_lab/features/room_studio/domain/room_project_repository.dart';
+import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../support/room_project_fixtures.dart';
@@ -111,6 +112,101 @@ void main() {
     expect(list.records.single.name, 'Living room');
     expect(list.records.single.revision, 1);
   });
+
+  test(
+    'an unrenderable photo cannot replace a healthy filesystem commit',
+    () async {
+      final first = await saveFirst();
+      final current = File('${projectPath()}/current');
+      final acknowledged = await current.readAsBytes();
+      final invalid = roomProjectOnePixelFixture(
+        photoPng: roomProjectPngWithMethods(compression: 1),
+        revision: 1,
+      );
+      await expectLater(
+        repository.save(invalid, expectedRevision: 1),
+        throwsA(isA<RoomProjectStorageException>()),
+      );
+      expect(await current.readAsBytes(), acknowledged);
+      await reopen();
+      final result = (await repository.read('project-1'))!;
+      expect(result.snapshot.revision, 1);
+      expect(result.snapshot.photoPng, first.photoPng);
+      expect(result.warning, isNull);
+    },
+  );
+
+  for (final asset in ['photo', 'thumbnail']) {
+    test(
+      'reopen recovers an unsupported $asset PNG even with valid storage hashes',
+      () async {
+        final first = await repository.save(
+          roomProjectOnePixelFixture(photoPng: roomProjectPngWithMethods()),
+          expectedRevision: 0,
+        );
+        await repository.save(
+          first.copyWith(name: 'Second'),
+          expectedRevision: 1,
+        );
+        final malformed = roomProjectPngWithMethods(compression: 1);
+        final assetHash = sha256.convert(malformed).toString();
+        final assetPath = 'assets/$assetHash.png';
+        await File(
+          '${projectPath()}/$assetPath',
+        ).writeAsBytes(malformed, flush: true);
+        final manifestFile = File('${projectPath()}/revisions/2/manifest.json');
+        final manifest =
+            jsonDecode(await manifestFile.readAsString())
+                as Map<String, dynamic>;
+        manifest['assets'][asset] = {
+          'path': assetPath,
+          'length': malformed.length,
+          'sha256': assetHash,
+        };
+        final manifestBytes = utf8.encode(jsonEncode(manifest));
+        await manifestFile.writeAsBytes(manifestBytes, flush: true);
+        final pointerFile = File('${projectPath()}/current');
+        final pointer =
+            jsonDecode(await pointerFile.readAsString())
+                as Map<String, dynamic>;
+        pointer['ancestry'][0]['manifestSha256'] = sha256
+            .convert(manifestBytes)
+            .toString();
+        pointer.remove('checksum');
+        pointer['checksum'] = sha256
+            .convert(utf8.encode(jsonEncode(pointer)))
+            .toString();
+        await pointerFile.writeAsString(jsonEncode(pointer), flush: true);
+
+        await reopen();
+        final result = (await repository.read('project-1'))!;
+        expect(result.acknowledgedRevision, 2);
+        if (asset == 'photo') {
+          expect(result.snapshot.revision, 1);
+          expect(result.snapshot.photoPng, first.photoPng);
+          expect(
+            result.warning!.reason,
+            RoomProjectRecoveryReason.earlierRevision,
+          );
+        } else {
+          expect(result.snapshot.revision, 2);
+          expect(result.snapshot.thumbnailPng, isNull);
+          expect(
+            result.warning!.reason,
+            RoomProjectRecoveryReason.thumbnailUnavailable,
+          );
+        }
+        expect(
+          (await repository.listSnapshot()).records.single.warning,
+          isNotNull,
+        );
+        expect(
+          await File('${projectPath()}/$assetPath').readAsBytes(),
+          malformed,
+        );
+      },
+    );
+  }
 
   test(
     'first save and concurrent updates enforce typed compare-and-swap',

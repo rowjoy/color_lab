@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:color_lab/features/room_studio/data/room_project_codec.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -173,4 +174,87 @@ void main() {
       );
     },
   );
+
+  for (final method in [
+    (name: 'compression 1', compression: 1, filter: 0, interlace: 0),
+    (name: 'compression 255', compression: 255, filter: 0, interlace: 0),
+    (name: 'filter 1', compression: 0, filter: 1, interlace: 0),
+    (name: 'filter 255', compression: 0, filter: 255, interlace: 0),
+    (name: 'interlace 2', compression: 0, filter: 0, interlace: 2),
+    (name: 'interlace 255', compression: 0, filter: 0, interlace: 255),
+  ]) {
+    test('rejects unsupported IHDR ${method.name} with a valid CRC', () async {
+      final png = roomProjectPngWithMethods(
+        compression: method.compression,
+        filter: method.filter,
+        interlace: method.interlace,
+      );
+      await expectLater(_flutterImageSize(png), throwsException);
+      expect(
+        () => codec.encode(
+          roomProjectOnePixelFixture(photoPng: png, revision: 1),
+        ),
+        throwsFormatException,
+      );
+      expect(
+        () => codec.encode(
+          roomProjectFixture(revision: 1).copyWith(thumbnailPng: png),
+        ),
+        throwsFormatException,
+      );
+    });
+  }
+
+  for (final interlace in [0, 1]) {
+    test(
+      'preserves Flutter-renderable standard interlace method $interlace',
+      () async {
+        final png = roomProjectPngWithMethods(interlace: interlace);
+        expect(await _flutterImageSize(png), (1, 1));
+        final encoded = codec.encode(
+          roomProjectOnePixelFixture(photoPng: png, revision: 1),
+        );
+        final decoded = codec.decode(
+          codec.readManifest(encoded.manifestBytes),
+          encoded.assets,
+        );
+        expect(decoded.snapshot.photoPng, png);
+      },
+    );
+  }
+
+  for (final chunk in ['IHDR', 'IDAT', 'IEND']) {
+    test('rejects an invalid $chunk CRC for photo and thumbnail PNGs', () {
+      final png = roomProjectPng();
+      final view = ByteData.sublistView(png);
+      var offset = 8;
+      while (ascii.decode(png.sublist(offset + 4, offset + 8)) != chunk) {
+        offset += view.getUint32(offset) + 12;
+      }
+      png[offset + 8 + view.getUint32(offset)] ^= 1;
+      final fixture = roomProjectFixture(revision: 1);
+      expect(
+        () => codec.encode(fixture.copyWith(photoPng: png)),
+        throwsFormatException,
+      );
+      expect(
+        () => codec.encode(fixture.copyWith(thumbnailPng: png)),
+        throwsFormatException,
+      );
+    });
+  }
+}
+
+Future<(int, int)> _flutterImageSize(Uint8List png) async {
+  final codec = await ui.instantiateImageCodec(png);
+  try {
+    final frame = await codec.getNextFrame();
+    try {
+      return (frame.image.width, frame.image.height);
+    } finally {
+      frame.image.dispose();
+    }
+  } finally {
+    codec.dispose();
+  }
 }
