@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/layout/adaptive_page.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../../l10n/l10n.dart';
@@ -13,45 +14,39 @@ class StudioPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => AppScaffold(
-    body: SafeArea(
-      bottom: false,
-      child: SingleChildScrollView(
-        key: ValueKey('screen-$name'),
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 640),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.blur_on_rounded,
-                      color: Theme.of(context).colorScheme.primary,
-                      size: AppSpacing.xxxl,
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: Text(
-                        context.l10n.appName,
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                    ),
-                    IconCircleButton(
-                      icon: Icons.tune_rounded,
-                      label: context.l10n.appearanceSettings,
-                      onPressed: () => showAppSettings(context),
-                    ),
-                  ],
+    useSafeArea: false,
+    resizeToAvoidBottomInset: false,
+    body: AdaptivePage(
+      key: ValueKey('screen-$name'),
+      maxContentWidth: 640,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.blur_on_rounded,
+                color: Theme.of(context).colorScheme.primary,
+                size: AppSpacing.xxxl,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  context.l10n.appName,
+                  style: Theme.of(context).textTheme.titleLarge,
                 ),
-                const SizedBox(height: AppSpacing.xxxl),
-                ...children,
-                const SizedBox(height: AppSpacing.xxl),
-              ],
-            ),
+              ),
+              IconCircleButton(
+                icon: Icons.tune_rounded,
+                label: context.l10n.appearanceSettings,
+                onPressed: () => showAppSettings(context),
+              ),
+            ],
           ),
-        ),
+          const SizedBox(height: AppSpacing.xxxl),
+          ...children,
+          const SizedBox(height: AppSpacing.xxl),
+        ],
       ),
     ),
   );

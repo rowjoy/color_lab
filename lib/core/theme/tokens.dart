@@ -12,6 +12,19 @@ abstract final class AppSpacing {
   static const screenPadding = EdgeInsets.all(xl);
 }
 
+abstract final class AppLayout {
+  static const double compactPagePadding = AppSpacing.lg;
+  static const double regularPagePadding = AppSpacing.xxl;
+  static const double widePagePadding = AppSpacing.xxxl;
+  static const double contentGap = AppSpacing.xxl;
+  static const double inspectorWidth = 320;
+  static const double defaultMaxContentWidth = 1200;
+}
+
+abstract final class AppTouchTargets {
+  static const double minimum = 48;
+}
+
 abstract final class AppRadii {
   static const double small = 12,
       medium = 20,

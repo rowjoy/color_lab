@@ -57,6 +57,34 @@ void main() {
       expect(entry.$1.textTheme.headlineSmall?.fontSize, 22);
       expect(entry.$1.textTheme.titleSmall?.fontSize, 16);
       expect(entry.$1.textTheme.labelSmall?.fontSize, 12);
+      expect(entry.$1.materialTapTargetSize, MaterialTapTargetSize.padded);
+      expect(entry.$1.focusColor, colors.focusRing);
+      expect(entry.$1.highlightColor, colors.pressedOverlay);
+      expect(entry.$1.disabledColor, colors.disabled);
+      expect(
+        entry.$1.navigationBarTheme.indicatorColor,
+        colors.selectedSurface,
+      );
+      expect(
+        entry.$1.navigationRailTheme.indicatorColor,
+        colors.selectedSurface,
+      );
+      expect(
+        entry.$1.navigationBarTheme.labelTextStyle!.resolve(const {
+          WidgetState.selected,
+        })!.color,
+        colors.textPrimary,
+      );
+      expect(
+        entry.$1.navigationBarTheme.labelTextStyle!.resolve(const {
+          WidgetState.disabled,
+        })!.color,
+        colors.disabled,
+      );
+      expect(
+        entry.$1.filledButtonTheme.style!.minimumSize!.resolve(const {}),
+        const Size(48, 48),
+      );
     }
   });
 }

@@ -1,3 +1,4 @@
+import 'package:color_lab/core/layout/adaptive_page.dart';
 import 'package:color_lab/core/theme/theme.dart';
 import 'package:color_lab/core/widgets/widgets.dart';
 import 'package:flutter/material.dart';
@@ -430,4 +431,88 @@ void main() {
     expect(find.bySemanticsLabel('Loading'), findsOneWidget);
     semantics.dispose();
   });
+
+  testWidgets(
+    'adaptive loading and error states stay usable in landscape at 200% text',
+    (tester) async {
+      tester.view.physicalSize = const Size(568, 320);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final semantics = tester.ensureSemantics();
+      try {
+        var retries = 0;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.light,
+            home: MediaQuery(
+              data: MediaQueryData(
+                size: const Size(568, 320),
+                textScaler: const TextScaler.linear(2),
+              ),
+              child: Scaffold(
+                resizeToAvoidBottomInset: false,
+                body: AdaptivePage(
+                  child: Column(
+                    children: [
+                      const LoadingState(
+                        title: 'Loading your saved palettes',
+                        message: 'This may take a moment.',
+                      ),
+                      ErrorState(
+                        title: 'Could not load your saved palettes',
+                        message: 'Check your storage and try again.',
+                        action: PrimaryButton(
+                          label: 'Try again',
+                          onPressed: () => retries++,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        expect(tester.takeException(), isNull);
+        expect(
+          tester
+              .widgetList<Semantics>(find.byType(Semantics))
+              .where((widget) => widget.properties.liveRegion == true)
+              .length,
+          greaterThanOrEqualTo(2),
+        );
+        final spokenLabels = tester.semantics
+            .simulatedAccessibilityTraversal()
+            .map((node) => node.getSemanticsData().label)
+            .join('\n');
+        expect(
+          RegExp(
+            RegExp.escape('Loading your saved palettes'),
+          ).allMatches(spokenLabels).length,
+          1,
+          reason: 'The loading title should be announced only once.',
+        );
+
+        await tester.scrollUntilVisible(
+          find.text('Try again'),
+          200,
+          scrollable: find.descendant(
+            of: find.byKey(const ValueKey('adaptive-page-scroll')),
+            matching: find.byType(Scrollable),
+          ),
+        );
+        expect(
+          tester.getSize(find.byType(PrimaryButton)).height,
+          greaterThanOrEqualTo(48),
+        );
+        await tester.tap(find.text('Try again'));
+        expect(retries, 1);
+        expect(tester.takeException(), isNull);
+      } finally {
+        semantics.dispose();
+      }
+    },
+  );
 }

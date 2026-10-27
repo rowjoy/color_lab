@@ -1,15 +1,27 @@
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
+
 import '../theme/theme.dart';
 
 class AppScaffold extends StatelessWidget {
-  const AppScaffold({super.key, required this.body, this.bottomNavigationBar});
+  const AppScaffold({
+    super.key,
+    required this.body,
+    this.bottomNavigationBar,
+    this.useSafeArea = true,
+    this.resizeToAvoidBottomInset = true,
+  });
   final Widget body;
   final Widget? bottomNavigationBar;
+  final bool useSafeArea;
+  final bool resizeToAvoidBottomInset;
+
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: context.appColors.background,
-    body: SafeArea(child: body),
+    resizeToAvoidBottomInset: resizeToAvoidBottomInset,
+    body: useSafeArea ? SafeArea(child: body) : body,
     bottomNavigationBar: bottomNavigationBar,
   );
 }
@@ -92,43 +104,129 @@ class EmptyState extends StatelessWidget {
   final IconData icon;
   final String title, message;
   final Widget? action;
+
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: AppSpacing.screenPadding,
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
+  Widget build(BuildContext context) => AppStatusView(
+    title: title,
+    message: message,
+    action: action,
+    visual: Container(
+      padding: const EdgeInsets.all(AppSpacing.xxl),
+      decoration: BoxDecoration(
+        color: context.appColors.surfaceElevated,
+        borderRadius: BorderRadius.circular(AppRadii.large),
+      ),
+      child: Icon(
+        icon,
+        size: AppSpacing.huge,
+        color: context.appColors.primary,
+      ),
+    ),
+  );
+}
+
+class LoadingState extends StatelessWidget {
+  const LoadingState({super.key, required this.title, required this.message});
+
+  final String title;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) => AppStatusView(
+    title: title,
+    message: message,
+    liveRegion: true,
+    visual: const SizedBox.square(
+      dimension: AppTouchTargets.minimum,
+      child: CircularProgressIndicator(),
+    ),
+  );
+}
+
+class ErrorState extends StatelessWidget {
+  const ErrorState({
+    super.key,
+    required this.title,
+    required this.message,
+    this.action,
+  });
+
+  final String title;
+  final String message;
+  final Widget? action;
+
+  @override
+  Widget build(BuildContext context) => AppStatusView(
+    title: title,
+    message: message,
+    action: action,
+    liveRegion: true,
+    visual: Container(
+      padding: const EdgeInsets.all(AppSpacing.xxl),
+      decoration: BoxDecoration(
+        color: context.appColors.error.withValues(alpha: .12),
+        borderRadius: BorderRadius.circular(AppRadii.large),
+      ),
+      child: Icon(
+        Icons.error_outline_rounded,
+        size: AppSpacing.huge,
+        color: context.appColors.error,
+      ),
+    ),
+  );
+}
+
+class AppStatusView extends StatelessWidget {
+  const AppStatusView({
+    super.key,
+    required this.visual,
+    required this.title,
+    required this.message,
+    this.action,
+    this.liveRegion = false,
+  });
+
+  final Widget visual;
+  final String title;
+  final String message;
+  final Widget? action;
+  final bool liveRegion;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    container: true,
+    liveRegion: liveRegion,
+    child: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 520),
+        child: Padding(
           padding: const EdgeInsets.all(AppSpacing.xxl),
-          decoration: BoxDecoration(
-            color: context.appColors.surfaceElevated,
-            borderRadius: BorderRadius.circular(AppRadii.large),
-          ),
-          child: Icon(
-            icon,
-            size: AppSpacing.huge,
-            color: context.appColors.primary,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              visual,
+              const SizedBox(height: AppSpacing.xxl),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: context.appColors.textSecondary,
+                ),
+              ),
+              if (action != null) ...[
+                const SizedBox(height: AppSpacing.xxl),
+                action!,
+              ],
+            ],
           ),
         ),
-        const SizedBox(height: AppSpacing.xxl),
-        Text(
-          title,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Text(
-          message,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: context.appColors.textSecondary,
-          ),
-        ),
-        if (action != null) ...[
-          const SizedBox(height: AppSpacing.xxl),
-          action!,
-        ],
-      ],
+      ),
     ),
   );
 }
