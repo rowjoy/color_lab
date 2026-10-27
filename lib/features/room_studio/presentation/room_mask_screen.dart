@@ -83,7 +83,12 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen> {
     if (widget.projectId == null || ref.read(roomModelSetupProvider).canEnter) {
       return true;
     }
-    context.push('/room/masks');
+    context.push(
+      Uri(
+        path: '/room/masks',
+        queryParameters: {'setupProject': widget.projectId!},
+      ).toString(),
+    );
     return false;
   }
 

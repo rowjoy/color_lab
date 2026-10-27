@@ -110,7 +110,17 @@ class _RoomProjectsScreenState extends ConsumerState<RoomProjectsScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => PopScope(
+    canPop: Navigator.of(context).canPop(),
+    onPopInvokedWithResult: (didPop, result) {
+      if (!didPop && !Navigator.of(context).canPop()) {
+        context.go('/rooms');
+      }
+    },
+    child: _buildPage(context),
+  );
+
+  Widget _buildPage(BuildContext context) {
     final l10n = context.l10n;
     final projects = ref.watch(roomProjectsProvider);
     final busy = ref.watch(roomProjectActionsProvider);

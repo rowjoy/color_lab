@@ -100,3 +100,64 @@ git log --diff-filter=A -1 --format=%H -- .superpowers/sdd/2026-10-27-tintatlas-
 ```
 
 The exact SHA is returned in the implementer handoff. Only the 15 explicit Dart files above, `lib/l10n/app_en.arb`, and this report are staged. The report alone is force-added from ignored `.superpowers`; the shared progress ledger and brief are not staged. The only remaining unstaged change after the commit is the protected user-owned `lib/main.dart`.
+
+## Fix round 1 — restoration ownership and system Back
+
+Reviewed base: `3727d81bd893116e28660b21c145bcd11dabd83e`, branch `TintAtlas`. This round addresses the two Important review findings only. The active-rename retry Minor remains deferred; there are no Task 5, storage, localization, dependency, or unrelated changes.
+
+### RED evidence
+
+The regression tests in `test/routing/app_router_test.dart` were written and run before changing production files:
+
+```sh
+/Users/jamirulislam/Applications/flutter/bin/flutter test --no-pub test/routing/app_router_test.dart --name 'setup detour|project Back' --reporter expanded > /tmp/tintatlas-task4-fix1-red.log 2>&1
+```
+
+Result: exit 1, `00:03 +6 -6: Some tests failed.` The six expected failures were:
+
+- `setup detour replacement keeps its saved identity through fresh restoration`: real UI acquisition/analysis reached a newly acknowledged revision-1 project B, but the URI's `project` value was null instead of B's ID.
+- `setup detour restored before Continue retains project ownership and permission gate`: the setup URI's `setupProject` value was null instead of A's ID.
+- `direct project Back from library uses system fallback` and the corresponding `saved`, `opening`, and `error` cases: `handlePopRoute()` returned false instead of true, so the expected fallback did not occur.
+
+The six passing controls were the four direct visible-Back states and pushed system/visible Back with a real prior route. An earlier run had one additional harness timeout: `pumpAndSettle` cannot settle the library's busy spinner while a deliberately blocked Open is pending. The test was corrected to wait for its destination before releasing that Open; the corrected six-failure RED above still preceded every production edit. At RED, the only task edit was the routing test file; `lib/main.dart` remained the protected pre-existing change.
+
+### Route design and regression coverage
+
+- Saved-editor acquisition/reanalysis now pushes `/room/masks?setupProject=A`. The dedicated owner key preserves A through a fresh provider/container restoration while the existing setup gate still requires explicit Continue before mounting any project editor. This replaces the unkeyed setup detour described in the original route section above.
+- The router checks `setupProject` before `project`; adding a `project` query cannot bypass the setup gate. After permission, a project-aware Open wrapper owns the `setupProject` route and uses the existing session/Open boundary. When real acquisition creates B, the current wrapper replaces its URI with `/room/masks?project=B`, so subsequent restoration opens B without picker/inference or another setup detour. The stable external `/rooms/project/:projectId` alias remains unchanged. Existing operation/current-route checks prevent repeated or covered-page Open publication; unsafe IDs still use localized recovery UI.
+- `PopScope` on the library and project wrapper supplies `/rooms` and `/rooms/projects` fallbacks when their Navigator cannot pop. When an actual preceding page exists, the normal pop proceeds and the fallback does not run. The project scope covers loading, successful editor, and failure screens. Visible Back uses its existing behavior.
+- Fourteen routing tests were added. The replacement test taps Choose photo, explicit setup Continue, Choose photo again, and confirmation; it runs the actual acquisition, mask-analysis orchestration, and session persistence, using doubles only for prepared picker bytes, segmentation, and the cached-model setup boundary. It asserts B's new project/photo identities, revision 1, exact 2×1 photo/PNG/mask draft, and one picker/segmenter call. It disposes the original ProviderContainer, restores the router in a fresh container, and verifies the same B draft with no additional picker/analysis calls.
+- The pre-Continue restoration test verifies A's identity and zero picker/inference before permission, then reopens A on Continue. The two `setup detour owner project-1/unsafe! cannot bypass permission with a project query` cases verify query precedence, zero premature session/editor publication, and localized handling of the unsafe owner after Continue.
+- Eight direct Back cases cover library/saved/opening/error with both system and visible Back. The opening case also completes its deferred read after leaving and verifies no late session publication. Two pushed Back cases exercise `/my-work` → library → saved editor and return one actual page at a time with system and visible Back, preventing double-pop/fallback override.
+
+### GREEN and final verification
+
+Incremental GREEN commands:
+
+```sh
+/Users/jamirulislam/Applications/flutter/bin/flutter test --no-pub test/routing/app_router_test.dart --plain-name 'project Back' --reporter expanded > /tmp/tintatlas-task4-fix1-back-green.log 2>&1
+/Users/jamirulislam/Applications/flutter/bin/flutter test --no-pub test/routing/app_router_test.dart --plain-name 'setup detour' --reporter expanded > /tmp/tintatlas-task4-fix1-setup-green.log 2>&1
+```
+
+Results: exit 0, `+10` Back tests and `+2` initial setup regression tests. The query-precedence cases were then added before the complete route/focused/full gates.
+
+```sh
+/Users/jamirulislam/Applications/flutter/bin/flutter test --no-pub test/routing/app_router_test.dart --reporter expanded > /tmp/tintatlas-task4-fix1-routes-green.log 2>&1
+/Users/jamirulislam/Applications/flutter/bin/flutter test --no-pub test/features/room_studio/presentation/room_projects_screen_test.dart test/features/room_studio/presentation/room_project_actions_test.dart test/routing/app_router_test.dart test/features/room_studio/application/room_project_session_controller_test.dart test/features/room_studio/application/room_mask_controller_test.dart test/features/room_studio/presentation/room_masks_integration_test.dart test/features/room_studio/presentation/room_model_setup_panel_test.dart test/features/my_work/my_work_screen_test.dart --reporter expanded > /tmp/tintatlas-task4-fix1-focused.log 2>&1
+/Users/jamirulislam/Applications/flutter/bin/flutter test --no-pub --reporter expanded > /tmp/tintatlas-task4-fix1-full.log 2>&1
+/Users/jamirulislam/Applications/flutter/bin/flutter analyze --no-pub > /tmp/tintatlas-task4-fix1-analyze.log 2>&1
+/Users/jamirulislam/Applications/flutter/bin/cache/dart-sdk/bin/dart format --output=none --set-exit-if-changed lib/features/room_studio/presentation/room_mask_screen.dart lib/features/room_studio/presentation/room_project_open_screen.dart lib/features/room_studio/presentation/room_projects_screen.dart lib/routing/app_router.dart test/routing/app_router_test.dart
+git diff --check
+```
+
+Results: routing `00:06 +41`, focused `00:14 +217`, full `01:00 +1869`, all tests passed with exit 0. The full suite ran once this round. Final analyzer: exit 0, `No issues found! (ran in 2.6s)`; its initial three test-only brace-style infos were corrected. Explicit formatter: exit 0, `Formatted 5 files (0 changed)`; whitespace check: exit 0. SDK verification used normal escalation where required. No native OS gesture/device certification is claimed; the system Back contract is exercised through Flutter's `handlePopRoute()`.
+
+### Fix commit gate
+
+Required message: `fix: preserve room project restoration routes`. The exact fix commit is returned in the handoff and resolvable with:
+
+```sh
+git log -1 --format=%H --grep='^fix: preserve room project restoration routes$'
+```
+
+Only the five explicitly named Dart files in this round's formatter command and this report are staged. Before committing, `git diff --cached --check` passes, `git diff --cached -- lib/main.dart` is empty, and the only remaining unstaged path is `lib/main.dart`. The protected unstaged diff SHA-256 remains `c9bd56e83824d1dff5f750092e3d751bbb1841ad9377380c057bdffb4aacf437`; that file was never edited, formatted, staged, or committed by this fix.

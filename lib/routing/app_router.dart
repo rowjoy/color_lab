@@ -125,6 +125,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/room/masks',
         builder: (context, state) {
+          // A saved editor's analysis setup retains its owner through restart.
+          // This guard takes precedence even if a project query is also given.
+          final setupProjectId = state.uri.queryParameters['setupProject'];
+          if (setupProjectId != null) {
+            return RoomModelSetupGate(
+              child: RoomProjectOpenScreen(
+                projectId: setupProjectId,
+                isSetupContinuation: true,
+              ),
+            );
+          }
           final projectId = state.uri.queryParameters['project'];
           return projectId == null
               ? const RoomModelSetupGate(child: RoomMaskScreen())

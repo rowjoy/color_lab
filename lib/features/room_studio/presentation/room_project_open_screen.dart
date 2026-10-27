@@ -12,8 +12,15 @@ import 'room_project_storage_notice.dart';
 /// The ID remains in the URI for restart restoration. Only a successful Open
 /// (or Continue of that same retained draft) bypasses new-photo model setup.
 class RoomProjectOpenScreen extends ConsumerStatefulWidget {
-  const RoomProjectOpenScreen({super.key, required this.projectId});
+  const RoomProjectOpenScreen({
+    super.key,
+    required this.projectId,
+    this.isSetupContinuation = false,
+  });
   final String projectId;
+
+  /// Only the setup gate mounts this continuation after explicit permission.
+  final bool isSetupContinuation;
   @override
   ConsumerState<RoomProjectOpenScreen> createState() =>
       _RoomProjectOpenScreenState();
@@ -57,13 +64,16 @@ class _RoomProjectOpenScreenState extends ConsumerState<RoomProjectOpenScreen> {
   bool get _ownsRoute =>
       mounted &&
       (ModalRoute.of(context)?.isCurrent ?? false) &&
-      GoRouter.of(context).state.uri.queryParameters['project'] ==
+      GoRouter.of(context).state.uri.queryParameters[widget.isSetupContinuation
+              ? 'setupProject'
+              : 'project'] ==
           widget.projectId;
 
   @override
   void didUpdateWidget(RoomProjectOpenScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.projectId != oldWidget.projectId) {
+    if (widget.projectId != oldWidget.projectId ||
+        widget.isSetupContinuation != oldWidget.isSetupContinuation) {
       _operation++;
       _opened = false;
       _retargeting = false;
@@ -108,7 +118,17 @@ class _RoomProjectOpenScreenState extends ConsumerState<RoomProjectOpenScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => PopScope(
+    canPop: Navigator.of(context).canPop(),
+    onPopInvokedWithResult: (didPop, result) {
+      if (!didPop && !Navigator.of(context).canPop()) {
+        context.go('/rooms/projects');
+      }
+    },
+    child: _buildPage(context),
+  );
+
+  Widget _buildPage(BuildContext context) {
     final l10n = context.l10n;
     final session = ref.watch(roomProjectSessionProvider);
     final ownsRoute = _ownsRoute;
