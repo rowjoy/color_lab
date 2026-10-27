@@ -1,28 +1,26 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
 
 import '../../../core/color/color_engine.dart';
 import '../../../data/db/hive_color_history_repository.dart';
+import '../../../data/storage/app_storage_directory.dart';
 import '../domain/color_history_repository.dart';
 import '../domain/saved_color.dart';
 
-final historyStorageDirectoryProvider = FutureProvider<Directory>(
-  (ref) => getApplicationDocumentsDirectory(),
-);
+final historyStorageDirectoryProvider = appStorageDirectoryProvider;
 
 final colorHistoryRepositoryProvider = FutureProvider<ColorHistoryRepository>((
   ref,
 ) async {
-  final documents = await ref.watch(historyStorageDirectoryProvider.future);
+  final storage = await ref.watch(appStorageDirectoryProvider.future);
   if (!ref.mounted) {
     throw StateError('History was disposed during initialization.');
   }
+  final directory = resolveAppStorageDirectory(storage);
   final repository = await HiveColorHistoryRepository.open(
-    directory: '${documents.path}/color_lab',
+    directory: directory.path,
   );
   if (!ref.mounted) {
     await repository.close();

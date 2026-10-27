@@ -1,29 +1,24 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
 
 import '../../../data/db/hive_app_preferences_repository.dart';
+import '../../../data/storage/app_storage_directory.dart';
 import '../domain/app_preferences.dart';
 import '../domain/app_preferences_repository.dart';
 
-final preferencesStorageDirectoryProvider = FutureProvider<Directory>(
-  (ref) => getApplicationDocumentsDirectory(),
-  retry: (retryCount, error) => null,
-);
+final preferencesStorageDirectoryProvider = appStorageDirectoryProvider;
 
 final appPreferencesRepositoryProvider =
     FutureProvider<AppPreferencesRepository>((ref) async {
-      final directory = await ref.watch(
-        preferencesStorageDirectoryProvider.future,
-      );
+      final storage = await ref.watch(appStorageDirectoryProvider.future);
       if (!ref.mounted) {
         throw StateError('Preferences were disposed during initialization.');
       }
+      final directory = resolveAppStorageDirectory(storage);
       final repository = await HiveAppPreferencesRepository.open(
-        directory: '${directory.path}/color_lab',
+        directory: directory.path,
       );
       if (!ref.mounted) {
         await repository.close();

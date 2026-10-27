@@ -1,12 +1,11 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
 
 import '../../../data/db/hive_game_profiles_repository.dart';
+import '../../../data/storage/app_storage_directory.dart';
 import '../domain/game_id.dart';
 import '../domain/game_leaderboard.dart';
 import '../domain/game_launch.dart';
@@ -17,21 +16,19 @@ import '../domain/game_progression_engine.dart';
 import '../domain/player_profile.dart';
 import 'game_adapter_registry.dart';
 
-final gameProfilesDirectoryProvider = FutureProvider<Directory>(
-  (ref) => getApplicationDocumentsDirectory(),
-  retry: (retryCount, error) => null,
-);
+final gameProfilesDirectoryProvider = appStorageDirectoryProvider;
 
 final gameProfilesRepositoryProvider = FutureProvider<GameProfilesRepository>((
   ref,
 ) async {
-  final directory = await ref.watch(gameProfilesDirectoryProvider.future);
+  final storage = await ref.watch(appStorageDirectoryProvider.future);
   if (!ref.mounted) {
     throw StateError('Game profiles were disposed during initialization.');
   }
+  final directory = resolveAppStorageDirectory(storage);
 
   final repository = await HiveGameProfilesRepository.open(
-    directory: '${directory.path}/color_lab',
+    directory: directory.path,
   );
   if (!ref.mounted) {
     await repository.close();

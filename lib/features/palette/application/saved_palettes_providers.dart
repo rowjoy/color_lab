@@ -1,29 +1,26 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
 
 import '../../../core/color/color_engine.dart';
 import '../../../data/db/hive_palette_repository.dart';
+import '../../../data/storage/app_storage_directory.dart';
 import '../domain/saved_palette.dart';
 import '../domain/saved_palette_repository.dart';
 
-final paletteStorageDirectoryProvider = FutureProvider<Directory>(
-  (ref) => getApplicationDocumentsDirectory(),
-  retry: (retryCount, error) => null,
-);
+final paletteStorageDirectoryProvider = appStorageDirectoryProvider;
 
 final savedPaletteRepositoryProvider = FutureProvider<SavedPaletteRepository>((
   ref,
 ) async {
-  final documents = await ref.watch(paletteStorageDirectoryProvider.future);
+  final storage = await ref.watch(appStorageDirectoryProvider.future);
   if (!ref.mounted) {
     throw StateError('Palettes were disposed during initialization.');
   }
+  final directory = resolveAppStorageDirectory(storage);
   final repository = await HivePaletteRepository.open(
-    directory: '${documents.path}/color_lab',
+    directory: directory.path,
   );
   if (!ref.mounted) {
     await repository.close();
