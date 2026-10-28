@@ -49,6 +49,7 @@ class RoomMaskScreen extends ConsumerStatefulWidget {
 
 class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
     with WidgetsBindingObserver {
+  final _inlineView = RoomMaskViewportController();
   int _restoreView = 0;
   bool _confirming = false;
   Object? _importOperation;
@@ -182,6 +183,7 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
     WidgetsBinding.instance.removeObserver(this);
     _exports.removeListener(_exportChanged);
     _exports.dispose();
+    _inlineView.dispose();
     final owner = _previewOwner;
     if (owner != null) _previews.detachOwner(owner);
     super.dispose();
@@ -571,30 +573,20 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
         acquisition.phase == AcquisitionPhase.ready &&
         receipt == null &&
         !acquisition.hasUntrustedIntent;
-    return AcquisitionRecoveryScope(
-      child: StudioPage(
-        name: 'RoomMasks',
+    final largeText = MediaQuery.textScalerOf(context).scale(1) > 1.35;
+    final photoActions = StudioCard(
+      key: const ValueKey('room-mask-photo-actions'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              IconCircleButton(
-                icon: Icons.arrow_back_rounded,
-                label: 'Back',
-                onPressed: _back,
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Text(
-                  'Room masks',
-                  style: Theme.of(context).textTheme.headlineMedium,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          if (widget.compareRequested && session != null) ...[
-            const RoomVariantControls(),
-            const SizedBox(height: AppSpacing.xl),
+          if (!largeText) ...[
+            const SectionHeader(
+              title: 'Start with your room',
+              subtitle:
+                  'Choose an existing photo or take a new one. Your room '
+                  'analysis and corrections stay on this device.',
+            ),
+            const SizedBox(height: AppSpacing.lg),
           ],
           PrimaryButton(
             key: const ValueKey('room-mask-gallery'),
@@ -604,7 +596,7 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
                 ? () => _import(source: PhotoSource.gallery)
                 : null,
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.sm),
           SecondaryButton(
             key: const ValueKey('room-mask-camera'),
             label: 'Take room photo',
@@ -613,9 +605,50 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
                 ? () => _import(source: PhotoSource.camera)
                 : null,
           ),
+          if (!largeText) ...[
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.offline_bolt_outlined,
+                  size: 18,
+                  color: context.appColors.primary,
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    context.l10n.roomModelsEditorOffline,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: context.appColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+    return AcquisitionRecoveryScope(
+      child: StudioPage(
+        name: 'RoomMasks',
+        maxContentWidth: 880,
+        children: [
+          if (largeText) ...[
+            photoActions,
+            const SizedBox(height: AppSpacing.xl),
+          ],
+          _RoomMaskHero(onBack: _back),
           const SizedBox(height: AppSpacing.xl),
-          Text(context.l10n.roomModelsEditorOffline),
-          const SizedBox(height: AppSpacing.md),
+          if (widget.compareRequested && session != null) ...[
+            const RoomVariantControls(),
+            const SizedBox(height: AppSpacing.xl),
+          ],
+          if (!largeText) ...[
+            photoActions,
+            const SizedBox(height: AppSpacing.xl),
+          ],
           if (receipt != null) ...[
             Text(
               receipt.destination == null
@@ -846,7 +879,9 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
                     view: _reviewView,
                     onSelect: controller.setLayer,
                     onViewChanged: (view) {
-                      controller.setShowOverlay(view == RoomMaskReviewView.overlay);
+                      controller.setShowOverlay(
+                        view == RoomMaskReviewView.overlay,
+                      );
                       setState(() {
                         _reviewView = view;
                         _showAfter = view == RoomMaskReviewView.recolored;
@@ -911,37 +946,56 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
                     key: ValueKey((draft.photoId, _restoreView)),
                     child: SizedBox(
                       height: 300,
-                      child: _reviewView == RoomMaskReviewView.recolored && recolorKey != null
-                          ? SingleChildScrollView(child: RoomRecolorViewport(
-                              sourcePngBytes: draft.photo.previewBytes,
-                              width: draft.photo.width,
-                              height: draft.photo.height,
-                              currentKey: recolorKey,
-                              frame: displayFrame,
-                              showAfter: true,
-                              updating: preview.isLoading,
-                            ))
-                          : RoomMaskViewport(
-                        key: const ValueKey('room-mask-viewport'),
-                        photoId: draft.photoId,
-                        maskRevision: draft.maskRevision,
-                        photo: draft.photo,
-                        masks: draft.masks,
-                        layer: state.selectedLayer,
-                        tool: state.tool,
-                        brushFraction: state.brushFraction,
-                        showOverlay: state.showOverlay,
-                        editingEnabled: state.canEdit && !_confirming,
-                        onStroke: (stroke) {
-                          if (_active) {
-                            controller.applyStroke(
-                              photoId: draft.photoId,
-                              maskRevision: draft.maskRevision,
-                              stroke: stroke,
-                            );
-                          }
-                        },
-                      ),
+                      child:
+                          _reviewView == RoomMaskReviewView.recolored &&
+                              recolorKey != null
+                          ? SingleChildScrollView(
+                              child: RoomRecolorViewport(
+                                sourcePngBytes: draft.photo.previewBytes,
+                                width: draft.photo.width,
+                                height: draft.photo.height,
+                                currentKey: recolorKey,
+                                frame: displayFrame,
+                                showAfter: true,
+                                updating: preview.isLoading,
+                              ),
+                            )
+                          : Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                RoomMaskViewport(
+                                  key: const ValueKey('room-mask-viewport'),
+                                  photoId: draft.photoId,
+                                  maskRevision: draft.maskRevision,
+                                  photo: draft.photo,
+                                  masks: draft.masks,
+                                  layer: state.selectedLayer,
+                                  tool: state.tool,
+                                  brushFraction: state.brushFraction,
+                                  showOverlay: state.showOverlay,
+                                  editingEnabled: state.canEdit && !_confirming,
+                                  viewController: _inlineView,
+                                  magnifierOnStart: true,
+                                  onStroke: (stroke) {
+                                    if (_active) {
+                                      controller.applyStroke(
+                                        photoId: draft.photoId,
+                                        maskRevision: draft.maskRevision,
+                                        stroke: stroke,
+                                      );
+                                    }
+                                  },
+                                ),
+                                PositionedDirectional(
+                                  top: AppSpacing.sm,
+                                  end: AppSpacing.sm,
+                                  child: RoomMaskZoomControls(
+                                    view: _inlineView,
+                                    keyPrefix: 'room-mask-inline',
+                                  ),
+                                ),
+                              ],
+                            ),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),
@@ -1013,8 +1067,11 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
                     value: !state.showOverlay,
                     onChanged: (value) {
                       controller.setShowOverlay(!value);
-                      setState(() => _reviewView = value
-                          ? RoomMaskReviewView.original : RoomMaskReviewView.overlay);
+                      setState(
+                        () => _reviewView = value
+                            ? RoomMaskReviewView.original
+                            : RoomMaskReviewView.overlay,
+                      );
                     },
                   ),
                   SecondaryButton(
@@ -1034,8 +1091,12 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
                     key: const ValueKey('room-mask-redo'),
                     label: 'Redo',
                     icon: Icons.redo_rounded,
-                    onPressed: state.canEdit && draft.history.canRedo && !_confirming
-                        ? () => controller.redo(photoId: draft.photoId, maskRevision: draft.maskRevision)
+                    onPressed:
+                        state.canEdit && draft.history.canRedo && !_confirming
+                        ? () => controller.redo(
+                            photoId: draft.photoId,
+                            maskRevision: draft.maskRevision,
+                          )
                         : null,
                   ),
                   const SizedBox(height: AppSpacing.md),
@@ -1060,4 +1121,75 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
 
   static String _title(String value) =>
       '${value[0].toUpperCase()}${value.substring(1)}';
+}
+
+class _RoomMaskHero extends StatelessWidget {
+  const _RoomMaskHero({required this.onBack});
+
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    key: const ValueKey('room-mask-hero'),
+    padding: const EdgeInsets.all(AppSpacing.lg),
+    decoration: BoxDecoration(
+      gradient: context.appColors.accentGradient,
+      borderRadius: BorderRadius.circular(AppRadii.large),
+      boxShadow: [
+        BoxShadow(
+          color: context.appColors.primary.withValues(alpha: .18),
+          blurRadius: 24,
+          offset: const Offset(0, 10),
+        ),
+      ],
+    ),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Material(
+          color: Colors.white.withValues(alpha: .16),
+          shape: const CircleBorder(),
+          child: IconButton(
+            key: const ValueKey('room-mask-back'),
+            tooltip: 'Back',
+            onPressed: onBack,
+            color: Colors.white,
+            icon: const Icon(Icons.arrow_back_rounded),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'REAL ROOM EDITOR',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Colors.white.withValues(alpha: .82),
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.3,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                'Room Mask Studio',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                'Review surfaces, correct masks and preview colors without '
+                'sending your room photo away.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.white.withValues(alpha: .88),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
 }

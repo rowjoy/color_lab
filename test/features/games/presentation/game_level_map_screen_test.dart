@@ -104,8 +104,15 @@ void main() {
       expect(find.byKey(const ValueKey('replay-level-1')), findsOneWidget);
 
       expect(find.byKey(const ValueKey('level-current-4')), findsOneWidget);
-      expect(find.byKey(const ValueKey('play-current-level')), findsOneWidget);
-      expect(find.text(l10n.gamePlayLevel(4)), findsOneWidget);
+      final currentAction = find.byKey(const ValueKey('play-current-level'));
+      expect(currentAction, findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('level-node-4')),
+          matching: find.text(l10n.gamePlayLevel(4)),
+        ),
+        findsOneWidget,
+      );
       expect(find.byTooltip(l10n.gameReplayLevel(1)), findsOneWidget);
       expect(find.byTooltip(l10n.gamePlayCurrentLevel(4)), findsOneWidget);
 
@@ -120,6 +127,147 @@ void main() {
       expect(find.byKey(const ValueKey('replay-level-5')), findsNothing);
     },
   );
+
+  testWidgets('premium map overview shows progress and next reward', (
+    tester,
+  ) async {
+    final profile = _profile(
+      progress: _progress(
+        completed: 3,
+        generatedThrough: 15,
+        scores: const {1: 91, 2: 84, 3: 96},
+      ),
+    );
+    final repository = InMemoryGameProfilesRepository(
+      initialState: _state(profile: profile),
+    );
+    final harness = await _pumpMap(
+      tester,
+      repository: repository,
+      onLaunchGame: (_) {},
+    );
+    addTearDown(harness.dispose);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('level-map-overview')), findsOneWidget);
+    expect(
+      _textWithin(tester, const ValueKey('level-map-game-identity')),
+      contains('Water Sort'),
+    );
+    expect(
+      _textWithin(tester, const ValueKey('level-map-current')),
+      contains('4'),
+    );
+    expect(
+      _textWithin(tester, const ValueKey('level-map-completed')),
+      contains('3'),
+    );
+    final reward = _textWithin(tester, const ValueKey('level-map-next-reward'));
+    expect(reward, contains('20'));
+    expect(reward, contains('50'));
+    expect(
+      _textWithin(tester, const ValueKey('level-map-primary-action')),
+      contains('Play'),
+    );
+  });
+
+  testWidgets(
+    'premium map Continue reuses exact active attempt without writing',
+    (tester) async {
+      final baseProgress = _progress(
+        completed: 3,
+        generatedThrough: 15,
+        scores: const {1: 91, 2: 84, 3: 96},
+      );
+      final descriptor = baseProgress.descriptors[4]!;
+      final activeAttempt = ActiveGameAttempt(
+        attemptId: 'profile-1:waterSort:4',
+        sequence: 4,
+        level: 4,
+        playKind: GamePlayKind.current,
+        descriptorFingerprint: descriptor.fingerprint,
+        startedAt: DateTime.utc(2026, 10, 24, 9, 30),
+      );
+      final profile = _profile(
+        progress: baseProgress.copyWith(
+          attempts: 4,
+          attemptSequence: 4,
+          activeAttempt: activeAttempt,
+        ),
+      );
+      final repository = InMemoryGameProfilesRepository(
+        initialState: _state(profile: profile),
+      );
+      final launches = <GameLaunch>[];
+      final harness = await _pumpMap(
+        tester,
+        repository: repository,
+        onLaunchGame: launches.add,
+      );
+      addTearDown(harness.dispose);
+      await tester.pumpAndSettle();
+
+      final primary = find.byKey(const ValueKey('level-map-primary-action'));
+      expect(primary, findsOneWidget);
+      expect(
+        _textWithin(tester, const ValueKey('level-map-primary-action')),
+        contains('Continue'),
+      );
+      final writesBefore = repository.writeAttempts;
+
+      await tester.tap(primary);
+      await _pumpUntil(tester, () => launches.length == 1);
+      await tester.pump(const Duration(milliseconds: 1));
+
+      expect(launches.single.attemptId, activeAttempt.attemptId);
+      expect(launches.single.descriptor, descriptor);
+      expect(launches.single.playKind, GamePlayKind.current);
+      expect(repository.writeAttempts, writesBefore);
+      expect(
+        repository
+            .durableState
+            .profiles[profile.id]!
+            .gameProgress[GameId.waterSort]!
+            .activeAttempt,
+        activeAttempt,
+      );
+    },
+  );
+
+  testWidgets('premium map gift dialog fits short landscape at 2x text', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(568, 320);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final profile = _profile(
+      progress: _progress(completed: 19, generatedThrough: 30),
+    );
+    final repository = InMemoryGameProfilesRepository(
+      initialState: _state(profile: profile),
+    );
+    final harness = await _pumpMap(
+      tester,
+      repository: repository,
+      textScaler: const TextScaler.linear(2),
+    );
+    addTearDown(harness.dispose);
+    await tester.pumpAndSettle();
+
+    await _reveal(tester, const ValueKey('level-milestone-20'));
+    await tester.tap(find.byKey(const ValueKey('level-milestone-20')));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    final close = find.widgetWithText(FilledButton, 'Got it');
+    expect(close.hitTestable(), findsOneWidget);
+    await tester.tap(close);
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsNothing);
+    expect(find.byKey(const ValueKey('level-milestone-20')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('replay and current Play callbacks wait for durable writes', (
     tester,
@@ -516,3 +664,10 @@ Future<void> _tapLevelAction(WidgetTester tester, ValueKey<String> key) async {
   await tester.pump();
   await tester.tap(action);
 }
+
+String _textWithin(WidgetTester tester, ValueKey<String> key) => tester
+    .widgetList<Text>(
+      find.descendant(of: find.byKey(key), matching: find.byType(Text)),
+    )
+    .map((text) => text.data ?? text.textSpan?.toPlainText() ?? '')
+    .join(' ');

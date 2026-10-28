@@ -97,6 +97,7 @@ final class _GamesScreenState extends ConsumerState<GamesScreen> {
     final profiles = ref.watch(gameProfilesProvider);
     return StudioPage(
       name: 'Games',
+      maxContentWidth: 1120,
       children: [
         const StudioHeading(
           eyebrow: 'Color games',
@@ -104,35 +105,6 @@ final class _GamesScreenState extends ConsumerState<GamesScreen> {
           description:
               'Keep leveling up across five color games. Progress stays on this device for each player.',
         ),
-        StudioCard(
-          key: const ValueKey('games-coloring-studio-card'),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.draw_outlined, color: context.appColors.primary),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Text(
-                      context.l10n.coloringStudioTitle,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(context.l10n.coloringGamesEntryBody),
-              const SizedBox(height: AppSpacing.lg),
-              FilledButton.icon(
-                onPressed: widget.onOpenColoring,
-                icon: const Icon(Icons.palette_outlined),
-                label: Text(context.l10n.coloringOpenStudio),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.xxl),
         profiles.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, stackTrace) => _LoadError(
@@ -158,9 +130,126 @@ final class _GamesScreenState extends ConsumerState<GamesScreen> {
             );
           },
         ),
+        const SizedBox(height: AppSpacing.xxl),
+        _ColoringStudioCard(onOpen: widget.onOpenColoring),
       ],
     );
   }
+}
+
+final class _ColoringStudioCard extends StatelessWidget {
+  const _ColoringStudioCard({required this.onOpen});
+
+  final VoidCallback? onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    return Container(
+      key: const ValueKey('games-coloring-studio-card'),
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            colors.primary.withValues(alpha: .16),
+            colors.surface,
+            const Color(0xffffd8a8).withValues(alpha: .28),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(AppRadii.large),
+        border: Border.all(color: colors.primary.withValues(alpha: .16)),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 620;
+          final copy = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'CREATE WITH COLOR',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: colors.primary,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.3,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                context.l10n.coloringStudioTitle,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                context.l10n.coloringGamesEntryBody,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: colors.textSecondary),
+              ),
+            ],
+          );
+          final action = FilledButton.icon(
+            key: const ValueKey('games-open-coloring'),
+            onPressed: onOpen,
+            icon: const Icon(Icons.palette_outlined),
+            label: Text(context.l10n.coloringOpenStudio),
+          );
+          if (compact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const _ColoringStudioMark(),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(child: copy),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                action,
+              ],
+            );
+          }
+          return Row(
+            children: [
+              const _ColoringStudioMark(),
+              const SizedBox(width: AppSpacing.xl),
+              Expanded(child: copy),
+              const SizedBox(width: AppSpacing.xl),
+              action,
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+final class _ColoringStudioMark extends StatelessWidget {
+  const _ColoringStudioMark();
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 70,
+    height: 70,
+    decoration: BoxDecoration(
+      color: context.appColors.surface,
+      borderRadius: BorderRadius.circular(22),
+      boxShadow: [
+        BoxShadow(
+          color: context.appColors.primary.withValues(alpha: .16),
+          blurRadius: 18,
+          offset: const Offset(0, 8),
+        ),
+      ],
+    ),
+    child: Icon(Icons.draw_rounded, size: 34, color: context.appColors.primary),
+  );
 }
 
 final class _LoadError extends StatelessWidget {
@@ -243,83 +332,26 @@ final class _GamesHub extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      Wrap(
-        spacing: AppSpacing.sm,
-        runSpacing: AppSpacing.sm,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          Semantics(
-            button: true,
-            label: 'Active player ${profile.name}',
-            excludeSemantics: true,
-            child: Tooltip(
-              message: 'Change player name or switch player',
-              child: ActionChip(
-                key: const ValueKey('games-profile-chip'),
-                avatar: const Icon(Icons.account_circle_rounded),
-                label: Text(profile.name),
-                onPressed: onManageProfiles,
-              ),
-            ),
-          ),
-          Tooltip(
-            message: 'Badges',
-            child: IconButton.filledTonal(
-              key: const ValueKey('games-badges'),
-              onPressed: onOpenBadges,
-              icon: const Icon(Icons.workspace_premium_rounded),
-            ),
-          ),
-          Tooltip(
-            message: 'Leaderboard',
-            child: IconButton.filledTonal(
-              key: const ValueKey('games-leaderboard'),
-              onPressed: onOpenLeaderboard,
-              icon: const Icon(Icons.leaderboard_rounded),
-            ),
-          ),
-        ],
-      ),
-      const SizedBox(height: AppSpacing.lg),
-      _GameCards(
+      _PlayerOverview(
         profile: profile,
-        onStartGame: onStartGame,
-        onOpenMap: onOpenMap,
-        launchEnabled: launchEnabled,
-        startingGames: startingGames,
+        onManageProfiles: onManageProfiles,
+        onOpenBadges: onOpenBadges,
+        onOpenLeaderboard: onOpenLeaderboard,
       ),
       const SizedBox(height: AppSpacing.xxl),
-      StudioCard(
-        child: Row(
-          children: [
-            Expanded(
-              child: _Stat(
-                valueKey: const ValueKey('games-stat-coins'),
-                label: 'Coins',
-                value: '${profile.coins}',
-                icon: Icons.stars_rounded,
-              ),
-            ),
-            Expanded(
-              child: _Stat(
-                valueKey: const ValueKey('games-stat-wins'),
-                label: 'Wins',
-                value: '${profile.gamesWon}',
-                icon: Icons.emoji_events_outlined,
-              ),
-            ),
-            Expanded(
-              child: _Stat(
-                valueKey: const ValueKey('games-stat-best'),
-                label: 'Best',
-                value: '${profile.bestScore}',
-                icon: Icons.trending_up_rounded,
-              ),
-            ),
-          ],
+      for (final category in GameHubCategory.values) ...[
+        _GameSection(
+          category: category,
+          profile: profile,
+          onStartGame: onStartGame,
+          onOpenMap: onOpenMap,
+          launchEnabled: launchEnabled,
+          startingGames: startingGames,
         ),
-      ),
-      const SizedBox(height: AppSpacing.lg),
+        if (category != GameHubCategory.values.last)
+          const SizedBox(height: AppSpacing.xxl),
+      ],
+      const SizedBox(height: AppSpacing.xl),
       Text(
         '${profile.gamesPlayed} games played · Progress stays on this device.',
         style: Theme.of(
@@ -328,6 +360,210 @@ final class _GamesHub extends StatelessWidget {
       ),
     ],
   );
+}
+
+final class _PlayerOverview extends StatelessWidget {
+  const _PlayerOverview({
+    required this.profile,
+    required this.onManageProfiles,
+    required this.onOpenBadges,
+    required this.onOpenLeaderboard,
+  });
+
+  final PlayerProfile profile;
+  final VoidCallback? onManageProfiles;
+  final VoidCallback? onOpenBadges;
+  final VoidCallback? onOpenLeaderboard;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(AppSpacing.xl),
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          context.appColors.primary.withValues(alpha: .12),
+          context.appColors.surface,
+        ],
+      ),
+      borderRadius: BorderRadius.circular(AppRadii.large),
+      border: Border.all(
+        color: context.appColors.primary.withValues(alpha: .12),
+      ),
+    ),
+    child: LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 620;
+        final controls = Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Semantics(
+              button: true,
+              label: 'Active player ${profile.name}',
+              excludeSemantics: true,
+              child: Tooltip(
+                message: 'Change player name or switch player',
+                child: ActionChip(
+                  key: const ValueKey('games-profile-chip'),
+                  avatar: const Icon(Icons.account_circle_rounded),
+                  label: Text(profile.name),
+                  onPressed: onManageProfiles,
+                ),
+              ),
+            ),
+            Tooltip(
+              message: 'Badges',
+              child: IconButton.filledTonal(
+                key: const ValueKey('games-badges'),
+                onPressed: onOpenBadges,
+                icon: const Icon(Icons.workspace_premium_rounded),
+              ),
+            ),
+            Tooltip(
+              message: 'Leaderboard',
+              child: IconButton.filledTonal(
+                key: const ValueKey('games-leaderboard'),
+                onPressed: onOpenLeaderboard,
+                icon: const Icon(Icons.leaderboard_rounded),
+              ),
+            ),
+          ],
+        );
+        final stats = Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _Stat(
+              valueKey: const ValueKey('games-stat-coins'),
+              label: 'Coins',
+              value: '${profile.coins}',
+              icon: Icons.stars_rounded,
+            ),
+            const SizedBox(width: AppSpacing.xl),
+            _Stat(
+              valueKey: const ValueKey('games-stat-wins'),
+              label: 'Wins',
+              value: '${profile.gamesWon}',
+              icon: Icons.emoji_events_outlined,
+            ),
+            const SizedBox(width: AppSpacing.xl),
+            _Stat(
+              valueKey: const ValueKey('games-stat-best'),
+              label: 'Best',
+              value: '${profile.bestScore}',
+              icon: Icons.trending_up_rounded,
+            ),
+          ],
+        );
+        if (compact) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              controls,
+              const SizedBox(height: AppSpacing.lg),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: stats,
+              ),
+            ],
+          );
+        }
+        return Row(
+          children: [
+            Expanded(child: controls),
+            const SizedBox(width: AppSpacing.xl),
+            stats,
+          ],
+        );
+      },
+    ),
+  );
+}
+
+final class _GameSection extends StatelessWidget {
+  const _GameSection({
+    required this.category,
+    required this.profile,
+    required this.onStartGame,
+    required this.onOpenMap,
+    required this.launchEnabled,
+    required this.startingGames,
+  });
+
+  final GameHubCategory category;
+  final PlayerProfile profile;
+  final ValueChanged<GameUiMetadata> onStartGame;
+  final ValueChanged<GameId>? onOpenMap;
+  final bool launchEnabled;
+  final Set<GameId> startingGames;
+
+  @override
+  Widget build(BuildContext context) {
+    final games = gameUiMetadata
+        .where((metadata) => metadata.category == category)
+        .toList(growable: false);
+    return Semantics(
+      container: true,
+      label: '${category.label}. ${category.description}',
+      child: Column(
+        key: ValueKey('games-section-${category.name}'),
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: context.appColors.primary.withValues(alpha: .1),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  category.icon,
+                  color: context.appColors.primary,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      category.label,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      category.description,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: context.appColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          _GameCards(
+            games: games,
+            profile: profile,
+            onStartGame: onStartGame,
+            onOpenMap: onOpenMap,
+            launchEnabled: launchEnabled,
+            startingGames: startingGames,
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 final class _Stat extends StatelessWidget {
@@ -361,6 +597,7 @@ final class _Stat extends StatelessWidget {
 
 final class _GameCards extends StatelessWidget {
   const _GameCards({
+    required this.games,
     required this.profile,
     required this.onStartGame,
     required this.onOpenMap,
@@ -368,6 +605,7 @@ final class _GameCards extends StatelessWidget {
     required this.startingGames,
   });
 
+  final List<GameUiMetadata> games;
   final PlayerProfile profile;
   final ValueChanged<GameUiMetadata> onStartGame;
   final ValueChanged<GameId>? onOpenMap;
@@ -377,18 +615,14 @@ final class _GameCards extends StatelessWidget {
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
-      final columns = constraints.maxWidth >= 780
-          ? 3
-          : constraints.maxWidth >= 420
-          ? 2
-          : 1;
+      final columns = constraints.maxWidth >= 700 && games.length > 1 ? 2 : 1;
       const gap = AppSpacing.md;
       final width = (constraints.maxWidth - gap * (columns - 1)) / columns;
       return Wrap(
         spacing: gap,
         runSpacing: gap,
         children: [
-          for (final metadata in gameUiMetadata)
+          for (final metadata in games)
             SizedBox(
               width: width,
               child: _GameCard(

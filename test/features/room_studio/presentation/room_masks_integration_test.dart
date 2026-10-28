@@ -446,6 +446,28 @@ Future<void> _zoom(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets('Room Studio premium hub keeps every journey action enabled', (
+    tester,
+  ) async {
+    await _launch(tester);
+    await tester.tap(_key('nav-rooms'));
+    await _frames(tester);
+
+    expect(_key('room-studio-hero'), findsOneWidget);
+    expect(_key('room-studio-real-room-card'), findsOneWidget);
+    expect(_key('room-studio-illustrated-card'), findsOneWidget);
+    for (final key in [
+      'open-room-masks',
+      'rooms-open-projects',
+      'open-illustrated-gallery',
+    ]) {
+      final action = _key(key);
+      await tester.ensureVisible(action);
+      await _frames(tester);
+      expect(action.hitTestable(), findsOneWidget);
+    }
+  });
+
   testWidgets(
     'invalid current PNG retries the preview and never hands off bytes',
     (tester) async {
@@ -1731,6 +1753,9 @@ void main() {
       await _tap(tester, _key('room-mask-tool-add'));
       final viewport = find.byType(RoomMaskViewport);
       await tester.ensureVisible(viewport);
+      await _tap(tester, _key('room-mask-tool-add'));
+      await tester.ensureVisible(viewport);
+      await _frames(tester);
       final gesture = await tester.startGesture(tester.getCenter(viewport));
       await _frames(tester);
       expect(container.read(roomProjectSessionProvider)!.durable!.revision, 1);
@@ -1946,6 +1971,57 @@ void main() {
   });
 
   testWidgets(
+    'inline room zoom controls stay right and use the existing viewport callbacks',
+    (tester) async {
+      final segmenter = _Segmenter();
+      await _launch(tester, segmenter: segmenter);
+      await _open(tester);
+      await _ready(tester, segmenter);
+
+      final viewport = _key('room-mask-viewport');
+      final controls = _key('room-mask-inline-zoom-controls');
+      await tester.ensureVisible(viewport);
+      await _frames(tester);
+      expect(controls, findsOneWidget);
+      expect(
+        tester.getCenter(controls).dx,
+        greaterThan(tester.getCenter(viewport).dx),
+      );
+      expect(
+        find.descendant(of: controls, matching: find.text('1.0×')),
+        findsOneWidget,
+      );
+
+      final gesture = await tester.createGesture(
+        kind: ui.PointerDeviceKind.mouse,
+      );
+      final hover = tester.getCenter(viewport);
+      await gesture.addPointer(location: hover);
+      await gesture.moveTo(hover + const Offset(1, 0));
+      await tester.pump();
+      final magnifier = _key('room-mask-magnifier');
+      expect(magnifier, findsOneWidget);
+      expect(
+        tester.getRect(magnifier).overlaps(tester.getRect(controls)),
+        isFalse,
+      );
+      await gesture.removePointer();
+      await tester.pump();
+
+      await _tap(tester, _key('room-mask-inline-zoom-in'));
+      expect(
+        find.descendant(of: controls, matching: find.text('1.5×')),
+        findsOneWidget,
+      );
+      await _tap(tester, _key('room-mask-inline-zoom-out'));
+      expect(
+        find.descendant(of: controls, matching: find.text('1.0×')),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
     'full-screen editor edits the shared masks and keeps edits on close',
     (tester) async {
       final segmenter = _Segmenter();
@@ -1956,9 +2032,38 @@ void main() {
       await _tap(tester, _key('room-mask-fullscreen'));
       expect(_key('room-mask-fullscreen-editor'), findsOneWidget);
       expect(_key('room-mask-fullscreen-viewport'), findsOneWidget);
+      final back = _key('room-mask-fullscreen-back');
+      expect(back, findsOneWidget);
+      expect(
+        find.descendant(
+          of: back,
+          matching: find.byIcon(Icons.arrow_back_rounded),
+        ),
+        findsOneWidget,
+      );
       expect(container.read(roomMaskProvider).tool, RoomMaskTool.add);
-      await _tap(tester, _key('room-mask-fullscreen-zoom-in'));
       final viewport = _key('room-mask-fullscreen-viewport');
+      final controls = _key('room-mask-fullscreen-zoom-controls');
+      expect(controls, findsOneWidget);
+      expect(
+        tester.getCenter(controls).dx,
+        greaterThan(tester.getCenter(viewport).dx),
+      );
+      expect(
+        find.descendant(of: controls, matching: find.text('1.0×')),
+        findsOneWidget,
+      );
+      await _tap(tester, _key('room-mask-fullscreen-zoom-in'));
+      expect(
+        find.descendant(of: controls, matching: find.text('1.5×')),
+        findsOneWidget,
+      );
+      await _tap(tester, _key('room-mask-fullscreen-zoom-out'));
+      expect(
+        find.descendant(of: controls, matching: find.text('1.0×')),
+        findsOneWidget,
+      );
+      await _tap(tester, _key('room-mask-fullscreen-zoom-in'));
       final rect = tester.getRect(viewport);
       expect(rect.height, greaterThan(300));
       // At 1.5×, this hits the center of source pixel (6, 5). Ignoring
@@ -2016,6 +2121,35 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets('short landscape keeps every right-side zoom action visible', (
+    tester,
+  ) async {
+    final segmenter = _Segmenter();
+    await _launch(tester, segmenter: segmenter);
+    await _open(tester);
+    await _ready(tester, segmenter);
+    tester.view.physicalSize = const Size(640, 360);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpAndSettle();
+
+    await _tap(tester, _key('room-mask-fullscreen'));
+    final viewport = _key('room-mask-fullscreen-viewport');
+    final controls = _key('room-mask-fullscreen-zoom-controls');
+    expect(controls, findsOneWidget);
+    expect(
+      tester.getRect(controls).bottom,
+      lessThanOrEqualTo(tester.getRect(viewport).bottom),
+    );
+    for (final action in ['zoom-out', 'zoom-in', 'fit']) {
+      expect(
+        _key('room-mask-fullscreen-$action').hitTestable(),
+        findsOneWidget,
+      );
+    }
+  });
 
   testWidgets(
     'candidate photo is visible through initial and replacement analysis',

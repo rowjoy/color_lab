@@ -25,7 +25,8 @@ class RoomMaskViewportController extends ChangeNotifier {
   Offset? get sourceCursor => _viewport?._cursorSource;
   PhotoViewport? get transform => _viewport?._viewport;
   void nudgeCursor(Offset delta) => _viewport?._nudgeCursor(delta);
-  void selectRegion(int row, int column) => _viewport?._selectRegion(row, column);
+  void selectRegion(int row, int column) =>
+      _viewport?._selectRegion(row, column);
   void panBy(Offset delta) => _viewport?._panBy(delta);
   void paintCursor(MaskEditMode mode) => _viewport?._paintCursor(mode);
   void cancelStroke() => _viewport?._abortStroke();
@@ -35,6 +36,97 @@ class RoomMaskViewportController extends ChangeNotifier {
   void reset() => _viewport?._resetView();
 
   void _changed() => notifyListeners();
+}
+
+/// A compact, premium control rail backed by the viewport's existing
+/// transform controller. It does not own or alter any zoom rules.
+class RoomMaskZoomControls extends StatelessWidget {
+  const RoomMaskZoomControls({
+    super.key,
+    required this.view,
+    required this.keyPrefix,
+    this.axis = Axis.vertical,
+  });
+
+  final RoomMaskViewportController view;
+  final String keyPrefix;
+  final Axis axis;
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: view,
+    builder: (context, _) => Semantics(
+      container: true,
+      label: 'Room preview zoom controls',
+      child: Material(
+        key: ValueKey('$keyPrefix-zoom-controls'),
+        color: context.appColors.surface.withValues(alpha: .94),
+        elevation: 8,
+        shadowColor: Colors.black.withValues(alpha: .24),
+        borderRadius: BorderRadius.circular(18),
+        clipBehavior: Clip.antiAlias,
+        child: Flex(
+          direction: axis,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 48,
+              height: axis == Axis.vertical ? 36 : 48,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    '${view.zoom.toStringAsFixed(1)}×',
+                    key: ValueKey('$keyPrefix-zoom-value'),
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: context.appColors.textSecondary,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            _ZoomRailDivider(axis: axis),
+            IconButton(
+              key: ValueKey('$keyPrefix-zoom-out'),
+              tooltip: 'Zoom out',
+              onPressed: view.zoomOut,
+              icon: const Icon(Icons.remove_rounded),
+            ),
+            _ZoomRailDivider(axis: axis),
+            IconButton(
+              key: ValueKey('$keyPrefix-zoom-in'),
+              tooltip: 'Zoom in',
+              onPressed: view.zoomIn,
+              icon: const Icon(Icons.add_rounded),
+            ),
+            _ZoomRailDivider(axis: axis),
+            IconButton(
+              key: ValueKey('$keyPrefix-fit'),
+              tooltip: 'Fit photo',
+              onPressed: view.reset,
+              icon: const Icon(Icons.fit_screen_rounded),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class _ZoomRailDivider extends StatelessWidget {
+  const _ZoomRailDivider({required this.axis});
+
+  final Axis axis;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = context.appColors.outline.withValues(alpha: .72);
+    return axis == Axis.vertical
+        ? Divider(height: 1, indent: 9, endIndent: 9, color: color)
+        : SizedBox(width: 1, height: 28, child: ColoredBox(color: color));
+  }
 }
 
 /// Displays a transparent ownership preview over the unchanged room photo.
@@ -53,6 +145,7 @@ class RoomMaskViewport extends ConsumerStatefulWidget {
     required this.editingEnabled,
     required this.onStroke,
     this.viewController,
+    this.magnifierOnStart = false,
   });
 
   final String photoId;
@@ -66,6 +159,7 @@ class RoomMaskViewport extends ConsumerStatefulWidget {
   final bool editingEnabled;
   final ValueChanged<MaskStroke> onStroke;
   final RoomMaskViewportController? viewController;
+  final bool magnifierOnStart;
 
   @override
   ConsumerState<RoomMaskViewport> createState() => _RoomMaskViewportState();
@@ -239,11 +333,16 @@ class _RoomMaskViewportState extends ConsumerState<RoomMaskViewport> {
     // The image can extend beyond the visible clip after zooming. Invisible
     // pointer travel is a disconnected gap, just like travel in a letterbox.
     final source = _viewport.sourceAt(position);
-    final normalized = source == null ? null : Offset(
-      source.dx / widget.photo.width,
-      source.dy / widget.photo.height,
-    );
-    if (source != null) { _cursorSource = source; _showCursor = true; }
+    final normalized = source == null
+        ? null
+        : Offset(
+            source.dx / widget.photo.width,
+            source.dy / widget.photo.height,
+          );
+    if (source != null) {
+      _cursorSource = source;
+      _showCursor = true;
+    }
     if (normalized == null) {
       _gap = true;
       return;
@@ -269,7 +368,9 @@ class _RoomMaskViewportState extends ConsumerState<RoomMaskViewport> {
   void _nudgeCursor(Offset delta) {
     setState(() {
       _showCursor = true;
-      final start = _cursorSource ?? Offset(widget.photo.width / 2, widget.photo.height / 2);
+      final start =
+          _cursorSource ??
+          Offset(widget.photo.width / 2, widget.photo.height / 2);
       _cursorSource = Offset(
         (start.dx + delta.dx).clamp(.5, widget.photo.width - .5),
         (start.dy + delta.dy).clamp(.5, widget.photo.height - .5),
@@ -304,15 +405,26 @@ class _RoomMaskViewportState extends ConsumerState<RoomMaskViewport> {
   }
 
   void _paintCursor(MaskEditMode mode) {
-    if (!widget.editingEnabled || !widget.showOverlay || _pointers.isNotEmpty) return;
+    if (!widget.editingEnabled || !widget.showOverlay || _pointers.isNotEmpty) {
+      return;
+    }
     _nudgeCursor(Offset.zero);
     final point = _cursorSource!;
-    widget.onStroke(MaskStroke(
-      layer: widget.layer,
-      mode: mode,
-      diameterFraction: widget.brushFraction,
-      segments: [[MaskPoint(point.dx / widget.photo.width, point.dy / widget.photo.height)]],
-    ));
+    widget.onStroke(
+      MaskStroke(
+        layer: widget.layer,
+        mode: mode,
+        diameterFraction: widget.brushFraction,
+        segments: [
+          [
+            MaskPoint(
+              point.dx / widget.photo.width,
+              point.dy / widget.photo.height,
+            ),
+          ],
+        ],
+      ),
+    );
   }
 
   void _anchorMove() {
@@ -506,7 +618,10 @@ class _RoomMaskViewportState extends ConsumerState<RoomMaskViewport> {
                 onPointerHover: (event) {
                   final source = _viewport.sourceAt(event.localPosition);
                   if (source != null && _pointers.isEmpty) {
-                    setState(() { _cursorSource = source; _showCursor = true; });
+                    setState(() {
+                      _cursorSource = source;
+                      _showCursor = true;
+                    });
                   }
                 },
                 onPointerDown: _down,
@@ -516,38 +631,49 @@ class _RoomMaskViewportState extends ConsumerState<RoomMaskViewport> {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                  CustomPaint(
-                  size: size,
-                  painter: _MaskPainter(
-                    viewport: _viewport,
-                    photo: _photo,
-                    overlay: widget.showOverlay ? _overlay : null,
-                    background: context.appColors.surfaceElevated,
-                    tint: _tint,
-                    segments: _segments
-                        .map((segment) => List<MaskPoint>.of(segment))
-                        .toList(),
-                    diameter: _strokeDiameter,
-                    erase: _strokeMode == MaskEditMode.erase,
-                    sample: !_showCursor || _cursorSource == null ? null : RoomMaskSample(
-                      viewport: _viewport,
-                      source: _cursorSource!,
-                      brushFraction: widget.brushFraction,
+                    CustomPaint(
+                      size: size,
+                      painter: _MaskPainter(
+                        viewport: _viewport,
+                        photo: _photo,
+                        overlay: widget.showOverlay ? _overlay : null,
+                        background: context.appColors.surfaceElevated,
+                        tint: _tint,
+                        segments: _segments
+                            .map((segment) => List<MaskPoint>.of(segment))
+                            .toList(),
+                        diameter: _strokeDiameter,
+                        erase: _strokeMode == MaskEditMode.erase,
+                        sample: !_showCursor || _cursorSource == null
+                            ? null
+                            : RoomMaskSample(
+                                viewport: _viewport,
+                                source: _cursorSource!,
+                                brushFraction: widget.brushFraction,
+                              ),
+                      ),
                     ),
-                  ),
-                ),
-                if (_showCursor && _cursorSource != null && widget.showOverlay)
-                  PositionedDirectional(
-                    top: 8,
-                    end: 8,
-                    child: IgnorePointer(child: RoomMaskMagnifier(
-                      key: const ValueKey('room-mask-magnifier'),
-                      sample: RoomMaskSample(viewport: _viewport, source: _cursorSource!, brushFraction: widget.brushFraction),
-                      image: _photo,
-                      overlay: _overlay,
-                    )),
-                  ),
-                ],
+                    if (_showCursor &&
+                        _cursorSource != null &&
+                        widget.showOverlay)
+                      PositionedDirectional(
+                        top: 8,
+                        start: widget.magnifierOnStart ? 8 : null,
+                        end: widget.magnifierOnStart ? null : 8,
+                        child: IgnorePointer(
+                          child: RoomMaskMagnifier(
+                            key: const ValueKey('room-mask-magnifier'),
+                            sample: RoomMaskSample(
+                              viewport: _viewport,
+                              source: _cursorSource!,
+                              brushFraction: widget.brushFraction,
+                            ),
+                            image: _photo,
+                            overlay: _overlay,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),
@@ -623,10 +749,22 @@ class _MaskPainter extends CustomPainter {
     if (sample != null) {
       final center = viewport.sourcePositionOf(sample!.source);
       final radius = sample!.screenRadius;
-      canvas.drawCircle(center, radius, Paint()
-        ..color = Colors.white ..style = PaintingStyle.stroke ..strokeWidth = 3);
-      canvas.drawCircle(center, radius, Paint()
-        ..color = Colors.black ..style = PaintingStyle.stroke ..strokeWidth = 1);
+      canvas.drawCircle(
+        center,
+        radius,
+        Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3,
+      );
+      canvas.drawCircle(
+        center,
+        radius,
+        Paint()
+          ..color = Colors.black
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1,
+      );
     }
   }
 

@@ -55,6 +55,47 @@ void main() {
     expect(mapOpens, 1);
   });
 
+  testWidgets('568x320 landscape at 2x text keeps a usable scrollable board', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(568, 320);
+    tester.view.devicePixelRatio = 1;
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(() {
+      tester.view.reset();
+      tester.platformDispatcher.clearTextScaleFactorTestValue();
+    });
+
+    final fixture = _fixture(level: 10);
+    final harness = await _pumpScreen(
+      tester,
+      fixture: fixture,
+      layoutFor: (descriptor) => _oneMoveLayout(descriptor.level, target: 3000),
+    );
+    addTearDown(harness.dispose);
+
+    final board = find.byKey(const ValueKey('fruit-pop-board'));
+    expect(board, findsOneWidget);
+    final boardSize = tester.getSize(board);
+    expect(boardSize.width, greaterThanOrEqualTo(144));
+    expect(boardSize.height, greaterThanOrEqualTo(144));
+
+    final pageScrollView = find.byType(SingleChildScrollView);
+    expect(pageScrollView, findsOneWidget);
+    final pageScrollable = find
+        .descendant(of: pageScrollView, matching: find.byType(Scrollable))
+        .first;
+    final scrollPosition = tester
+        .state<ScrollableState>(pageScrollable)
+        .position;
+    expect(scrollPosition.maxScrollExtent, greaterThan(0));
+    expect(
+      scrollPosition.physics.shouldAcceptUserOffset(scrollPosition),
+      isTrue,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('Restart durably begins a fresh attempt on the same level', (
     tester,
   ) async {

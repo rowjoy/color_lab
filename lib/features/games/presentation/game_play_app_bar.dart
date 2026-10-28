@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 /// Compact, consistent toolbar for active game screens.
 class GamePlayAppBar extends StatelessWidget implements PreferredSizeWidget {
+  static const _compactMapBreakpoint = 480.0;
+
   const GamePlayAppBar({
     super.key,
     required this.title,
@@ -35,83 +37,95 @@ class GamePlayAppBar extends StatelessWidget implements PreferredSizeWidget {
   Size get preferredSize => const Size.fromHeight(72);
 
   @override
-  Widget build(BuildContext context) => AppBar(
-    toolbarHeight: 72,
-    automaticallyImplyLeading: false,
-    backgroundColor: backgroundColor,
-    foregroundColor: foregroundColor,
-    surfaceTintColor: Colors.transparent,
-    elevation: 0,
-    scrolledUnderElevation: 0,
-    leadingWidth: 54,
-    leading: Padding(
-      padding: const EdgeInsets.only(left: 12),
-      child: IconButton.filledTonal(
-        tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-        onPressed: locked ? null : onBack,
-        style: IconButton.styleFrom(
-          backgroundColor: buttonColor,
-          foregroundColor: foregroundColor,
-          fixedSize: const Size(40, 40),
-          padding: EdgeInsets.zero,
-        ),
-        icon: const Icon(Icons.arrow_back_rounded, size: 20),
-      ),
-    ),
-    titleSpacing: 8,
-    title: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          subtitle,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: accentColor,
-            fontSize: 9,
-            fontWeight: FontWeight.w800,
-            letterSpacing: .9,
+  Widget build(BuildContext context) {
+    final compactMap = MediaQuery.sizeOf(context).width < _compactMapBreakpoint;
+    return AppBar(
+      toolbarHeight: 72,
+      automaticallyImplyLeading: false,
+      backgroundColor: backgroundColor,
+      foregroundColor: foregroundColor,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      leadingWidth: 54,
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 12),
+        child: IconButton.filledTonal(
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+          onPressed: locked ? null : onBack,
+          style: IconButton.styleFrom(
+            backgroundColor: buttonColor,
+            foregroundColor: foregroundColor,
+            fixedSize: const Size(40, 40),
+            padding: EdgeInsets.zero,
           ),
+          icon: const Icon(Icons.arrow_back_rounded, size: 20),
         ),
+      ),
+      titleSpacing: 8,
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            subtitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: accentColor,
+              fontSize: 9,
+              fontWeight: FontWeight.w800,
+              letterSpacing: .9,
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        if (onOpenMap != null)
+          if (compactMap)
+            _HeaderAction(
+              tooltip: 'Level map',
+              icon: Icons.map_outlined,
+              onPressed: locked ? null : onOpenMap,
+              foreground: foregroundColor,
+              background: buttonColor,
+            )
+          else
+            _MapHeaderAction(
+              tooltip: 'Level map',
+              onPressed: locked ? null : onOpenMap,
+              foreground: foregroundColor,
+              background: buttonColor,
+            ),
+        if (soundEnabled != null && onToggleSound != null)
+          _HeaderAction(
+            tooltip: soundEnabled! ? 'Mute game sounds' : 'Enable game sounds',
+            icon: soundEnabled!
+                ? Icons.volume_up_rounded
+                : Icons.volume_off_rounded,
+            onPressed: onToggleSound,
+            foreground: foregroundColor,
+            background: buttonColor,
+          ),
+        if (onRestart != null)
+          _HeaderAction(
+            tooltip: 'Restart level',
+            icon: Icons.refresh_rounded,
+            onPressed: locked ? null : onRestart,
+            foreground: foregroundColor,
+            background: buttonColor,
+          ),
+        const SizedBox(width: 8),
       ],
-    ),
-    actions: [
-      if (onOpenMap != null)
-        _MapHeaderAction(
-          tooltip: 'Level map',
-          onPressed: locked ? null : onOpenMap,
-          foreground: foregroundColor,
-          background: buttonColor,
-        ),
-      if (soundEnabled != null && onToggleSound != null)
-        _HeaderAction(
-          tooltip: soundEnabled! ? 'Mute game sounds' : 'Enable game sounds',
-          icon: soundEnabled!
-              ? Icons.volume_up_rounded
-              : Icons.volume_off_rounded,
-          onPressed: onToggleSound,
-          foreground: foregroundColor,
-          background: buttonColor,
-        ),
-      if (onRestart != null)
-        _HeaderAction(
-          tooltip: 'Restart level',
-          icon: Icons.refresh_rounded,
-          onPressed: locked ? null : onRestart,
-          foreground: foregroundColor,
-          background: buttonColor,
-        ),
-      const SizedBox(width: 8),
-    ],
-  );
+    );
+  }
 }
 
 class _HeaderAction extends StatelessWidget {

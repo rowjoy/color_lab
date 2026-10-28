@@ -7,10 +7,16 @@ import '../../../l10n/l10n.dart';
 import '../../settings/presentation/settings_sheet.dart';
 
 class StudioPage extends StatelessWidget {
-  const StudioPage({super.key, required this.name, required this.children});
+  const StudioPage({
+    super.key,
+    required this.name,
+    required this.children,
+    this.maxContentWidth = 640,
+  });
 
   final String name;
   final List<Widget> children;
+  final double maxContentWidth;
 
   @override
   Widget build(BuildContext context) => AppScaffold(
@@ -18,7 +24,7 @@ class StudioPage extends StatelessWidget {
     resizeToAvoidBottomInset: false,
     body: AdaptivePage(
       key: ValueKey('screen-$name'),
-      maxContentWidth: 640,
+      maxContentWidth: maxContentWidth,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

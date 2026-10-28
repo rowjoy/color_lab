@@ -8,6 +8,7 @@ import 'package:color_lab/features/games/domain/game_id.dart';
 import 'package:color_lab/features/games/domain/game_launch.dart';
 import 'package:color_lab/features/games/domain/game_level.dart';
 import 'package:color_lab/features/games/domain/game_profiles_state.dart';
+import 'package:color_lab/features/games/domain/player_profile.dart';
 import 'package:color_lab/features/games/presentation/badges_screen.dart';
 import 'package:color_lab/features/games/presentation/bubble_shooter_screen.dart';
 import 'package:color_lab/features/games/presentation/fruit_pop_screen.dart';
@@ -439,10 +440,26 @@ void main() {
       expect(find.byType(LeaderboardScreen), findsOneWidget);
     });
 
-    testWidgets('Games hub callbacks open every destination and Back returns', (
+    testWidgets('Games hub card taps open every game and Back returns', (
       tester,
     ) async {
-      final container = await launch(tester);
+      final profile = PlayerProfile(
+        id: 'profile-router-test',
+        name: 'Player',
+        createdAt: DateTime.utc(2026, 10, 28, 8),
+        updatedAt: DateTime.utc(2026, 10, 28, 8),
+      );
+      final profilesRepository = InMemoryGameProfilesRepository(
+        initialState: GameProfilesState(
+          activeProfileId: profile.id,
+          profiles: {profile.id: profile},
+          legacyMigrationComplete: true,
+        ),
+      );
+      final container = await launch(
+        tester,
+        gameProfilesRepository: profilesRepository,
+      );
       final router = container.read(appRouterProvider);
       await openRoute(tester, container, '/games');
 
@@ -473,12 +490,34 @@ void main() {
       await finishRouteTransition(tester);
 
       for (final gameId in GameId.values) {
-        final gameLaunch = _gameLaunch(gameId);
-        tester.widget<GamesScreen>(find.byType(GamesScreen)).onLaunchGame!(
-          gameLaunch,
-        );
+        final tile = find.byKey(ValueKey('game-tile-${gameId.storageId}'));
+        await tester.ensureVisible(tile);
+        await tester.pump();
+        await tester.tap(tile);
         await finishRouteTransition(tester);
         expect(_findGameScreen(gameId), findsOneWidget);
+        final routedLaunch = switch (gameId) {
+          GameId.bubbleShooter =>
+            tester
+                .widget<BubbleShooterScreen>(find.byType(BubbleShooterScreen))
+                .launch,
+          GameId.fruitPop =>
+            tester.widget<FruitPopScreen>(find.byType(FruitPopScreen)).launch,
+          GameId.waterSort =>
+            tester.widget<WaterSortScreen>(find.byType(WaterSortScreen)).launch,
+          GameId.rainbowRings =>
+            tester
+                .widget<RainbowRingsScreen>(find.byType(RainbowRingsScreen))
+                .launch,
+          GameId.colorMatch =>
+            tester.widget<MatchingScreen>(find.byType(MatchingScreen)).launch!,
+        };
+        expect(routedLaunch.gameId, gameId, reason: gameId.storageId);
+        expect(
+          routedLaunch.descriptor.gameId,
+          gameId,
+          reason: gameId.storageId,
+        );
         router.pop();
         await finishRouteTransition(tester);
         expect(find.byType(GamesScreen), findsOneWidget);

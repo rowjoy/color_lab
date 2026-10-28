@@ -69,6 +69,65 @@ void main() {
     expect(find.text('Choose difficulty'), findsNothing);
   });
 
+  testWidgets('premium hub groups every game once and uses the wide canvas', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final profile = _profile(
+      id: 'profile-1',
+      name: 'Player',
+      coins: 50,
+      gamesPlayed: 5,
+      gamesWon: 3,
+      bestScore: 92,
+      completedByGame: {for (final gameId in GameId.values) gameId: 1},
+    );
+    final repository = InMemoryGameProfilesRepository(
+      initialState: GameProfilesState(
+        activeProfileId: profile.id,
+        profiles: {profile.id: profile},
+        legacyMigrationComplete: true,
+      ),
+    );
+    final harness = await _pumpHub(
+      tester,
+      repository: repository,
+      onLaunchGame: (_) {},
+    );
+    addTearDown(harness.dispose);
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('games-section-learnWithColor')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('games-section-colorLogic')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('games-section-playAndRelax')),
+      findsOneWidget,
+    );
+    expect(find.text('Learn with Color'), findsOneWidget);
+    expect(find.text('Color Logic'), findsOneWidget);
+    expect(find.text('Play & Relax'), findsOneWidget);
+    for (final gameId in GameId.values) {
+      expect(
+        find.byKey(ValueKey('game-card-${gameId.storageId}')),
+        findsOneWidget,
+      );
+    }
+    expect(
+      tester.getSize(find.byKey(const ValueKey('game-card-waterSort'))).width,
+      greaterThan(400),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('active profile controls all aggregate and per-game stats', (
     tester,
   ) async {

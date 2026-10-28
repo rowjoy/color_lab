@@ -697,16 +697,27 @@ class _FruitPopScreenState extends ConsumerState<FruitPopScreen>
             ),
             LayoutBuilder(
               builder: (context, constraints) {
-                final boardWidth = math.min(
-                  math.max(0.0, constraints.maxWidth - 12),
+                final availableBoardWidth = math.max(
+                  0.0,
+                  math.min(520.0, constraints.maxWidth - 12),
+                );
+                final heightFittedBoardWidth = math.max(
+                  0.0,
                   math.min(
                     constraints.maxHeight * .78,
-                    math.max(0.0, constraints.maxHeight - 270),
+                    constraints.maxHeight - 270,
                   ),
                 );
+                final boardWidth = math.min(
+                  availableBoardWidth,
+                  math.max(160.0, heightFittedBoardWidth),
+                );
+                final needsPageScroll = heightFittedBoardWidth < 160;
                 return Center(
                   child: SingleChildScrollView(
-                    physics: const NeverScrollableScrollPhysics(),
+                    physics: needsPageScroll
+                        ? const ClampingScrollPhysics()
+                        : const NeverScrollableScrollPhysics(),
                     padding: const EdgeInsets.all(16),
                     child: ConstrainedBox(
                       constraints: BoxConstraints(

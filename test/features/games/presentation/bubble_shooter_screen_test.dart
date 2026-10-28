@@ -14,6 +14,7 @@ import 'package:color_lab/features/games/domain/game_progression_engine.dart';
 import 'package:color_lab/features/games/domain/player_profile.dart';
 import 'package:color_lab/features/games/presentation/bubble_shooter_painter.dart';
 import 'package:color_lab/features/games/presentation/bubble_shooter_screen.dart';
+import 'package:color_lab/features/games/presentation/game_play_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -63,6 +64,47 @@ void main() {
         isNot(oldAttemptId),
       );
       expect(_paintedGame(tester).level, 10);
+    },
+  );
+
+  testWidgets(
+    'narrow header replaces Map label with an accessible icon action',
+    (tester) async {
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      var mapOpens = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            appBar: GamePlayAppBar(
+              title: 'Bubble Shooter',
+              subtitle: 'Level 10 · Medium',
+              onBack: () {},
+              onOpenMap: () => mapOpens++,
+              soundEnabled: true,
+              onToggleSound: () {},
+              onRestart: () {},
+              backgroundColor: const Color(0xff6250bb),
+              foregroundColor: Colors.white,
+              buttonColor: Colors.white24,
+              accentColor: const Color(0xffffd77d),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('Map'), findsNothing);
+      expect(find.byTooltip('Level map'), findsOneWidget);
+      expect(find.byTooltip('Mute game sounds'), findsOneWidget);
+      expect(find.byTooltip('Restart level'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+
+      await tester.tap(find.byTooltip('Level map'));
+      await tester.pump();
+      expect(mapOpens, 1);
     },
   );
 
