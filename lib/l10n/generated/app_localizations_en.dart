@@ -11,6 +11,43 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get roomCompare => 'Compare';
+
+  @override
+  String get roomComparePin => 'Pin current colors as A';
+
+  @override
+  String get roomCompareA => 'A · Pinned colors';
+
+  @override
+  String get roomCompareCurrent => 'Current colors';
+
+  @override
+  String get roomCompareOriginal => 'Original · Last saved colors';
+
+  @override
+  String get roomCompareGrayscale => 'Black & white preview';
+
+  @override
+  String roomCompareVariant(String name) {
+    return 'B · $name';
+  }
+
+  @override
+  String get roomCompareHint =>
+      'Comparisons preserve your edits. Original shows your last saved colors, or black & white for a new design.';
+
+  @override
+  String get roomExportArtwork => 'Room PNG · 2400 × 1600';
+
+  @override
+  String get roomExportPaletteCard => 'Palette card · 1200 px wide';
+
+  @override
+  String get roomExportDisplayed =>
+      'Exports the view shown now. The palette card is available for colored views.';
+
+  @override
   String get roomUsePhoto => 'Use my photo';
 
   @override
@@ -237,6 +274,172 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String modelsSummary(int files, int bytes) {
     return '$files model files · $bytes bytes';
+  }
+
+  @override
+  String get roomDraftUnavailable =>
+      'A draft from a newer app version can’t be opened yet. It is kept safely on this device.';
+
+  @override
+  String get roomEditFlow => 'Choose a Look → Change a Surface → Save';
+
+  @override
+  String get roomChooseLook => 'Choose a Look';
+
+  @override
+  String get roomChangeSurface => 'Change a Surface';
+
+  @override
+  String get roomApplyCompleteLook => 'Apply Complete Look';
+
+  @override
+  String get roomLookPreview => 'Preview — apply to change your room';
+
+  @override
+  String get roomSave => 'Save';
+
+  @override
+  String get roomUpdate => 'Update';
+
+  @override
+  String get roomSaveCopy => 'Save a Copy';
+
+  @override
+  String get roomMyDesigns => 'My Designs';
+
+  @override
+  String get roomMyPalettes => 'My Palettes';
+
+  @override
+  String get roomUndo => 'Undo';
+
+  @override
+  String get roomRedo => 'Redo';
+
+  @override
+  String get roomSaving => 'Saving…';
+
+  @override
+  String get roomSaved => 'Saved';
+
+  @override
+  String get roomDraftFailed =>
+      'Draft could not be saved. Your changes are still here.';
+
+  @override
+  String get roomRetry => 'Retry';
+
+  @override
+  String get roomCustomColor => 'Custom color';
+
+  @override
+  String get roomClose => 'Close';
+
+  @override
+  String get roomNoPalettes => 'No saved palettes yet.';
+
+  @override
+  String get roomPalettesFailed => 'Could not load your palettes.';
+
+  @override
+  String get roomLoading => 'Loading…';
+
+  @override
+  String get roomWallBack => 'Back wall';
+
+  @override
+  String get roomWallSide => 'Side wall';
+
+  @override
+  String get roomWallAccent => 'Accent wall';
+
+  @override
+  String get roomDesk => 'Desk';
+
+  @override
+  String get roomChair => 'Chair';
+
+  @override
+  String get roomShelves => 'Shelves';
+
+  @override
+  String get roomConsole => 'Console';
+
+  @override
+  String get roomSofa => 'Sofa';
+
+  @override
+  String get roomAccentChair => 'Accent chair';
+
+  @override
+  String get roomCoffeeTable => 'Coffee table';
+
+  @override
+  String get roomWardrobe => 'Wardrobe';
+
+  @override
+  String get roomBedsideTableLeft => 'Left bedside table';
+
+  @override
+  String get roomBedsideTableRight => 'Right bedside table';
+
+  @override
+  String get roomBed => 'Bed';
+
+  @override
+  String get roomSideboard => 'Sideboard';
+
+  @override
+  String get roomChairBackLeft => 'Back left chair';
+
+  @override
+  String get roomChairBackRight => 'Back right chair';
+
+  @override
+  String get roomChairFrontLeft => 'Front left chair';
+
+  @override
+  String get roomChairFrontRight => 'Front right chair';
+
+  @override
+  String get roomDiningTable => 'Dining table';
+
+  @override
+  String get roomCabinetUpperLeft => 'Upper left cabinets';
+
+  @override
+  String get roomCabinetLowerLeft => 'Lower left cabinets';
+
+  @override
+  String get roomCabinetUpperRight => 'Upper right cabinets';
+
+  @override
+  String get roomCabinetLowerRight => 'Lower right cabinets';
+
+  @override
+  String get roomIsland => 'Island';
+
+  @override
+  String get roomVanity => 'Vanity';
+
+  @override
+  String get roomStorage => 'Storage';
+
+  @override
+  String get roomWalls => 'All Walls';
+
+  @override
+  String get roomCeiling => 'Ceiling';
+
+  @override
+  String get roomFloor => 'Floor';
+
+  @override
+  String get roomFurniture => 'Furniture';
+
+  @override
+  String roomSelectedSurface(String name) {
+    return 'Selected: $name';
   }
 
   @override
@@ -1174,4 +1377,68 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get roomDialogCancel => 'Cancel';
+
+  @override
+  String get illustratedPaletteSoftLinenName => 'Soft Linen';
+
+  @override
+  String get illustratedPaletteSoftLinenDescription =>
+      'Soft neutrals with a deeper warm accent.';
+
+  @override
+  String get illustratedPaletteQuietSageName => 'Quiet Sage';
+
+  @override
+  String get illustratedPaletteQuietSageDescription =>
+      'Muted greens with a gentle neutral contrast.';
+
+  @override
+  String get illustratedPaletteAirySlateName => 'Airy Slate';
+
+  @override
+  String get illustratedPaletteAirySlateDescription =>
+      'Pale cool tones with a deeper blue-gray accent.';
+
+  @override
+  String get illustratedPaletteClayAndCreamName => 'Clay and Cream';
+
+  @override
+  String get illustratedPaletteClayAndCreamDescription =>
+      'Cream and earthy tones with a dark brown accent.';
+
+  @override
+  String get illustratedPaletteMistAndInkName => 'Mist and Ink';
+
+  @override
+  String get illustratedPaletteMistAndInkDescription =>
+      'Light gray and blue tones with a dark ink accent.';
+
+  @override
+  String get illustratedPaletteSunwashedOliveName => 'Sunwashed Olive';
+
+  @override
+  String get illustratedPaletteSunwashedOliveDescription =>
+      'Warm yellow and olive tones with a deep green accent.';
+
+  @override
+  String get illustratedPaletteGuideTitle => 'Why these looks?';
+
+  @override
+  String get illustratedPaletteGuideClose => 'Close palette guide';
+
+  @override
+  String get illustratedPaletteGuideIntro =>
+      'Original color combinations for exploring your room. Each palette supplies wall, ceiling, floor and furniture colors.';
+
+  @override
+  String get illustratedPalettePreviewLimit =>
+      'This is a non-calibrated display preview. Screen calibration, lighting, surface texture, paint finish and surrounding colors can change appearance. Compare physical samples in your room before buying paint.';
+
+  @override
+  String get illustratedPaletteRecommended => 'Starting look';
+
+  @override
+  String illustratedPaletteRecommendedLabel(String name) {
+    return '$name, Starting look';
+  }
 }

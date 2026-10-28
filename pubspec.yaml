@@ -80,6 +80,8 @@ flutter:
     - assets/data/color_names.json
     - assets/models/room_seg_descriptor.json
     - assets/rooms/
+    - assets/rooms/regions/
+    - assets/rooms/palettes/
     - assets/licenses/
   fonts:
     - family: PlusJakartaSans

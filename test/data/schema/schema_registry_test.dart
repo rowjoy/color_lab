@@ -50,7 +50,7 @@ void main() {
         'illustrated-rooms': (
           'illustrated_room_designs_v1',
           StorageBackend.hiveBox,
-          1,
+          2,
           LocalDataScope.sharedLibrary,
         ),
         'photo-acquisition': (
@@ -106,7 +106,7 @@ void main() {
     expect(hive['app_preferences_v1']!.currentVersion, 2);
     expect(hive['color_history_v1']!.currentVersion, 1);
     expect(hive['color_palettes_v1']!.currentVersion, 1);
-    expect(hive['illustrated_room_designs_v1']!.currentVersion, 1);
+    expect(hive['illustrated_room_designs_v1']!.currentVersion, 2);
     expect(hive['photo_acquisition_v1']!.currentVersion, 1);
     expect(hive['game_profiles_v2']!.currentVersion, 2);
     expect(hive['game_progress_v1']!.currentVersion, 1);

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/theme.dart';
+import '../../../l10n/l10n.dart';
 import '../domain/illustrated_room.dart';
 
 Future<void> showIllustratedRoomMarketGuide(
@@ -40,13 +41,13 @@ class IllustratedRoomMarketGuide extends StatelessWidget {
                 child: Semantics(
                   header: true,
                   child: Text(
-                    'Why these looks?',
+                    context.l10n.illustratedPaletteGuideTitle,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),
               ),
               IconButton(
-                tooltip: 'Close market guide',
+                tooltip: context.l10n.illustratedPaletteGuideClose,
                 constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                 onPressed: () => Navigator.of(context).pop(),
                 icon: const Icon(Icons.close_rounded),
@@ -65,17 +66,7 @@ class IllustratedRoomMarketGuide extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  template.paletteReviewLabel,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: context.appColors.primary,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  'These are practical starting points for '
-                  '${template.title.toLowerCase()} lighting and materials.',
-                ),
+                Text(context.l10n.illustratedPaletteGuideIntro),
                 const SizedBox(height: AppSpacing.xl),
                 for (final palette in template.palettes) ...[
                   _GuidePalette(palette: palette),
@@ -85,10 +76,10 @@ class IllustratedRoomMarketGuide extends StatelessWidget {
                 const SizedBox(height: AppSpacing.md),
                 Semantics(
                   container: true,
-                  label: template.paletteSourceNote,
+                  label: context.l10n.illustratedPalettePreviewLimit,
                   excludeSemantics: true,
                   child: Text(
-                    template.paletteSourceNote,
+                    context.l10n.illustratedPalettePreviewLimit,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: context.appColors.textSecondary,
                     ),
@@ -120,18 +111,12 @@ class _GuidePalette extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(palette.name, style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            palette.localizedName(context.l10n),
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: AppSpacing.xs),
-          Text(palette.guidance),
-          if (palette.provenance case final provenance?) ...[
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              provenance,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: context.appColors.textSecondary,
-              ),
-            ),
-          ],
+          Text(palette.localizedGuidance(context.l10n)),
         ],
       ),
     ),

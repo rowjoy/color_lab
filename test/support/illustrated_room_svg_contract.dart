@@ -1,11 +1,15 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:color_lab/core/vector_regions/data/vector_region_json_codec.dart';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:color_lab/core/color/color_models.dart';
 import 'package:color_lab/features/room_studio/domain/illustrated_room.dart';
+import 'package:color_lab/features/room_studio/domain/illustrated_room_assignments.dart';
 import 'package:color_lab/features/room_studio/domain/illustrated_room_draft.dart';
 import 'package:color_lab/features/room_studio/presentation/illustrated_room_svg.dart';
+import 'package:color_lab/features/room_studio/presentation/illustrated_room_region_artwork.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -93,6 +97,15 @@ void validatePolishedIllustratedRoomSvg(
     );
   }
 
+  if (template.regionAssetPath != null &&
+      source.contains('<!-- ${template.id}-decoration-slots -->')) {
+    // Migrated rooms own no token base or editable SVG groups. Their immutable
+    // JSON and frozen-raster tests replace legacy group/token assertions;
+    // the tone, shadow, color and complexity checks still run unchanged.
+    expect(source, contains('fill="#FFFFFF"'));
+    expect(source, contains('fill="#000000"'));
+    return;
+  }
   final groups = <String, _PolishGroup>{
     for (final id in {
       ...contract.requiredGroupIds,
@@ -375,6 +388,37 @@ void validateIllustratedRoomSvg(
     }
   }
 
+  if (template.regionAssetPath != null &&
+      source.contains('<!-- ${template.id}-decoration-slots -->')) {
+    expect(frames, isEmpty, reason: '${template.id}: unbalanced decoration');
+    for (final entry in groupCounts.entries) {
+      expect(entry.value, 0);
+    }
+    for (final entry in tokenGeometryCounts.entries) {
+      expect(entry.value, 0);
+    }
+    final definition = VectorRegionJsonCodec().decode(
+      File(template.regionAssetPath!).readAsStringSync(),
+    );
+    expect(definition.id, template.id);
+    expect(definition.revision, 1);
+    expect(
+      definition.regions,
+      hasLength(
+        IllustratedRoomRegionMembership.forTemplate(
+          template,
+        ).groups.values.fold<int>(0, (sum, ids) => sum + ids.length),
+      ),
+    );
+    expect(
+      definition.intrinsicSize,
+      Size(
+        template.artboardWidth.toDouble(),
+        template.artboardHeight.toDouble(),
+      ),
+    );
+    return;
+  }
   expect(frames, isEmpty, reason: '${template.id}: unbalanced SVG');
   for (final entry in groupCounts.entries) {
     expect(
@@ -400,6 +444,9 @@ Future<void> pumpIllustratedRoomRaster(
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
+  if (draft.template.regionAssetPath != null) {
+    await tester.runAsync(() => StudyRoomRegionArtwork.loadFor(draft.template));
+  }
   await tester.pumpWidget(
     Directionality(
       textDirection: TextDirection.ltr,

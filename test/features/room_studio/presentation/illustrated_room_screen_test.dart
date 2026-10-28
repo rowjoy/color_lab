@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:color_lab/core/theme/theme.dart';
+import 'package:color_lab/l10n/l10n.dart';
+import 'package:color_lab/l10n/generated/app_localizations_en.dart';
 import 'package:color_lab/core/widgets/buttons.dart';
 import 'package:color_lab/features/history/application/history_providers.dart';
 import 'package:color_lab/features/room_studio/application/illustrated_room_artwork_encoder.dart';
@@ -20,6 +22,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../../support/in_memory_room_design_repository.dart';
 import '../../../support/in_memory_color_history_repository.dart';
+import '../../../support/room_png_fixtures.dart';
+import '../../../support/illustrated_room_test_export_service.dart';
+import 'package:color_lab/features/room_studio/application/room_image_export_service.dart';
 
 final class _EditorHarness {
   const _EditorHarness(this.container);
@@ -40,7 +45,7 @@ final class _TestArtworkEncoder implements IllustratedRoomArtworkEncoder {
   Future<Uint8List> encodePng(IllustratedRoomDraft draft) async {
     calls++;
     if (failure case final error?) throw error;
-    return Uint8List.fromList([137, 80, 78, 71, 13, 10, 26, 10]);
+    return roomPng();
   }
 }
 
@@ -100,7 +105,9 @@ Future<_EditorHarness> _pumpEditor(
       if (artworkEncoder != null)
         illustratedRoomArtworkEncoderProvider.overrideWithValue(artworkEncoder),
       if (galleryWriter != null)
-        roomGalleryWriterProvider.overrideWithValue(galleryWriter),
+        roomImageExportServiceProvider.overrideWithValue(
+          IllustratedRoomTestExportService(galleryWriter),
+        ),
       if (gallerySettings != null)
         roomGallerySettingsProvider.overrideWithValue(gallerySettings),
     ],
@@ -110,6 +117,8 @@ Future<_EditorHarness> _pumpEditor(
     UncontrolledProviderScope(
       container: container,
       child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         theme: AppTheme.light,
         darkTheme: AppTheme.dark,
         themeMode: themeMode,
@@ -234,37 +243,37 @@ void main() {
     expect(tester.getRect(scene), sceneRect);
   });
 
-  testWidgets('explicit rail choice survives crossing the 720dp breakpoint', (
+  testWidgets('explicit rail choice survives crossing the 600dp breakpoint', (
     tester,
   ) async {
     await _pumpEditor(
       tester,
-      size: const Size(719, 768),
+      size: const Size(599, 768),
       disableAnimations: true,
     );
     expect(_key('room-color-rail').hitTestable(), findsNothing);
 
-    tester.view.physicalSize = const Size(720, 768);
+    tester.view.physicalSize = const Size(600, 768);
     await tester.pumpAndSettle();
     expect(_key('room-color-rail').hitTestable(), findsOneWidget);
 
     await _tapKey(tester, 'room-hide-color-tools');
-    tester.view.physicalSize = const Size(719, 768);
+    tester.view.physicalSize = const Size(599, 768);
     await tester.pumpAndSettle();
     expect(_key('room-color-rail').hitTestable(), findsNothing);
 
-    tester.view.physicalSize = const Size(720, 768);
+    tester.view.physicalSize = const Size(600, 768);
     await tester.pumpAndSettle();
     expect(_key('room-color-rail').hitTestable(), findsNothing);
 
-    tester.view.physicalSize = const Size(719, 768);
+    tester.view.physicalSize = const Size(599, 768);
     await tester.pumpAndSettle();
     await _tapKey(tester, 'room-show-color-tools');
-    tester.view.physicalSize = const Size(720, 768);
+    tester.view.physicalSize = const Size(600, 768);
     await tester.pumpAndSettle();
     expect(_key('room-color-rail').hitTestable(), findsOneWidget);
 
-    tester.view.physicalSize = const Size(719, 768);
+    tester.view.physicalSize = const Size(599, 768);
     await tester.pumpAndSettle();
     expect(_key('room-color-rail').hitTestable(), findsOneWidget);
   });
@@ -272,13 +281,13 @@ void main() {
   testWidgets('responsive auto-hide clears an open flyout', (tester) async {
     await _pumpEditor(
       tester,
-      size: const Size(720, 768),
+      size: const Size(600, 768),
       disableAnimations: true,
     );
     await _tapKey(tester, 'room-rail-looks');
     expect(_key('room-flyout'), findsOneWidget);
 
-    tester.view.physicalSize = const Size(719, 768);
+    tester.view.physicalSize = const Size(599, 768);
     await tester.pumpAndSettle();
     expect(_key('room-flyout'), findsNothing);
     expect(_key('room-show-color-tools').hitTestable(), findsOneWidget);
@@ -300,7 +309,7 @@ void main() {
     (tester) async {
       await _pumpEditor(
         tester,
-        size: const Size(719, 768),
+        size: const Size(599, 768),
         disableAnimations: true,
       );
 
@@ -308,7 +317,7 @@ void main() {
       await _tapKey(tester, 'room-exit-focus-preview');
       expect(_key('room-color-rail').hitTestable(), findsNothing);
 
-      tester.view.physicalSize = const Size(720, 768);
+      tester.view.physicalSize = const Size(600, 768);
       await tester.pumpAndSettle();
       expect(_key('room-color-rail').hitTestable(), findsOneWidget);
 
@@ -319,10 +328,10 @@ void main() {
       expect(_key('room-exit-focus-preview'), findsNothing);
       expect(_key('room-color-rail').hitTestable(), findsNothing);
 
-      tester.view.physicalSize = const Size(719, 768);
+      tester.view.physicalSize = const Size(599, 768);
       await tester.pumpAndSettle();
       expect(_key('room-color-rail').hitTestable(), findsNothing);
-      tester.view.physicalSize = const Size(720, 768);
+      tester.view.physicalSize = const Size(600, 768);
       await tester.pumpAndSettle();
       expect(_key('room-color-rail').hitTestable(), findsNothing);
     },
@@ -340,7 +349,7 @@ void main() {
         );
         harness.container
             .read(illustratedRoomProvider.notifier)
-            .applyPalette('soft-botanical');
+            .applyPalette('quiet-sage');
         await tester.pumpAndSettle();
         final before = harness.studyDraft;
 
@@ -413,7 +422,7 @@ void main() {
       );
       harness.container
           .read(illustratedRoomProvider.notifier)
-          .applyPalette('warm-natural');
+          .applyPalette('soft-linen');
       await tester.pumpAndSettle();
       final before = harness.studyDraft;
 
@@ -580,7 +589,7 @@ void main() {
 
         await _ensureColorToolsVisible(tester);
         final rail = _key('room-color-rail');
-        expect(tester.getSize(rail).width, scenario.size.width < 720 ? 68 : 72);
+        expect(tester.getSize(rail).width, scenario.size.width < 600 ? 68 : 72);
         await _tapKey(tester, 'room-rail-looks');
         expect(_key('room-flyout'), findsOneWidget);
         expect(
@@ -603,18 +612,18 @@ void main() {
     );
   }
 
-  for (final width in [719.0, 720.0]) {
+  for (final width in [599.0, 600.0]) {
     testWidgets('rail changes width at ${width.toInt()}dp', (tester) async {
       await _pumpEditor(tester, size: Size(width, 768));
-      if (width < 720) await _tapKey(tester, 'room-show-color-tools');
+      if (width < 600) await _tapKey(tester, 'room-show-color-tools');
       expect(
         tester.getSize(_key('room-color-rail')).width,
-        width < 720 ? 68 : 72,
+        width < 600 ? 68 : 72,
       );
     });
   }
 
-  testWidgets('starts grayscale with exact looks and disabled save actions', (
+  testWidgets('starts grayscale with exact looks and image export available', (
     tester,
   ) async {
     final harness = await _pumpEditor(tester);
@@ -638,7 +647,7 @@ void main() {
       expect(_key('room-palette-${palette.id}'), findsOneWidget);
       expect(find.text(palette.name), findsOneWidget);
     }
-    expect(find.text('Recommended'), findsOneWidget);
+    expect(find.text('Starting look'), findsOneWidget);
     expect(find.text('Why these looks?'), findsOneWidget);
 
     await _tapKey(tester, 'room-open-designs');
@@ -651,7 +660,7 @@ void main() {
             find.byType(IllustratedRoomColorRail),
           )
           .onSaveToGallery,
-      isNull,
+      isNotNull,
     );
   });
 
@@ -677,7 +686,7 @@ void main() {
         );
         harness.container
             .read(illustratedRoomProvider.notifier)
-            .applyPalette('soft-botanical');
+            .applyPalette('quiet-sage');
         await tester.pumpAndSettle();
         final before = harness.studyDraft;
         await _prepareGalleryTap(tester);
@@ -705,18 +714,23 @@ void main() {
 
         release.complete();
         await tester.pump();
-        final feedback = find.text('Saved to Gallery');
+        final feedback = find.text(AppLocalizationsEn().roomExportSaved);
         expect(feedback, findsOneWidget);
         final feedbackElement = feedback.evaluate().single;
         await tester.pump(const Duration(milliseconds: 300));
 
         expect(feedback, findsOneWidget);
         expect(feedback.evaluate().single, same(feedbackElement));
-        expect(find.bySemanticsLabel('Saved to Gallery'), findsOneWidget);
         expect(
-          tester.getSemantics(find.bySemanticsLabel('Saved to Gallery')),
+          find.bySemanticsLabel(AppLocalizationsEn().roomExportSaved),
+          findsOneWidget,
+        );
+        expect(
+          tester.getSemantics(
+            find.bySemanticsLabel(AppLocalizationsEn().roomExportSaved),
+          ),
           matchesSemantics(
-            label: 'Saved to Gallery',
+            label: AppLocalizationsEn().roomExportSaved,
             isLiveRegion: true,
             textDirection: TextDirection.ltr,
           ),
@@ -761,17 +775,18 @@ void main() {
       final harness = await _pumpEditor(tester, disableAnimations: true);
       await _ensureColorToolsVisible(tester);
       await _tapKey(tester, 'room-rail-looks');
-      await _tapKey(tester, 'room-palette-warm-natural');
+      await _tapKey(tester, 'room-palette-soft-linen');
+      await _tapKey(tester, 'room-apply-complete-look');
 
       final colors = harness.studyDraft.colors!;
-      expect(colors.wall.hex, '#E2D5BF');
-      expect(colors.ceiling.hex, '#F8F4EB');
-      expect(colors.floor.hex, '#C5AA84');
-      expect(colors.furniture.hex, '#72513D');
+      expect(colors.wall.hex, '#F2E9DA');
+      expect(colors.ceiling.hex, '#D8C7AC');
+      expect(colors.floor.hex, '#A89073');
+      expect(colors.furniture.hex, '#5C554D');
       expect(
         find.bySemanticsLabel(
-          'Study room. Warm Natural. Wall #E2D5BF. Ceiling #F8F4EB. '
-          'Floor #C5AA84. Desk & furniture #72513D.',
+          'Study room. Soft Linen. Wall #F2E9DA. Ceiling #D8C7AC. '
+          'Floor #A89073. Desk & furniture #5C554D.',
         ),
         findsOneWidget,
       );
@@ -788,7 +803,14 @@ void main() {
     await _tapKey(tester, 'room-surface-furniture');
 
     expect(find.text('Desk & furniture'), findsWidgets);
-    for (final hex in ['72513D', '654A39', '465967']) {
+    for (final hex in [
+      '5C554D',
+      '4E5B4A',
+      '3F5362',
+      '5E4A42',
+      '263746',
+      '4F5A3F',
+    ]) {
       final suggestion = _key('room-suggestion-furniture-$hex');
       expect(suggestion, findsOneWidget);
       expect(tester.getSize(suggestion).shortestSide, greaterThanOrEqualTo(48));
@@ -810,35 +832,42 @@ void main() {
     await tester.pumpAndSettle();
 
     final colors = harness.studyDraft.colors!;
-    expect(colors.wall.hex, '#B7C5B3');
+    expect(colors.wall.hex, '#ECE9DF');
     expect(colors.ceiling.hex, '#123456');
-    expect(colors.floor.hex, '#C6AC84');
-    expect(colors.furniture.hex, '#654A39');
+    expect(colors.floor.hex, '#78866B');
+    expect(colors.furniture.hex, '#4E5B4A');
     expect(harness.studyDraft.visualStateLabel, 'Custom combination');
   });
 
-  testWidgets('market guide explains provenance and physical swatches', (
-    tester,
-  ) async {
-    await _pumpEditor(tester, themeMode: ThemeMode.dark);
-    await _ensureColorToolsVisible(tester);
-    await _tapKey(tester, 'room-rail-looks');
-    await _tapKey(tester, 'room-market-guide');
+  testWidgets(
+    'palette guide explains original combinations and preview limitations',
+    (tester) async {
+      await _pumpEditor(tester, themeMode: ThemeMode.dark);
+      await _ensureColorToolsVisible(tester);
+      await _tapKey(tester, 'room-rail-looks');
+      await _tapKey(tester, 'room-market-guide');
 
-    expect(find.text('Why these looks?'), findsWidgets);
-    expect(
-      find.text(IllustratedRoomCatalog.study.paletteReviewLabel),
-      findsOneWidget,
-    );
-    expect(
-      find.text(IllustratedRoomCatalog.study.paletteSourceNote),
-      findsOneWidget,
-    );
-    for (final palette in IllustratedRoomCatalog.study.palettes) {
-      expect(find.text(palette.name), findsWidgets);
-      expect(find.text(palette.provenance!), findsOneWidget);
-    }
-  });
+      expect(find.text('Why these looks?'), findsWidgets);
+      expect(
+        find.text(AppLocalizationsEn().illustratedPaletteGuideIntro),
+        findsOneWidget,
+      );
+      expect(
+        find.text(AppLocalizationsEn().illustratedPalettePreviewLimit),
+        findsOneWidget,
+      );
+      for (final palette in IllustratedRoomCatalog.study.palettes) {
+        expect(find.text(palette.name), findsWidgets);
+        expect(
+          find.descendant(
+            of: find.byKey(const ValueKey('room-market-guide-sheet')),
+            matching: find.text(palette.guidance),
+          ),
+          findsOneWidget,
+        );
+      }
+    },
+  );
 
   for (final scenario
       in <
@@ -854,7 +883,7 @@ void main() {
           name: 'render',
           encoderFailure: const IllustratedRoomRenderException(),
           writerFailure: null,
-          message: 'Could not prepare the room image. Try again.',
+          message: AppLocalizationsEn().roomExportInvalid,
           settings: false,
         ),
         (
@@ -863,7 +892,7 @@ void main() {
           writerFailure: const RoomGalleryWriteException(
             RoomGalleryFailure.accessDenied,
           ),
-          message: 'Allow photo access in Settings to save this room image.',
+          message: AppLocalizationsEn().roomExportAccess,
           settings: true,
         ),
         (
@@ -872,7 +901,7 @@ void main() {
           writerFailure: const RoomGalleryWriteException(
             RoomGalleryFailure.notEnoughSpace,
           ),
-          message: 'Not enough device storage to save the room image.',
+          message: AppLocalizationsEn().roomExportCapacity,
           settings: false,
         ),
         (
@@ -881,7 +910,7 @@ void main() {
           writerFailure: const RoomGalleryWriteException(
             RoomGalleryFailure.unsupportedFormat,
           ),
-          message: 'This room image format could not be saved.',
+          message: AppLocalizationsEn().roomExportInvalid,
           settings: false,
         ),
         (
@@ -890,14 +919,14 @@ void main() {
           writerFailure: const RoomGalleryWriteException(
             RoomGalleryFailure.unsupportedPlatform,
           ),
-          message: 'Saving to Gallery is not available on this device.',
+          message: AppLocalizationsEn().roomExportSaveFailed,
           settings: false,
         ),
         (
           name: 'unexpected',
           encoderFailure: null,
           writerFailure: StateError('private /Users/example/gallery detail'),
-          message: 'Could not save the room image. Try again.',
+          message: AppLocalizationsEn().roomExportSaveFailed,
           settings: false,
         ),
       ]) {
@@ -921,7 +950,7 @@ void main() {
         );
         harness.container
             .read(illustratedRoomProvider.notifier)
-            .applyPalette('cool-airy');
+            .applyPalette('airy-slate');
         await tester.pumpAndSettle();
         final before = harness.studyDraft;
 
@@ -978,19 +1007,19 @@ void main() {
     );
     harness.container
         .read(illustratedRoomProvider.notifier)
-        .applyPalette('warm-natural');
+        .applyPalette('soft-linen');
     await tester.pumpAndSettle();
     final before = harness.studyDraft;
 
     await _tapGalleryAndShowFeedback(tester);
     expect(
-      find.text('Could not save the room image. Try again.'),
+      find.text(AppLocalizationsEn().roomExportSaveFailed),
       findsOneWidget,
     );
     expect(harness.studyDraft, same(before));
 
     await _tapGalleryAndShowFeedback(tester);
-    expect(find.text('Saved to Gallery'), findsOneWidget);
+    expect(find.text(AppLocalizationsEn().roomExportSaved), findsOneWidget);
     expect(encoder.calls, 2);
     expect(writer.calls, 2);
     expect(harness.studyDraft, same(before));
@@ -1002,7 +1031,7 @@ void main() {
     final harness = await _pumpEditor(tester);
     harness.container
         .read(illustratedRoomProvider.notifier)
-        .applyPalette('soft-botanical');
+        .applyPalette('quiet-sage');
     await tester.pumpAndSettle();
 
     await _tapKey(tester, 'room-editor-back');
@@ -1029,7 +1058,7 @@ void main() {
     final harness = await _pumpEditor(tester);
     harness.container
         .read(illustratedRoomProvider.notifier)
-        .applyPalette('warm-natural');
+        .applyPalette('soft-linen');
     await tester.pumpAndSettle();
 
     await _tapKey(tester, 'room-editor-back');
@@ -1045,21 +1074,24 @@ void main() {
     expect(session.draftFor('study')!.isDirty, isFalse);
   });
 
-  testWidgets('black and white confirms before clearing dirty colors', (
+  testWidgets('black and white previews without clearing dirty colors', (
     tester,
   ) async {
     final harness = await _pumpEditor(tester);
     harness.container
         .read(illustratedRoomProvider.notifier)
-        .applyPalette('cool-airy');
+        .applyPalette('airy-slate');
     await tester.pumpAndSettle();
 
     await _ensureColorToolsVisible(tester);
+    final before = harness.studyDraft;
     await _tapKey(tester, 'room-black-white');
-    expect(find.text('Return to black & white?'), findsOneWidget);
-    await tester.tap(find.widgetWithText(TextButton, 'Return'));
     await tester.pumpAndSettle();
 
-    expect(harness.studyDraft.mode, IllustratedRoomVisualMode.grayscale);
+    expect(harness.studyDraft.displayMode, IllustratedRoomVisualMode.grayscale);
+    expect(harness.studyDraft.assignments, before.assignments);
+    expect(identical(harness.studyDraft.history, before.history), isTrue);
+    await _tapKey(tester, 'room-black-white');
+    expect(harness.studyDraft.displayAssignments, before.assignments);
   });
 }

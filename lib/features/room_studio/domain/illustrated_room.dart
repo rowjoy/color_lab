@@ -1,6 +1,8 @@
 import 'dart:collection';
 
 import '../../../core/color/color_models.dart';
+import '../../../l10n/l10n.dart';
+import '../data/illustrated_room_palette_catalog.dart';
 
 enum IllustratedRoomSurface { wall, ceiling, floor, furniture }
 
@@ -109,19 +111,37 @@ final class IllustratedRoomPalette {
     required String name,
     required String guidance,
     required this.colors,
-    String? provenance,
   }) : id = _requiredId(id, 'id'),
-       name = _requiredText(name, 'name'),
-       guidance = _requiredText(guidance, 'guidance'),
-       provenance = provenance == null
-           ? null
-           : _requiredText(provenance, 'provenance');
+       _name = _requiredText(name, 'name'),
+       _guidance = _requiredText(guidance, 'guidance'),
+       catalogueRecord = null;
+
+  IllustratedRoomPalette.snapshot(IllustratedRoomPaletteRecord record)
+    : id = record.id,
+      _name = '',
+      _guidance = '',
+      catalogueRecord = record,
+      colors = IllustratedRoomColors(
+        wall: RgbColor.fromHex(record.colors[0]),
+        ceiling: RgbColor.fromHex(record.colors[1]),
+        floor: RgbColor.fromHex(record.colors[2]),
+        furniture: RgbColor.fromHex(record.colors[3]),
+      );
 
   final String id;
-  final String name;
-  final String guidance;
+  final String _name;
+  final String _guidance;
   final IllustratedRoomColors colors;
-  final String? provenance;
+  final IllustratedRoomPaletteRecord? catalogueRecord;
+
+  String get name =>
+      localizedName(IllustratedRoomPaletteCatalog.fallbackLocalizations);
+  String get guidance =>
+      localizedGuidance(IllustratedRoomPaletteCatalog.fallbackLocalizations);
+  String localizedName(AppLocalizations l10n) =>
+      catalogueRecord?.localizedName(l10n) ?? _name;
+  String localizedGuidance(AppLocalizations l10n) =>
+      catalogueRecord?.localizedDescription(l10n) ?? _guidance;
 
   @override
   bool operator ==(Object other) =>
@@ -129,11 +149,9 @@ final class IllustratedRoomPalette {
       id == other.id &&
       name == other.name &&
       guidance == other.guidance &&
-      colors == other.colors &&
-      provenance == other.provenance;
-
+      colors == other.colors;
   @override
-  int get hashCode => Object.hash(id, name, guidance, colors, provenance);
+  int get hashCode => Object.hash(id, name, guidance, colors);
 }
 
 final class IllustratedRoomTemplate {
@@ -148,22 +166,13 @@ final class IllustratedRoomTemplate {
     required this.focalPoint,
     this.artboardWidth = 1200,
     this.artboardHeight = 800,
-    required String paletteReviewLabel,
-    required String paletteSourceNote,
+    this.regionAssetPath,
   }) : id = _requiredId(id, 'id'),
        title = _requiredText(title, 'title'),
        summary = _requiredText(summary, 'summary'),
        assetPath = _requiredText(assetPath, 'assetPath'),
        defaultPaletteId = _requiredId(defaultPaletteId, 'defaultPaletteId'),
-       palettes = UnmodifiableListView(palettes.toList(growable: false)),
-       paletteReviewLabel = _requiredText(
-         paletteReviewLabel,
-         'paletteReviewLabel',
-       ),
-       paletteSourceNote = _requiredText(
-         paletteSourceNote,
-         'paletteSourceNote',
-       ) {
+       palettes = UnmodifiableListView(palettes.toList(growable: false)) {
     if (this.palettes.isEmpty) {
       throw ArgumentError.value(palettes, 'palettes', 'Must not be empty');
     }
@@ -207,14 +216,13 @@ final class IllustratedRoomTemplate {
   final String title;
   final String summary;
   final String assetPath;
+  final String? regionAssetPath;
   final String defaultPaletteId;
   final List<IllustratedRoomPalette> palettes;
   final IllustratedRoomSurfaceLabels surfaceLabels;
   final IllustratedRoomFocalPoint focalPoint;
   final int artboardWidth;
   final int artboardHeight;
-  final String paletteReviewLabel;
-  final String paletteSourceNote;
 
   double get aspectRatio => artboardWidth / artboardHeight;
 
@@ -245,12 +253,6 @@ final class IllustratedRoomTemplate {
 }
 
 abstract final class IllustratedRoomCatalog {
-  static const _reviewLabel = 'Market guide - reviewed October 2026';
-  static const _sourceNote =
-      'Display preview inspired by current Bangladesh paint guidance. Colors '
-      'vary by screen, light, surface and finish; compare a physical swatch '
-      'in daylight and evening before purchase.';
-
   static const _standardLabels = IllustratedRoomSurfaceLabels(
     wall: 'Wall',
     ceiling: 'Ceiling',
@@ -263,14 +265,9 @@ abstract final class IllustratedRoomCatalog {
     title: 'Living room',
     summary: 'A welcoming lounge with layered seating and natural light.',
     assetPath: 'assets/rooms/living_room.svg',
-    defaultPaletteId: 'warm-natural',
+    defaultPaletteId: 'soft-linen',
     focalPoint: const IllustratedRoomFocalPoint(x: 0, y: .08),
     labels: _standardLabels,
-    values: const {
-      'warm-natural': ['#E6D8C3', '#F8F4EB', '#C5AD8A', '#7B5944'],
-      'soft-botanical': ['#C4D3C1', '#F8F4EB', '#BEB2A2', '#9A7557'],
-      'cool-airy': ['#D3E0E4', '#F7F5EF', '#B5BEC1', '#5F493F'],
-    },
   );
 
   static final IllustratedRoomTemplate bedroom = _room(
@@ -278,7 +275,7 @@ abstract final class IllustratedRoomCatalog {
     title: 'Bedroom',
     summary: 'A restful bedroom with layered textiles and warm timber.',
     assetPath: 'assets/rooms/bedroom_room.svg',
-    defaultPaletteId: 'warm-natural',
+    defaultPaletteId: 'soft-linen',
     focalPoint: const IllustratedRoomFocalPoint(x: .05, y: .05),
     labels: const IllustratedRoomSurfaceLabels(
       wall: 'Wall',
@@ -286,11 +283,6 @@ abstract final class IllustratedRoomCatalog {
       floor: 'Floor',
       furniture: 'Bed & furniture',
     ),
-    values: const {
-      'warm-natural': ['#DED5C7', '#FAF6EE', '#C2A483', '#785747'],
-      'soft-botanical': ['#C8D3C2', '#F8F4EC', '#BCA58A', '#80614E'],
-      'cool-airy': ['#D4DFE4', '#F8F6F0', '#B7BEC1', '#67514B'],
-    },
   );
 
   static final IllustratedRoomTemplate study = _room(
@@ -298,7 +290,7 @@ abstract final class IllustratedRoomCatalog {
     title: 'Study room',
     summary: 'A focused workspace with ergonomic seating and task lighting.',
     assetPath: 'assets/rooms/study_room.svg',
-    defaultPaletteId: 'soft-botanical',
+    defaultPaletteId: 'quiet-sage',
     focalPoint: const IllustratedRoomFocalPoint(x: 0, y: 0),
     labels: const IllustratedRoomSurfaceLabels(
       wall: 'Wall',
@@ -306,11 +298,6 @@ abstract final class IllustratedRoomCatalog {
       floor: 'Floor',
       furniture: 'Desk & furniture',
     ),
-    values: const {
-      'warm-natural': ['#E2D5BF', '#F8F4EB', '#C5AA84', '#72513D'],
-      'soft-botanical': ['#B7C5B3', '#F8F4EB', '#C6AC84', '#654A39'],
-      'cool-airy': ['#C7D6DF', '#F6F5F0', '#B7A083', '#465967'],
-    },
   );
 
   static final IllustratedRoomTemplate dining = _room(
@@ -318,7 +305,7 @@ abstract final class IllustratedRoomCatalog {
     title: 'Dining room',
     summary: 'A sociable dining space with a central table and pendant light.',
     assetPath: 'assets/rooms/dining_room.svg',
-    defaultPaletteId: 'warm-natural',
+    defaultPaletteId: 'soft-linen',
     focalPoint: const IllustratedRoomFocalPoint(x: 0, y: .08),
     labels: const IllustratedRoomSurfaceLabels(
       wall: 'Wall',
@@ -326,11 +313,6 @@ abstract final class IllustratedRoomCatalog {
       floor: 'Floor',
       furniture: 'Table & furniture',
     ),
-    values: const {
-      'warm-natural': ['#D5BCAA', '#FAF5EC', '#A98464', '#704C3B'],
-      'soft-botanical': ['#C3D0BB', '#F8F4EA', '#AC9274', '#6E5242'],
-      'cool-airy': ['#CFDCE0', '#F8F5EE', '#AA927D', '#5C4740'],
-    },
   );
 
   static final IllustratedRoomTemplate kitchen = _room(
@@ -338,7 +320,7 @@ abstract final class IllustratedRoomCatalog {
     title: 'Kitchen',
     summary: 'A practical kitchen with cabinetry, counters and a broad island.',
     assetPath: 'assets/rooms/kitchen_room.svg',
-    defaultPaletteId: 'soft-botanical',
+    defaultPaletteId: 'quiet-sage',
     focalPoint: const IllustratedRoomFocalPoint(x: .05, y: 0),
     labels: const IllustratedRoomSurfaceLabels(
       wall: 'Wall',
@@ -346,11 +328,6 @@ abstract final class IllustratedRoomCatalog {
       floor: 'Floor',
       furniture: 'Cabinets',
     ),
-    values: const {
-      'warm-natural': ['#E3D7C6', '#FAF8F2', '#BBAF9E', '#987454'],
-      'soft-botanical': ['#D8E1D3', '#FAF8F2', '#B8B0A3', '#A7B39B'],
-      'cool-airy': ['#D8E4E6', '#FBF9F4', '#B7C0C2', '#718184'],
-    },
   );
 
   static final IllustratedRoomTemplate bathroom = _room(
@@ -358,7 +335,7 @@ abstract final class IllustratedRoomCatalog {
     title: 'Bathroom',
     summary: 'A bright bathroom with a vanity, storage and calm hard finishes.',
     assetPath: 'assets/rooms/bathroom_room.svg',
-    defaultPaletteId: 'cool-airy',
+    defaultPaletteId: 'airy-slate',
     focalPoint: const IllustratedRoomFocalPoint(x: -.05, y: .02),
     labels: const IllustratedRoomSurfaceLabels(
       wall: 'Wall',
@@ -366,11 +343,6 @@ abstract final class IllustratedRoomCatalog {
       floor: 'Floor',
       furniture: 'Vanity & storage',
     ),
-    values: const {
-      'warm-natural': ['#E6DDD1', '#FBF9F4', '#C4B8AA', '#92745F'],
-      'soft-botanical': ['#D4E0D7', '#FAFBF7', '#B8C2BA', '#789080'],
-      'cool-airy': ['#D8E5E7', '#FBFBF8', '#B9C2C4', '#8A725F'],
-    },
   );
 
   static final List<IllustratedRoomTemplate> all = List.unmodifiable([
@@ -397,7 +369,6 @@ abstract final class IllustratedRoomCatalog {
     required String defaultPaletteId,
     required IllustratedRoomFocalPoint focalPoint,
     required IllustratedRoomSurfaceLabels labels,
-    required Map<String, List<String>> values,
   }) => IllustratedRoomTemplate(
     id: id,
     title: title,
@@ -406,53 +377,11 @@ abstract final class IllustratedRoomCatalog {
     defaultPaletteId: defaultPaletteId,
     surfaceLabels: labels,
     focalPoint: focalPoint,
-    paletteReviewLabel: _reviewLabel,
-    paletteSourceNote: _sourceNote,
-    palettes: values.entries.map(
-      (entry) => IllustratedRoomPalette(
-        id: entry.key,
-        name: _lookName(entry.key),
-        guidance: _lookGuidance(entry.key),
-        provenance: _lookProvenance(entry.key),
-        colors: _colors(entry.value),
-      ),
+    regionAssetPath: 'assets/rooms/regions/${id}_room.v1.json',
+    palettes: IllustratedRoomPaletteCatalog.all.map(
+      IllustratedRoomPalette.snapshot,
     ),
   );
-
-  static IllustratedRoomColors _colors(List<String> values) =>
-      IllustratedRoomColors(
-        wall: RgbColor.fromHex(values[0]),
-        ceiling: RgbColor.fromHex(values[1]),
-        floor: RgbColor.fromHex(values[2]),
-        furniture: RgbColor.fromHex(values[3]),
-      );
-
-  static String _lookName(String id) => switch (id) {
-    'warm-natural' => 'Warm Natural',
-    'soft-botanical' => 'Soft Botanical',
-    'cool-airy' => 'Cool Airy',
-    _ => throw ArgumentError.value(id, 'id', 'Unknown market-guided look'),
-  };
-
-  static String _lookGuidance(String id) => switch (id) {
-    'warm-natural' =>
-      'Warm neutrals and timber tones create a grounded, welcoming room.',
-    'soft-botanical' =>
-      'Muted botanical color supports a calm room with gentle contrast.',
-    'cool-airy' =>
-      'Cool light tones keep the room open while deeper furniture adds focus.',
-    _ => throw ArgumentError.value(id, 'id', 'Unknown market-guided look'),
-  };
-
-  static String _lookProvenance(String id) => switch (id) {
-    'warm-natural' =>
-      'Inspired by Milkshake 8012, White Clay 8620 and Timber Glaze families.',
-    'soft-botanical' =>
-      'Inspired by restrained pastel greens suited to local light and climate.',
-    'cool-airy' =>
-      'Inspired by Gossamer 8052 and soft off-white ceiling combinations.',
-    _ => throw ArgumentError.value(id, 'id', 'Unknown market-guided look'),
-  };
 }
 
 String _requiredId(String value, String name) {
@@ -474,3 +403,13 @@ String _requiredText(String value, String name) {
   }
   return trimmed;
 }
+
+/// The v1 region contract preserves the existing saved four-surface color model.
+IllustratedRoomSurface illustratedRoomSurfaceForGroup(String group) =>
+    switch (group) {
+      'walls' => IllustratedRoomSurface.wall,
+      'ceiling' => IllustratedRoomSurface.ceiling,
+      'floor' => IllustratedRoomSurface.floor,
+      'furniture' => IllustratedRoomSurface.furniture,
+      _ => throw ArgumentError.value(group, 'group'),
+    };

@@ -1,173 +1,193 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
-  <!-- Original Color Lab dining room: an oblique table beside a garden window. -->
-  <defs>
+<!-- Repository-authored artwork. Fill geometry is owned by the paired region JSON. -->
+<defs xmlns="http://www.w3.org/2000/svg">
     <linearGradient id="dining-sky" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#A8D5DF"/><stop offset="1" stop-color="#E7EEE3"/>
+      <stop offset="0" stop-color="#A8D5DF" /><stop offset="1" stop-color="#E7EEE3" />
     </linearGradient>
     <linearGradient id="dining-daylight-fade" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#FFFFFF" stop-opacity=".23"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity=".23" /><stop offset="1" stop-color="#FFFFFF" stop-opacity="0" />
     </linearGradient>
     <radialGradient id="dining-pendant-pool" cx=".5" cy=".5" r=".5">
-      <stop offset="0" stop-color="#FFFFFF" stop-opacity=".13"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity=".13" /><stop offset="1" stop-color="#FFFFFF" stop-opacity="0" />
     </radialGradient>
     <linearGradient id="dining-linen" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#FFFFFF" stop-opacity=".17"/><stop offset=".6" stop-color="#FFFFFF" stop-opacity=".04"/><stop offset="1" stop-color="#000000" stop-opacity=".14"/>
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity=".17" /><stop offset=".6" stop-color="#FFFFFF" stop-opacity=".04" /><stop offset="1" stop-color="#000000" stop-opacity=".14" />
     </linearGradient>
   </defs>
-  <g id="dining-architecture-depth">
-    <g id="surface-ceiling"><path d="M0 0H1200V81L840 133L0 102Z" fill="#00E5FF"/></g>
-    <path d="M0 83L840 115L1200 65V80L840 130L0 98Z" fill="#FFFFFF" fill-opacity=".26"/>
-    <path d="M0 101L840 133L1200 81" fill="none" stroke="#FFFFFF" stroke-opacity=".62" stroke-width="8"/>
-    <g id="surface-wall"><path d="M0 102L840 133L1200 81V597L840 511L0 565Z" fill="#FF00A1"/></g>
-    <path d="M840 133L1200 81V597L840 511Z" fill="#000000" fill-opacity=".09"/>
-    <path d="M840 140V505" stroke="#000000" stroke-opacity=".12" stroke-width="3"/>
-    <path d="M844 140V505" stroke="#FFFFFF" stroke-opacity=".14" stroke-width="2"/>
-    <path d="M0 109L837 140" stroke="#000000" stroke-opacity=".16" stroke-width="3"/>
-    <g id="surface-floor"><path d="M0 565L840 511L1200 597V800H0Z" fill="#B7FF00"/></g>
-    <path d="M0 550L840 497L1200 583V597L840 512L0 566Z" fill="#EAE3D5"/>
-    <path d="M0 566L840 512L1200 597" fill="none" stroke="#000000" stroke-opacity=".26" stroke-width="4"/>
-    <path d="M0 552L840 499L1200 585" fill="none" stroke="#FFFFFF" stroke-opacity=".55" stroke-width="2"/>
-    <g fill="none" stroke="#000000" stroke-opacity=".11" stroke-width="2">
-      <path d="M463 536L0 730M547 531L119 800M624 526L359 800M705 521L615 800M784 516L865 800M865 519L1150 800"/>
-      <path d="M0 638L863 575L1200 655M0 731L892 646L1200 724M384 610L362 634M733 662L737 685M1015 679L1043 705"/>
-    </g>
-  </g>
-  <g id="dining-daylight">
-    <path d="M66 174H334L535 509L274 530Z" fill="url(#dining-daylight-fade)"/>
-    <path d="M71 448L332 449L497 526L237 544Z" fill="#FFFFFF" fill-opacity=".13"/>
-    <path d="M61 568L177 559L392 757L251 781ZM199 558L320 550L554 738L420 752Z" fill="#FFFFFF" fill-opacity=".17"/>
-  </g>
-  <g id="dining-window-depth">
-    <path d="M43 153L350 164V476L43 495Z" fill="#000000" fill-opacity=".24"/>
-    <path d="M53 159L341 170V468L53 487Z" fill="#F3EFE4"/>
-    <path d="M70 176L324 185V450L70 466Z" fill="url(#dining-sky)"/>
-    <circle cx="274" cy="226" r="28" fill="#F3D27A"/>
-    <path d="M70 370L120 326L165 357L225 304L324 380V450L70 466Z" fill="#8FA78F"/>
-    <path d="M70 407L131 366L186 395L249 348L324 410V450L70 466Z" fill="#507664"/>
-    <path d="M197 181V458M70 318L324 321" stroke="#F3EFE4" stroke-width="10"/>
-    <path d="M58 165L70 176V466L58 480Z" fill="#FFFFFF" fill-opacity=".46"/>
-    <path d="M336 176L324 185V450L336 461Z" fill="#000000" fill-opacity=".15"/>
-    <path d="M48 485L345 467L367 479L29 502Z" fill="#F8F1E4"/>
-    <path d="M29 502L367 479V489L29 512Z" fill="#C7C4B7"/>
-    <path d="M29 512L367 489L386 503L49 525Z" fill="#000000" fill-opacity=".11"/>
-    <path d="M27 148L369 160" stroke="#4C5148" stroke-width="7" stroke-linecap="round"/>
-    <path d="M27 149L64 150C77 270 22 392 55 511L13 514C-10 389 42 267 27 149ZM328 159L368 160C348 278 399 389 383 489L342 492C360 381 310 278 328 159Z" fill="#A1AA97"/>
-    <path d="M34 153C52 277 3 392 30 510M51 153C67 269 16 398 45 509M340 163C322 281 374 387 356 488M357 163C339 282 392 383 374 487" fill="none" stroke="url(#dining-linen)" stroke-width="10"/>
-  </g>
-  <g id="dining-wall-art">
-    <path d="M465 174L557 177V298L465 299ZM689 181L774 184V294L689 296Z" fill="#000000" fill-opacity=".12"/>
-    <path d="M460 169L552 172V291L460 293ZM684 176L769 179V287L684 289Z" fill="#635B4D"/>
-    <path d="M469 178L543 180V282L469 284ZM693 185L760 187V279L693 281Z" fill="#EDE5D6"/>
-    <path d="M482 266Q475 221 505 200Q536 233 531 266Z" fill="#B59C77"/>
-    <path d="M488 267Q506 239 532 232" fill="none" stroke="#788D79" stroke-width="5"/>
-    <circle cx="735" cy="211" r="14" fill="#C6A36C"/>
-    <path d="M701 267L720 226L750 266Z" fill="#738D89"/>
-  </g>
-  <g id="dining-rug-underlay">
-    <path d="M329 583L830 546L1024 744L228 799L169 760Z" fill="#000000" fill-opacity=".12"/>
-    <path d="M333 588L824 553L1004 739L227 791L183 758Z" fill="#A09B87"/>
-    <path d="M338 604L816 570L971 727L234 775L208 756Z" fill="none" stroke="#E5DEC8" stroke-opacity=".47" stroke-width="3"/>
-    <path d="M258 680L890 637M223 737L947 688M408 589L344 782M554 579L545 768M697 569L751 755M272 787L272 795M288 786L289 795M965 743L973 752M980 742L989 751" fill="none" stroke="#FFFFFF" stroke-opacity=".13" stroke-width="2"/>
-  </g>
-  <g id="dining-contact-shadows">
-    <path d="M871 585L1127 574L1180 633L925 649Z" fill="#000000" fill-opacity=".18"/>
-    <path d="M986 602L1019 600L1050 625L1000 631Z" fill="#000000" fill-opacity=".25"/>
-    <path d="M1102 584L1129 585L1164 611L1132 613Z" fill="#000000" fill-opacity=".28"/>
-    <path d="M356 678L785 644L915 745L415 790L322 758Z" fill="#000000" fill-opacity=".13"/>
-    <path d="M334 748L359 750L408 785L376 788ZM792 736L818 733L859 762L830 768Z" fill="#000000" fill-opacity=".28"/>
-    <path d="M220 716L338 705L394 755L266 778L209 747ZM814 676L920 674L990 732L873 751Z" fill="#000000" fill-opacity=".20"/>
-    <path d="M222 743L240 742L273 767L251 771ZM335 733L351 734L376 754L357 759ZM854 727L872 724L900 747L879 750ZM933 706L950 707L978 728L957 732Z" fill="#000000" fill-opacity=".30"/>
-  </g>
-  <g id="surface-furniture">
-    <g id="dining-editable-sideboard">
-      <path d="M869 468L1097 445L1140 464V587L913 611L869 589Z" fill="#7A00FF"/>
-      <path d="M869 468L1097 445L1140 464L912 488Z" fill="#FFFFFF" fill-opacity=".23"/>
-      <path d="M869 468L912 488V611L869 589Z" fill="#FFFFFF" fill-opacity=".07"/>
-      <path d="M912 488L1140 464V587L912 611Z" fill="#000000" fill-opacity=".11"/>
-      <path d="M927 503L1127 482V577L927 598Z" fill="#000000" fill-opacity=".22"/>
-      <path d="M933 508L1022 499V588L933 597ZM1029 498L1121 489V578L1029 587Z" fill="#7A00FF"/>
-      <path d="M933 508L1022 499V506L933 515ZM1029 498L1121 489V496L1029 505Z" fill="#FFFFFF" fill-opacity=".13"/>
-      <path d="M883 595L900 603V625L883 618ZM1111 589L1129 587V609L1111 611Z" fill="#7A00FF"/>
-      <path d="M883 595L900 603V625L883 618ZM1118 589L1129 587V609L1118 611Z" fill="#000000" fill-opacity=".28"/>
-      <path d="M900 493V589M936 522L945 521M1111 508L1115 507" stroke="#FFFFFF" stroke-opacity=".16" stroke-width="2"/>
-    </g>
-    <g id="dining-editable-chairs">
-      <!-- Rear chairs are smaller; the two near chairs tuck beneath the table edge. -->
-      <path d="M449 422Q449 396 471 394L515 392Q537 392 540 416L545 505L451 513Z" fill="#7A00FF"/>
-      <path d="M458 424Q458 405 474 403L510 401Q528 401 530 419L533 465L459 471Z" fill="#FFFFFF" fill-opacity=".16"/>
-      <path d="M455 478L539 471L545 505L451 513Z" fill="#000000" fill-opacity=".20"/>
-      <path d="M460 510L474 509L465 636L453 638ZM524 505L538 504L550 620L537 622Z" fill="#7A00FF"/>
-      <path d="M460 510L467 510L459 637L453 638ZM531 505L538 504L550 620L543 621Z" fill="#000000" fill-opacity=".28"/>
-      <path d="M661 409Q661 384 683 383L720 382Q744 382 747 405L753 486L663 493Z" fill="#7A00FF"/>
-      <path d="M669 410Q669 392 686 392L718 390Q734 390 737 408L740 449L671 454Z" fill="#FFFFFF" fill-opacity=".14"/>
-      <path d="M666 460L747 454L753 486L663 493Z" fill="#000000" fill-opacity=".21"/>
-      <path d="M674 491L687 490L682 608L670 610ZM734 486L746 485L762 594L750 596Z" fill="#7A00FF"/>
-      <path d="M674 491L681 491L676 609L670 610ZM740 486L746 485L762 594L756 595Z" fill="#000000" fill-opacity=".27"/>
-      <path d="M225 586Q222 550 249 547L291 543Q321 541 327 573L342 665L237 680Z" fill="#7A00FF"/>
-      <path d="M235 588Q231 561 253 558L288 554Q311 552 316 578L323 622L242 633Z" fill="#FFFFFF" fill-opacity=".21"/>
-      <path d="M240 636L331 624L349 659L238 676Z" fill="#7A00FF"/>
-      <path d="M242 642L328 631L336 646L243 659Z" fill="#FFFFFF" fill-opacity=".11"/>
-      <path d="M238 664L349 648V667L240 684Z" fill="#000000" fill-opacity=".27"/>
-      <path d="M243 678L258 676L238 750L221 752ZM326 666L340 664L352 739L337 742Z" fill="#7A00FF"/>
-      <path d="M248 677L258 676L238 750L230 751ZM333 665L340 664L352 739L344 740Z" fill="#000000" fill-opacity=".25"/>
-      <path d="M827 550Q828 521 851 521L889 523Q916 526 921 554L938 642L840 648Z" fill="#7A00FF"/>
-      <path d="M837 551Q838 531 855 532L884 534Q905 536 908 557L915 600L845 603Z" fill="#FFFFFF" fill-opacity=".13"/>
-      <path d="M842 609L925 605L946 636L840 646Z" fill="#7A00FF"/>
-      <path d="M842 613L922 609L931 624L843 631Z" fill="#FFFFFF" fill-opacity=".09"/>
-      <path d="M840 638L946 629V648L842 657Z" fill="#000000" fill-opacity=".29"/>
-      <path d="M848 653L863 652L870 733L854 735ZM923 649L938 648L954 713L939 717Z" fill="#7A00FF"/>
-      <path d="M854 653L863 652L870 733L862 734ZM930 649L938 648L954 713L946 715Z" fill="#000000" fill-opacity=".29"/>
-      <path d="M244 580L307 573M677 415L731 412M847 555L902 557" fill="none" stroke="#FFFFFF" stroke-opacity=".17" stroke-width="2"/>
-    </g>
-    <g id="dining-editable-table">
-      <!-- The slab converges toward the back right; apron and feet share those edges. -->
-      <path d="M414 508L440 506L428 654L411 657ZM751 482L774 480L793 633L776 635Z" fill="#7A00FF"/>
-      <path d="M423 507L440 506L428 654L419 656ZM763 481L774 480L793 633L784 634Z" fill="#000000" fill-opacity=".30"/>
-      <path d="M351 638L383 636L360 759L333 763ZM778 625L808 623L820 742L793 747Z" fill="#7A00FF"/>
-      <path d="M369 637L383 636L360 759L348 761ZM794 624L808 623L820 742L807 744Z" fill="#000000" fill-opacity=".29"/>
-      <path d="M352 647L359 647L340 753M781 635L787 635L801 738" fill="none" stroke="#FFFFFF" stroke-opacity=".14" stroke-width="3"/>
-      <path d="M417 489L774 461L883 609L329 625Z" fill="#7A00FF"/>
-      <path d="M417 489L774 461L793 488L396 521Z" fill="#FFFFFF" fill-opacity=".13"/>
-      <path d="M396 521L793 488L827 535L374 558Z" fill="#FFFFFF" fill-opacity=".22"/>
-      <path d="M774 461L883 609L881 638L774 491Z" fill="#000000" fill-opacity=".26"/>
-      <path d="M329 625L883 609L881 638L327 654Z" fill="#7A00FF"/>
-      <path d="M329 625L883 609L881 638L327 654Z" fill="#000000" fill-opacity=".29"/>
-      <path d="M334 626L879 610" fill="none" stroke="#FFFFFF" stroke-opacity=".30" stroke-width="3"/>
-      <path d="M330 650L879 634" stroke="#000000" stroke-opacity=".17" stroke-width="3"/>
-      <path d="M431 497L755 473M398 548L466 545M701 523L807 517M372 582L471 578M731 573L843 568" fill="none" stroke="#FFFFFF" stroke-opacity=".08" stroke-width="2"/>
-      <path d="M412 513L472 509M690 500L783 494M372 601L452 598M746 593L861 589" fill="none" stroke="#000000" stroke-opacity=".09" stroke-width="2"/>
-      <ellipse cx="649" cy="551" rx="142" ry="36" fill="url(#dining-pendant-pool)"/>
-    </g>
-  </g>
-  <g id="dining-material-cues">
-    <path d="M995 524L1010 522M1038 519L1053 517" stroke="#C3B087" stroke-width="3" stroke-linecap="round"/>
-    <path d="M878 472L906 485M1025 472L1110 462M940 581L979 577M1075 568L1110 564" stroke="#FFFFFF" stroke-opacity=".14" stroke-width="2"/>
-    <path d="M232 596L235 625M921 566L925 596M455 433L456 461M744 417L747 445" stroke="#000000" stroke-opacity=".15" stroke-width="2"/>
-    <path d="M633 499Q671 490 705 500L718 509Q674 524 628 516Z" fill="#000000" fill-opacity=".18"/>
-    <ellipse cx="666" cy="501" rx="43" ry="13" fill="#E6DFCF"/>
-    <path d="M623 501Q666 518 709 501L701 512Q666 527 632 512Z" fill="#BEB6A5"/>
-    <ellipse cx="666" cy="500" rx="33" ry="8" fill="#73856D"/>
-    <circle cx="652" cy="498" r="9" fill="#BC9B51"/><circle cx="671" cy="495" r="10" fill="#C8AA63"/><circle cx="686" cy="500" r="8" fill="#9DA66A"/>
-    <path d="M652 490L650 485M671 486L673 480" stroke="#657454" stroke-width="2"/>
-    <path d="M488 562L524 560L540 570L504 573Z" fill="#000000" fill-opacity=".15"/>
-    <path d="M489 557L520 555L535 566L503 568Z" fill="#E8DFCC"/>
-    <path d="M494 560L520 558M499 564L525 562" stroke="#AEA58E" stroke-opacity=".65" stroke-width="1"/>
-    <path d="M1009 448L1063 442L1078 449L1024 455Z" fill="#000000" fill-opacity=".16"/>
-    <path d="M1015 438L1066 433V443L1015 449Z" fill="#D3C9B5"/>
-    <path d="M1007 431L1060 426V435L1007 441Z" fill="#8B9D8B"/>
-    <path d="M905 458Q889 435 905 416Q918 408 930 424Q944 444 928 456Z" fill="#CEC5AE"/>
-    <path d="M910 453Q899 435 912 419" fill="none" stroke="#F3ECDB" stroke-width="3"/>
-    <path d="M914 414L908 381M910 395Q891 397 891 381Q905 378 910 395M910 387Q925 388 929 372Q916 373 910 387" fill="#647D61" stroke="#526B50" stroke-width="2"/>
-  </g>
-  <g id="dining-pendant-light">
-    <path d="M655 0V286" stroke="#4D5048" stroke-width="4"/>
-    <path d="M642 0H668V9H642Z" fill="#6A6859"/>
-    <path d="M598 336L636 286H673L716 335Q664 353 598 336Z" fill="#C7B58E"/>
-    <path d="M598 336L636 286H651L634 340Z" fill="#FFFFFF" fill-opacity=".25"/>
-    <path d="M673 286L716 335L693 343L661 286Z" fill="#000000" fill-opacity=".16"/>
-    <ellipse cx="657" cy="336" rx="59" ry="11" fill="#E7D4A5"/>
-    <ellipse cx="657" cy="338" rx="41" ry="6" fill="#F5E9CA"/>
-    <path d="M628 349L613 446M687 348L707 439" fill="none" stroke="#FFFFFF" stroke-opacity=".035" stroke-width="2"/>
-  </g>
+<!-- dining-decoration-slots -->
+<g>
+
+</g>
+<!-- dining-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M0 83L840 115L1200 65V80L840 130L0 98Z" fill="#FFFFFF" fill-opacity=".26" />
+<path xmlns="http://www.w3.org/2000/svg" d="M0 101L840 133L1200 81" fill="none" stroke="#FFFFFF" stroke-opacity=".62" stroke-width="8" />
+</g>
+<!-- dining-decoration-slot -->
+<g>
+
+</g>
+<!-- dining-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M840 140V505" stroke="#000000" stroke-opacity=".12" stroke-width="3" />
+<path xmlns="http://www.w3.org/2000/svg" d="M844 140V505" stroke="#FFFFFF" stroke-opacity=".14" stroke-width="2" />
+<path xmlns="http://www.w3.org/2000/svg" d="M0 109L837 140" stroke="#000000" stroke-opacity=".16" stroke-width="3" />
+</g>
+<!-- dining-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M0 550L840 497L1200 583V597L840 512L0 566Z" fill="#EAE3D5" />
+<path xmlns="http://www.w3.org/2000/svg" d="M0 566L840 512L1200 597" fill="none" stroke="#000000" stroke-opacity=".26" stroke-width="4" />
+<path xmlns="http://www.w3.org/2000/svg" d="M0 552L840 499L1200 585" fill="none" stroke="#FFFFFF" stroke-opacity=".55" stroke-width="2" />
+<path xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#000000" stroke-opacity=".11" stroke-width="2" d="M463 536L0 730M547 531L119 800M624 526L359 800M705 521L615 800M784 516L865 800M865 519L1150 800" />
+<path xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#000000" stroke-opacity=".11" stroke-width="2" d="M0 638L863 575L1200 655M0 731L892 646L1200 724M384 610L362 634M733 662L737 685M1015 679L1043 705" />
+<path xmlns="http://www.w3.org/2000/svg" d="M66 174H334L535 509L274 530Z" fill="url(#dining-daylight-fade)" />
+<path xmlns="http://www.w3.org/2000/svg" d="M71 448L332 449L497 526L237 544Z" fill="#FFFFFF" fill-opacity=".13" />
+<path xmlns="http://www.w3.org/2000/svg" d="M61 568L177 559L392 757L251 781ZM199 558L320 550L554 738L420 752Z" fill="#FFFFFF" fill-opacity=".17" />
+<path xmlns="http://www.w3.org/2000/svg" d="M43 153L350 164V476L43 495Z" fill="#000000" fill-opacity=".24" />
+<path xmlns="http://www.w3.org/2000/svg" d="M53 159L341 170V468L53 487Z" fill="#F3EFE4" />
+<path xmlns="http://www.w3.org/2000/svg" d="M70 176L324 185V450L70 466Z" fill="url(#dining-sky)" />
+<circle xmlns="http://www.w3.org/2000/svg" cx="274" cy="226" r="28" fill="#F3D27A" />
+<path xmlns="http://www.w3.org/2000/svg" d="M70 370L120 326L165 357L225 304L324 380V450L70 466Z" fill="#8FA78F" />
+<path xmlns="http://www.w3.org/2000/svg" d="M70 407L131 366L186 395L249 348L324 410V450L70 466Z" fill="#507664" />
+<path xmlns="http://www.w3.org/2000/svg" d="M197 181V458M70 318L324 321" stroke="#F3EFE4" stroke-width="10" />
+<path xmlns="http://www.w3.org/2000/svg" d="M58 165L70 176V466L58 480Z" fill="#FFFFFF" fill-opacity=".46" />
+<path xmlns="http://www.w3.org/2000/svg" d="M336 176L324 185V450L336 461Z" fill="#000000" fill-opacity=".15" />
+<path xmlns="http://www.w3.org/2000/svg" d="M48 485L345 467L367 479L29 502Z" fill="#F8F1E4" />
+<path xmlns="http://www.w3.org/2000/svg" d="M29 502L367 479V489L29 512Z" fill="#C7C4B7" />
+<path xmlns="http://www.w3.org/2000/svg" d="M29 512L367 489L386 503L49 525Z" fill="#000000" fill-opacity=".11" />
+<path xmlns="http://www.w3.org/2000/svg" d="M27 148L369 160" stroke="#4C5148" stroke-width="7" stroke-linecap="round" />
+<path xmlns="http://www.w3.org/2000/svg" d="M27 149L64 150C77 270 22 392 55 511L13 514C-10 389 42 267 27 149ZM328 159L368 160C348 278 399 389 383 489L342 492C360 381 310 278 328 159Z" fill="#A1AA97" />
+<path xmlns="http://www.w3.org/2000/svg" d="M34 153C52 277 3 392 30 510M51 153C67 269 16 398 45 509M340 163C322 281 374 387 356 488M357 163C339 282 392 383 374 487" fill="none" stroke="url(#dining-linen)" stroke-width="10" />
+<path xmlns="http://www.w3.org/2000/svg" d="M465 174L557 177V298L465 299ZM689 181L774 184V294L689 296Z" fill="#000000" fill-opacity=".12" />
+<path xmlns="http://www.w3.org/2000/svg" d="M460 169L552 172V291L460 293ZM684 176L769 179V287L684 289Z" fill="#635B4D" />
+<path xmlns="http://www.w3.org/2000/svg" d="M469 178L543 180V282L469 284ZM693 185L760 187V279L693 281Z" fill="#EDE5D6" />
+<path xmlns="http://www.w3.org/2000/svg" d="M482 266Q475 221 505 200Q536 233 531 266Z" fill="#B59C77" />
+<path xmlns="http://www.w3.org/2000/svg" d="M488 267Q506 239 532 232" fill="none" stroke="#788D79" stroke-width="5" />
+<circle xmlns="http://www.w3.org/2000/svg" cx="735" cy="211" r="14" fill="#C6A36C" />
+<path xmlns="http://www.w3.org/2000/svg" d="M701 267L720 226L750 266Z" fill="#738D89" />
+<path xmlns="http://www.w3.org/2000/svg" d="M329 583L830 546L1024 744L228 799L169 760Z" fill="#000000" fill-opacity=".12" />
+<path xmlns="http://www.w3.org/2000/svg" d="M333 588L824 553L1004 739L227 791L183 758Z" fill="#A09B87" />
+<path xmlns="http://www.w3.org/2000/svg" d="M338 604L816 570L971 727L234 775L208 756Z" fill="none" stroke="#E5DEC8" stroke-opacity=".47" stroke-width="3" />
+<path xmlns="http://www.w3.org/2000/svg" d="M258 680L890 637M223 737L947 688M408 589L344 782M554 579L545 768M697 569L751 755M272 787L272 795M288 786L289 795M965 743L973 752M980 742L989 751" fill="none" stroke="#FFFFFF" stroke-opacity=".13" stroke-width="2" />
+<path xmlns="http://www.w3.org/2000/svg" d="M871 585L1127 574L1180 633L925 649Z" fill="#000000" fill-opacity=".18" />
+<path xmlns="http://www.w3.org/2000/svg" d="M986 602L1019 600L1050 625L1000 631Z" fill="#000000" fill-opacity=".25" />
+<path xmlns="http://www.w3.org/2000/svg" d="M1102 584L1129 585L1164 611L1132 613Z" fill="#000000" fill-opacity=".28" />
+<path xmlns="http://www.w3.org/2000/svg" d="M356 678L785 644L915 745L415 790L322 758Z" fill="#000000" fill-opacity=".13" />
+<path xmlns="http://www.w3.org/2000/svg" d="M334 748L359 750L408 785L376 788ZM792 736L818 733L859 762L830 768Z" fill="#000000" fill-opacity=".28" />
+<path xmlns="http://www.w3.org/2000/svg" d="M220 716L338 705L394 755L266 778L209 747ZM814 676L920 674L990 732L873 751Z" fill="#000000" fill-opacity=".20" />
+<path xmlns="http://www.w3.org/2000/svg" d="M222 743L240 742L273 767L251 771ZM335 733L351 734L376 754L357 759ZM854 727L872 724L900 747L879 750ZM933 706L950 707L978 728L957 732Z" fill="#000000" fill-opacity=".30" />
+</g>
+<!-- dining-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M869 468L1097 445L1140 464L912 488Z" fill="#FFFFFF" fill-opacity=".23" />
+<path xmlns="http://www.w3.org/2000/svg" d="M869 468L912 488V611L869 589Z" fill="#FFFFFF" fill-opacity=".07" />
+<path xmlns="http://www.w3.org/2000/svg" d="M912 488L1140 464V587L912 611Z" fill="#000000" fill-opacity=".11" />
+<path xmlns="http://www.w3.org/2000/svg" d="M927 503L1127 482V577L927 598Z" fill="#000000" fill-opacity=".22" />
+</g>
+<!-- dining-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M933 508L1022 499V506L933 515ZM1029 498L1121 489V496L1029 505Z" fill="#FFFFFF" fill-opacity=".13" />
+</g>
+<!-- dining-decoration-slot -->
+<g>
+<!-- room-shared-black-overlay part-slot="6" contour-indices="0" opacity="0.28" -->
+<path xmlns="http://www.w3.org/2000/svg" d="M1118 589L1129 587V609L1118 611Z" fill="#000000" fill-opacity=".28" />
+<path xmlns="http://www.w3.org/2000/svg" d="M900 493V589M936 522L945 521M1111 508L1115 507" stroke="#FFFFFF" stroke-opacity=".16" stroke-width="2" />
+</g>
+<!-- dining-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M458 424Q458 405 474 403L510 401Q528 401 530 419L533 465L459 471Z" fill="#FFFFFF" fill-opacity=".16" />
+<path xmlns="http://www.w3.org/2000/svg" d="M455 478L539 471L545 505L451 513Z" fill="#000000" fill-opacity=".20" />
+</g>
+<!-- dining-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M460 510L467 510L459 637L453 638ZM531 505L538 504L550 620L543 621Z" fill="#000000" fill-opacity=".28" />
+</g>
+<!-- dining-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M669 410Q669 392 686 392L718 390Q734 390 737 408L740 449L671 454Z" fill="#FFFFFF" fill-opacity=".14" />
+<path xmlns="http://www.w3.org/2000/svg" d="M666 460L747 454L753 486L663 493Z" fill="#000000" fill-opacity=".21" />
+</g>
+<!-- dining-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M674 491L681 491L676 609L670 610ZM740 486L746 485L762 594L756 595Z" fill="#000000" fill-opacity=".27" />
+</g>
+<!-- dining-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M235 588Q231 561 253 558L288 554Q311 552 316 578L323 622L242 633Z" fill="#FFFFFF" fill-opacity=".21" />
+</g>
+<!-- dining-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M242 642L328 631L336 646L243 659Z" fill="#FFFFFF" fill-opacity=".11" />
+<path xmlns="http://www.w3.org/2000/svg" d="M238 664L349 648V667L240 684Z" fill="#000000" fill-opacity=".27" />
+</g>
+<!-- dining-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M248 677L258 676L238 750L230 751ZM333 665L340 664L352 739L344 740Z" fill="#000000" fill-opacity=".25" />
+</g>
+<!-- dining-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M837 551Q838 531 855 532L884 534Q905 536 908 557L915 600L845 603Z" fill="#FFFFFF" fill-opacity=".13" />
+</g>
+<!-- dining-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M842 613L922 609L931 624L843 631Z" fill="#FFFFFF" fill-opacity=".09" />
+<path xmlns="http://www.w3.org/2000/svg" d="M840 638L946 629V648L842 657Z" fill="#000000" fill-opacity=".29" />
+</g>
+<!-- dining-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M854 653L863 652L870 733L862 734ZM930 649L938 648L954 713L946 715Z" fill="#000000" fill-opacity=".29" />
+<path xmlns="http://www.w3.org/2000/svg" d="M244 580L307 573M677 415L731 412M847 555L902 557" fill="none" stroke="#FFFFFF" stroke-opacity=".17" stroke-width="2" />
+</g>
+<!-- dining-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M423 507L440 506L428 654L419 656ZM763 481L774 480L793 633L784 634Z" fill="#000000" fill-opacity=".30" />
+</g>
+<!-- dining-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M369 637L383 636L360 759L348 761ZM794 624L808 623L820 742L807 744Z" fill="#000000" fill-opacity=".29" />
+<path xmlns="http://www.w3.org/2000/svg" d="M352 647L359 647L340 753M781 635L787 635L801 738" fill="none" stroke="#FFFFFF" stroke-opacity=".14" stroke-width="3" />
+</g>
+<!-- dining-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M417 489L774 461L793 488L396 521Z" fill="#FFFFFF" fill-opacity=".13" />
+<path xmlns="http://www.w3.org/2000/svg" d="M396 521L793 488L827 535L374 558Z" fill="#FFFFFF" fill-opacity=".22" />
+<path xmlns="http://www.w3.org/2000/svg" d="M774 461L883 609L881 638L774 491Z" fill="#000000" fill-opacity=".26" />
+</g>
+<!-- dining-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M334 626L879 610" fill="none" stroke="#FFFFFF" stroke-opacity=".30" stroke-width="3" />
+<path xmlns="http://www.w3.org/2000/svg" d="M330 650L879 634" stroke="#000000" stroke-opacity=".17" stroke-width="3" />
+<path xmlns="http://www.w3.org/2000/svg" d="M431 497L755 473M398 548L466 545M701 523L807 517M372 582L471 578M731 573L843 568" fill="none" stroke="#FFFFFF" stroke-opacity=".08" stroke-width="2" />
+<path xmlns="http://www.w3.org/2000/svg" d="M412 513L472 509M690 500L783 494M372 601L452 598M746 593L861 589" fill="none" stroke="#000000" stroke-opacity=".09" stroke-width="2" />
+<ellipse xmlns="http://www.w3.org/2000/svg" cx="649" cy="551" rx="142" ry="36" fill="url(#dining-pendant-pool)" />
+<path xmlns="http://www.w3.org/2000/svg" d="M995 524L1010 522M1038 519L1053 517" stroke="#C3B087" stroke-width="3" stroke-linecap="round" />
+<path xmlns="http://www.w3.org/2000/svg" d="M878 472L906 485M1025 472L1110 462M940 581L979 577M1075 568L1110 564" stroke="#FFFFFF" stroke-opacity=".14" stroke-width="2" />
+<path xmlns="http://www.w3.org/2000/svg" d="M232 596L235 625M921 566L925 596M455 433L456 461M744 417L747 445" stroke="#000000" stroke-opacity=".15" stroke-width="2" />
+<path xmlns="http://www.w3.org/2000/svg" d="M633 499Q671 490 705 500L718 509Q674 524 628 516Z" fill="#000000" fill-opacity=".18" />
+<ellipse xmlns="http://www.w3.org/2000/svg" cx="666" cy="501" rx="43" ry="13" fill="#E6DFCF" />
+<path xmlns="http://www.w3.org/2000/svg" d="M623 501Q666 518 709 501L701 512Q666 527 632 512Z" fill="#BEB6A5" />
+<ellipse xmlns="http://www.w3.org/2000/svg" cx="666" cy="500" rx="33" ry="8" fill="#73856D" />
+<circle xmlns="http://www.w3.org/2000/svg" cx="652" cy="498" r="9" fill="#BC9B51" />
+<circle xmlns="http://www.w3.org/2000/svg" cx="671" cy="495" r="10" fill="#C8AA63" />
+<circle xmlns="http://www.w3.org/2000/svg" cx="686" cy="500" r="8" fill="#9DA66A" />
+<path xmlns="http://www.w3.org/2000/svg" d="M652 490L650 485M671 486L673 480" stroke="#657454" stroke-width="2" />
+<path xmlns="http://www.w3.org/2000/svg" d="M488 562L524 560L540 570L504 573Z" fill="#000000" fill-opacity=".15" />
+<path xmlns="http://www.w3.org/2000/svg" d="M489 557L520 555L535 566L503 568Z" fill="#E8DFCC" />
+<path xmlns="http://www.w3.org/2000/svg" d="M494 560L520 558M499 564L525 562" stroke="#AEA58E" stroke-opacity=".65" stroke-width="1" />
+<path xmlns="http://www.w3.org/2000/svg" d="M1009 448L1063 442L1078 449L1024 455Z" fill="#000000" fill-opacity=".16" />
+<path xmlns="http://www.w3.org/2000/svg" d="M1015 438L1066 433V443L1015 449Z" fill="#D3C9B5" />
+<path xmlns="http://www.w3.org/2000/svg" d="M1007 431L1060 426V435L1007 441Z" fill="#8B9D8B" />
+<path xmlns="http://www.w3.org/2000/svg" d="M905 458Q889 435 905 416Q918 408 930 424Q944 444 928 456Z" fill="#CEC5AE" />
+<path xmlns="http://www.w3.org/2000/svg" d="M910 453Q899 435 912 419" fill="none" stroke="#F3ECDB" stroke-width="3" />
+<path xmlns="http://www.w3.org/2000/svg" d="M914 414L908 381M910 395Q891 397 891 381Q905 378 910 395M910 387Q925 388 929 372Q916 373 910 387" fill="#647D61" stroke="#526B50" stroke-width="2" />
+<path xmlns="http://www.w3.org/2000/svg" d="M655 0V286" stroke="#4D5048" stroke-width="4" />
+<path xmlns="http://www.w3.org/2000/svg" d="M642 0H668V9H642Z" fill="#6A6859" />
+<path xmlns="http://www.w3.org/2000/svg" d="M598 336L636 286H673L716 335Q664 353 598 336Z" fill="#C7B58E" />
+<path xmlns="http://www.w3.org/2000/svg" d="M598 336L636 286H651L634 340Z" fill="#FFFFFF" fill-opacity=".25" />
+<path xmlns="http://www.w3.org/2000/svg" d="M673 286L716 335L693 343L661 286Z" fill="#000000" fill-opacity=".16" />
+<ellipse xmlns="http://www.w3.org/2000/svg" cx="657" cy="336" rx="59" ry="11" fill="#E7D4A5" />
+<ellipse xmlns="http://www.w3.org/2000/svg" cx="657" cy="338" rx="41" ry="6" fill="#F5E9CA" />
+<path xmlns="http://www.w3.org/2000/svg" d="M628 349L613 446M687 348L707 439" fill="none" stroke="#FFFFFF" stroke-opacity=".035" stroke-width="2" />
+</g>
 </svg>

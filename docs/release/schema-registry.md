@@ -15,13 +15,53 @@ Durable data uses Hive and the Room project file tree beneath the application-do
 | `app_preferences_v1` | key `preferences` | `schemaVersion: 2`; `themeMode`, `onboardingCompleted`, `motion`, `highContrast`, `alwaysShowColorLabels`. Version 1 reads use safe accessibility defaults; the next edit writes v2. | Installation-local settings. Explicit reset returns to onboarding; unsupported schemas remain untouched. Never deletes projects, colors, palettes, or games. |
 | `color_history_v1` | one record per canonical HEX key | `version: 1`; `id`, `hex`, `name`, `isFavorite`, `createdAt`, `source` | Shared My Work color library. A game-profile deletion must not touch it. |
 | `color_palettes_v1` | `${mode.name}-${HEX-without-#}` | `version: 1`; `id`, `name`, `base`, `mode`, `colors`, `createdAt` | Shared My Work palette library. Consumers copy color snapshots rather than retaining fragile foreign keys. |
-| `illustrated_room_designs_v1` | one record per generated design ID | `version: 1`; `id`, `name`, `templateId`, wall/ceiling/floor/furniture colors, `createdAt`, `updatedAt` | Shared My Work illustrated designs. Template migrations must preserve the visible result. |
+| `illustrated_room_designs_v1` | design ID; reserved `@draft:<templateId>` for one recoverable draft per template | `version: 2`; design `id`, `name`, `templateId`, `templateRevision`, `groupColors`, `regionOverrides`, nullable `activeBaseline`, `createdAt`, `updatedAt` | Shared My Work illustrated designs and isolated local drafts. V1 maps exact four colors to groups with no overrides or palette link; healthy rows rewrite only after flush. |
 | `photo_acquisition_v1` | key `pending` | `schemaVersion: 1`; `requestId`, `source`, `destination` | Transient recoverable acquisition intent. Clearing it must not delete a selected source photo owned elsewhere. |
 | `game_profiles_v2` | key `state` | root `schemaVersion: 2`; `activeProfileId`, `profiles`, `pendingLegacySnapshot`, `legacyMigrationComplete`; nested game/profile records remain v1 | Games-only profiles/progress/rewards/preferences. Profile deletion must not delete or hide shared My Work. |
 | `game_progress_v1` | key `progress` | legacy aggregate schema v1 | Read as the migration source for `game_profiles_v2`; retain until migration/rollback evidence explicitly retires it. |
 | `room_projects` (`room-projects`) | `projects/<projectId>/current` | file-tree schema v2 (strict v1 read migration); project/photo IDs, name, storage revision, prepared PNG/dimensions, AI/current masks, explicit intent, mask/color revisions, named color variants, active and nullable comparison-baseline IDs, thumbnail, UTC timestamps | Installation-local shared Room library. Its serialized `LocalDataOwner` owns this tree only; external exports and game data are excluded. |
 
 Immutable serialization details include root keys, enum storage strings, stable `GameId` values, UTC timestamp encoding, uppercase canonical `#RRGGBB`, and nested record versions. Corrupt-record handling must isolate the bad record and retain recoverable bytes; it must not reset an entire healthy box silently.
+
+### Illustrated designs and recoverable drafts v2
+
+The box name stays `illustrated_room_designs_v1`. Group keys are exactly `walls`,
+`ceiling`, `floor`, `furniture`; region keys are stable lowercase hyphenated IDs.
+Snapshots contain only immutable canonical uppercase HEX copies, never a palette
+ID or inferred catalogue link. `activeBaseline` is the pinned comparison
+snapshot (nullable), independent of current assignments. Template revision is a
+positive integer; the current editor accepts revision 1 and validates group and
+region membership at materialization. Storage decoding preserves unknown
+future templates and regions without requiring the live catalogue.
+
+A draft row contains exactly `version: 2`, `templateId`, `templateRevision`,
+nullable `visible`, `activeBaseline`, `savedSnapshot`, `savedDesignId`,
+`savedName`, and canonical UTC `updatedAt`. `visible` is null for grayscale;
+`savedSnapshot` and the paired saved identity retain the discard/dirty baseline.
+Each nested snapshot has exactly `groupColors` and `regionOverrides`. Undo
+history and temporary B&W remain session-only. Draft rows are excluded from
+the saved library and have independent corrupt-record warnings. Corrupt draft
+bytes are never overwritten by retain or Retry.
+
+V1 migration preserves IDs, names, template IDs, UTC timestamps and the exact
+four colors for all six frozen fixtures. It introduces revision 1, empty
+region overrides and null comparison baseline. A corrupt row is retained while
+healthy rows migrate. Unknown versions/fields/types are rejected without reset.
+An older v1 reader cannot consume v2; downgrade rewriting is unsupported.
+
+Writes serialize through the owning repository and publish only after flush.
+Hive changes its cache before flush, so a failed write restores the previous
+payloads and retains a blocked barrier. Reads and later mutations cannot turn
+that failed attempt into success. Explicit Retry finishes rollback and allows
+the caller to reapply its visible failed draft. Close finishes rollback before
+closing; fresh handles reopen the previous acknowledged state. If rollback
+itself cannot flush, Retry/close fails and the handle remains open. Once the
+box close begins, a close error is terminal for that repository handle: Retry
+must fail, and the owner must replace/reopen the repository (provider owners
+invalidate `roomDesignRepositoryProvider` before loading a fresh instance). This is a
+flush/close-reopen contract, not an atomic device-power-loss guarantee during a
+failed write and rollback. The draft store exposes `saved`, `saving`, `failed`
+and retains both the visible attempt and last acknowledged draft.
 
 ### Future schema ownership reserved by the approved design
 
@@ -115,14 +155,60 @@ Model inventory is read-only. Model removal cancels and drains active work, bloc
 | `assets/models/room_seg_descriptor.json` | 1,160 | `cf1bb10c7518cb4ff5e5403f856f1342280dbce8341a72c26fbd06d2e345d533` |
 | `assets/fonts/JetBrainsMono-Variable.ttf` | 187,208 | `48715a42ec242c21e9f02692891e147d022299a52e48d5e413e1a942193ffeda` |
 | `assets/fonts/PlusJakartaSans-Variable.ttf` | 176,288 | `89b3fb38aa0d275d7a731d0d817a4f1622b316b4d7fbdedcf02ee9099ff68bc8` |
-| `assets/rooms/bathroom_room.svg` | 15,189 | `a5400b6a4e50bd9f4c4a1d058e51b189d75371564e20f1e4d60af258ed26c068` |
-| `assets/rooms/bedroom_room.svg` | 14,112 | `d5f69379b8bba90a2e28fc7df0d982711a82a02701ed7fd9b564ac23a27818f4` |
-| `assets/rooms/dining_room.svg` | 14,077 | `dd13522ce28cdec7eaf9a601a15eaa39c661a114a18783ae3f8bafa6c531536a` |
-| `assets/rooms/kitchen_room.svg` | 13,739 | `876c7a4e136b2354a54c66d148ac28c845e5cab6506f4ae021ac219af0dc4d88` |
-| `assets/rooms/living_room.svg` | 15,847 | `81a400211f87253eeb844fc9f427f164091734077c60e8d01cb8aae6d13796e6` |
-| `assets/rooms/study_room.svg` | 21,279 | `3637e4f694387cb1ec2b5c2555f7cb969290ed5b9ef836fa69ce7cf8b58a8168` |
+| `assets/rooms/bathroom_room.svg` | 18,492 | `61c12bdca53ffc595b2396991c5468865eeee4461764892ae570e811b7e3add6` |
+| `assets/rooms/bedroom_room.svg` | 15,669 | `51239f270468bcb7b84393ef432c2b3c8eda076aee456c215cfd6770e47a7bdd` |
+| `assets/rooms/dining_room.svg` | 15,823 | `bc3464d1fbf701104ead3a3de053b7ad565bd6d871b2a5672fdb50b32c177e39` |
+| `assets/rooms/kitchen_room.svg` | 16,249 | `d08f2a4a444c8d7fadf7e7ca97f695155c46373611a525dbb4fbc0c29336af93` |
+| `assets/rooms/living_room.svg` | 17,168 | `17b9b89abf503af23faf2d18fc84bf94665df24a15289c570ed32c317a228b86` |
+| `assets/rooms/study_room.svg` | 24,114 | `d547a004155670db40e058afe1a4fb0a06c0d83e0376189ca210f45655e6ee0a` |
+| `assets/rooms/regions/bathroom_room.v1.json` | 9,271 | `3d0edf621aa7aac0da31a2e001d525d0191a3ddc089e1dfc32ce6687424715fa` |
+| `assets/rooms/regions/bedroom_room.v1.json` | 18,293 | `8d97f12556aade078b89fd5b29123c7ce01c8752299b83ba5d945ce4c39704ae` |
+| `assets/rooms/regions/dining_room.v1.json` | 18,738 | `b0ac3e9d192b65ec26a93fa676e1cbf731e453e4b27c47d8fcefc28b10cd47eb` |
+| `assets/rooms/regions/kitchen_room.v1.json` | 17,489 | `c7390a425eb5a84a8f933745586b20eb77bdd1e0cf8bcc0f7622d05dd3a5340a` |
+| `assets/rooms/regions/living_room.v1.json` | 20,402 | `577ea777d36e5a8378aa9181cdac7bbde575f0ca0537340eb8bc614e7a3feafe` |
+| `assets/rooms/regions/study_room.v1.json` | 22,294 | `4b753ef541f8ee2a3011f80e7ad6bb499f96c17c248100d04e94733f7c8c1185` |
+| `assets/rooms/palettes/starter_palettes.v1.json` | 1,722 | `985ee30d37ea07270c50a35144fdc7669a2dba61e70783fa96d989a7875edf1c` |
+| `assets/licenses/illustrated-room-palettes-NOTICE.txt` | 843 | `e1bf7191aaf19a20ef9507636ba067033e950374e74fab9d558a8f75f048b8ba` |
 
-License/notice files are registered at runtime from `lib/main.dart`; their provenance and current hashes remain authoritative in `docs/asset-sources.md`. Any new palette, artwork, model, font, sound, or icon must add source, rights, checksum, and runtime-license evidence before shipping.
+Existing model/font/data license and notice files are registered at runtime
+from `lib/main.dart`. The illustrated-room palette NOTICE listed above is
+bundled but its runtime registration remains explicitly deferred. Provenance
+and current hashes remain authoritative in `docs/asset-sources.md`. Any new
+palette, artwork, model, font, sound, or icon must add source, rights, checksum,
+and runtime-license evidence before shipping.
+
+### Illustrated Rooms v2 artwork catalogue
+
+The shared vector-region contract is schema 1. All six template IDs and artwork
+revisions remain stable at revision 1; every artboard is 1200 × 800. JSON owns
+all fill geometry and SVG owns fixed decoration plus only the bounded,
+allowlisted shared-path recipes recorded by the loader. Region identity, group,
+paint order and contiguous part slots are compatibility data consumed by both
+Illustrated Rooms and the future Coloring Studio.
+
+| Template | Revision | Regions | Parts | Decoration slots | Final SVG / JSON SHA-256 |
+| --- | ---: | ---: | ---: | ---: | --- |
+| `living` | 1 | 9 | 19 | 20 | `17b9b89a…228b86` / `577ea777…feafe` |
+| `bedroom` | 1 | 9 | 20 | 21 | `51239f27…a7bdd` / `8d97f125…9704ae` |
+| `study` | 1 | 8 | 21 | 22 | `d547a004…5e6ee0a` / `4b753ef5…c8c1185` |
+| `dining` | 1 | 10 | 21 | 22 | `bc3464d1…c177e39` / `b0ac3e9d…cd47eb` |
+| `kitchen` | 1 | 10 | 18 | 19 | `d08f2a4a…36af93` / `c7390a42…a5340a` |
+| `bathroom` | 1 | 7 | 11 | 12 | `61c12bdc…e3add6` / `3d0edf62…4715fa` |
+
+The exact pre-region SVG inputs remain test-only fixtures. Their SHA-256 values
+are, respectively: Living `81a400211f87253eeb844fc9f427f164091734077c60e8d01cb8aae6d13796e6`,
+Bedroom `d5f69379b8bba90a2e28fc7df0d982711a82a02701ed7fd9b564ac23a27818f4`,
+Study `3637e4f694387cb1ec2b5c2555f7cb969290ed5b9ef836fa69ce7cf8b58a8168`,
+Dining `dd13522ce28cdec7eaf9a601a15eaa39c661a114a18783ae3f8bafa6c531536a`,
+Kitchen `876c7a4e136b2354a54c66d148ac28c845e5cab6506f4ae021ac219af0dc4d88`,
+and Bathroom `a5400b6a4e50bd9f4c4a1d058e51b189d75371564e20f1e4d60af258ed26c068`.
+The frozen six-design schema-v1 fixture is 1,818 bytes, SHA-256
+`c34d867347480f5916a6bf79a69c5b7b5a5840c3b19cb752ca6f051e15714a8f`.
+These hashes preserve migration evidence; they are not current runtime assets.
+
+The palette NOTICE is bundled but is not yet registered by the protected
+`lib/main.dart` runtime license list. That release gap remains open and the
+NOTICE grants no rights to the room illustrations.
 
 ## Downloaded Room models
 

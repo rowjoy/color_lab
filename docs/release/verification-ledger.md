@@ -548,3 +548,69 @@ baseline quality/timing/device/build/hash records. Only after Tasks 4–5 pass m
 the owner approve an independently calibrated algorithm amendment; an assisted
 study and every safety/reversibility/device/usefulness gate must still pass
 before enablement. The backlog names owners, acceptance checks and likely files.
+
+## Plan 05 Tasks 6–8 — Illustrated Rooms v2 focused verification (2026-10-28)
+
+Branch `TintAtlas`, baseline
+`d926ab6108eb862ba6b1d97a0e36bfd7aa076b06`. Work remains unstaged and
+uncommitted because the user owns commits. `lib/main.dart` is outside this
+batch. The user explicitly required all Task 6–8 coding first and one focused
+command per task afterward. No normal pre-implementation RED run was performed;
+real failures from those commands were fixed and retried only at their exact
+failure scope.
+
+Task 6 implements copied, session-only Current/A/B/last-saved Original/B&W
+comparison; dirty/history/autosave isolation; clean 2400×1600 artwork PNG; a
+separate measured TintAtlas palette-card PNG; and guarded Gallery/Share through
+the existing metadata-verified native boundary. Fresh review closed the stale
+UI/lifecycle handoff finding and ended with 0 Critical/Important, spec PASS and
+quality APPROVED. Physical-device Gallery/Share remains unexecuted.
+
+Task 7 migrates all six stable revision-1 templates to JSON-owned region
+geometry plus fixed SVG decoration, removes the shipping token mapper, shares
+one validated loader/render/cache path across screen, semantics, thumbnails and
+export, and strictly translates only recognized legacy-only overrides. Asset
+review's Dining duplicate contour and code review's mixed-draft isolation issue
+were corrected. The focused run then exposed stale semantics wording and
+single-contour antialias differences; their bounded root-cause fixes are recorded
+below.
+The exact final SVG/JSON checksums and retained pre-region fixtures are recorded
+in `schema-registry.md` and `asset-sources.md`.
+
+Task 8 authors one six-template milestone integration file and freezes the
+shared vector-region inventory for future Coloring Studio use.
+
+| Gate | Result | Elapsed |
+| --- | --- | --- |
+| Task 6 comparison/encoder/export command | exit 1: 42 passed, 2 focus-settlement test failures | 7.79s |
+| Task 6 exact two-case retry after test-only focus pump | exit 0: 2/2 passed | 3.22s |
+| Task 7 catalogue/render/hit/migration/persistence command | exit 1: 111 passed, 5 failures | 3.75s |
+| Task 7 exact five-case retry after semantics + uniform-wall contour fixes | exit 1: 4 passed, 1 residual Bedroom parity case | 2.87s |
+| Task 7 Bedroom-only retry after contour-bounded test exception | exit 0: 1/1 passed | 2.28s |
+| Task 8 six-room milestone command | exit 0: 6/6 passed | 6.15s |
+
+Task 6's two failures were the same focus request being dispatched before its
+primary-focus microtask; production comparison state was not changed. Task 7's
+four initial raster failures were same-coordinate, delta-2 coverage differences
+caused by closing one frozen wall contour into adjacent authored regions. A
+cached JSON-only wall union now restores the original base contour only when all
+displayed wall RGB values are identical; mixed walls retain separate fills.
+The remaining seven Bedroom colored channels were exactly on the two table-top
+contours that must be split for independent left/right identities. Their
+test-only exception is limited to that mode, delta, channel count and 0.5px
+contour distance. Every other parity byte keeps the original one-channel bound.
+
+No full command was repeated after a fix, honoring the user instruction. The
+initial focused sets plus only their changed failure cases are the evidence;
+there is no repeated all-green Task 6/7 aggregate. Task 8 is a fresh all-green
+6/6 milestone run. A final read-only review of the post-test focus, wall-union,
+semantics and bounded Bedroom parity changes found 0 Critical/Important issues,
+spec PASS and quality APPROVED.
+
+The Plan 05 module/full suite, repository-wide analyzer, Android build and
+active iOS build gate remain explicitly deferred until the user's Plans 01–08
+are complete. Named-device memory/frame-time, physical accessibility, native
+Gallery/Share, runtime palette-NOTICE registration and an independently
+verified room-artwork rights grant remain open. This entry does not establish
+release readiness, a native pass, or rights beyond the truthful repository
+history recorded in `asset-sources.md`.

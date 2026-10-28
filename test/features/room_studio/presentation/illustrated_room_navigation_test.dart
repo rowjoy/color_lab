@@ -146,9 +146,9 @@ void main() {
         .draftFor('study')!;
     expect(draft.mode, IllustratedRoomVisualMode.colored);
     expect(draft.colors!.wall.hex, '#123456');
-    expect(draft.colors!.ceiling.hex, '#F8F4EB');
-    expect(draft.colors!.floor.hex, '#C6AC84');
-    expect(draft.colors!.furniture.hex, '#654A39');
+    expect(draft.colors!.ceiling.hex, '#B7C2A3');
+    expect(draft.colors!.floor.hex, '#78866B');
+    expect(draft.colors!.furniture.hex, '#4E5B4A');
 
     harness.router.pop();
     await tester.pumpAndSettle();
@@ -160,7 +160,7 @@ void main() {
   ) async {
     final harness = await _pumpHarness(tester);
     final controller = harness.container.read(illustratedRoomProvider.notifier);
-    controller.applyPalette('warm-natural');
+    controller.applyPalette('soft-linen');
     controller.openTemplate(IllustratedRoomCatalog.living);
     final before = harness.container.read(illustratedRoomProvider);
     final legacyBefore = harness.container.read(roomColorProvider);
@@ -219,7 +219,7 @@ void main() {
     final repository = InMemoryRoomDesignRepository(clock: () => _now);
     final harness = await _pumpHarness(tester, repository: repository);
     final controller = harness.container.read(illustratedRoomProvider.notifier);
-    controller.applyPalette('warm-natural');
+    controller.applyPalette('soft-linen');
     final previousColors = harness.container
         .read(illustratedRoomProvider)
         .draftFor('study')!
@@ -253,7 +253,7 @@ void main() {
       ..failWrites = true;
     final harness = await _pumpHarness(tester, repository: repository);
     final controller = harness.container.read(illustratedRoomProvider.notifier);
-    controller.applyPalette('cool-airy');
+    controller.applyPalette('airy-slate');
     controller.openTemplate(IllustratedRoomCatalog.living);
     final before = harness.container.read(illustratedRoomProvider);
     final legacyBefore = harness.container.read(roomColorProvider);
@@ -284,7 +284,7 @@ void main() {
         illustratedRoomProvider.notifier,
       );
       controller.openTemplate(IllustratedRoomCatalog.bedroom);
-      controller.applyPalette('cool-airy');
+      controller.applyPalette('airy-slate');
       controller.openTemplate(IllustratedRoomCatalog.living);
       final before = harness.container.read(illustratedRoomProvider);
       final legacyBefore = harness.container.read(roomColorProvider);
@@ -315,7 +315,7 @@ void main() {
       id: 'study-same',
       name: 'Original study',
       templateId: 'study',
-      colors: IllustratedRoomCatalog.study.palette('warm-natural').colors,
+      colors: IllustratedRoomCatalog.study.palette('soft-linen').colors,
     );
     final repository = InMemoryRoomDesignRepository(
       designs: [stored],

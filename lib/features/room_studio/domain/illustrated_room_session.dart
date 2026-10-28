@@ -2,6 +2,7 @@ import 'dart:collection';
 
 import 'illustrated_room.dart';
 import 'illustrated_room_draft.dart';
+import 'illustrated_room_history.dart';
 
 final class IllustratedRoomSession {
   IllustratedRoomSession._(
@@ -29,6 +30,11 @@ final class IllustratedRoomSession {
       activeTemplateId == null ? null : _drafts[activeTemplateId];
 
   IllustratedRoomDraft? draftFor(String templateId) => _drafts[templateId];
+
+  IllustratedRoomHistory? get activeHistory => activeDraft?.history;
+
+  IllustratedRoomHistory? historyFor(String templateId) =>
+      draftFor(templateId)?.history;
 
   IllustratedRoomSession activate(IllustratedRoomTemplate template) {
     final drafts = Map<String, IllustratedRoomDraft>.of(_drafts);

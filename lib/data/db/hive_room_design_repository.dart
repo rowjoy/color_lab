@@ -11,6 +11,7 @@ import 'package:hive/src/hive_impl.dart';
 import '../../features/room_studio/domain/illustrated_room.dart';
 import '../../features/room_studio/domain/room_design_repository.dart';
 import '../../features/room_studio/domain/saved_room_design.dart';
+import '../../features/room_studio/domain/recoverable_room_draft.dart';
 import '../schema/corrupt_record.dart';
 import '../schema/repository_snapshot.dart';
 import '../schema/schema_registry.dart';
@@ -71,12 +72,61 @@ final class HiveRoomDesignRepository
     _needsFlush = false;
   }
 
-  Future<T> _serialize<T>(FutureOr<T> Function() operation) {
+  bool _failed = false;
+  Map<Object, Object?>? _rollback;
+
+  Future<void> _restoreRollback() async {
+    final rollback = _rollback;
+    if (rollback == null) return;
+    _needsFlush = true;
+    for (final entry in rollback.entries) {
+      if (entry.value == null) {
+        await _box.delete(entry.key);
+      } else {
+        await _box.put(entry.key, entry.value);
+      }
+    }
+    await _ensureDurable();
+    _rollback = null;
+  }
+
+  /// Hive mutates its cache before flush. A failed attempt is rolled back, never
+  /// implicitly promoted by a read/close. The barrier stays blocked until Retry.
+  Future<void> _write(Map<Object, Object?> changes) async {
+    _rollback = {for (final key in changes.keys) key: _box.get(key)};
+    try {
+      _needsFlush = true;
+      for (final entry in changes.entries) {
+        if (entry.value == null) {
+          await _box.delete(entry.key);
+        } else {
+          await _box.put(entry.key, entry.value);
+        }
+      }
+      await _ensureDurable();
+      _rollback = null;
+    } catch (_) {
+      _failed = true;
+      try {
+        await _restoreRollback();
+      } catch (_) {
+        /* Retry/close must finish rollback. */
+      }
+      rethrow;
+    }
+  }
+
+  Future<T> _serialize<T>(
+    FutureOr<T> Function() operation, {
+    bool retry = false,
+  }) {
     if (_closing != null) {
       return Future<T>.error(const RoomDesignStorageException());
     }
     final result = _pending.then<T>((_) async {
       try {
+        if (_failed && !retry) throw const RoomDesignStorageException();
+        if (retry) await _restoreRollback();
         await _ensureDurable();
         return await operation();
       } catch (_) {
@@ -87,10 +137,16 @@ final class HiveRoomDesignRepository
     return result;
   }
 
+  @override
+  Future<void> retry() => _serialize(() {
+    _failed = false;
+  }, retry: true);
+
   RepositorySnapshot<SavedRoomDesign> _readSnapshot() {
     final designs = <SavedRoomDesign>[];
     final corruptRecords = <CorruptRecord>[];
     for (final key in _box.keys) {
+      if (key is String && key.startsWith('@draft:')) continue;
       final value = _box.get(key);
       if (value is! Map) {
         corruptRecords.add(_corrupt(key, 'Stored value is not a record.'));
@@ -131,54 +187,191 @@ final class HiveRoomDesignRepository
 
   @override
   Future<RepositorySnapshot<SavedRoomDesign>> loadSnapshot() =>
-      _serialize(_readSnapshot);
+      _serialize(() async {
+        final snapshot = _readSnapshot();
+        final migrations = <Object, Object?>{};
+        for (final design in snapshot.records) {
+          if ((_box.get(design.id) as Map)['version'] == 1) {
+            migrations[design.id] = design.toMap();
+          }
+        }
+        if (migrations.isNotEmpty) await _write(migrations);
+        return snapshot;
+      });
 
   @override
   Future<List<SavedRoomDesign>> load() =>
       loadSnapshot().then((snapshot) => snapshot.records);
 
+  SavedRoomDesign _existing(String id) => _readSnapshot().records.firstWhere(
+    (design) => design.id == id,
+    orElse: () => throw const RoomDesignStorageException(),
+  );
+
+  Future<SavedRoomDesign> _save({
+    SavedRoomDesign? previous,
+    required String name,
+    required String templateId,
+    required int templateRevision,
+    required RoomDesignSnapshot snapshot,
+    required RoomDesignSnapshot? activeBaseline,
+    bool reconcileDraftName = false,
+  }) async {
+    final now = _clock().toUtc();
+    final saved = SavedRoomDesign(
+      id:
+          previous?.id ??
+          _nextId(templateId, now, _box.keys.cast<Object>().toSet()),
+      name: name,
+      templateId: templateId,
+      templateRevision: templateRevision,
+      snapshot: snapshot,
+      activeBaseline: activeBaseline,
+      createdAt: previous?.createdAt ?? now,
+      updatedAt: now,
+    );
+    await _write({
+      saved.id: saved.toMap(),
+      if (reconcileDraftName)
+        for (final draft in _readDraftSnapshot().records.where(
+          (draft) => draft.savedDesignId == saved.id,
+        ))
+          '@draft:${draft.templateId}': draft.withSavedName(saved.name).toMap(),
+    });
+    return saved;
+  }
+
+  @override
+  Future<SavedRoomDesign> saveNew({
+    required String name,
+    required String templateId,
+    int templateRevision = 1,
+    required RoomDesignSnapshot snapshot,
+    RoomDesignSnapshot? activeBaseline,
+  }) => _serialize(
+    () => _save(
+      name: name,
+      templateId: templateId,
+      templateRevision: templateRevision,
+      snapshot: snapshot,
+      activeBaseline: activeBaseline,
+    ),
+  );
+
+  @override
+  Future<SavedRoomDesign> update(
+    String existingId, {
+    required String name,
+    required RoomDesignSnapshot snapshot,
+    required RoomDesignSnapshot? activeBaseline,
+  }) => _serialize(() {
+    final previous = _existing(existingId);
+    return _save(
+      previous: previous,
+      name: name,
+      templateId: previous.templateId,
+      templateRevision: previous.templateRevision,
+      snapshot: snapshot,
+      activeBaseline: activeBaseline,
+      reconcileDraftName: true,
+    );
+  });
+
+  @override
+  Future<SavedRoomDesign> rename(String id, String name) => _serialize(() {
+    final previous = _existing(id);
+    return _save(
+      previous: previous,
+      name: name,
+      templateId: previous.templateId,
+      templateRevision: previous.templateRevision,
+      snapshot: previous.snapshot,
+      activeBaseline: previous.activeBaseline,
+      reconcileDraftName: true,
+    );
+  });
+
+  @override
+  Future<SavedRoomDesign> saveCopy(String existingId, {required String name}) =>
+      _serialize(() {
+        final previous = _existing(existingId);
+        return _save(
+          name: name,
+          templateId: previous.templateId,
+          templateRevision: previous.templateRevision,
+          snapshot: previous.snapshot,
+          activeBaseline: previous.activeBaseline,
+        );
+      });
+
+  /// Temporary four-group adapter. New callers use the explicit snapshot actions.
   @override
   Future<SavedRoomDesign> save({
     String? existingId,
     required String name,
     required String templateId,
     required IllustratedRoomColors colors,
-  }) => _serialize(() async {
-    final existing = _readSnapshot().records;
-    final now = _clock().toUtc();
-    late final SavedRoomDesign saved;
-    if (existingId == null) {
-      saved = SavedRoomDesign(
-        id: _nextId(templateId, now, _box.keys.cast<Object>().toSet()),
-        name: name,
-        templateId: templateId,
-        colors: colors,
-        createdAt: now,
-        updatedAt: now,
-      );
-    } else {
-      SavedRoomDesign? previous;
-      for (final design in existing) {
-        if (design.id == existingId) {
-          previous = design;
-          break;
-        }
-      }
-      if (previous == null) throw const RoomDesignStorageException();
-      saved = SavedRoomDesign(
-        id: previous.id,
-        name: name,
-        templateId: templateId,
-        colors: colors,
-        createdAt: previous.createdAt,
-        updatedAt: now,
-      );
-    }
+  }) => existingId == null
+      ? saveNew(
+          name: name,
+          templateId: templateId,
+          snapshot: RoomDesignSnapshot.fromColors(colors),
+        )
+      : _serialize(() {
+          final previous = _existing(existingId);
+          // The four-color adapter cannot express overrides or a pinned baseline.
+          // Preserve both while changing only the groups it actually received.
+          return _save(
+            previous: previous,
+            name: name,
+            templateId: previous.templateId,
+            templateRevision: previous.templateRevision,
+            snapshot: RoomDesignSnapshot(
+              groupColors: RoomDesignSnapshot.fromColors(colors).groupColors,
+              regionOverrides: previous.snapshot.regionOverrides,
+            ),
+            activeBaseline: previous.activeBaseline,
+          );
+        });
 
-    _needsFlush = true;
-    await _box.put(saved.id, saved.toMap());
-    await _ensureDurable();
-    return saved;
+  RepositorySnapshot<RecoverableRoomDraft> _readDraftSnapshot() {
+    final drafts = <RecoverableRoomDraft>[];
+    final corrupt = <CorruptRecord>[];
+    for (final key in _box.keys) {
+      if (key is! String || !key.startsWith('@draft:')) continue;
+      try {
+        final value = _box.get(key);
+        if (value is! Map) throw const FormatException('Invalid draft.');
+        final draft = RecoverableRoomDraft.fromMap(value);
+        if (key != '@draft:${draft.templateId}') {
+          throw const FormatException('Draft key mismatch.');
+        }
+        drafts.add(draft);
+      } on FormatException {
+        corrupt.add(_corrupt(key, 'Stored draft could not be decoded.'));
+      }
+    }
+    return RepositorySnapshot(records: drafts, corruptRecords: corrupt);
+  }
+
+  @override
+  Future<RepositorySnapshot<RecoverableRoomDraft>> loadDraftSnapshot() =>
+      _serialize(_readDraftSnapshot);
+
+  @override
+  Future<void> saveDraft(RecoverableRoomDraft draft) => _serialize(() async {
+    final key = '@draft:${draft.templateId}';
+    final snapshot = _readDraftSnapshot();
+    if (snapshot.corruptRecords.any((record) => record.storageKey == key)) {
+      throw const RoomDesignStorageException();
+    }
+    final previous = snapshot.records
+        .where((record) => record.templateId == draft.templateId)
+        .firstOrNull;
+    if (previous != null && draft.updatedAt.isBefore(previous.updatedAt)) {
+      throw const RoomDesignStorageException();
+    }
+    await _write({key: draft.toMap()});
   });
 
   String _nextId(String templateId, DateTime now, Set<Object> used) {
@@ -198,18 +391,30 @@ final class HiveRoomDesignRepository
   @override
   Future<void> delete(String id) => _serialize(() async {
     if (!_readSnapshot().records.any((design) => design.id == id)) return;
-    _needsFlush = true;
-    await _box.delete(id);
-    await _ensureDurable();
+    await _write({
+      id: null,
+      for (final draft in _readDraftSnapshot().records.where(
+        (draft) => draft.savedDesignId == id,
+      ))
+        '@draft:${draft.templateId}': draft.withoutSavedDesign().toMap(),
+    });
   });
 
   @override
   Future<void> close() => _closing ??= _pending.then((_) async {
     try {
+      await _restoreRollback();
       await _ensureDurable();
+    } catch (_) {
+      // Rollback/flush failed before close: this open handle can still retry.
+      _closing = null;
+      throw const RoomDesignStorageException();
+    }
+    try {
       await _box.close();
     } catch (_) {
-      _closing = null;
+      // Hive marks itself closed before awaiting backend close. Keep this
+      // terminal handle unavailable, including Retry; the owner must reopen.
       throw const RoomDesignStorageException();
     }
   });

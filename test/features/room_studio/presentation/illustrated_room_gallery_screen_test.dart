@@ -109,8 +109,6 @@ IllustratedRoomTemplate _missingTemplate() => IllustratedRoomTemplate(
   palettes: IllustratedRoomCatalog.living.palettes,
   surfaceLabels: IllustratedRoomCatalog.living.surfaceLabels,
   focalPoint: IllustratedRoomCatalog.living.focalPoint,
-  paletteReviewLabel: IllustratedRoomCatalog.living.paletteReviewLabel,
-  paletteSourceNote: IllustratedRoomCatalog.living.paletteSourceNote,
 );
 
 void main() {
@@ -208,7 +206,7 @@ void main() {
       textScaler: const TextScaler.linear(2),
       beforePump: (container) => container
           .read(illustratedRoomProvider.notifier)
-          .applyPalette('soft-botanical'),
+          .applyPalette('quiet-sage'),
     );
 
     for (final template in IllustratedRoomCatalog.all) {
@@ -229,7 +227,7 @@ void main() {
       beforePump: (container) {
         container
             .read(illustratedRoomProvider.notifier)
-            .applyPalette('soft-botanical');
+            .applyPalette('quiet-sage');
         retained = container.read(illustratedRoomProvider).draftFor('study')!;
       },
     );
@@ -297,7 +295,7 @@ void main() {
       id: 'dining-saved',
       name: 'Evening dining',
       templateId: template.id,
-      colors: template.palette('cool-airy').colors,
+      colors: template.palette('airy-slate').colors,
       createdAt: DateTime.utc(2026, 10, 24),
       updatedAt: DateTime.utc(2026, 10, 25),
     );
@@ -342,7 +340,7 @@ void main() {
       id: 'study-saved',
       name: 'Stored study',
       templateId: template.id,
-      colors: template.palette('cool-airy').colors,
+      colors: template.palette('airy-slate').colors,
       createdAt: DateTime.utc(2026, 10, 24),
       updatedAt: DateTime.utc(2026, 10, 25),
     );
@@ -352,7 +350,7 @@ void main() {
       repository: repository,
       beforePump: (container) => container
           .read(illustratedRoomProvider.notifier)
-          .applyPalette('warm-natural'),
+          .applyPalette('soft-linen'),
     );
     final before = harness.container.read(illustratedRoomProvider);
 

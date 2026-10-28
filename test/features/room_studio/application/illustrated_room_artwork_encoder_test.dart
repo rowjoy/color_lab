@@ -2,6 +2,8 @@ import 'dart:ui' as ui;
 
 import 'package:color_lab/core/color/color_models.dart';
 import 'package:color_lab/features/room_studio/application/illustrated_room_artwork_encoder.dart';
+import 'package:color_lab/features/room_studio/application/illustrated_room_palette_card_encoder.dart';
+import 'package:color_lab/features/room_studio/application/room_export_metadata_verifier.dart';
 import 'package:color_lab/features/room_studio/domain/illustrated_room.dart';
 import 'package:color_lab/features/room_studio/domain/illustrated_room_draft.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -36,7 +38,9 @@ void main() {
     );
   }
 
-  testWidgets('rejects grayscale before loading any picture', (tester) async {
+  testWidgets('exports grayscale through the same complete artwork loader', (
+    tester,
+  ) async {
     var loads = 0;
     final encoder = SvgIllustratedRoomArtworkEncoder(
       loadPicture: (draft) async {
@@ -48,14 +52,139 @@ void main() {
       },
     );
 
-    await expectLater(
-      encoder.encodePng(
+    final png = await tester.runAsync(
+      () => encoder.encodePng(
         IllustratedRoomDraft.grayscale(IllustratedRoomCatalog.study),
       ),
-      throwsA(isA<IllustratedRoomRenderException>()),
     );
-    expect(loads, 0);
+    expect(const RoomExportMetadataVerifier().verify(png!).width, 2400);
+    expect(loads, 1);
   });
+
+  testWidgets(
+    'comparison overrides and temporary grayscale drive exported pixels',
+    (tester) async {
+      final current = _distinctDraft(IllustratedRoomCatalog.study);
+      final changed = current
+          .setRegionColor('wall-back', RgbColor.fromHex('#123456'))
+          .assignments!;
+      final comparison = current.setComparisonVariant(changed);
+      final png = await tester.runAsync(
+        () => SvgIllustratedRoomArtworkEncoder().encodePng(comparison),
+      );
+      final decoded = image.decodePng(png!)!;
+      _expectRgb(decoded, (1200, 440), '#123456');
+      expect(comparison.assignments, current.assignments);
+      final gray = await tester.runAsync(
+        () => SvgIllustratedRoomArtworkEncoder().encodePng(
+          current.showTemporaryGrayscale(),
+        ),
+      );
+      final grayImage = image.decodePng(gray!)!;
+      _expectRgb(grayImage, (1200, 440), '#C8C8C8');
+      expect(
+        const RoomExportMetadataVerifier().verify(png).height,
+        SvgIllustratedRoomArtworkEncoder.outputHeight,
+      );
+    },
+  );
+
+  for (final direction in ui.TextDirection.values) {
+    testWidgets(
+      'palette card wraps long labels at 200% $direction with clean metadata',
+      (tester) async {
+        final draft = _distinctDraft(IllustratedRoomCatalog.study);
+        final card = IllustratedRoomPaletteCard.fromDraft(
+          draft,
+          labelFor: (id) => 'A localized longer label for $id',
+          limitation:
+              'Preview only. Compare physical samples in your room before choosing paint.',
+          textDirection: direction,
+          textScale: 2,
+        );
+        expect(
+          card.rows.first.color.hex,
+          draft.assignments!.groupColors['walls']!.hex,
+        );
+        final png = await tester.runAsync(
+          () => CanvasIllustratedRoomPaletteCardEncoder().encodePng(card),
+        );
+        final dimensions = const RoomExportMetadataVerifier().verify(png!);
+        expect(
+          dimensions.width,
+          CanvasIllustratedRoomPaletteCardEncoder.outputWidth,
+        );
+        expect(
+          dimensions.height,
+          lessThanOrEqualTo(
+            CanvasIllustratedRoomPaletteCardEncoder.maxOutputHeight,
+          ),
+        );
+        final decoded = image.decodePng(png)!;
+        expect(decoded.getPixel(0, 0).r, 255);
+        final layout = CanvasIllustratedRoomPaletteCardEncoder.layout(card);
+        try {
+          expect(
+            (dimensions.width, dimensions.height),
+            (layout.width, layout.height),
+          );
+          expect(
+            layout.text.map((item) => item.role),
+            containsAll(['title', 'limitation']),
+          );
+          expect(layout.text.first.text, 'TintAtlas');
+          expect(layout.text.last.text, card.limitation);
+          for (var i = 0; i < card.rows.length; i++) {
+            expect(
+              layout.text.singleWhere((item) => item.role == 'hex-$i').text,
+              card.rows[i].color.hex.toUpperCase(),
+            );
+            expect(
+              layout.text.singleWhere((item) => item.role == 'label-$i').text,
+              contains(card.rows[i].name),
+            );
+          }
+          for (final item in layout.text) {
+            final bounds = item.bounds;
+            expect(bounds.left, greaterThanOrEqualTo(0), reason: item.role);
+            expect(bounds.top, greaterThanOrEqualTo(0), reason: item.role);
+            expect(
+              bounds.right,
+              lessThanOrEqualTo(dimensions.width),
+              reason: item.role,
+            );
+            expect(
+              bounds.bottom,
+              lessThanOrEqualTo(dimensions.height),
+              reason: item.role,
+            );
+            var hasTextPixels = false;
+            for (
+              var y = bounds.top.ceil();
+              y < bounds.bottom.floor() && !hasTextPixels;
+              y++
+            ) {
+              for (var x = bounds.left.ceil(); x < bounds.right.floor(); x++) {
+                final pixel = decoded.getPixel(x, y);
+                if (pixel.r < 128 && pixel.g < 128 && pixel.b < 128) {
+                  hasTextPixels = true;
+                  break;
+                }
+              }
+            }
+            expect(
+              hasTextPixels,
+              isTrue,
+              reason:
+                  '${item.role} must be painted inside its measured image bounds',
+            );
+          }
+        } finally {
+          layout.dispose();
+        }
+      },
+    );
+  }
 
   testWidgets('maps missing and private loader failures to one safe type', (
     tester,
@@ -81,8 +210,6 @@ void main() {
         furniture: 'Furniture',
       ),
       focalPoint: const IllustratedRoomFocalPoint(x: 0, y: 0),
-      paletteReviewLabel: 'Test review',
-      paletteSourceNote: 'Test display note.',
     );
     final missingDraft = IllustratedRoomDraft.grayscale(
       missing,

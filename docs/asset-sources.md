@@ -149,3 +149,52 @@ evidence belongs to the [Task5 report](superpowers/plans/room-task-5-report.md).
 cf1bb10c7518cb4ff5e5403f856f1342280dbce8341a72c26fbd06d2e345d533  assets/models/room_seg_descriptor.json
 ```
 
+## Repository-authored illustrated rooms and palettes
+
+The six bundled room illustrations are repository-authored vector artwork. The
+approved 2026-10-25 designs describe original scenes and prohibit tracing or
+shipping the supplied reference images. The generated Study raster was used
+only as non-shipping visual direction. Plan 05 derives strict region JSON and
+fixed-decoration SVGs from these existing vectors; it introduces no downloaded
+room imagery.
+
+Git history records the prior artwork-polish commits below. The inspected
+commits are attributed to repository contributor `rowjoy`; commit authorship is
+not independent proof of copyright ownership and does not establish a separate
+third-party license grant. No repository-wide LICENSE or room-artwork
+LICENSE/NOTICE was found. The starter-palette NOTICE grants rights only to the
+original palette values, names and descriptions; it does **not** grant rights to
+the SVG or region JSON artwork.
+
+| Template | Historical artwork commit | Final SVG SHA-256 | Final region JSON SHA-256 |
+| --- | --- | --- | --- |
+| Living | `c3116f5` | `17b9b89abf503af23faf2d18fc84bf94665df24a15289c570ed32c317a228b86` | `577ea777d36e5a8378aa9181cdac7bbde575f0ca0537340eb8bc614e7a3feafe` |
+| Bedroom | `1f5a019` | `51239f270468bcb7b84393ef432c2b3c8eda076aee456c215cfd6770e47a7bdd` | `8d97f12556aade078b89fd5b29123c7ce01c8752299b83ba5d945ce4c39704ae` |
+| Study | `6860456` | `d547a004155670db40e058afe1a4fb0a06c0d83e0376189ca210f45655e6ee0a` | `4b753ef541f8ee2a3011f80e7ad6bb499f96c17c248100d04e94733f7c8c1185` |
+| Dining | `da27b9e` | `bc3464d1fbf701104ead3a3de053b7ad565bd6d871b2a5672fdb50b32c177e39` | `b0ac3e9d192b65ec26a93fa676e1cbf731e453e4b27c47d8fcefc28b10cd47eb` |
+| Kitchen | `74c2a7e` | `d08f2a4a444c8d7fadf7e7ca97f695155c46373611a525dbb4fbc0c29336af93` | `c7390a425eb5a84a8f933745586b20eb77bdd1e0cf8bcc0f7622d05dd3a5340a` |
+| Bathroom | `7e56c46` | `61c12bdca53ffc595b2396991c5468865eeee4461764892ae570e811b7e3add6` | `3d0edf621aa7aac0da31a2e001d525d0191a3ddc089e1dfc32ce6687424715fa` |
+
+The design sources are
+`docs/superpowers/specs/2026-10-25-svg-room-color-studio-design.md` and
+`docs/superpowers/specs/2026-10-25-polished-3d-illustrated-rooms-design.md`.
+Exact pre-region SVGs are retained as test-only migration fixtures rather than
+runtime assets. Their raw-byte SHA-256 values are:
+
+```text
+81a400211f87253eeb844fc9f427f164091734077c60e8d01cb8aae6d13796e6  test/fixtures/illustrated_rooms/living_room_pre_regions.svg
+d5f69379b8bba90a2e28fc7df0d982711a82a02701ed7fd9b564ac23a27818f4  test/fixtures/illustrated_rooms/bedroom_room_pre_regions.svg
+3637e4f694387cb1ec2b5c2555f7cb969290ed5b9ef836fa69ce7cf8b58a8168  test/fixtures/study_room_pre_region_pilot.svg
+dd13522ce28cdec7eaf9a601a15eaa39c661a114a18783ae3f8bafa6c531536a  test/fixtures/illustrated_rooms/dining_room_pre_regions.svg
+876c7a4e136b2354a54c66d148ac28c845e5cab6506f4ae021ac219af0dc4d88  test/fixtures/illustrated_rooms/kitchen_room_pre_regions.svg
+a5400b6a4e50bd9f4c4a1d058e51b189d75371564e20f1e4d60af258ed26c068  test/fixtures/illustrated_rooms/bathroom_room_pre_regions.svg
+c34d867347480f5916a6bf79a69c5b7b5a5840c3b19cb752ca6f051e15714a8f  test/fixtures/illustrated_rooms/v1.json
+```
+
+The original, brand-neutral starter-palette catalogue is 1,722 bytes, SHA-256
+`985ee30d37ea07270c50a35144fdc7669a2dba61e70783fa96d989a7875edf1c`.
+Its 843-byte NOTICE is SHA-256
+`e1bf7191aaf19a20ef9507636ba067033e950374e74fab9d558a8f75f048b8ba`.
+Both are bundled. Runtime registration of that NOTICE in the protected
+`lib/main.dart` license list remains a release prerequisite.
+

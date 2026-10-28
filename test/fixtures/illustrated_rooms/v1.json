@@ -1,0 +1,74 @@
+[
+  {
+    "version": 1,
+    "id": "living-legacy",
+    "name": "Legacy living",
+    "templateId": "living",
+    "wall": "#A1B2C3",
+    "ceiling": "#D4E5F6",
+    "floor": "#010203",
+    "furniture": "#405060",
+    "createdAt": "2026-10-20T01:02:03.004Z",
+    "updatedAt": "2026-10-25T04:05:06.007Z"
+  },
+  {
+    "version": 1,
+    "id": "bedroom-legacy",
+    "name": "Legacy bedroom",
+    "templateId": "bedroom",
+    "wall": "#112233",
+    "ceiling": "#445566",
+    "floor": "#778899",
+    "furniture": "#AABBCC",
+    "createdAt": "2026-10-20T01:02:03.004Z",
+    "updatedAt": "2026-10-25T04:05:06.007Z"
+  },
+  {
+    "version": 1,
+    "id": "study-legacy",
+    "name": "Legacy study",
+    "templateId": "study",
+    "wall": "#A7B5A0",
+    "ceiling": "#F7F2E8",
+    "floor": "#C9A77B",
+    "furniture": "#5B4636",
+    "createdAt": "2026-10-20T01:02:03.004Z",
+    "updatedAt": "2026-10-25T04:05:06.007Z"
+  },
+  {
+    "version": 1,
+    "id": "dining-legacy",
+    "name": "Legacy dining",
+    "templateId": "dining",
+    "wall": "#ABCDEF",
+    "ceiling": "#FEDCBA",
+    "floor": "#987654",
+    "furniture": "#123456",
+    "createdAt": "2026-10-20T01:02:03.004Z",
+    "updatedAt": "2026-10-25T04:05:06.007Z"
+  },
+  {
+    "version": 1,
+    "id": "kitchen-legacy",
+    "name": "Legacy kitchen",
+    "templateId": "kitchen",
+    "wall": "#001122",
+    "ceiling": "#334455",
+    "floor": "#667788",
+    "furniture": "#99AABB",
+    "createdAt": "2026-10-20T01:02:03.004Z",
+    "updatedAt": "2026-10-25T04:05:06.007Z"
+  },
+  {
+    "version": 1,
+    "id": "bathroom-legacy",
+    "name": "Legacy bathroom",
+    "templateId": "bathroom",
+    "wall": "#FFFFFF",
+    "ceiling": "#EEEEEE",
+    "floor": "#DDDDDD",
+    "furniture": "#CCCCCC",
+    "createdAt": "2026-10-20T01:02:03.004Z",
+    "updatedAt": "2026-10-25T04:05:06.007Z"
+  }
+]

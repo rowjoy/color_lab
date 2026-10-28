@@ -7,9 +7,15 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/theme.dart';
 import '../../../core/widgets/buttons.dart';
+import '../../../l10n/l10n.dart';
+import '../application/illustrated_room_editor_persistence.dart';
+import 'illustrated_room_editor_flow.dart';
+import 'illustrated_room_export_controls.dart';
+import 'illustrated_room_surface_picker.dart';
 import '../../mixer/presentation/mixer_color_picker.dart';
 import '../application/illustrated_room_controller.dart';
 import '../application/illustrated_room_export_controller.dart';
+import '../application/illustrated_room_export_request.dart';
 import '../application/room_designs_providers.dart';
 import '../application/room_gallery_writer.dart';
 import '../domain/illustrated_room.dart';
@@ -45,6 +51,8 @@ class _IllustratedRoomScreenState extends ConsumerState<IllustratedRoomScreen> {
   bool _handlingExport = false;
   bool _previewUnavailable = false;
   int _previewAttempt = 0;
+  String? _selectedRegionId;
+  bool _flowOpen = false;
 
   IllustratedRoomTemplate? get _template =>
       IllustratedRoomCatalog.maybeById(widget.templateId);
@@ -70,6 +78,7 @@ class _IllustratedRoomScreenState extends ConsumerState<IllustratedRoomScreen> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.templateId != widget.templateId) {
       _activeTool = null;
+      _selectedRegionId = null;
       _railVisibleOverride = null;
       _focusPreview = false;
       _railVisibleOverrideBeforeFocus = null;
@@ -105,15 +114,24 @@ class _IllustratedRoomScreenState extends ConsumerState<IllustratedRoomScreen> {
     if (_handlingExport) return;
     _handlingExport = true;
     IllustratedRoomExportResult result;
+    final request = IllustratedRoomExportRequest(
+      ownsRequest: () =>
+          mounted &&
+          widget.templateId == draft.template.id &&
+          (ModalRoute.of(context)?.isCurrent ?? true) &&
+          ref.read(illustratedRoomProvider).activeTemplateId ==
+              draft.template.id,
+    );
     try {
       result = await ref
           .read(illustratedRoomExportProvider.notifier)
-          .saveToGallery(draft);
+          .saveToGallery(draft, isCurrent: () => request.isCurrent);
     } catch (_) {
       result = const IllustratedRoomExportFailed(
         IllustratedRoomExportFailure.unexpected,
       );
     } finally {
+      request.dispose();
       _handlingExport = false;
     }
     if (!mounted) return;
@@ -121,25 +139,7 @@ class _IllustratedRoomScreenState extends ConsumerState<IllustratedRoomScreen> {
   }
 
   void _showExportResult(IllustratedRoomExportResult result) {
-    final message = switch (result) {
-      IllustratedRoomExportSuccess() => 'Saved to Gallery',
-      IllustratedRoomExportFailed(:final failure) => switch (failure) {
-        IllustratedRoomExportFailure.notColored =>
-          'Choose room colors before saving.',
-        IllustratedRoomExportFailure.renderFailed =>
-          'Could not prepare the room image. Try again.',
-        IllustratedRoomExportFailure.accessDenied =>
-          'Allow photo access in Settings to save this room image.',
-        IllustratedRoomExportFailure.notEnoughSpace =>
-          'Not enough device storage to save the room image.',
-        IllustratedRoomExportFailure.unsupportedFormat =>
-          'This room image format could not be saved.',
-        IllustratedRoomExportFailure.unsupportedPlatform =>
-          'Saving to Gallery is not available on this device.',
-        IllustratedRoomExportFailure.unexpected =>
-          'Could not save the room image. Try again.',
-      },
-    };
+    final message = illustratedRoomExportMessage(context.l10n, result);
     final accessDenied =
         result is IllustratedRoomExportFailed &&
         result.failure == IllustratedRoomExportFailure.accessDenied;
@@ -190,7 +190,7 @@ class _IllustratedRoomScreenState extends ConsumerState<IllustratedRoomScreen> {
       return;
     }
     final width = MediaQuery.sizeOf(context).width;
-    if (width < 720 && _railVisibleFor(width)) {
+    if (width < 600 && _railVisibleFor(width)) {
       _hideColorRail();
       return;
     }
@@ -209,7 +209,7 @@ class _IllustratedRoomScreenState extends ConsumerState<IllustratedRoomScreen> {
       builder: (context) => AlertDialog(
         title: const Text('Keep this draft?'),
         content: const Text(
-          'You can keep these colors for this session, discard the changes, '
+          'You can keep these colors on this device, discard the changes, '
           'or stay in the editor.',
         ),
         actions: [
@@ -260,36 +260,23 @@ class _IllustratedRoomScreenState extends ConsumerState<IllustratedRoomScreen> {
         draft.colors?.colorFor(surface) ??
         draft.template.defaultPalette.colors.colorFor(surface);
     final color = await showMixerColorPicker(context, initialColor: initial);
-    if (!mounted || color == null) return;
+    if (!mounted ||
+        color == null ||
+        ref.read(illustratedRoomProvider).activeTemplateId !=
+            draft.template.id ||
+        !identical(ref.read(illustratedRoomProvider).activeDraft, draft)) {
+      return;
+    }
     ref.read(illustratedRoomProvider.notifier).setSurfaceColor(surface, color);
   }
 
   Future<void> _returnToBlackAndWhite(IllustratedRoomDraft draft) async {
-    if (draft.mode == IllustratedRoomVisualMode.grayscale) return;
-    if (draft.isDirty) {
-      final confirmed = await showDialog<bool>(
-        context: context,
-        useRootNavigator: true,
-        builder: (context) => AlertDialog(
-          title: const Text('Return to black & white?'),
-          content: const Text(
-            'Your unsaved color changes will be removed from this preview.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Return'),
-            ),
-          ],
-        ),
-      );
-      if (confirmed != true || !mounted) return;
+    final controller = ref.read(illustratedRoomProvider.notifier);
+    if (draft.temporaryGrayscale) {
+      controller.clearComparison();
+    } else {
+      controller.showTemporaryGrayscale();
     }
-    ref.read(illustratedRoomProvider.notifier).resetToGrayscale();
     if (mounted) setState(() => _activeTool = null);
   }
 
@@ -297,7 +284,24 @@ class _IllustratedRoomScreenState extends ConsumerState<IllustratedRoomScreen> {
     setState(() => _activeTool = _activeTool == tool ? null : tool);
   }
 
-  bool _railVisibleFor(double width) => _railVisibleOverride ?? width >= 720;
+  bool _railVisibleFor(double width) => _railVisibleOverride ?? width >= 600;
+
+  Future<void> _openFlow([String? regionId]) async {
+    if (_flowOpen) return;
+    setState(() {
+      _flowOpen = true;
+      if (regionId != null) _selectedRegionId = regionId;
+    });
+    await showIllustratedRoomEditorFlow(
+      context,
+      templateId: widget.templateId,
+      selectedRegionId: _selectedRegionId,
+      onRegionSelected: (id) {
+        if (mounted) setState(() => _selectedRegionId = id);
+      },
+    );
+    if (mounted) setState(() => _flowOpen = false);
+  }
 
   void _showColorRail() {
     setState(() => _railVisibleOverride = true);
@@ -352,6 +356,7 @@ class _IllustratedRoomScreenState extends ConsumerState<IllustratedRoomScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(illustratedRoomEditorPersistenceProvider);
     final template = _template;
     if (template == null) {
       return _UnavailableRoom(onBack: _leaveEditor);
@@ -376,7 +381,7 @@ class _IllustratedRoomScreenState extends ConsumerState<IllustratedRoomScreen> {
             ? _RoomPreviewUnavailable(onRetry: _retryPreview, onBack: _goBack)
             : LayoutBuilder(
                 builder: (context, constraints) {
-                  final compact = constraints.maxWidth < 720;
+                  final compact = constraints.maxWidth < 600;
                   final railWidth = compact ? 68.0 : 72.0;
                   final railVisible =
                       !_focusPreview && _railVisibleFor(constraints.maxWidth);
@@ -418,6 +423,13 @@ class _IllustratedRoomScreenState extends ConsumerState<IllustratedRoomScreen> {
                             viewMode: _viewMode,
                             retryToken: _previewAttempt,
                             onError: _handlePreviewError,
+                            selectedRegionId: _selectedRegionId,
+                            onRegionSelected:
+                                _focusPreview ||
+                                    _activeTool != null ||
+                                    (compact && railVisible)
+                                ? null
+                                : (id) => _openFlow(id),
                           ),
                         ),
                       ),
@@ -502,10 +514,7 @@ class _IllustratedRoomScreenState extends ConsumerState<IllustratedRoomScreen> {
                                           onBlackAndWhite: () =>
                                               _returnToBlackAndWhite(draft),
                                           onSaveToGallery:
-                                              draft.mode ==
-                                                      IllustratedRoomVisualMode
-                                                          .colored &&
-                                                  !exportState.isBusy &&
+                                              !exportState.isBusy &&
                                                   !_handlingExport
                                               ? () => _saveToGallery(draft)
                                               : null,
@@ -521,6 +530,55 @@ class _IllustratedRoomScreenState extends ConsumerState<IllustratedRoomScreen> {
                           ),
                         ),
                       ),
+                      if (!_focusPreview)
+                        Positioned(
+                          left: padding.left + AppSpacing.sm,
+                          bottom:
+                              math.max(padding.bottom, keyboardInset) +
+                              AppSpacing.sm,
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxWidth: math.max(
+                                48,
+                                constraints.maxWidth -
+                                    padding.horizontal -
+                                    (railVisible ? railWidth : 64) -
+                                    24,
+                              ),
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (!_flowOpen)
+                                  Material(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: IllustratedRoomDraftStatus(
+                                      templateId: widget.templateId,
+                                    ),
+                                  ),
+                                FilledButton.icon(
+                                  key: const ValueKey('room-edit-flow'),
+                                  style: FilledButton.styleFrom(
+                                    minimumSize: const Size(48, 48),
+                                  ),
+                                  onPressed: () => _openFlow(),
+                                  icon: const Icon(Icons.edit_outlined),
+                                  label: Text(
+                                    _selectedRegionId == null
+                                        ? context.l10n.roomChangeSurface
+                                        : context.l10n.roomSelectedSurface(
+                                            roomRegionName(
+                                              context.l10n,
+                                              _selectedRegionId!,
+                                            ),
+                                          ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       if (!_focusPreview)
                         Positioned(
                           right: padding.right + AppSpacing.sm,
@@ -607,12 +665,16 @@ class _RoomScene extends StatelessWidget {
     required this.viewMode,
     required this.retryToken,
     required this.onError,
+    this.selectedRegionId,
+    this.onRegionSelected,
   });
 
   final IllustratedRoomDraft draft;
   final IllustratedRoomViewMode viewMode;
   final int retryToken;
   final VoidCallback onError;
+  final String? selectedRegionId;
+  final ValueChanged<String>? onRegionSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -641,6 +703,8 @@ class _RoomScene extends StatelessWidget {
             ),
             retryToken: retryToken,
             onError: onError,
+            selectedRegionId: selectedRegionId,
+            onRegionSelected: onRegionSelected,
           ),
         ),
       ),

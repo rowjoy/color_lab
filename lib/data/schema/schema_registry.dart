@@ -58,7 +58,7 @@ abstract final class SchemaRegistry {
     id: 'illustrated-rooms',
     storageName: 'illustrated_room_designs_v1',
     backend: StorageBackend.hiveBox,
-    currentVersion: 1,
+    currentVersion: 2,
     scope: LocalDataScope.sharedLibrary,
   );
   static const photoAcquisition = SchemaDescriptor(

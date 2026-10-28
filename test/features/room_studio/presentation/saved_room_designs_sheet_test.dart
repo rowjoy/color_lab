@@ -405,7 +405,7 @@ void main() {
       final container = _container(tester);
       container
           .read(illustratedRoomProvider.notifier)
-          .applyPalette('soft-botanical');
+          .applyPalette('quiet-sage');
       await tester.pumpAndSettle();
 
       final semantics = tester.ensureSemantics();
@@ -440,7 +440,7 @@ void main() {
     await _pumpEditor(tester, repository);
     final container = _container(tester);
     final controller = container.read(illustratedRoomProvider.notifier);
-    controller.applyPalette('warm-natural');
+    controller.applyPalette('soft-linen');
     await tester.pumpAndSettle();
 
     await _tapKey(tester, 'room-open-designs');

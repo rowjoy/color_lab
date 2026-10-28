@@ -63,6 +63,50 @@ void main() {
     colors: colors ?? focusSage,
   );
 
+  // Catches compatibility save/rename adapters dropping v2 overrides and baseline.
+  test(
+    'authoritative actions preserve exact snapshots and copy independent identity',
+    () async {
+      final repository = InMemoryRoomDesignRepository(
+        clock: () => DateTime.utc(2026, 10, 28),
+      );
+      final container = containerFor(repository);
+      await container.read(savedRoomDesignsProvider.future);
+      final controller = container.read(savedRoomDesignsProvider.notifier);
+      final snapshot = RoomDesignSnapshot(
+        groupColors: {
+          'walls': '#123456',
+          'ceiling': '#ABCDEF',
+          'floor': '#010203',
+          'furniture': '#FFEEDD',
+        },
+        regionOverrides: {'desk': '#654321'},
+      );
+      final saved = await controller.saveNew(
+        name: 'New',
+        templateId: 'study',
+        templateRevision: 1,
+        snapshot: snapshot,
+        activeBaseline: snapshot,
+      );
+      final renamed = await controller.rename(saved.id, 'Renamed');
+      final copy = await controller.saveCopy(saved.id, name: 'Copy');
+      expect(renamed.snapshot, snapshot);
+      expect(copy.activeBaseline, snapshot);
+      expect(copy.id, isNot(saved.id));
+      final updated = await controller.updateDesign(
+        saved.id,
+        name: 'Updated',
+        snapshot: snapshot,
+        activeBaseline: null,
+      );
+      expect(updated.activeBaseline, isNull);
+      expect(copy.activeBaseline, snapshot);
+      await controller.delete(saved.id);
+      expect(container.read(savedRoomDesignsProvider).requireValue, [copy]);
+    },
+  );
+
   test('loads immutable newest-first design snapshots', () async {
     final container = containerFor(
       InMemoryRoomDesignRepository(

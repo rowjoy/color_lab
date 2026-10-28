@@ -32,12 +32,14 @@ Future<SavedRoomDesign?> showSaveRoomDesignDialog(
   BuildContext context, {
   required String initialName,
   String? templateId,
+  bool asCopy = false,
 }) => showDialog<SavedRoomDesign>(
   context: context,
   useRootNavigator: true,
   builder: (context) => _RoomDesignNameDialog.save(
     initialName: initialName,
     templateId: templateId,
+    asCopy: asCopy,
   ),
 );
 
@@ -453,12 +455,19 @@ class _RoomDesignNameDialog extends ConsumerStatefulWidget {
     required this.initialName,
     required this.designId,
     required this.templateId,
+    this.asCopy = false,
   });
 
   const _RoomDesignNameDialog.save({
     required String initialName,
     String? templateId,
-  }) : this._(initialName: initialName, designId: null, templateId: templateId);
+    bool asCopy = false,
+  }) : this._(
+         initialName: initialName,
+         designId: null,
+         templateId: templateId,
+         asCopy: asCopy,
+       );
 
   const _RoomDesignNameDialog.rename({
     required String initialName,
@@ -468,6 +477,7 @@ class _RoomDesignNameDialog extends ConsumerStatefulWidget {
   final String initialName;
   final String? designId;
   final String? templateId;
+  final bool asCopy;
 
   @override
   ConsumerState<_RoomDesignNameDialog> createState() =>
@@ -511,7 +521,11 @@ class _RoomDesignNameDialogState extends ConsumerState<_RoomDesignNameDialog> {
                 .renameDesign(widget.designId!, name)
           : await ref
                 .read(illustratedRoomProvider.notifier)
-                .saveDesign(name, templateId: widget.templateId);
+                .saveDesign(
+                  name,
+                  templateId: widget.templateId,
+                  asCopy: widget.asCopy,
+                );
       if (mounted) Navigator.of(context).pop(saved);
     } catch (_) {
       if (!mounted) return;

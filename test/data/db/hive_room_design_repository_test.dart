@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:color_lab/core/color/color_models.dart';
 import 'package:color_lab/data/db/hive_room_design_repository.dart';
@@ -107,18 +108,8 @@ void main() {
       await reopen();
       final loaded = await repository.load();
       expect(loaded, [saved]);
-      expect(loaded.single.toMap(), {
-        'version': 1,
-        'id': expectedId,
-        'name': 'My focused study',
-        'templateId': 'study',
-        'wall': '#A7B5A0',
-        'ceiling': '#F7F2E8',
-        'floor': '#C9A77B',
-        'furniture': '#5B4636',
-        'createdAt': '2026-10-25T04:00:00.000Z',
-        'updatedAt': '2026-10-25T04:00:00.000Z',
-      });
+      expect(loaded.single.toMap()['version'], 2);
+      expect(loaded.single.colors, focusSage);
       expect(() => loaded.clear(), throwsUnsupportedError);
     },
   );
@@ -204,8 +195,12 @@ void main() {
     await expectLater(repository.delete('missing'), error);
 
     boundary.failFlush = false;
+    await expectLater(repository.load(), error);
+    await repository.retry();
+    expect(await repository.load(), isEmpty);
+    final created = await save();
     final recovered = await repository.load();
-    expect(recovered.single.name, 'My focused study');
+    expect(recovered, [created]);
     await reopen();
     expect(await repository.load(), recovered);
   });
@@ -323,6 +318,136 @@ void main() {
       },
     );
   }
+
+  // Catches palette remapping, row-wide migration failure and pre-flush publication.
+  test(
+    'all six frozen v1 rows migrate durably while a corrupt row remains exact',
+    () async {
+      await repository.close();
+      final rows =
+          (jsonDecode(
+                    await File(
+                      'test/fixtures/illustrated_rooms/v1.json',
+                    ).readAsString(),
+                  )
+                  as List)
+              .cast<Map>();
+      final box = await Hive.openBox<dynamic>(boxName, path: directory.path);
+      for (final row in rows) {
+        await box.put(row['id'], row);
+      }
+      const corrupt = {'version': 99, 'evidence': 'keep'};
+      await box.put('corrupt', corrupt);
+      await box.flush();
+      final boundary = _FlushBoundaryBox(box)..failFlush = true;
+      repository = HiveRoomDesignRepository.fromBox(
+        box: boundary,
+        clock: () => now,
+      );
+      await expectLater(repository.loadSnapshot(), error);
+      for (final row in rows) {
+        expect(box.get(row['id']), row);
+      }
+      boundary.failFlush = false;
+      await expectLater(repository.loadSnapshot(), error);
+      // Close flushes only rollback; fresh raw handle must still contain v1.
+      await repository.close();
+      final raw = await Hive.openBox<dynamic>(boxName, path: directory.path);
+      for (final row in rows) {
+        expect(raw.get(row['id']), row);
+      }
+      expect(raw.get('corrupt'), corrupt);
+      await raw.close();
+      repository = await HiveRoomDesignRepository.open(
+        directory: directory.path,
+        boxName: boxName,
+      );
+      final migrated = await repository.loadSnapshot();
+      expect(migrated.records, hasLength(6));
+      expect(migrated.corruptRecords.single.storageKey, 'corrupt');
+      for (final row in rows) {
+        final design = migrated.records.singleWhere((d) => d.id == row['id']);
+        expect(design.name, row['name']);
+        expect(design.templateId, row['templateId']);
+        expect(design.createdAt.toIso8601String(), row['createdAt']);
+        expect(design.updatedAt.toIso8601String(), row['updatedAt']);
+        expect(design.snapshot.groupColors, {
+          'walls': row['wall'],
+          'ceiling': row['ceiling'],
+          'floor': row['floor'],
+          'furniture': row['furniture'],
+        });
+        expect(design.snapshot.regionOverrides, isEmpty);
+        expect(design.activeBaseline, isNull);
+        expect(design.toMap().containsKey('sourcePaletteId'), isFalse);
+      }
+      await repository.close();
+      final rewritten = await Hive.openBox<dynamic>(
+        boxName,
+        path: directory.path,
+      );
+      for (final row in rows) {
+        expect((rewritten.get(row['id']) as Map)['version'], 2);
+      }
+      expect(rewritten.get('corrupt'), corrupt);
+      await rewritten.close();
+    },
+  );
+
+  // Catches failed-update cache promotion, missing rollback, lossy copy/rename.
+  test(
+    'failed update preserves durable predecessor and explicit actions retain snapshots',
+    () async {
+      await repository.close();
+      final boundary = _FlushBoundaryBox(
+        await Hive.openBox<dynamic>(boxName, path: directory.path),
+      );
+      repository = HiveRoomDesignRepository.fromBox(
+        box: boundary,
+        clock: () => now,
+      );
+      final snapshot = RoomDesignSnapshot(
+        groupColors: {
+          'walls': '#123456',
+          'ceiling': '#ABCDEF',
+          'floor': '#010203',
+          'furniture': '#FFEEDD',
+        },
+        regionOverrides: {'desk': '#654321'},
+      );
+      final first = await repository.saveNew(
+        name: 'Original',
+        templateId: 'study',
+        templateRevision: 1,
+        snapshot: snapshot,
+        activeBaseline: snapshot,
+      );
+      boundary.failFlush = true;
+      await expectLater(
+        repository.update(
+          first.id,
+          name: 'Failed',
+          snapshot: snapshot,
+          activeBaseline: null,
+        ),
+        error,
+      );
+      boundary.failFlush = false;
+      await expectLater(repository.rename(first.id, 'Blocked'), error);
+      await reopen();
+      expect(await repository.load(), [first]);
+      final renamed = await repository.rename(first.id, 'Renamed');
+      final copy = await repository.saveCopy(first.id, name: 'Copy');
+      expect(copy.id, isNot(first.id));
+      expect(copy.snapshot, snapshot);
+      expect(copy.activeBaseline, snapshot);
+      expect(renamed.snapshot, snapshot);
+      expect(renamed.activeBaseline, snapshot);
+      await repository.delete(first.id);
+      await reopen();
+      expect(await repository.load(), [copy]);
+    },
+  );
 
   test('corrupt bytes fail open without truncating the file', () async {
     await repository.close();

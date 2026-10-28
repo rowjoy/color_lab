@@ -4,7 +4,7 @@ import 'package:color_lab/core/color/color_models.dart';
 import 'package:color_lab/features/room_studio/domain/illustrated_room.dart';
 import 'package:color_lab/features/room_studio/domain/illustrated_room_draft.dart';
 import 'package:color_lab/features/room_studio/presentation/illustrated_room_svg.dart';
-import 'package:color_lab/features/room_studio/rendering/illustrated_room_color_mapper.dart';
+import '../../../support/legacy_illustrated_room_color_mapper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -41,7 +41,7 @@ String _semanticsLabel(IllustratedRoomDraft draft) {
   if (draft.mode == IllustratedRoomVisualMode.grayscale) {
     return '${draft.template.title}, black and white';
   }
-  final colors = IllustratedRoomColorMapper(draft).effectiveColors;
+  final colors = LegacyIllustratedRoomColorMapper(draft).effectiveColors;
   final labels = draft.template.surfaceLabels;
   return '${draft.template.title}. ${draft.visualStateLabel}. '
       '${labels.wall} ${colors.wall.hex}. '
@@ -191,7 +191,7 @@ void main() {
   });
 
   test('mapper makes the whole initial scene grayscale', () {
-    final grayscale = IllustratedRoomColorMapper(
+    final grayscale = LegacyIllustratedRoomColorMapper(
       IllustratedRoomDraft.grayscale(IllustratedRoomCatalog.study),
     );
     final unchanged = const Color(0xFF2468AC);
@@ -205,7 +205,7 @@ void main() {
     expect(substitute(const Color(0xFF7A00FF)), const Color(0xFF737373));
     expect(substitute(unchanged), const Color(0xFF5B5B5B));
 
-    final colored = IllustratedRoomColorMapper(_distinctDraft());
+    final colored = LegacyIllustratedRoomColorMapper(_distinctDraft());
     expect(
       colored.substitute(null, 'path', 'fill', unchanged),
       same(unchanged),
@@ -228,7 +228,7 @@ void main() {
     );
   });
 
-  testWidgets('real asset exposes one contextual complete-scene semantic', (
+  testWidgets('Study exposes contextual scene and shared region semantics', (
     tester,
   ) async {
     final semantics = tester.ensureSemantics();
@@ -249,7 +249,29 @@ void main() {
         textDirection: TextDirection.ltr,
       ),
     );
-    expect(node.childrenCountInTraversalOrder, 0);
+    final labels = <String>[];
+    void collect(dynamic current) {
+      current.visitChildren((child) {
+        labels.add(child.label as String);
+        collect(child);
+        return true;
+      });
+    }
+
+    collect(node);
+    expect(
+      labels.where((label) => label.contains('#')),
+      unorderedEquals(const [
+        'Back wall, All Walls, #D11111',
+        'Side wall, All Walls, #D11111',
+        'Accent wall, All Walls, #D11111',
+        'Ceiling, Ceiling, #11D111',
+        'Floor, Floor, #1111D1',
+        'Shelves, Furniture, #D1A111',
+        'Desk, Furniture, #D1A111',
+        'Chair, Furniture, #D1A111',
+      ]),
+    );
     semantics.dispose();
   });
 
@@ -269,8 +291,7 @@ void main() {
         furniture: 'Furniture',
       ),
       focalPoint: const IllustratedRoomFocalPoint(x: 0, y: 0),
-      paletteReviewLabel: 'Test review',
-      paletteSourceNote: 'Test display preview and physical swatch note.',
+
       palettes: [
         IllustratedRoomPalette(
           id: 'fallback',
@@ -397,6 +418,24 @@ void main() {
       },
     );
   }
+
+  // Mutation: merging the two bedside-table regions, swapping their IDs, or
+  // drawing either table from the shared furniture group instead of its
+  // authored override makes at least one literal raster sample fail.
+  testWidgets('Bedroom renders each bedside table from its own region color', (
+    tester,
+  ) async {
+    final draft = _distinctDraft(IllustratedRoomCatalog.bedroom)
+        .setRegionColor('bedside-table-left', RgbColor.fromHex('#F40000'))
+        .setRegionColor('bedside-table-right', RgbColor.fromHex('#005CFF'));
+
+    await pumpIllustratedRoomRaster(tester, draft);
+    final pixels = await illustratedRoomPixels(tester);
+
+    expectIllustratedRoomRgb(pixels, (240, 550), '#F40000');
+    expectIllustratedRoomRgb(pixels, (930, 550), '#005CFF');
+    expectIllustratedRoomRgb(pixels, (1030, 420), '#D1A111');
+  });
 
   for (final template in IllustratedRoomCatalog.all) {
     testWidgets(

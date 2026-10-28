@@ -1,4 +1,26 @@
 {
+  "roomCompare": "Compare",
+  "@roomCompare": {"description": "Illustrated room comparison section."},
+  "roomComparePin": "Pin current colors as A",
+  "@roomComparePin": {"description": "Copy the editable colors into comparison baseline A."},
+  "roomCompareA": "A · Pinned colors",
+  "@roomCompareA": {"description": "Display pinned comparison colors."},
+  "roomCompareCurrent": "Current colors",
+  "@roomCompareCurrent": {"description": "Dismiss the temporary comparison."},
+  "roomCompareOriginal": "Original · Last saved colors",
+  "@roomCompareOriginal": {"description": "Show last saved colors or grayscale for a new design."},
+  "roomCompareGrayscale": "Black & white preview",
+  "@roomCompareGrayscale": {"description": "Temporary grayscale comparison, preserving edits."},
+  "roomCompareVariant": "B · {name}",
+  "@roomCompareVariant": {"description": "Compare a copied saved design.", "placeholders": {"name": {"type": "String"}}},
+  "roomCompareHint": "Comparisons preserve your edits. Original shows your last saved colors, or black & white for a new design.",
+  "@roomCompareHint": {"description": "Explains non-destructive comparison behavior."},
+  "roomExportArtwork": "Room PNG · 2400 × 1600",
+  "@roomExportArtwork": {"description": "Clean illustrated room output dimensions."},
+  "roomExportPaletteCard": "Palette card · 1200 px wide",
+  "@roomExportPaletteCard": {"description": "Separate palette card with content-sized height."},
+  "roomExportDisplayed": "Exports the view shown now. The palette card is available for colored views.",
+  "@roomExportDisplayed": {"description": "Export comparison selection policy."},
   "roomUsePhoto": "Use my photo",
   "@roomUsePhoto": {
     "description": "Room model setup: Use my photo"
@@ -195,6 +217,114 @@
   "modelsSummary": "{files} model files · {bytes} bytes",
   "@modelsSummary": {"description":"Installed model inventory.","placeholders":{"files":{"type":"int"},"bytes":{"type":"int"}}},
   "@@locale": "en",
+  "roomDraftUnavailable": "A draft from a newer app version can’t be opened yet. It is kept safely on this device.",
+  "@roomDraftUnavailable": {"description": "Unsupported recoverable room revision or region snapshot. No ineffective retry action is offered."},
+  "@roomEditFlow": {"description": "Illustrated room editor control or accessible surface label."},
+  "@roomChooseLook": {"description": "Illustrated room editor control or accessible surface label."},
+  "@roomChangeSurface": {"description": "Illustrated room editor control or accessible surface label."},
+  "@roomApplyCompleteLook": {"description": "Illustrated room editor control or accessible surface label."},
+  "@roomLookPreview": {"description": "Illustrated room editor control or accessible surface label."},
+  "@roomSave": {"description": "Illustrated room editor control or accessible surface label."},
+  "@roomUpdate": {"description": "Illustrated room editor control or accessible surface label."},
+  "@roomSaveCopy": {"description": "Illustrated room editor control or accessible surface label."},
+  "@roomMyDesigns": {"description": "Illustrated room editor control or accessible surface label."},
+  "@roomMyPalettes": {"description": "Illustrated room editor control or accessible surface label."},
+  "@roomUndo": {"description": "Illustrated room editor control or accessible surface label."},
+  "@roomRedo": {"description": "Illustrated room editor control or accessible surface label."},
+  "@roomSaving": {"description": "Illustrated room editor control or accessible surface label."},
+  "@roomSaved": {"description": "Illustrated room editor control or accessible surface label."},
+  "@roomDraftFailed": {"description": "Illustrated room editor control or accessible surface label."},
+  "@roomRetry": {"description": "Illustrated room editor control or accessible surface label."},
+  "@roomCustomColor": {"description": "Illustrated room editor control or accessible surface label."},
+  "@roomClose": {"description": "Illustrated room editor control or accessible surface label."},
+  "@roomNoPalettes": {"description": "Illustrated room editor control or accessible surface label."},
+  "@roomPalettesFailed": {"description": "Illustrated room editor control or accessible surface label."},
+  "@roomLoading": {"description": "Illustrated room editor control or accessible surface label."},
+  "@roomWallBack": {"description": "Illustrated room editor control or accessible surface label."},
+  "@roomWallSide": {"description": "Illustrated room editor control or accessible surface label."},
+  "@roomWallAccent": {"description": "Illustrated room editor control or accessible surface label."},
+  "@roomDesk": {"description": "Illustrated room editor control or accessible surface label."},
+  "@roomChair": {"description": "Illustrated room editor control or accessible surface label."},
+  "@roomShelves": {"description": "Illustrated room editor control or accessible surface label."},
+  "@roomWalls": {"description": "Illustrated room editor control or accessible surface label."},
+  "@roomCeiling": {"description": "Illustrated room editor control or accessible surface label."},
+  "@roomFloor": {"description": "Illustrated room editor control or accessible surface label."},
+  "@roomFurniture": {"description": "Illustrated room editor control or accessible surface label."},
+  "roomEditFlow": "Choose a Look → Change a Surface → Save",
+  "roomChooseLook": "Choose a Look",
+  "roomChangeSurface": "Change a Surface",
+  "roomApplyCompleteLook": "Apply Complete Look",
+  "roomLookPreview": "Preview — apply to change your room",
+  "roomSave": "Save",
+  "roomUpdate": "Update",
+  "roomSaveCopy": "Save a Copy",
+  "roomMyDesigns": "My Designs",
+  "roomMyPalettes": "My Palettes",
+  "roomUndo": "Undo",
+  "roomRedo": "Redo",
+  "roomSaving": "Saving…",
+  "roomSaved": "Saved",
+  "roomDraftFailed": "Draft could not be saved. Your changes are still here.",
+  "roomRetry": "Retry",
+  "roomCustomColor": "Custom color",
+  "roomClose": "Close",
+  "roomNoPalettes": "No saved palettes yet.",
+  "roomPalettesFailed": "Could not load your palettes.",
+  "roomLoading": "Loading…",
+  "roomWallBack": "Back wall",
+  "roomWallSide": "Side wall",
+  "roomWallAccent": "Accent wall",
+  "roomDesk": "Desk",
+  "roomChair": "Chair",
+  "roomShelves": "Shelves",
+  "roomConsole": "Console",
+  "@roomConsole": {"description": "Localized illustrated-room region label."},
+  "roomSofa": "Sofa",
+  "@roomSofa": {"description": "Localized illustrated-room region label."},
+  "roomAccentChair": "Accent chair",
+  "@roomAccentChair": {"description": "Localized illustrated-room region label."},
+  "roomCoffeeTable": "Coffee table",
+  "@roomCoffeeTable": {"description": "Localized illustrated-room region label."},
+  "roomWardrobe": "Wardrobe",
+  "@roomWardrobe": {"description": "Localized illustrated-room region label."},
+  "roomBedsideTableLeft": "Left bedside table",
+  "@roomBedsideTableLeft": {"description": "Localized illustrated-room region label."},
+  "roomBedsideTableRight": "Right bedside table",
+  "@roomBedsideTableRight": {"description": "Localized illustrated-room region label."},
+  "roomBed": "Bed",
+  "@roomBed": {"description": "Localized illustrated-room region label."},
+  "roomSideboard": "Sideboard",
+  "@roomSideboard": {"description": "Localized illustrated-room region label."},
+  "roomChairBackLeft": "Back left chair",
+  "@roomChairBackLeft": {"description": "Localized illustrated-room region label."},
+  "roomChairBackRight": "Back right chair",
+  "@roomChairBackRight": {"description": "Localized illustrated-room region label."},
+  "roomChairFrontLeft": "Front left chair",
+  "@roomChairFrontLeft": {"description": "Localized illustrated-room region label."},
+  "roomChairFrontRight": "Front right chair",
+  "@roomChairFrontRight": {"description": "Localized illustrated-room region label."},
+  "roomDiningTable": "Dining table",
+  "@roomDiningTable": {"description": "Localized illustrated-room region label."},
+  "roomCabinetUpperLeft": "Upper left cabinets",
+  "@roomCabinetUpperLeft": {"description": "Localized illustrated-room region label."},
+  "roomCabinetLowerLeft": "Lower left cabinets",
+  "@roomCabinetLowerLeft": {"description": "Localized illustrated-room region label."},
+  "roomCabinetUpperRight": "Upper right cabinets",
+  "@roomCabinetUpperRight": {"description": "Localized illustrated-room region label."},
+  "roomCabinetLowerRight": "Lower right cabinets",
+  "@roomCabinetLowerRight": {"description": "Localized illustrated-room region label."},
+  "roomIsland": "Island",
+  "@roomIsland": {"description": "Localized illustrated-room region label."},
+  "roomVanity": "Vanity",
+  "@roomVanity": {"description": "Localized illustrated-room region label."},
+  "roomStorage": "Storage",
+  "@roomStorage": {"description": "Localized illustrated-room region label."},
+  "roomWalls": "All Walls",
+  "roomCeiling": "Ceiling",
+  "roomFloor": "Floor",
+  "roomFurniture": "Furniture",
+  "roomSelectedSurface": "Selected: {name}",
+  "@roomSelectedSurface": {"placeholders": {"name": {"type": "String"}}},
   "appName": "TintAtlas",
   "@appName": {"description": "Compact product name shown inside the app."},
   "storeTitle": "TintAtlas: Room Visualizer",
@@ -881,5 +1011,82 @@
   "roomDialogCancel": "Cancel",
   "@roomDialogCancel": {
     "description": "Room photo privacy, export, or typed recovery copy."
+  },
+  "illustratedPaletteSoftLinenName": "Soft Linen",
+  "@illustratedPaletteSoftLinenName": {
+    "description": "Original Soft Linen starter palette name."
+  },
+  "illustratedPaletteSoftLinenDescription": "Soft neutrals with a deeper warm accent.",
+  "@illustratedPaletteSoftLinenDescription": {
+    "description": "Original Soft Linen starter palette description."
+  },
+  "illustratedPaletteQuietSageName": "Quiet Sage",
+  "@illustratedPaletteQuietSageName": {
+    "description": "Original Quiet Sage starter palette name."
+  },
+  "illustratedPaletteQuietSageDescription": "Muted greens with a gentle neutral contrast.",
+  "@illustratedPaletteQuietSageDescription": {
+    "description": "Original Quiet Sage starter palette description."
+  },
+  "illustratedPaletteAirySlateName": "Airy Slate",
+  "@illustratedPaletteAirySlateName": {
+    "description": "Original Airy Slate starter palette name."
+  },
+  "illustratedPaletteAirySlateDescription": "Pale cool tones with a deeper blue-gray accent.",
+  "@illustratedPaletteAirySlateDescription": {
+    "description": "Original Airy Slate starter palette description."
+  },
+  "illustratedPaletteClayAndCreamName": "Clay and Cream",
+  "@illustratedPaletteClayAndCreamName": {
+    "description": "Original Clay and Cream starter palette name."
+  },
+  "illustratedPaletteClayAndCreamDescription": "Cream and earthy tones with a dark brown accent.",
+  "@illustratedPaletteClayAndCreamDescription": {
+    "description": "Original Clay and Cream starter palette description."
+  },
+  "illustratedPaletteMistAndInkName": "Mist and Ink",
+  "@illustratedPaletteMistAndInkName": {
+    "description": "Original Mist and Ink starter palette name."
+  },
+  "illustratedPaletteMistAndInkDescription": "Light gray and blue tones with a dark ink accent.",
+  "@illustratedPaletteMistAndInkDescription": {
+    "description": "Original Mist and Ink starter palette description."
+  },
+  "illustratedPaletteSunwashedOliveName": "Sunwashed Olive",
+  "@illustratedPaletteSunwashedOliveName": {
+    "description": "Original Sunwashed Olive starter palette name."
+  },
+  "illustratedPaletteSunwashedOliveDescription": "Warm yellow and olive tones with a deep green accent.",
+  "@illustratedPaletteSunwashedOliveDescription": {
+    "description": "Original Sunwashed Olive starter palette description."
+  },
+  "illustratedPaletteGuideTitle": "Why these looks?",
+  "@illustratedPaletteGuideTitle": {
+    "description": "Illustrated Room original palette guide copy."
+  },
+  "illustratedPaletteGuideClose": "Close palette guide",
+  "@illustratedPaletteGuideClose": {
+    "description": "Illustrated Room original palette guide copy."
+  },
+  "illustratedPaletteGuideIntro": "Original color combinations for exploring your room. Each palette supplies wall, ceiling, floor and furniture colors.",
+  "@illustratedPaletteGuideIntro": {
+    "description": "Illustrated Room original palette guide copy."
+  },
+  "illustratedPalettePreviewLimit": "This is a non-calibrated display preview. Screen calibration, lighting, surface texture, paint finish and surrounding colors can change appearance. Compare physical samples in your room before buying paint.",
+  "@illustratedPalettePreviewLimit": {
+    "description": "Illustrated Room original palette guide copy."
+  },
+  "illustratedPaletteRecommended": "Starting look",
+  "@illustratedPaletteRecommended": {
+    "description": "Illustrated Room original palette guide copy."
+  },
+  "illustratedPaletteRecommendedLabel": "{name}, Starting look",
+  "@illustratedPaletteRecommendedLabel": {
+    "description": "Illustrated Room original palette guide copy.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }

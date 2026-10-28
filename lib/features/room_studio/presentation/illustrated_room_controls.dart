@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/color/color_models.dart';
 import '../../../core/theme/theme.dart';
+import '../../../l10n/l10n.dart';
 import '../domain/illustrated_room_draft.dart';
 
 enum IllustratedRoomTool { looks, wall, ceiling, floor, furniture, designs }
@@ -56,7 +57,7 @@ class IllustratedRoomColorRail extends StatelessWidget {
               key: const ValueKey('room-rail-looks'),
               icon: Icons.palette_outlined,
               selectedIcon: Icons.palette_rounded,
-              label: 'Looks',
+              label: context.l10n.roomChooseLook,
               selected: activeTool == IllustratedRoomTool.looks,
               onPressed: () => onToolSelected(IllustratedRoomTool.looks),
             ),
@@ -108,14 +109,15 @@ class IllustratedRoomColorRail extends StatelessWidget {
               selectedIcon: Icons.tonality_rounded,
               label: 'B&W',
               semanticsLabel: 'Black & white',
-              selected: draft.mode == IllustratedRoomVisualMode.grayscale,
+              selected:
+                  draft.displayMode == IllustratedRoomVisualMode.grayscale,
               onPressed: onBlackAndWhite,
             ),
             _RailAction(
               key: const ValueKey('room-open-designs'),
               icon: Icons.collections_bookmark_outlined,
               selectedIcon: Icons.collections_bookmark_rounded,
-              label: 'Designs',
+              label: context.l10n.roomMyDesigns,
               detail: savedDesignCount == 0 ? null : '$savedDesignCount',
               semanticsLabel:
                   'Designs, $savedDesignCount saved, current design '

@@ -54,10 +54,10 @@ void main() {
     expect(() => exposed.clear(), throwsUnsupportedError);
     final updated = session.updateDraft(
       'study',
-      (draft) => draft.applyPalette('warm-natural'),
+      (draft) => draft.applyPalette('soft-linen'),
     );
     expect(exposed['study']?.mode.name, 'grayscale');
-    expect(updated.draftFor('study')?.sourcePaletteId, 'warm-natural');
+    expect(updated.draftFor('study')?.sourcePaletteId, 'soft-linen');
   });
 
   test('putDraft can replace a draft without changing current activation', () {
@@ -68,7 +68,7 @@ void main() {
         .putDraft(sessionDraft(study), activate: false);
 
     expect(session.activeTemplateId, 'living');
-    expect(session.draftFor('study')?.sourcePaletteId, 'cool-airy');
+    expect(session.draftFor('study')?.sourcePaletteId, 'airy-slate');
   });
 
   test('invalid updates fail atomically', () {
@@ -93,4 +93,4 @@ void main() {
 }
 
 IllustratedRoomDraft sessionDraft(IllustratedRoomTemplate template) =>
-    IllustratedRoomDraft.grayscale(template).applyPalette('cool-airy');
+    IllustratedRoomDraft.grayscale(template).applyPalette('airy-slate');

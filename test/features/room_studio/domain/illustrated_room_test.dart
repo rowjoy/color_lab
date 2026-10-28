@@ -52,9 +52,6 @@ IllustratedRoomTemplate _template({
   ),
   int artboardWidth = 1200,
   int artboardHeight = 800,
-  String paletteReviewLabel = 'Market guide - reviewed October 2026',
-  String paletteSourceNote =
-      'Display preview only; compare a physical swatch before purchase.',
 }) => IllustratedRoomTemplate(
   id: id,
   title: title,
@@ -66,48 +63,24 @@ IllustratedRoomTemplate _template({
   focalPoint: focalPoint,
   artboardWidth: artboardWidth,
   artboardHeight: artboardHeight,
-  paletteReviewLabel: paletteReviewLabel,
-  paletteSourceNote: paletteSourceNote,
 );
 
 void main() {
-  const expectedLooks = <String, Map<String, Object>>{
-    'living': {
-      'default': 'warm-natural',
-      'warm-natural': ['#E6D8C3', '#F8F4EB', '#C5AD8A', '#7B5944'],
-      'soft-botanical': ['#C4D3C1', '#F8F4EB', '#BEB2A2', '#9A7557'],
-      'cool-airy': ['#D3E0E4', '#F7F5EF', '#B5BEC1', '#5F493F'],
-    },
-    'bedroom': {
-      'default': 'warm-natural',
-      'warm-natural': ['#DED5C7', '#FAF6EE', '#C2A483', '#785747'],
-      'soft-botanical': ['#C8D3C2', '#F8F4EC', '#BCA58A', '#80614E'],
-      'cool-airy': ['#D4DFE4', '#F8F6F0', '#B7BEC1', '#67514B'],
-    },
-    'study': {
-      'default': 'soft-botanical',
-      'warm-natural': ['#E2D5BF', '#F8F4EB', '#C5AA84', '#72513D'],
-      'soft-botanical': ['#B7C5B3', '#F8F4EB', '#C6AC84', '#654A39'],
-      'cool-airy': ['#C7D6DF', '#F6F5F0', '#B7A083', '#465967'],
-    },
-    'dining': {
-      'default': 'warm-natural',
-      'warm-natural': ['#D5BCAA', '#FAF5EC', '#A98464', '#704C3B'],
-      'soft-botanical': ['#C3D0BB', '#F8F4EA', '#AC9274', '#6E5242'],
-      'cool-airy': ['#CFDCE0', '#F8F5EE', '#AA927D', '#5C4740'],
-    },
-    'kitchen': {
-      'default': 'soft-botanical',
-      'warm-natural': ['#E3D7C6', '#FAF8F2', '#BBAF9E', '#987454'],
-      'soft-botanical': ['#D8E1D3', '#FAF8F2', '#B8B0A3', '#A7B39B'],
-      'cool-airy': ['#D8E4E6', '#FBF9F4', '#B7C0C2', '#718184'],
-    },
-    'bathroom': {
-      'default': 'cool-airy',
-      'warm-natural': ['#E6DDD1', '#FBF9F4', '#C4B8AA', '#92745F'],
-      'soft-botanical': ['#D4E0D7', '#FAFBF7', '#B8C2BA', '#789080'],
-      'cool-airy': ['#D8E5E7', '#FBFBF8', '#B9C2C4', '#8A725F'],
-    },
+  const expectedDefaults = {
+    'living': 'soft-linen',
+    'bedroom': 'soft-linen',
+    'study': 'quiet-sage',
+    'dining': 'soft-linen',
+    'kitchen': 'quiet-sage',
+    'bathroom': 'airy-slate',
+  };
+  const expectedLooks = {
+    'soft-linen': ['#F2E9DA', '#D8C7AC', '#A89073', '#5C554D'],
+    'quiet-sage': ['#ECE9DF', '#B7C2A3', '#78866B', '#4E5B4A'],
+    'airy-slate': ['#F2F4F3', '#C9D3D8', '#8396A5', '#3F5362'],
+    'clay-and-cream': ['#F5EBDD', '#D79A7A', '#9B6553', '#5E4A42'],
+    'mist-and-ink': ['#ECEFF1', '#B8C4CE', '#667989', '#263746'],
+    'sunwashed-olive': ['#F3E7C7', '#D8B96A', '#8B8F58', '#4F5A3F'],
   };
 
   const expectedAssets = <String, String>{
@@ -137,7 +110,7 @@ void main() {
     'bathroom': (-.05, .02),
   };
 
-  test('catalog pins six ordered rooms and exact market-guided looks', () {
+  test('catalog pins six ordered rooms and original starter looks', () {
     expect(IllustratedRoomCatalog.all.map((room) => room.id), [
       'living',
       'bedroom',
@@ -148,12 +121,11 @@ void main() {
     ]);
 
     for (final room in IllustratedRoomCatalog.all) {
-      final expected = expectedLooks[room.id]!;
       expect(room.id, matches(RegExp(r'^[a-z0-9-]+$')));
       expect(room.title.trim(), isNotEmpty);
       expect(room.summary.trim(), isNotEmpty);
       expect(room.assetPath, expectedAssets[room.id]);
-      expect(room.defaultPaletteId, expected['default']);
+      expect(room.defaultPaletteId, expectedDefaults[room.id]);
       expect(room.artboardWidth, 1200);
       expect(room.artboardHeight, 800);
       expect(room.aspectRatio, 1.5);
@@ -161,23 +133,22 @@ void main() {
       expect(room.surfaceLabels.ceiling, 'Ceiling');
       expect(room.surfaceLabels.floor, 'Floor');
       expect(room.surfaceLabels.furniture, furnitureLabels[room.id]);
-      expect(room.paletteReviewLabel, 'Market guide - reviewed October 2026');
-      expect(room.paletteSourceNote.toLowerCase(), contains('display preview'));
-      expect(room.paletteSourceNote.toLowerCase(), contains('physical swatch'));
       expect(room.focalPoint.x, focalPoints[room.id]!.$1);
       expect(room.focalPoint.y, focalPoints[room.id]!.$2);
       expect(room.focalPoint.x, inInclusiveRange(-1, 1));
       expect(room.focalPoint.y, inInclusiveRange(-1, 1));
       expect(room.palettes.map((palette) => palette.id), [
-        'warm-natural',
-        'soft-botanical',
-        'cool-airy',
+        'soft-linen',
+        'quiet-sage',
+        'airy-slate',
+        'clay-and-cream',
+        'mist-and-ink',
+        'sunwashed-olive',
       ]);
 
       for (final palette in room.palettes) {
         expect(palette.name.trim(), isNotEmpty);
         expect(palette.guidance.trim(), isNotEmpty);
-        expect(palette.provenance?.trim(), isNotEmpty);
         expect(
           [
             palette.colors.wall.hex,
@@ -185,7 +156,7 @@ void main() {
             palette.colors.floor.hex,
             palette.colors.furniture.hex,
           ],
-          expected[palette.id],
+          expectedLooks[palette.id],
           reason: '${room.id}/${palette.id}',
         );
         expect(room.matchingPalette(palette.colors), same(palette));
@@ -242,8 +213,6 @@ void main() {
       expect(() => _template(title: ' '), throwsArgumentError);
       expect(() => _template(summary: ' '), throwsArgumentError);
       expect(() => _template(assetPath: ' '), throwsArgumentError);
-      expect(() => _template(paletteReviewLabel: ' '), throwsArgumentError);
-      expect(() => _template(paletteSourceNote: ' '), throwsArgumentError);
       expect(() => _template(artboardWidth: 0), throwsArgumentError);
       expect(() => _template(artboardHeight: -1), throwsArgumentError);
       expect(
@@ -276,18 +245,15 @@ void main() {
       String id = 'id',
       String name = 'Name',
       String guidance = 'Guidance',
-      String? provenance,
     }) => IllustratedRoomPalette(
       id: id,
       name: name,
       guidance: guidance,
-      provenance: provenance,
       colors: _colors('#000000', '#111111', '#222222', '#333333'),
     );
 
     expect(() => create(id: ' '), throwsArgumentError);
     expect(() => create(name: ' '), throwsArgumentError);
     expect(() => create(guidance: ' '), throwsArgumentError);
-    expect(() => create(provenance: ' '), throwsArgumentError);
   });
 }

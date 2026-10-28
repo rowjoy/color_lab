@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../../../core/color/color_models.dart';
 import '../../../core/theme/theme.dart';
+import '../../../l10n/l10n.dart';
 import '../../../core/widgets/buttons.dart';
 import '../domain/illustrated_room.dart';
 import '../domain/illustrated_room_draft.dart';
 import 'illustrated_room_controls.dart';
+import 'illustrated_room_svg.dart';
 
 class IllustratedRoomFlyout extends StatelessWidget {
   const IllustratedRoomFlyout({
@@ -126,7 +128,7 @@ class IllustratedRoomFlyout extends StatelessWidget {
   );
 }
 
-class _LooksContent extends StatelessWidget {
+class _LooksContent extends StatefulWidget {
   const _LooksContent({
     required this.draft,
     required this.onPaletteSelected,
@@ -136,6 +138,14 @@ class _LooksContent extends StatelessWidget {
   final IllustratedRoomDraft draft;
   final ValueChanged<String> onPaletteSelected;
   final VoidCallback onMarketGuide;
+
+  @override
+  State<_LooksContent> createState() => _LooksContentState();
+}
+
+class _LooksContentState extends State<_LooksContent> {
+  String? _previewId;
+  IllustratedRoomDraft get draft => widget.draft;
 
   @override
   Widget build(BuildContext context) => Column(
@@ -152,18 +162,34 @@ class _LooksContent extends StatelessWidget {
         _PaletteOption(
           key: ValueKey('room-palette-${palette.id}'),
           palette: palette,
-          selected: draft.sourcePaletteId == palette.id,
+          selected: (_previewId ?? draft.sourcePaletteId) == palette.id,
           recommended: palette.id == draft.template.defaultPaletteId,
-          onPressed: () => onPaletteSelected(palette.id),
+          onPressed: () => setState(() => _previewId = palette.id),
         ),
         const SizedBox(height: AppSpacing.sm),
+      ],
+      if (_previewId != null) ...[
+        Text(context.l10n.roomLookPreview),
+        SizedBox(
+          height: 120,
+          child: IllustratedRoomSvg(draft: draft.applyPalette(_previewId!)),
+        ),
+        OutlinedButton(
+          key: const ValueKey('room-apply-complete-look'),
+          style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48)),
+          onPressed: () {
+            widget.onPaletteSelected(_previewId!);
+            setState(() => _previewId = null);
+          },
+          child: Text(context.l10n.roomApplyCompleteLook),
+        ),
       ],
       const SizedBox(height: AppSpacing.sm),
       SecondaryButton(
         key: const ValueKey('room-market-guide'),
-        label: 'Why these looks?',
+        label: context.l10n.illustratedPaletteGuideTitle,
         icon: Icons.info_outline_rounded,
-        onPressed: onMarketGuide,
+        onPressed: widget.onMarketGuide,
       ),
     ],
   );
@@ -189,7 +215,11 @@ class _PaletteOption extends StatelessWidget {
     button: true,
     selected: selected,
     onTap: onPressed,
-    label: '${palette.name}${recommended ? ', Recommended' : ''}',
+    label: recommended
+        ? context.l10n.illustratedPaletteRecommendedLabel(
+            palette.localizedName(context.l10n),
+          )
+        : palette.localizedName(context.l10n),
     excludeSemantics: true,
     child: Material(
       color: selected
@@ -218,7 +248,7 @@ class _PaletteOption extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        palette.name,
+                        palette.localizedName(context.l10n),
                         style: Theme.of(context).textTheme.labelLarge,
                       ),
                     ),
@@ -232,7 +262,7 @@ class _PaletteOption extends StatelessWidget {
                 if (recommended) ...[
                   const SizedBox(height: AppSpacing.xs),
                   Text(
-                    'Recommended',
+                    context.l10n.illustratedPaletteRecommended,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       color: context.appColors.primary,
                       fontWeight: FontWeight.w700,
@@ -243,7 +273,7 @@ class _PaletteOption extends StatelessWidget {
                 _PaletteSwatches(colors: palette.colors),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  palette.guidance,
+                  palette.localizedGuidance(context.l10n),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],

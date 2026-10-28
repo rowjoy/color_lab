@@ -1,306 +1,279 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
-  <!-- Original layered vector study. Dominant light enters from upper left;
-       fitted shadows fall lower right. The task lamp adds only local warmth.
-       Flat reserved base fills preserve independently editable surface hue. -->
-  <defs>
+<defs xmlns="http://www.w3.org/2000/svg">
     <linearGradient id="study-window-sky" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#9FD7EA"/>
-      <stop offset="1" stop-color="#DCEFF1"/>
+      <stop offset="0" stop-color="#9FD7EA" />
+      <stop offset="1" stop-color="#DCEFF1" />
     </linearGradient>
     <linearGradient id="study-rug" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#526D77"/>
-      <stop offset="1" stop-color="#2F4652"/>
+      <stop offset="0" stop-color="#526D77" />
+      <stop offset="1" stop-color="#2F4652" />
     </linearGradient>
     <linearGradient id="study-screen" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#294554"/>
-      <stop offset="1" stop-color="#0D171D"/>
+      <stop offset="0" stop-color="#294554" />
+      <stop offset="1" stop-color="#0D171D" />
     </linearGradient>
     <linearGradient id="study-metal" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#27343A"/>
-      <stop offset=".5" stop-color="#637178"/>
-      <stop offset="1" stop-color="#222D32"/>
+      <stop offset="0" stop-color="#27343A" />
+      <stop offset=".5" stop-color="#637178" />
+      <stop offset="1" stop-color="#222D32" />
     </linearGradient>
     <linearGradient id="study-daylight-falloff" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#E6F5FA" stop-opacity=".29"/>
-      <stop offset="1" stop-color="#E6F5FA" stop-opacity="0"/>
+      <stop offset="0" stop-color="#E6F5FA" stop-opacity=".29" />
+      <stop offset="1" stop-color="#E6F5FA" stop-opacity="0" />
     </linearGradient>
     <linearGradient id="study-curtain-volume" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#000000" stop-opacity=".18"/>
-      <stop offset=".35" stop-color="#FFFFFF" stop-opacity=".17"/>
-      <stop offset=".7" stop-color="#000000" stop-opacity=".17"/>
-      <stop offset="1" stop-color="#FFFFFF" stop-opacity=".06"/>
+      <stop offset="0" stop-color="#000000" stop-opacity=".18" />
+      <stop offset=".35" stop-color="#FFFFFF" stop-opacity=".17" />
+      <stop offset=".7" stop-color="#000000" stop-opacity=".17" />
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity=".06" />
     </linearGradient>
     <linearGradient id="study-upholstery-volume" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#FFFFFF" stop-opacity=".24"/>
-      <stop offset=".3" stop-color="#FFFFFF" stop-opacity=".04"/>
-      <stop offset=".75" stop-color="#000000" stop-opacity=".02"/>
-      <stop offset="1" stop-color="#000000" stop-opacity=".25"/>
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity=".24" />
+      <stop offset=".3" stop-color="#FFFFFF" stop-opacity=".04" />
+      <stop offset=".75" stop-color="#000000" stop-opacity=".02" />
+      <stop offset="1" stop-color="#000000" stop-opacity=".25" />
     </linearGradient>
   </defs>
 
-  <g id="study-architecture-depth">
-    <g id="surface-ceiling">
-      <path d="M0 0H1200V108L1120 140H80L0 108Z" fill="#00E5FF"/>
-    </g>
-    <path d="M46 83H1154L1120 124H80Z" fill="#FFFFFF" fill-opacity=".18"/>
-    <path d="M80 124H1120" stroke="#FFFFFF" stroke-opacity=".68" stroke-width="13"/>
-    <path d="M83 138H1117" stroke="#2B3940" stroke-opacity=".22" stroke-width="4"/>
 
-    <g id="surface-wall">
-      <path d="M0 108L80 140H1120L1200 108V552H0Z" fill="#FF00A1"/>
-    </g>
-    <path d="M0 108L80 140V552H0Z" fill="#000000" fill-opacity=".12"/>
-    <path d="M1200 108L1120 140V552H1200Z" fill="#000000" fill-opacity=".075"/>
-    <path d="M80 140H1120V552" fill="none" stroke="#FFFFFF" stroke-opacity=".08" stroke-width="3"/>
+<!-- study-decoration-slots -->
+<g>
 
-    <g id="surface-floor">
-      <path d="M0 552H1200V800H0Z" fill="#B7FF00"/>
-    </g>
-    <path d="M0 542H1200V566H0Z" fill="#F7F3EA"/>
-    <path d="M0 565H1200" stroke="#2B2725" stroke-opacity=".30" stroke-width="5"/>
-    <g fill="none" stroke="#4A403A" stroke-opacity=".18" stroke-width="2">
-      <path d="M600 552L62 800"/>
-      <path d="M600 552L292 800"/>
-      <path d="M600 552L474 800"/>
-      <path d="M600 552L726 800"/>
-      <path d="M600 552L908 800"/>
-      <path d="M600 552L1138 800"/>
-      <path d="M0 609H1200M0 675H1200M0 751H1060"/>
-      <path d="M183 609V640M361 675V710M831 609V637M1021 675V709"/>
-    </g>
-    <path d="M0 544H1200V550H0Z" fill="#FFFFFF" fill-opacity=".45"/>
-    <path d="M0 550H1200V554H0Z" fill="#000000" fill-opacity=".12"/>
-    <path d="M16 583L159 583M58 586L131 586M920 642L1003 642M934 645L974 645M29 768L72 768" fill="none" stroke="#FFFFFF" stroke-opacity=".12" stroke-width="2"/>
-    <path d="M0 110L80 141V148L0 118ZM1120 141L1200 110V118L1120 148Z" fill="#000000" fill-opacity=".14"/>
-  </g>
+</g>
+<!-- study-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M46 83H1154L1120 124H80Z" fill="#FFFFFF" fill-opacity=".18" />
+<path xmlns="http://www.w3.org/2000/svg" d="M80 124H1120" stroke="#FFFFFF" stroke-opacity=".68" stroke-width="13" />
+<path xmlns="http://www.w3.org/2000/svg" d="M83 138H1117" stroke="#2B3940" stroke-opacity=".22" stroke-width="4" />
+</g>
+<!-- study-decoration-slot -->
+<g>
 
-  <!-- Cool daylight is restrained and remains clear of exact test anchors. -->
-  <g id="study-daylight">
-    <path d="M88 166H354L557 542H236Z" fill="url(#study-daylight-falloff)"/>
-    <path d="M99 449L339 449L515 604L270 604Z" fill="#E6F5FA" fill-opacity=".15"/>
-    <path d="M98 566H211L347 645H189ZM227 566H341L481 645H359Z" fill="#FFFFFF" fill-opacity=".17"/>
-    <path d="M205 659L331 659L540 800H369ZM347 659L474 659L691 800H522Z" fill="#E0F1F6" fill-opacity=".11"/>
-  </g>
+</g>
+<!-- study-decoration-slot -->
+<g>
 
-  <g id="study-window">
-    <path d="M64 148H374V474H64Z" fill="#1E2C33" fill-opacity=".28"/>
-    <path d="M74 154H364V464H74Z" fill="#F4F1EA"/>
-    <path d="M91 171H347V447H91Z" fill="#C7D0D2"/>
-    <path d="M99 179H339V439H99Z" fill="#9FD7EA"/>
-    <path d="M99 309H339V439H99Z" fill="#FFFFFF" fill-opacity=".24"/>
-    <circle cx="292" cy="226" r="31" fill="#F7D783"/>
-    <path d="M99 358L151 319L191 348L245 291L339 361V439H99Z" fill="#78978A"/>
-    <path d="M99 385L158 348L205 380L263 329L339 383V439H99Z" fill="#456D60"/>
-    <path d="M219 179V439M99 309H339" stroke="#F4F1EA" stroke-width="10"/>
-    <path d="M86 166L99 179V439L86 452Z" fill="#FFFFFF" fill-opacity=".46"/>
-    <path d="M352 166L339 179V439L352 452Z" fill="#000000" fill-opacity=".12"/>
-    <path d="M85 455H355L380 472H62Z" fill="#F9F6EE"/>
-    <path d="M62 472H380V480H62Z" fill="#C8C6BE"/>
-    <path d="M62 480H380L390 487H72Z" fill="#000000" fill-opacity=".16"/>
-    <path d="M42 143H394" stroke="#26343A" stroke-width="9" stroke-linecap="round"/>
-    <path d="M42 143C76 190 74 258 62 320S47 417 82 487H22V143Z" fill="#526B75"/>
-    <path d="M394 143C360 190 362 258 374 320S389 417 354 487H414V143Z" fill="#526B75"/>
-    <path d="M45 157C65 218 54 292 45 353M391 157C371 218 382 292 391 353" fill="none" stroke="#FFFFFF" stroke-opacity=".18" stroke-width="8"/>
-    <path d="M27 150H42C64 251 32 366 55 487H30C11 370 43 250 27 150ZM60 150H75C94 247 58 370 83 487H63C42 375 79 247 60 150ZM365 150H380C359 251 395 366 372 487H352C377 373 344 252 365 150ZM393 150H407C391 250 423 370 404 487H380C401 369 374 249 393 150Z" fill="url(#study-curtain-volume)"/>
-    <path d="M34 151V165M65 151V165M374 151V165M400 151V165" stroke="#BBC9CA" stroke-opacity=".48" stroke-width="5" stroke-linecap="round"/>
-  </g>
+</g>
+<!-- study-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M80 140H1120V552" fill="none" stroke="#FFFFFF" stroke-opacity=".08" stroke-width="3" />
+</g>
+<!-- study-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M0 542H1200V566H0Z" fill="#F7F3EA" />
+<path xmlns="http://www.w3.org/2000/svg" d="M0 565H1200" stroke="#2B2725" stroke-opacity=".30" stroke-width="5" />
+<path xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#4A403A" stroke-opacity=".18" stroke-width="2" d="M600 552L62 800" />
+<path xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#4A403A" stroke-opacity=".18" stroke-width="2" d="M600 552L292 800" />
+<path xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#4A403A" stroke-opacity=".18" stroke-width="2" d="M600 552L474 800" />
+<path xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#4A403A" stroke-opacity=".18" stroke-width="2" d="M600 552L726 800" />
+<path xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#4A403A" stroke-opacity=".18" stroke-width="2" d="M600 552L908 800" />
+<path xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#4A403A" stroke-opacity=".18" stroke-width="2" d="M600 552L1138 800" />
+<path xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#4A403A" stroke-opacity=".18" stroke-width="2" d="M0 609H1200M0 675H1200M0 751H1060" />
+<path xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#4A403A" stroke-opacity=".18" stroke-width="2" d="M183 609V640M361 675V710M831 609V637M1021 675V709" />
+<path xmlns="http://www.w3.org/2000/svg" d="M0 544H1200V550H0Z" fill="#FFFFFF" fill-opacity=".45" />
+<path xmlns="http://www.w3.org/2000/svg" d="M0 550H1200V554H0Z" fill="#000000" fill-opacity=".12" />
+<path xmlns="http://www.w3.org/2000/svg" d="M16 583L159 583M58 586L131 586M920 642L1003 642M934 645L974 645M29 768L72 768" fill="none" stroke="#FFFFFF" stroke-opacity=".12" stroke-width="2" />
+<path xmlns="http://www.w3.org/2000/svg" d="M0 110L80 141V148L0 118ZM1120 141L1200 110V118L1120 148Z" fill="#000000" fill-opacity=".14" />
+<path xmlns="http://www.w3.org/2000/svg" d="M88 166H354L557 542H236Z" fill="url(#study-daylight-falloff)" />
+<path xmlns="http://www.w3.org/2000/svg" d="M99 449L339 449L515 604L270 604Z" fill="#E6F5FA" fill-opacity=".15" />
+<path xmlns="http://www.w3.org/2000/svg" d="M98 566H211L347 645H189ZM227 566H341L481 645H359Z" fill="#FFFFFF" fill-opacity=".17" />
+<path xmlns="http://www.w3.org/2000/svg" d="M205 659L331 659L540 800H369ZM347 659L474 659L691 800H522Z" fill="#E0F1F6" fill-opacity=".11" />
+<path xmlns="http://www.w3.org/2000/svg" d="M64 148H374V474H64Z" fill="#1E2C33" fill-opacity=".28" />
+<path xmlns="http://www.w3.org/2000/svg" d="M74 154H364V464H74Z" fill="#F4F1EA" />
+<path xmlns="http://www.w3.org/2000/svg" d="M91 171H347V447H91Z" fill="#C7D0D2" />
+<path xmlns="http://www.w3.org/2000/svg" d="M99 179H339V439H99Z" fill="#9FD7EA" />
+<path xmlns="http://www.w3.org/2000/svg" d="M99 309H339V439H99Z" fill="#FFFFFF" fill-opacity=".24" />
+<circle xmlns="http://www.w3.org/2000/svg" cx="292" cy="226" r="31" fill="#F7D783" />
+<path xmlns="http://www.w3.org/2000/svg" d="M99 358L151 319L191 348L245 291L339 361V439H99Z" fill="#78978A" />
+<path xmlns="http://www.w3.org/2000/svg" d="M99 385L158 348L205 380L263 329L339 383V439H99Z" fill="#456D60" />
+<path xmlns="http://www.w3.org/2000/svg" d="M219 179V439M99 309H339" stroke="#F4F1EA" stroke-width="10" />
+<path xmlns="http://www.w3.org/2000/svg" d="M86 166L99 179V439L86 452Z" fill="#FFFFFF" fill-opacity=".46" />
+<path xmlns="http://www.w3.org/2000/svg" d="M352 166L339 179V439L352 452Z" fill="#000000" fill-opacity=".12" />
+<path xmlns="http://www.w3.org/2000/svg" d="M85 455H355L380 472H62Z" fill="#F9F6EE" />
+<path xmlns="http://www.w3.org/2000/svg" d="M62 472H380V480H62Z" fill="#C8C6BE" />
+<path xmlns="http://www.w3.org/2000/svg" d="M62 480H380L390 487H72Z" fill="#000000" fill-opacity=".16" />
+<path xmlns="http://www.w3.org/2000/svg" d="M42 143H394" stroke="#26343A" stroke-width="9" stroke-linecap="round" />
+<path xmlns="http://www.w3.org/2000/svg" d="M42 143C76 190 74 258 62 320S47 417 82 487H22V143Z" fill="#526B75" />
+<path xmlns="http://www.w3.org/2000/svg" d="M394 143C360 190 362 258 374 320S389 417 354 487H414V143Z" fill="#526B75" />
+<path xmlns="http://www.w3.org/2000/svg" d="M45 157C65 218 54 292 45 353M391 157C371 218 382 292 391 353" fill="none" stroke="#FFFFFF" stroke-opacity=".18" stroke-width="8" />
+<path xmlns="http://www.w3.org/2000/svg" d="M27 150H42C64 251 32 366 55 487H30C11 370 43 250 27 150ZM60 150H75C94 247 58 370 83 487H63C42 375 79 247 60 150ZM365 150H380C359 251 395 366 372 487H352C377 373 344 252 365 150ZM393 150H407C391 250 423 370 404 487H380C401 369 374 249 393 150Z" fill="url(#study-curtain-volume)" />
+<path xmlns="http://www.w3.org/2000/svg" d="M34 151V165M65 151V165M374 151V165M400 151V165" stroke="#BBC9CA" stroke-opacity=".48" stroke-width="5" stroke-linecap="round" />
+<rect xmlns="http://www.w3.org/2000/svg" x="452" y="164" width="132" height="118" rx="5" fill="#1F282D" />
+<rect xmlns="http://www.w3.org/2000/svg" x="463" y="175" width="110" height="96" fill="#F1EDE5" />
+<path xmlns="http://www.w3.org/2000/svg" d="M476 251L505 206L530 234L558 194V258H476Z" fill="#637F70" />
+<circle xmlns="http://www.w3.org/2000/svg" cx="518" cy="202" r="15" fill="#DDA06F" />
+<rect xmlns="http://www.w3.org/2000/svg" x="694" y="164" width="132" height="118" rx="5" fill="#1F282D" />
+<rect xmlns="http://www.w3.org/2000/svg" x="705" y="175" width="110" height="96" fill="#F1EDE5" />
+<path xmlns="http://www.w3.org/2000/svg" d="M720 252L755 197L800 252Z" fill="#587A8A" />
+<circle xmlns="http://www.w3.org/2000/svg" cx="781" cy="201" r="16" fill="#E4B85D" />
+<path xmlns="http://www.w3.org/2000/svg" d="M452 282H584M694 282H826" stroke="#000000" stroke-opacity=".12" stroke-width="7" />
+<path xmlns="http://www.w3.org/2000/svg" d="M17 670H79L121 692H52L8 681Z" fill="#000000" fill-opacity=".18" />
+<path xmlns="http://www.w3.org/2000/svg" d="M45 615C5 602 3 565 9 554C34 554 54 579 52 603C30 566 33 529 49 516C66 539 64 573 54 600C64 562 89 548 110 554C111 580 83 606 58 617Z" fill="#4E7756" />
+<path xmlns="http://www.w3.org/2000/svg" d="M49 616C26 589 13 577 10 557M51 614L49 525M53 615Q74 584 104 559" fill="none" stroke="#355441" stroke-width="4" />
+<path xmlns="http://www.w3.org/2000/svg" d="M15 611Q47 603 84 611L75 673Q48 684 24 672Z" fill="#D7C8AF" />
+<path xmlns="http://www.w3.org/2000/svg" d="M15 611Q47 619 84 611L83 622Q46 630 17 622Z" fill="#F0E5D2" />
+<path xmlns="http://www.w3.org/2000/svg" d="M63 625L82 622L75 673Q65 678 59 678Z" fill="#000000" fill-opacity=".12" />
+<path xmlns="http://www.w3.org/2000/svg" d="M24 632L29 664M29 633L34 665" stroke="#FFFFFF" stroke-opacity=".28" stroke-width="2" />
+<path xmlns="http://www.w3.org/2000/svg" d="M276 646H923L1035 800H164Z" fill="#1B252B" fill-opacity=".16" />
+<path xmlns="http://www.w3.org/2000/svg" d="M301 651H899L987 800H213Z" fill="url(#study-rug)" />
+<path xmlns="http://www.w3.org/2000/svg" d="M330 682H881M304 721H909M276 762H940" stroke="#FFFFFF" stroke-opacity=".12" stroke-width="4" />
+<path xmlns="http://www.w3.org/2000/svg" d="M449 651L406 800M600 651V800M751 651L794 800" stroke="#FFFFFF" stroke-opacity=".08" stroke-width="3" />
+<path xmlns="http://www.w3.org/2000/svg" d="M318 661H893L973 794H227Z" fill="none" stroke="#D9E2DF" stroke-opacity=".13" stroke-width="2" />
+<path xmlns="http://www.w3.org/2000/svg" d="M283 740H922M274 745H925M264 773H943M254 778H947" stroke="#FFFFFF" stroke-opacity=".075" stroke-width="2" />
+<path xmlns="http://www.w3.org/2000/svg" d="M346 721L882 721L941 764L391 755Z" fill="#000000" fill-opacity=".12" />
+<path xmlns="http://www.w3.org/2000/svg" d="M356 729L404 729L434 749L374 748ZM834 729L885 729L917 749L855 748Z" fill="#000000" fill-opacity=".25" />
+<path xmlns="http://www.w3.org/2000/svg" d="M100 713L277 712L335 766L153 777L91 752Z" fill="#000000" fill-opacity=".13" />
+<path xmlns="http://www.w3.org/2000/svg" d="M97 760L114 757L146 779L118 781ZM274 761L290 762L318 781L288 782Z" fill="#000000" fill-opacity=".30" />
+<path xmlns="http://www.w3.org/2000/svg" d="M554 765L679 763L741 797H577L532 783Z" fill="#000000" fill-opacity=".20" />
+<path xmlns="http://www.w3.org/2000/svg" d="M1028 566L1098 574L1143 608L1066 608L1021 581Z" fill="#000000" fill-opacity=".24" />
+<path xmlns="http://www.w3.org/2000/svg" d="M1043 584L1095 588L1117 601L1067 603Z" fill="#000000" fill-opacity=".17" />
+<path xmlns="http://www.w3.org/2000/svg" d="M936 517H1135L1161 534H958Z" fill="#000000" fill-opacity=".16" />
+</g>
+<!-- study-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M950 170H1120V502H950Z" fill="#000000" fill-opacity=".27" />
+<path xmlns="http://www.w3.org/2000/svg" d="M950 170H1120V185H950ZM950 282H1120V296H950ZM950 394H1120V408H950Z" fill="#000000" fill-opacity=".22" />
+</g>
+<!-- study-decoration-slot -->
+<g>
 
-  <g id="study-wall-art">
-    <rect x="452" y="164" width="132" height="118" rx="5" fill="#1F282D"/>
-    <rect x="463" y="175" width="110" height="96" fill="#F1EDE5"/>
-    <path d="M476 251L505 206L530 234L558 194V258H476Z" fill="#637F70"/>
-    <circle cx="518" cy="202" r="15" fill="#DDA06F"/>
-    <rect x="694" y="164" width="132" height="118" rx="5" fill="#1F282D"/>
-    <rect x="705" y="175" width="110" height="96" fill="#F1EDE5"/>
-    <path d="M720 252L755 197L800 252Z" fill="#587A8A"/>
-    <circle cx="781" cy="201" r="16" fill="#E4B85D"/>
-    <path d="M452 282H584M694 282H826" stroke="#000000" stroke-opacity=".12" stroke-width="7"/>
-  </g>
+</g>
+<!-- study-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M935 152H950V519H935Z" fill="#FFFFFF" fill-opacity=".20" />
+<path xmlns="http://www.w3.org/2000/svg" d="M1120 152L1140 170V519L1120 502Z" fill="#000000" fill-opacity=".25" />
+<path xmlns="http://www.w3.org/2000/svg" d="M935 152H1120L1140 170H1120L1106 160H950V170H935Z" fill="#FFFFFF" fill-opacity=".18" />
+<path xmlns="http://www.w3.org/2000/svg" d="M950 282H1120M950 394H1120M935 519H1140" stroke="#000000" stroke-opacity=".25" stroke-width="2" />
+</g>
+<!-- study-decoration-slot -->
+<g>
 
-  <!-- The floor planter sits behind the reading chair, never on its back. -->
-  <g id="study-floor-planter">
-    <path d="M17 670H79L121 692H52L8 681Z" fill="#000000" fill-opacity=".18"/>
-    <path d="M45 615C5 602 3 565 9 554C34 554 54 579 52 603C30 566 33 529 49 516C66 539 64 573 54 600C64 562 89 548 110 554C111 580 83 606 58 617Z" fill="#4E7756"/>
-    <path d="M49 616C26 589 13 577 10 557M51 614L49 525M53 615Q74 584 104 559" fill="none" stroke="#355441" stroke-width="4"/>
-    <path d="M15 611Q47 603 84 611L75 673Q48 684 24 672Z" fill="#D7C8AF"/>
-    <path d="M15 611Q47 619 84 611L83 622Q46 630 17 622Z" fill="#F0E5D2"/>
-    <path d="M63 625L82 622L75 673Q65 678 59 678Z" fill="#000000" fill-opacity=".12"/>
-    <path d="M24 632L29 664M29 633L34 665" stroke="#FFFFFF" stroke-opacity=".28" stroke-width="2"/>
-  </g>
+</g>
+<!-- study-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M477 550H493V711L477 733ZM875 550H891V711L875 733Z" fill="#000000" fill-opacity=".25" />
+<path xmlns="http://www.w3.org/2000/svg" d="M350 554H475V566H350ZM759 554H873V566H759Z" fill="#000000" fill-opacity=".25" />
+<path xmlns="http://www.w3.org/2000/svg" d="M351 567H475V631H351ZM759 567H873V631H759Z" fill="#000000" fill-opacity=".11" />
+</g>
+<!-- study-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M355 571H471V575H359V627H355ZM763 571H869V575H767V627H763Z" fill="#FFFFFF" fill-opacity=".15" />
+<path xmlns="http://www.w3.org/2000/svg" d="M351 637H475V704H351ZM759 637H873V704H759Z" fill="#000000" fill-opacity=".15" />
+</g>
+<!-- study-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M355 641H471V645H359V700H355ZM763 641H869V645H767V700H763Z" fill="#FFFFFF" fill-opacity=".13" />
+<path xmlns="http://www.w3.org/2000/svg" d="M351 709H477V720H351ZM755 709H876V720H755Z" fill="#000000" fill-opacity=".20" />
+</g>
+<!-- study-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M379 720H393L385 745H374ZM864 720H876L886 745H873Z" fill="#000000" fill-opacity=".25" />
+</g>
+<!-- study-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M344 511H894L917 524Q920 529 911 530H330Q322 530 326 525Z" fill="#FFFFFF" fill-opacity=".20" />
+<path xmlns="http://www.w3.org/2000/svg" d="M320 546H922V549Q922 557 913 557H328Q320 557 320 549Z" fill="#000000" fill-opacity=".24" />
+<path xmlns="http://www.w3.org/2000/svg" d="M328 531H914" stroke="#FFFFFF" stroke-opacity=".13" stroke-width="2" />
+<path xmlns="http://www.w3.org/2000/svg" d="M898 516L922 527V548L908 554V532Z" fill="#000000" fill-opacity=".18" />
+</g>
+<!-- study-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M520 606Q523 584 548 584H670Q689 584 697 600" fill="none" stroke="#FFFFFF" stroke-opacity=".31" stroke-width="4" />
+<path xmlns="http://www.w3.org/2000/svg" d="M515 611Q515 580 547 580H568Q551 614 551 644Q551 676 568 696H545Q520 695 518 671Z" fill="url(#study-upholstery-volume)" />
+<path xmlns="http://www.w3.org/2000/svg" d="M663 582H671Q703 580 706 610L701 668Q699 694 676 700H658Z" fill="#000000" fill-opacity=".18" />
+<path xmlns="http://www.w3.org/2000/svg" d="M529 689Q603 704 691 687L684 709H542Z" fill="#000000" fill-opacity=".28" />
+</g>
+<!-- study-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M541 699Q606 691 679 700Q688 702 691 708Q615 699 537 710Z" fill="#FFFFFF" fill-opacity=".20" />
+<path xmlns="http://www.w3.org/2000/svg" d="M531 720Q608 730 700 718Q698 735 677 737H553Q535 735 531 720Z" fill="#000000" fill-opacity=".18" />
+</g>
+<!-- study-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M513 647H527V657H513ZM699 649H713V659H699Z" fill="#FFFFFF" fill-opacity=".21" />
+<path xmlns="http://www.w3.org/2000/svg" d="M526 611Q527 596 542 595M539 675Q543 685 551 686M685 608L682 665" fill="none" stroke="#000000" stroke-opacity=".16" stroke-width="2" />
+</g>
+<!-- study-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M111 610Q112 574 153 568H211Q247 571 269 601L263 642H117Z" fill="#FFFFFF" fill-opacity=".17" />
+<path xmlns="http://www.w3.org/2000/svg" d="M117 608Q148 585 183 589Q229 586 260 612L258 639H118Z" fill="#000000" fill-opacity=".09" />
+</g>
+<!-- study-decoration-slot -->
+<g>
 
-  <!-- Rug and contact shadows are deliberately below every furniture plane. -->
-  <g id="study-rug-underlay">
-    <path d="M276 646H923L1035 800H164Z" fill="#1B252B" fill-opacity=".16"/>
-    <path d="M301 651H899L987 800H213Z" fill="url(#study-rug)"/>
-    <path d="M330 682H881M304 721H909M276 762H940" stroke="#FFFFFF" stroke-opacity=".12" stroke-width="4"/>
-    <path d="M449 651L406 800M600 651V800M751 651L794 800" stroke="#FFFFFF" stroke-opacity=".08" stroke-width="3"/>
-    <path d="M318 661H893L973 794H227Z" fill="none" stroke="#D9E2DF" stroke-opacity=".13" stroke-width="2"/>
-    <path d="M283 740H922M274 745H925M264 773H943M254 778H947" stroke="#FFFFFF" stroke-opacity=".075" stroke-width="2"/>
-  </g>
-
-  <g id="study-contact-shadows">
-    <path d="M346 721L882 721L941 764L391 755Z" fill="#000000" fill-opacity=".12"/>
-    <path d="M356 729L404 729L434 749L374 748ZM834 729L885 729L917 749L855 748Z" fill="#000000" fill-opacity=".25"/>
-    <path d="M100 713L277 712L335 766L153 777L91 752Z" fill="#000000" fill-opacity=".13"/>
-    <path d="M97 760L114 757L146 779L118 781ZM274 761L290 762L318 781L288 782Z" fill="#000000" fill-opacity=".30"/>
-    <path d="M554 765L679 763L741 797H577L532 783Z" fill="#000000" fill-opacity=".20"/>
-    <path d="M1028 566L1098 574L1143 608L1066 608L1021 581Z" fill="#000000" fill-opacity=".24"/>
-    <path d="M1043 584L1095 588L1117 601L1067 603Z" fill="#000000" fill-opacity=".17"/>
-    <path d="M936 517H1135L1161 534H958Z" fill="#000000" fill-opacity=".16"/>
-  </g>
-
-  <g id="surface-furniture">
-    <!-- Built-in shelving picks up the same furniture material. -->
-    <g id="study-editable-shelving">
-      <path d="M935 152H1120L1140 170V519H935Z" fill="#7A00FF"/>
-      <path d="M950 170H1120V502H950Z" fill="#000000" fill-opacity=".27"/>
-      <path d="M950 170H1120V185H950ZM950 282H1120V296H950ZM950 394H1120V408H950Z" fill="#000000" fill-opacity=".22"/>
-      <path d="M950 260H1106L1120 270H950ZM950 372H1106L1120 382H950ZM950 492H1106L1120 502H950Z" fill="#7A00FF"/>
-      <path d="M950 260H1106L1120 270H950ZM950 372H1106L1120 382H950ZM950 492H1106L1120 502H950Z" fill="#FFFFFF" fill-opacity=".18"/>
-      <path d="M950 270H1120V282H950ZM950 382H1120V394H950ZM935 502H1140V519H935Z" fill="#7A00FF"/>
-      <path d="M935 152H950V519H935Z" fill="#FFFFFF" fill-opacity=".20"/>
-      <path d="M1120 152L1140 170V519L1120 502Z" fill="#000000" fill-opacity=".25"/>
-      <path d="M935 152H1120L1140 170H1120L1106 160H950V170H935Z" fill="#FFFFFF" fill-opacity=".18"/>
-      <path d="M950 282H1120M950 394H1120M935 519H1140" stroke="#000000" stroke-opacity=".25" stroke-width="2"/>
-    </g>
-
-    <!-- Desk top, front and legs use one editable base plus neutral planes. -->
-    <g id="study-editable-desk">
-      <path d="M346 550H493V711L477 733H351Z" fill="#7A00FF"/>
-      <path d="M755 550H891V711L876 733H755Z" fill="#7A00FF"/>
-      <path d="M477 550H493V711L477 733ZM875 550H891V711L875 733Z" fill="#000000" fill-opacity=".25"/>
-      <path d="M350 554H475V566H350ZM759 554H873V566H759Z" fill="#000000" fill-opacity=".25"/>
-      <path d="M351 567H475V631H351ZM759 567H873V631H759Z" fill="#000000" fill-opacity=".11"/>
-      <path d="M355 571H471V627H355ZM763 571H869V627H763Z" fill="#7A00FF"/>
-      <path d="M355 571H471V575H359V627H355ZM763 571H869V575H767V627H763Z" fill="#FFFFFF" fill-opacity=".15"/>
-      <path d="M351 637H475V704H351ZM759 637H873V704H759Z" fill="#000000" fill-opacity=".15"/>
-      <path d="M355 641H471V700H355ZM763 641H869V700H763Z" fill="#7A00FF"/>
-      <path d="M355 641H471V645H359V700H355ZM763 641H869V645H767V700H763Z" fill="#FFFFFF" fill-opacity=".13"/>
-      <path d="M351 709H477V720H351ZM755 709H876V720H755Z" fill="#000000" fill-opacity=".20"/>
-      <path d="M361 720H393L385 745H356ZM845 720H876L886 745H854Z" fill="#7A00FF"/>
-      <path d="M379 720H393L385 745H374ZM864 720H876L886 745H873Z" fill="#000000" fill-opacity=".25"/>
-      <path d="M344 511H894L923 525V548Q923 557 913 557H328Q319 557 319 548V528Q319 523 326 520Z" fill="#7A00FF"/>
-      <path d="M344 511H894L917 524Q920 529 911 530H330Q322 530 326 525Z" fill="#FFFFFF" fill-opacity=".20"/>
-      <path d="M320 546H922V549Q922 557 913 557H328Q320 557 320 549Z" fill="#000000" fill-opacity=".24"/>
-      <path d="M328 531H914" stroke="#FFFFFF" stroke-opacity=".13" stroke-width="2"/>
-      <path d="M898 516L922 527V548L908 554V532Z" fill="#000000" fill-opacity=".18"/>
-    </g>
-
-    <!-- Ergonomic office chair. -->
-    <g id="study-editable-office-chair">
-      <path d="M515 611Q515 580 547 580H671Q703 580 706 610L701 668Q699 694 676 700H545Q520 695 518 671Z" fill="#7A00FF"/>
-      <path d="M520 606Q523 584 548 584H670Q689 584 697 600" fill="none" stroke="#FFFFFF" stroke-opacity=".31" stroke-width="4"/>
-      <path d="M515 611Q515 580 547 580H568Q551 614 551 644Q551 676 568 696H545Q520 695 518 671Z" fill="url(#study-upholstery-volume)"/>
-      <path d="M663 582H671Q703 580 706 610L701 668Q699 694 676 700H658Z" fill="#000000" fill-opacity=".18"/>
-      <path d="M529 689Q603 704 691 687L684 709H542Z" fill="#000000" fill-opacity=".28"/>
-      <path d="M537 697Q608 686 682 697Q701 700 700 716Q699 734 677 737H553Q531 734 530 718Q529 703 537 697Z" fill="#7A00FF"/>
-      <path d="M541 699Q606 691 679 700Q688 702 691 708Q615 699 537 710Z" fill="#FFFFFF" fill-opacity=".20"/>
-      <path d="M531 720Q608 730 700 718Q698 735 677 737H553Q535 735 531 720Z" fill="#000000" fill-opacity=".18"/>
-      <path d="M529 627Q515 631 513 649V690H528ZM694 629Q711 634 713 652V689H698Z" fill="#7A00FF"/>
-      <path d="M513 647H527V657H513ZM699 649H713V659H699Z" fill="#FFFFFF" fill-opacity=".21"/>
-      <path d="M526 611Q527 596 542 595M539 675Q543 685 551 686M685 608L682 665" fill="none" stroke="#000000" stroke-opacity=".16" stroke-width="2"/>
-    </g>
-
-    <!-- Reading chair with shaped arms and believable material panels. -->
-    <g id="study-editable-reading-chair">
-      <path d="M88 627C83 580 118 550 162 548H211C255 548 289 572 294 610L283 694Q279 716 258 720H119Q96 713 94 692Z" fill="#7A00FF"/>
-      <path d="M111 610Q112 574 153 568H211Q247 571 269 601L263 642H117Z" fill="#FFFFFF" fill-opacity=".17"/>
-      <path d="M117 608Q148 585 183 589Q229 586 260 612L258 639H118Z" fill="#000000" fill-opacity=".09"/>
-      <path d="M119 639Q180 627 256 638L270 671H110Z" fill="#7A00FF"/>
-      <path d="M111 666Q181 655 270 666L269 696Q191 709 110 694Z" fill="#7A00FF"/>
-      <path d="M111 678Q185 687 269 678V696Q191 709 110 694Z" fill="#000000" fill-opacity=".15"/>
-      <path d="M109 639Q84 603 76 637L82 689Q84 708 105 711H125L121 664Q119 650 109 639ZM262 638Q284 608 301 631L296 684Q294 706 275 712H253L259 665Z" fill="#7A00FF"/>
-      <path d="M81 635Q83 621 96 634L110 653Q116 668 116 694H106L99 661Z" fill="#FFFFFF" fill-opacity=".24"/>
-      <path d="M278 639Q289 625 295 636L290 680Q285 699 273 701H266L270 668Z" fill="#000000" fill-opacity=".20"/>
-      <path d="M107 709Q183 722 274 710L267 724H119Z" fill="#000000" fill-opacity=".24"/>
-      <path d="M115 608Q119 582 149 577M123 672Q182 667 254 674M94 643Q106 662 106 689" fill="none" stroke="#FFFFFF" stroke-opacity=".21" stroke-width="2"/>
-    </g>
-  </g>
-
-  <!-- Neutral hardware and small decor render after the editable furniture. -->
-  <g id="study-furniture-hardware">
-    <path d="M450 597H460M450 666H460M847 597H857M847 666H857" stroke="#000000" stroke-opacity=".22" stroke-width="9" stroke-linecap="round"/>
-    <path d="M450 595H460M450 664H460M847 595H857M847 664H857" stroke="#D7C39A" stroke-width="5" stroke-linecap="round"/>
-    <path d="M622 729V758M622 749L556 778M622 749L688 778" stroke="url(#study-metal)" stroke-width="13" stroke-linecap="round"/>
-    <circle cx="548" cy="783" r="11" fill="#202A2F"/>
-    <circle cx="696" cy="783" r="11" fill="#202A2F"/>
-    <path d="M622 745L613 785" stroke="#344047" stroke-width="11" stroke-linecap="round"/>
-    <circle cx="611" cy="789" r="10" fill="#202A2F"/>
-    <path d="M549 777L555 773M689 777L694 780M614 784L609 787" stroke="#A9B3B4" stroke-opacity=".5" stroke-width="3"/>
-    <path d="M120 719L103 766M263 719L282 766" stroke="#513A30" stroke-width="13" stroke-linecap="round"/>
-    <path d="M119 724L109 761M264 725L275 759" stroke="#FFFFFF" stroke-opacity=".16" stroke-width="3"/>
-  </g>
-
-  <g id="study-material-cues">
-    <!-- Sparse timber grain follows each plane, avoiding the base samples. -->
-    <path d="M344 518Q395 515 450 518M352 522L475 522M749 518Q803 515 878 519M766 523H868" fill="none" stroke="#FFFFFF" stroke-opacity=".18" stroke-width="1.5"/>
-    <path d="M335 541Q398 536 460 541M729 542Q813 537 887 541M366 585Q399 582 439 586M369 609Q399 612 439 608M367 654Q399 651 442 655M402 684L451 684M774 585Q805 582 837 586M777 612L849 612M776 653Q806 651 835 655M779 684L851 684" fill="none" stroke="#000000" stroke-opacity=".10" stroke-width="1.5"/>
-    <path d="M365 588H420M370 613H447M404 687H458M774 590H835M782 687H846M958 276H1036M1039 389H1106" fill="none" stroke="#FFFFFF" stroke-opacity=".10" stroke-width="1.5"/>
-    <path d="M540 618Q548 612 555 614M650 615Q670 614 680 622M549 678Q557 684 569 684M642 682Q664 681 675 674" fill="none" stroke="#000000" stroke-opacity=".12" stroke-width="2"/>
-    <path d="M146 602Q168 596 191 600M218 604Q235 608 246 616M134 691L151 693M223 695L245 692" fill="none" stroke="#000000" stroke-opacity=".12" stroke-width="2"/>
-  </g>
-
-  <g id="study-computer">
-    <rect x="500" y="326" width="244" height="174" rx="14" fill="#273238"/>
-    <rect x="514" y="340" width="216" height="144" rx="5" fill="url(#study-screen)"/>
-    <path d="M532 460L580 408L618 438L674 378L714 460Z" fill="#4A8793" fill-opacity=".72"/>
-    <circle cx="677" cy="384" r="17" fill="#EDC76C"/>
-    <path d="M518 344H600L538 480H518Z" fill="#FFFFFF" fill-opacity=".11"/>
-    <path d="M604 344H621L557 480H540Z" fill="#FFFFFF" fill-opacity=".035"/>
-    <path d="M508 349Q508 334 522 334H724" fill="none" stroke="#FFFFFF" stroke-opacity=".29" stroke-width="2"/>
-    <rect x="603" y="500" width="38" height="12" fill="#344047"/>
-    <path d="M565 513H679" stroke="#344047" stroke-width="8" stroke-linecap="round"/>
-    <rect x="700" y="532" width="118" height="12" rx="6" fill="#252F34"/>
-    <ellipse cx="838" cy="538" rx="16" ry="10" fill="#252F34"/>
-  </g>
-
-  <g id="study-practical-light">
-    <ellipse cx="426" cy="518" rx="27" ry="7" fill="#1F292E" fill-opacity=".24"/>
-    <circle cx="426" cy="510" r="19" fill="#34434A"/>
-    <path d="M426 495V415L470 371" fill="none" stroke="#34434A" stroke-width="10" stroke-linecap="round"/>
-    <path d="M454 354H514L491 398H433Z" fill="#D9A34D"/>
-    <path d="M441 398H486" stroke="#F9E9B8" stroke-width="8" stroke-linecap="round"/>
-    <path d="M439 402L370 513H534L486 402Z" fill="#FFD98B" fill-opacity=".09"/>
-    <path d="M398 513H514L540 524H375Z" fill="#FFE6A2" fill-opacity=".20"/>
-    <path d="M454 354H514L507 367H450Z" fill="#FFFFFF" fill-opacity=".23"/>
-    <path d="M433 397L441 382H497L491 398Z" fill="#000000" fill-opacity=".16"/>
-  </g>
-
-  <g id="study-shelf-decor">
-    <rect x="968" y="220" width="25" height="50" rx="2" fill="#C7795E"/>
-    <rect x="998" y="210" width="22" height="60" rx="2" fill="#5D7B91"/>
-    <rect x="1025" y="230" width="38" height="40" rx="2" fill="#D4AD59"/>
-    <path d="M1080 266C1058 234 1071 204 1100 218C1112 188 1140 211 1121 267Z" fill="#56795C"/>
-    <rect x="1081" y="258" width="43" height="20" rx="4" fill="#C78362"/>
-    <rect x="972" y="350" width="22" height="32" fill="#627A9A"/>
-    <rect x="999" y="338" width="25" height="44" fill="#CA7D5B"/>
-    <rect x="1029" y="352" width="34" height="30" fill="#D0B15D"/>
-    <circle cx="1091" cy="353" r="23" fill="#E8E1D3"/>
-    <path d="M1091 353V337M1091 353L1102 361" stroke="#3A484E" stroke-width="4" stroke-linecap="round"/>
-    <path d="M972 225V267M1002 215V267M1029 234V267M975 354V379M1003 342V379M1033 357V379" stroke="#FFFFFF" stroke-opacity=".25" stroke-width="2"/>
-    <path d="M970 235H990M1000 224H1017M1027 243H1060M1000 350H1021" stroke="#EBD9B7" stroke-opacity=".48" stroke-width="2"/>
-    <path d="M1082 266Q1100 271 1124 265V273Q1106 281 1084 275Z" fill="#000000" fill-opacity=".15"/>
-  </g>
-
-  <g id="study-plants-and-books">
-    <rect x="783" y="500" width="92" height="16" rx="3" fill="#E6DED0"/>
-    <rect x="775" y="483" width="98" height="17" rx="3" fill="#CC765B"/>
-    <rect x="795" y="466" width="78" height="17" rx="3" fill="#587986"/>
-    <path d="M1040 548C1010 514 1020 476 1049 491C1059 459 1096 470 1086 505C1119 496 1131 534 1098 552Z" fill="#477153"/>
-    <path d="M1065 550V486M1065 522L1038 505M1066 513L1090 495" stroke="#31513D" stroke-width="5"/>
-    <path d="M1034 548H1104L1093 594H1045Z" fill="#D8CAB1"/>
-    <path d="M1034 548Q1069 559 1104 548L1101 561Q1069 569 1037 560Z" fill="#FFFFFF" fill-opacity=".26"/>
-    <path d="M1081 560L1101 556L1093 594H1077Z" fill="#000000" fill-opacity=".13"/>
-    <path d="M1044 568L1048 586M1050 570L1053 588" stroke="#FFFFFF" stroke-opacity=".23" stroke-width="2"/>
-    <path d="M1047 527Q1028 500 1036 496Q1057 502 1065 526ZM1072 518Q1073 488 1085 481Q1092 505 1072 535ZM1082 538Q1102 512 1114 518Q1116 536 1087 546Z" fill="#FFFFFF" fill-opacity=".13"/>
-    <path d="M799 471H867M779 489H865M789 506H867" stroke="#FFFFFF" stroke-opacity=".24" stroke-width="2"/>
-  </g>
-
-  <g id="study-ceiling-light">
-    <path d="M735 0V56" stroke="#354148" stroke-width="5"/>
-    <path d="M688 91L719 54H751L782 91Z" fill="#F4E8CF"/>
-    <ellipse cx="735" cy="91" rx="49" ry="10" fill="#DDB560"/>
-    <path d="M735 101V130" stroke="#F5D581" stroke-opacity=".23" stroke-width="78"/>
-  </g>
+</g>
+<!-- study-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M111 678Q185 687 269 678V696Q191 709 110 694Z" fill="#000000" fill-opacity=".15" />
+</g>
+<!-- study-decoration-slot -->
+<g>
+<path xmlns="http://www.w3.org/2000/svg" d="M81 635Q83 621 96 634L110 653Q116 668 116 694H106L99 661Z" fill="#FFFFFF" fill-opacity=".24" />
+<path xmlns="http://www.w3.org/2000/svg" d="M278 639Q289 625 295 636L290 680Q285 699 273 701H266L270 668Z" fill="#000000" fill-opacity=".20" />
+<path xmlns="http://www.w3.org/2000/svg" d="M107 709Q183 722 274 710L267 724H119Z" fill="#000000" fill-opacity=".24" />
+<path xmlns="http://www.w3.org/2000/svg" d="M115 608Q119 582 149 577M123 672Q182 667 254 674M94 643Q106 662 106 689" fill="none" stroke="#FFFFFF" stroke-opacity=".21" stroke-width="2" />
+<path xmlns="http://www.w3.org/2000/svg" d="M450 597H460M450 666H460M847 597H857M847 666H857" stroke="#000000" stroke-opacity=".22" stroke-width="9" stroke-linecap="round" />
+<path xmlns="http://www.w3.org/2000/svg" d="M450 595H460M450 664H460M847 595H857M847 664H857" stroke="#D7C39A" stroke-width="5" stroke-linecap="round" />
+<path xmlns="http://www.w3.org/2000/svg" d="M622 729V758M622 749L556 778M622 749L688 778" stroke="url(#study-metal)" stroke-width="13" stroke-linecap="round" />
+<circle xmlns="http://www.w3.org/2000/svg" cx="548" cy="783" r="11" fill="#202A2F" />
+<circle xmlns="http://www.w3.org/2000/svg" cx="696" cy="783" r="11" fill="#202A2F" />
+<path xmlns="http://www.w3.org/2000/svg" d="M622 745L613 785" stroke="#344047" stroke-width="11" stroke-linecap="round" />
+<circle xmlns="http://www.w3.org/2000/svg" cx="611" cy="789" r="10" fill="#202A2F" />
+<path xmlns="http://www.w3.org/2000/svg" d="M549 777L555 773M689 777L694 780M614 784L609 787" stroke="#A9B3B4" stroke-opacity=".5" stroke-width="3" />
+<path xmlns="http://www.w3.org/2000/svg" d="M120 719L103 766M263 719L282 766" stroke="#513A30" stroke-width="13" stroke-linecap="round" />
+<path xmlns="http://www.w3.org/2000/svg" d="M119 724L109 761M264 725L275 759" stroke="#FFFFFF" stroke-opacity=".16" stroke-width="3" />
+<path xmlns="http://www.w3.org/2000/svg" d="M344 518Q395 515 450 518M352 522L475 522M749 518Q803 515 878 519M766 523H868" fill="none" stroke="#FFFFFF" stroke-opacity=".18" stroke-width="1.5" />
+<path xmlns="http://www.w3.org/2000/svg" d="M335 541Q398 536 460 541M729 542Q813 537 887 541M366 585Q399 582 439 586M369 609Q399 612 439 608M367 654Q399 651 442 655M402 684L451 684M774 585Q805 582 837 586M777 612L849 612M776 653Q806 651 835 655M779 684L851 684" fill="none" stroke="#000000" stroke-opacity=".10" stroke-width="1.5" />
+<path xmlns="http://www.w3.org/2000/svg" d="M365 588H420M370 613H447M404 687H458M774 590H835M782 687H846M958 276H1036M1039 389H1106" fill="none" stroke="#FFFFFF" stroke-opacity=".10" stroke-width="1.5" />
+<path xmlns="http://www.w3.org/2000/svg" d="M540 618Q548 612 555 614M650 615Q670 614 680 622M549 678Q557 684 569 684M642 682Q664 681 675 674" fill="none" stroke="#000000" stroke-opacity=".12" stroke-width="2" />
+<path xmlns="http://www.w3.org/2000/svg" d="M146 602Q168 596 191 600M218 604Q235 608 246 616M134 691L151 693M223 695L245 692" fill="none" stroke="#000000" stroke-opacity=".12" stroke-width="2" />
+<rect xmlns="http://www.w3.org/2000/svg" x="500" y="326" width="244" height="174" rx="14" fill="#273238" />
+<rect xmlns="http://www.w3.org/2000/svg" x="514" y="340" width="216" height="144" rx="5" fill="url(#study-screen)" />
+<path xmlns="http://www.w3.org/2000/svg" d="M532 460L580 408L618 438L674 378L714 460Z" fill="#4A8793" fill-opacity=".72" />
+<circle xmlns="http://www.w3.org/2000/svg" cx="677" cy="384" r="17" fill="#EDC76C" />
+<path xmlns="http://www.w3.org/2000/svg" d="M518 344H600L538 480H518Z" fill="#FFFFFF" fill-opacity=".11" />
+<path xmlns="http://www.w3.org/2000/svg" d="M604 344H621L557 480H540Z" fill="#FFFFFF" fill-opacity=".035" />
+<path xmlns="http://www.w3.org/2000/svg" d="M508 349Q508 334 522 334H724" fill="none" stroke="#FFFFFF" stroke-opacity=".29" stroke-width="2" />
+<rect xmlns="http://www.w3.org/2000/svg" x="603" y="500" width="38" height="12" fill="#344047" />
+<path xmlns="http://www.w3.org/2000/svg" d="M565 513H679" stroke="#344047" stroke-width="8" stroke-linecap="round" />
+<rect xmlns="http://www.w3.org/2000/svg" x="700" y="532" width="118" height="12" rx="6" fill="#252F34" />
+<ellipse xmlns="http://www.w3.org/2000/svg" cx="838" cy="538" rx="16" ry="10" fill="#252F34" />
+<ellipse xmlns="http://www.w3.org/2000/svg" cx="426" cy="518" rx="27" ry="7" fill="#1F292E" fill-opacity=".24" />
+<circle xmlns="http://www.w3.org/2000/svg" cx="426" cy="510" r="19" fill="#34434A" />
+<path xmlns="http://www.w3.org/2000/svg" d="M426 495V415L470 371" fill="none" stroke="#34434A" stroke-width="10" stroke-linecap="round" />
+<path xmlns="http://www.w3.org/2000/svg" d="M454 354H514L491 398H433Z" fill="#D9A34D" />
+<path xmlns="http://www.w3.org/2000/svg" d="M441 398H486" stroke="#F9E9B8" stroke-width="8" stroke-linecap="round" />
+<path xmlns="http://www.w3.org/2000/svg" d="M439 402L370 513H534L486 402Z" fill="#FFD98B" fill-opacity=".09" />
+<path xmlns="http://www.w3.org/2000/svg" d="M398 513H514L540 524H375Z" fill="#FFE6A2" fill-opacity=".20" />
+<path xmlns="http://www.w3.org/2000/svg" d="M454 354H514L507 367H450Z" fill="#FFFFFF" fill-opacity=".23" />
+<path xmlns="http://www.w3.org/2000/svg" d="M433 397L441 382H497L491 398Z" fill="#000000" fill-opacity=".16" />
+<rect xmlns="http://www.w3.org/2000/svg" x="968" y="220" width="25" height="50" rx="2" fill="#C7795E" />
+<rect xmlns="http://www.w3.org/2000/svg" x="998" y="210" width="22" height="60" rx="2" fill="#5D7B91" />
+<rect xmlns="http://www.w3.org/2000/svg" x="1025" y="230" width="38" height="40" rx="2" fill="#D4AD59" />
+<path xmlns="http://www.w3.org/2000/svg" d="M1080 266C1058 234 1071 204 1100 218C1112 188 1140 211 1121 267Z" fill="#56795C" />
+<rect xmlns="http://www.w3.org/2000/svg" x="1081" y="258" width="43" height="20" rx="4" fill="#C78362" />
+<rect xmlns="http://www.w3.org/2000/svg" x="972" y="350" width="22" height="32" fill="#627A9A" />
+<rect xmlns="http://www.w3.org/2000/svg" x="999" y="338" width="25" height="44" fill="#CA7D5B" />
+<rect xmlns="http://www.w3.org/2000/svg" x="1029" y="352" width="34" height="30" fill="#D0B15D" />
+<circle xmlns="http://www.w3.org/2000/svg" cx="1091" cy="353" r="23" fill="#E8E1D3" />
+<path xmlns="http://www.w3.org/2000/svg" d="M1091 353V337M1091 353L1102 361" stroke="#3A484E" stroke-width="4" stroke-linecap="round" />
+<path xmlns="http://www.w3.org/2000/svg" d="M972 225V267M1002 215V267M1029 234V267M975 354V379M1003 342V379M1033 357V379" stroke="#FFFFFF" stroke-opacity=".25" stroke-width="2" />
+<path xmlns="http://www.w3.org/2000/svg" d="M970 235H990M1000 224H1017M1027 243H1060M1000 350H1021" stroke="#EBD9B7" stroke-opacity=".48" stroke-width="2" />
+<path xmlns="http://www.w3.org/2000/svg" d="M1082 266Q1100 271 1124 265V273Q1106 281 1084 275Z" fill="#000000" fill-opacity=".15" />
+<rect xmlns="http://www.w3.org/2000/svg" x="783" y="500" width="92" height="16" rx="3" fill="#E6DED0" />
+<rect xmlns="http://www.w3.org/2000/svg" x="775" y="483" width="98" height="17" rx="3" fill="#CC765B" />
+<rect xmlns="http://www.w3.org/2000/svg" x="795" y="466" width="78" height="17" rx="3" fill="#587986" />
+<path xmlns="http://www.w3.org/2000/svg" d="M1040 548C1010 514 1020 476 1049 491C1059 459 1096 470 1086 505C1119 496 1131 534 1098 552Z" fill="#477153" />
+<path xmlns="http://www.w3.org/2000/svg" d="M1065 550V486M1065 522L1038 505M1066 513L1090 495" stroke="#31513D" stroke-width="5" />
+<path xmlns="http://www.w3.org/2000/svg" d="M1034 548H1104L1093 594H1045Z" fill="#D8CAB1" />
+<path xmlns="http://www.w3.org/2000/svg" d="M1034 548Q1069 559 1104 548L1101 561Q1069 569 1037 560Z" fill="#FFFFFF" fill-opacity=".26" />
+<path xmlns="http://www.w3.org/2000/svg" d="M1081 560L1101 556L1093 594H1077Z" fill="#000000" fill-opacity=".13" />
+<path xmlns="http://www.w3.org/2000/svg" d="M1044 568L1048 586M1050 570L1053 588" stroke="#FFFFFF" stroke-opacity=".23" stroke-width="2" />
+<path xmlns="http://www.w3.org/2000/svg" d="M1047 527Q1028 500 1036 496Q1057 502 1065 526ZM1072 518Q1073 488 1085 481Q1092 505 1072 535ZM1082 538Q1102 512 1114 518Q1116 536 1087 546Z" fill="#FFFFFF" fill-opacity=".13" />
+<path xmlns="http://www.w3.org/2000/svg" d="M799 471H867M779 489H865M789 506H867" stroke="#FFFFFF" stroke-opacity=".24" stroke-width="2" />
+<path xmlns="http://www.w3.org/2000/svg" d="M735 0V56" stroke="#354148" stroke-width="5" />
+<path xmlns="http://www.w3.org/2000/svg" d="M688 91L719 54H751L782 91Z" fill="#F4E8CF" />
+<ellipse xmlns="http://www.w3.org/2000/svg" cx="735" cy="91" rx="49" ry="10" fill="#DDB560" />
+<path xmlns="http://www.w3.org/2000/svg" d="M735 101V130" stroke="#F5D581" stroke-opacity=".23" stroke-width="78" />
+</g>
 </svg>

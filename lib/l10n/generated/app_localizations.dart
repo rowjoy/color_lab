@@ -95,6 +95,72 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[Locale('en')];
 
+  /// Illustrated room comparison section.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare'**
+  String get roomCompare;
+
+  /// Copy the editable colors into comparison baseline A.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin current colors as A'**
+  String get roomComparePin;
+
+  /// Display pinned comparison colors.
+  ///
+  /// In en, this message translates to:
+  /// **'A · Pinned colors'**
+  String get roomCompareA;
+
+  /// Dismiss the temporary comparison.
+  ///
+  /// In en, this message translates to:
+  /// **'Current colors'**
+  String get roomCompareCurrent;
+
+  /// Show last saved colors or grayscale for a new design.
+  ///
+  /// In en, this message translates to:
+  /// **'Original · Last saved colors'**
+  String get roomCompareOriginal;
+
+  /// Temporary grayscale comparison, preserving edits.
+  ///
+  /// In en, this message translates to:
+  /// **'Black & white preview'**
+  String get roomCompareGrayscale;
+
+  /// Compare a copied saved design.
+  ///
+  /// In en, this message translates to:
+  /// **'B · {name}'**
+  String roomCompareVariant(String name);
+
+  /// Explains non-destructive comparison behavior.
+  ///
+  /// In en, this message translates to:
+  /// **'Comparisons preserve your edits. Original shows your last saved colors, or black & white for a new design.'**
+  String get roomCompareHint;
+
+  /// Clean illustrated room output dimensions.
+  ///
+  /// In en, this message translates to:
+  /// **'Room PNG · 2400 × 1600'**
+  String get roomExportArtwork;
+
+  /// Separate palette card with content-sized height.
+  ///
+  /// In en, this message translates to:
+  /// **'Palette card · 1200 px wide'**
+  String get roomExportPaletteCard;
+
+  /// Export comparison selection policy.
+  ///
+  /// In en, this message translates to:
+  /// **'Exports the view shown now. The palette card is available for colored views.'**
+  String get roomExportDisplayed;
+
   /// Room model setup: Use my photo
   ///
   /// In en, this message translates to:
@@ -484,6 +550,330 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{files} model files · {bytes} bytes'**
   String modelsSummary(int files, int bytes);
+
+  /// Unsupported recoverable room revision or region snapshot. No ineffective retry action is offered.
+  ///
+  /// In en, this message translates to:
+  /// **'A draft from a newer app version can’t be opened yet. It is kept safely on this device.'**
+  String get roomDraftUnavailable;
+
+  /// Illustrated room editor control or accessible surface label.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a Look → Change a Surface → Save'**
+  String get roomEditFlow;
+
+  /// Illustrated room editor control or accessible surface label.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a Look'**
+  String get roomChooseLook;
+
+  /// Illustrated room editor control or accessible surface label.
+  ///
+  /// In en, this message translates to:
+  /// **'Change a Surface'**
+  String get roomChangeSurface;
+
+  /// Illustrated room editor control or accessible surface label.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply Complete Look'**
+  String get roomApplyCompleteLook;
+
+  /// Illustrated room editor control or accessible surface label.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview — apply to change your room'**
+  String get roomLookPreview;
+
+  /// Illustrated room editor control or accessible surface label.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get roomSave;
+
+  /// Illustrated room editor control or accessible surface label.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get roomUpdate;
+
+  /// Illustrated room editor control or accessible surface label.
+  ///
+  /// In en, this message translates to:
+  /// **'Save a Copy'**
+  String get roomSaveCopy;
+
+  /// Illustrated room editor control or accessible surface label.
+  ///
+  /// In en, this message translates to:
+  /// **'My Designs'**
+  String get roomMyDesigns;
+
+  /// Illustrated room editor control or accessible surface label.
+  ///
+  /// In en, this message translates to:
+  /// **'My Palettes'**
+  String get roomMyPalettes;
+
+  /// Illustrated room editor control or accessible surface label.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get roomUndo;
+
+  /// Illustrated room editor control or accessible surface label.
+  ///
+  /// In en, this message translates to:
+  /// **'Redo'**
+  String get roomRedo;
+
+  /// Illustrated room editor control or accessible surface label.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get roomSaving;
+
+  /// Illustrated room editor control or accessible surface label.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get roomSaved;
+
+  /// Illustrated room editor control or accessible surface label.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft could not be saved. Your changes are still here.'**
+  String get roomDraftFailed;
+
+  /// Illustrated room editor control or accessible surface label.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get roomRetry;
+
+  /// Illustrated room editor control or accessible surface label.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom color'**
+  String get roomCustomColor;
+
+  /// Illustrated room editor control or accessible surface label.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get roomClose;
+
+  /// Illustrated room editor control or accessible surface label.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved palettes yet.'**
+  String get roomNoPalettes;
+
+  /// Illustrated room editor control or accessible surface label.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load your palettes.'**
+  String get roomPalettesFailed;
+
+  /// Illustrated room editor control or accessible surface label.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading…'**
+  String get roomLoading;
+
+  /// Illustrated room editor control or accessible surface label.
+  ///
+  /// In en, this message translates to:
+  /// **'Back wall'**
+  String get roomWallBack;
+
+  /// Illustrated room editor control or accessible surface label.
+  ///
+  /// In en, this message translates to:
+  /// **'Side wall'**
+  String get roomWallSide;
+
+  /// Illustrated room editor control or accessible surface label.
+  ///
+  /// In en, this message translates to:
+  /// **'Accent wall'**
+  String get roomWallAccent;
+
+  /// Illustrated room editor control or accessible surface label.
+  ///
+  /// In en, this message translates to:
+  /// **'Desk'**
+  String get roomDesk;
+
+  /// Illustrated room editor control or accessible surface label.
+  ///
+  /// In en, this message translates to:
+  /// **'Chair'**
+  String get roomChair;
+
+  /// Illustrated room editor control or accessible surface label.
+  ///
+  /// In en, this message translates to:
+  /// **'Shelves'**
+  String get roomShelves;
+
+  /// Localized illustrated-room region label.
+  ///
+  /// In en, this message translates to:
+  /// **'Console'**
+  String get roomConsole;
+
+  /// Localized illustrated-room region label.
+  ///
+  /// In en, this message translates to:
+  /// **'Sofa'**
+  String get roomSofa;
+
+  /// Localized illustrated-room region label.
+  ///
+  /// In en, this message translates to:
+  /// **'Accent chair'**
+  String get roomAccentChair;
+
+  /// Localized illustrated-room region label.
+  ///
+  /// In en, this message translates to:
+  /// **'Coffee table'**
+  String get roomCoffeeTable;
+
+  /// Localized illustrated-room region label.
+  ///
+  /// In en, this message translates to:
+  /// **'Wardrobe'**
+  String get roomWardrobe;
+
+  /// Localized illustrated-room region label.
+  ///
+  /// In en, this message translates to:
+  /// **'Left bedside table'**
+  String get roomBedsideTableLeft;
+
+  /// Localized illustrated-room region label.
+  ///
+  /// In en, this message translates to:
+  /// **'Right bedside table'**
+  String get roomBedsideTableRight;
+
+  /// Localized illustrated-room region label.
+  ///
+  /// In en, this message translates to:
+  /// **'Bed'**
+  String get roomBed;
+
+  /// Localized illustrated-room region label.
+  ///
+  /// In en, this message translates to:
+  /// **'Sideboard'**
+  String get roomSideboard;
+
+  /// Localized illustrated-room region label.
+  ///
+  /// In en, this message translates to:
+  /// **'Back left chair'**
+  String get roomChairBackLeft;
+
+  /// Localized illustrated-room region label.
+  ///
+  /// In en, this message translates to:
+  /// **'Back right chair'**
+  String get roomChairBackRight;
+
+  /// Localized illustrated-room region label.
+  ///
+  /// In en, this message translates to:
+  /// **'Front left chair'**
+  String get roomChairFrontLeft;
+
+  /// Localized illustrated-room region label.
+  ///
+  /// In en, this message translates to:
+  /// **'Front right chair'**
+  String get roomChairFrontRight;
+
+  /// Localized illustrated-room region label.
+  ///
+  /// In en, this message translates to:
+  /// **'Dining table'**
+  String get roomDiningTable;
+
+  /// Localized illustrated-room region label.
+  ///
+  /// In en, this message translates to:
+  /// **'Upper left cabinets'**
+  String get roomCabinetUpperLeft;
+
+  /// Localized illustrated-room region label.
+  ///
+  /// In en, this message translates to:
+  /// **'Lower left cabinets'**
+  String get roomCabinetLowerLeft;
+
+  /// Localized illustrated-room region label.
+  ///
+  /// In en, this message translates to:
+  /// **'Upper right cabinets'**
+  String get roomCabinetUpperRight;
+
+  /// Localized illustrated-room region label.
+  ///
+  /// In en, this message translates to:
+  /// **'Lower right cabinets'**
+  String get roomCabinetLowerRight;
+
+  /// Localized illustrated-room region label.
+  ///
+  /// In en, this message translates to:
+  /// **'Island'**
+  String get roomIsland;
+
+  /// Localized illustrated-room region label.
+  ///
+  /// In en, this message translates to:
+  /// **'Vanity'**
+  String get roomVanity;
+
+  /// Localized illustrated-room region label.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage'**
+  String get roomStorage;
+
+  /// Illustrated room editor control or accessible surface label.
+  ///
+  /// In en, this message translates to:
+  /// **'All Walls'**
+  String get roomWalls;
+
+  /// Illustrated room editor control or accessible surface label.
+  ///
+  /// In en, this message translates to:
+  /// **'Ceiling'**
+  String get roomCeiling;
+
+  /// Illustrated room editor control or accessible surface label.
+  ///
+  /// In en, this message translates to:
+  /// **'Floor'**
+  String get roomFloor;
+
+  /// Illustrated room editor control or accessible surface label.
+  ///
+  /// In en, this message translates to:
+  /// **'Furniture'**
+  String get roomFurniture;
+
+  /// No description provided for @roomSelectedSurface.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected: {name}'**
+  String roomSelectedSurface(String name);
 
   /// Compact product name shown inside the app.
   ///
@@ -2074,6 +2464,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancel'**
   String get roomDialogCancel;
+
+  /// Original Soft Linen starter palette name.
+  ///
+  /// In en, this message translates to:
+  /// **'Soft Linen'**
+  String get illustratedPaletteSoftLinenName;
+
+  /// Original Soft Linen starter palette description.
+  ///
+  /// In en, this message translates to:
+  /// **'Soft neutrals with a deeper warm accent.'**
+  String get illustratedPaletteSoftLinenDescription;
+
+  /// Original Quiet Sage starter palette name.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet Sage'**
+  String get illustratedPaletteQuietSageName;
+
+  /// Original Quiet Sage starter palette description.
+  ///
+  /// In en, this message translates to:
+  /// **'Muted greens with a gentle neutral contrast.'**
+  String get illustratedPaletteQuietSageDescription;
+
+  /// Original Airy Slate starter palette name.
+  ///
+  /// In en, this message translates to:
+  /// **'Airy Slate'**
+  String get illustratedPaletteAirySlateName;
+
+  /// Original Airy Slate starter palette description.
+  ///
+  /// In en, this message translates to:
+  /// **'Pale cool tones with a deeper blue-gray accent.'**
+  String get illustratedPaletteAirySlateDescription;
+
+  /// Original Clay and Cream starter palette name.
+  ///
+  /// In en, this message translates to:
+  /// **'Clay and Cream'**
+  String get illustratedPaletteClayAndCreamName;
+
+  /// Original Clay and Cream starter palette description.
+  ///
+  /// In en, this message translates to:
+  /// **'Cream and earthy tones with a dark brown accent.'**
+  String get illustratedPaletteClayAndCreamDescription;
+
+  /// Original Mist and Ink starter palette name.
+  ///
+  /// In en, this message translates to:
+  /// **'Mist and Ink'**
+  String get illustratedPaletteMistAndInkName;
+
+  /// Original Mist and Ink starter palette description.
+  ///
+  /// In en, this message translates to:
+  /// **'Light gray and blue tones with a dark ink accent.'**
+  String get illustratedPaletteMistAndInkDescription;
+
+  /// Original Sunwashed Olive starter palette name.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunwashed Olive'**
+  String get illustratedPaletteSunwashedOliveName;
+
+  /// Original Sunwashed Olive starter palette description.
+  ///
+  /// In en, this message translates to:
+  /// **'Warm yellow and olive tones with a deep green accent.'**
+  String get illustratedPaletteSunwashedOliveDescription;
+
+  /// Illustrated Room original palette guide copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Why these looks?'**
+  String get illustratedPaletteGuideTitle;
+
+  /// Illustrated Room original palette guide copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Close palette guide'**
+  String get illustratedPaletteGuideClose;
+
+  /// Illustrated Room original palette guide copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Original color combinations for exploring your room. Each palette supplies wall, ceiling, floor and furniture colors.'**
+  String get illustratedPaletteGuideIntro;
+
+  /// Illustrated Room original palette guide copy.
+  ///
+  /// In en, this message translates to:
+  /// **'This is a non-calibrated display preview. Screen calibration, lighting, surface texture, paint finish and surrounding colors can change appearance. Compare physical samples in your room before buying paint.'**
+  String get illustratedPalettePreviewLimit;
+
+  /// Illustrated Room original palette guide copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting look'**
+  String get illustratedPaletteRecommended;
+
+  /// Illustrated Room original palette guide copy.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}, Starting look'**
+  String illustratedPaletteRecommendedLabel(String name);
 }
 
 class _AppLocalizationsDelegate

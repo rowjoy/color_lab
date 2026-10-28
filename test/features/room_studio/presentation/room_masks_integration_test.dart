@@ -2979,9 +2979,9 @@ void main() {
       expect(container.read(roomColorProvider).hex, labHex);
       final study = container.read(illustratedRoomProvider).draftFor('study')!;
       expect(study.colors!.wall.hex, labHex);
-      expect(study.colors!.ceiling.hex, '#F8F4EB');
-      expect(study.colors!.floor.hex, '#C6AC84');
-      expect(study.colors!.furniture.hex, '#654A39');
+      expect(study.colors!.ceiling.hex, '#B7C2A3');
+      expect(study.colors!.floor.hex, '#78866B');
+      expect(study.colors!.furniture.hex, '#4E5B4A');
       expect(container.read(roomMaskProvider).draft, same(draft));
       expect(container.read(colorHistoryProvider).requireValue, history);
       await _tap(tester, _key('room-editor-back'));

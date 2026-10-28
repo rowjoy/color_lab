@@ -6,7 +6,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:vector_graphics/vector_graphics.dart' as vector_graphics;
 
 import '../domain/illustrated_room_draft.dart';
-import '../rendering/illustrated_room_color_mapper.dart';
+import '../presentation/illustrated_room_region_artwork.dart';
+import '../../../core/vector_regions/application/vector_region_transform.dart';
+import 'illustrated_room_png.dart';
 
 abstract interface class IllustratedRoomArtworkEncoder {
   Future<Uint8List> encodePng(IllustratedRoomDraft draft);
@@ -40,18 +42,14 @@ final class SvgIllustratedRoomArtworkEncoder
     : _loadPicture = loadPicture ?? _loadSvgPicture;
 
   static const _sourceSize = ui.Size(1200, 800);
-  static const _outputWidth = 2400;
-  static const _outputHeight = 1600;
+  static const outputWidth = 2400;
+  static const outputHeight = 1600;
   static const _outputBounds = ui.Rect.fromLTWH(0, 0, 2400, 1600);
 
   final IllustratedRoomPictureLoader _loadPicture;
 
   @override
   Future<Uint8List> encodePng(IllustratedRoomDraft draft) async {
-    if (draft.mode != IllustratedRoomVisualMode.colored) {
-      throw const IllustratedRoomRenderException();
-    }
-
     ui.Picture? source;
     ui.Picture? scaled;
     ui.PictureRecorder? recorder;
@@ -74,10 +72,10 @@ final class SvgIllustratedRoomArtworkEncoder
       assert(canvas.getSaveCount() == 1);
       scaled = recorder.endRecording();
       recorder = null;
-      image = await scaled.toImage(_outputWidth, _outputHeight);
+      image = await scaled.toImage(outputWidth, outputHeight);
       final data = await image.toByteData(format: ui.ImageByteFormat.png);
       if (data == null) throw const IllustratedRoomRenderException();
-      output = Uint8List.fromList(
+      output = cleanIllustratedRoomPng(
         data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
       );
     } catch (_, stackTrace) {
@@ -129,11 +127,24 @@ final class SvgIllustratedRoomArtworkEncoder
   static Future<IllustratedRoomLoadedPicture> _loadSvgPicture(
     IllustratedRoomDraft draft,
   ) async {
+    if (draft.template.regionAssetPath != null) {
+      final artwork = await StudyRoomRegionArtwork.loadFor(draft.template);
+      final recorder = ui.PictureRecorder();
+      artwork.draw(
+        ui.Canvas(recorder),
+        draft,
+        VectorRegionTransform.fit(
+          intrinsicSize: artwork.definition.intrinsicSize,
+          viewport: _sourceSize,
+        ),
+      );
+      return IllustratedRoomLoadedPicture(
+        picture: recorder.endRecording(),
+        size: artwork.definition.intrinsicSize,
+      );
+    }
     final info = await vector_graphics.vg.loadPicture(
-      SvgAssetLoader(
-        draft.template.assetPath,
-        colorMapper: IllustratedRoomColorMapper(draft),
-      ),
+      SvgAssetLoader(draft.template.assetPath),
       null,
     );
     return IllustratedRoomLoadedPicture(picture: info.picture, size: info.size);

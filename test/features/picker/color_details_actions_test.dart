@@ -137,9 +137,9 @@ void main() {
       expect(container.read(roomColorProvider).hex, '#00FFFF');
       final draft = container.read(illustratedRoomProvider).draftFor('study')!;
       expect(draft.colors!.wall.hex, '#00FFFF');
-      expect(draft.colors!.ceiling.hex, '#F8F4EB');
-      expect(draft.colors!.floor.hex, '#C6AC84');
-      expect(draft.colors!.furniture.hex, '#654A39');
+      expect(draft.colors!.ceiling.hex, '#B7C2A3');
+      expect(draft.colors!.floor.hex, '#78866B');
+      expect(draft.colors!.furniture.hex, '#4E5B4A');
       expect(find.byType(IllustratedRoomScreen), findsOneWidget);
     },
   );
@@ -149,7 +149,7 @@ void main() {
   ) async {
     final container = await open(tester, RecordingShare());
     final controller = container.read(illustratedRoomProvider.notifier);
-    controller.applyPalette('warm-natural');
+    controller.applyPalette('soft-linen');
     final before = container.read(illustratedRoomProvider);
     final roomBefore = container.read(roomColorProvider);
     final routeBefore = container.read(appRouterProvider).state.uri.path;

@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "catalogueRevision": 1,
+  "roles": [
+    "wall",
+    "ceiling",
+    "floor",
+    "furniture"
+  ],
+  "palettes": [
+    {
+      "id": "soft-linen",
+      "nameKey": "illustratedPaletteSoftLinenName",
+      "descriptionKey": "illustratedPaletteSoftLinenDescription",
+      "colors": [
+        "#F2E9DA",
+        "#D8C7AC",
+        "#A89073",
+        "#5C554D"
+      ]
+    },
+    {
+      "id": "quiet-sage",
+      "nameKey": "illustratedPaletteQuietSageName",
+      "descriptionKey": "illustratedPaletteQuietSageDescription",
+      "colors": [
+        "#ECE9DF",
+        "#B7C2A3",
+        "#78866B",
+        "#4E5B4A"
+      ]
+    },
+    {
+      "id": "airy-slate",
+      "nameKey": "illustratedPaletteAirySlateName",
+      "descriptionKey": "illustratedPaletteAirySlateDescription",
+      "colors": [
+        "#F2F4F3",
+        "#C9D3D8",
+        "#8396A5",
+        "#3F5362"
+      ]
+    },
+    {
+      "id": "clay-and-cream",
+      "nameKey": "illustratedPaletteClayAndCreamName",
+      "descriptionKey": "illustratedPaletteClayAndCreamDescription",
+      "colors": [
+        "#F5EBDD",
+        "#D79A7A",
+        "#9B6553",
+        "#5E4A42"
+      ]
+    },
+    {
+      "id": "mist-and-ink",
+      "nameKey": "illustratedPaletteMistAndInkName",
+      "descriptionKey": "illustratedPaletteMistAndInkDescription",
+      "colors": [
+        "#ECEFF1",
+        "#B8C4CE",
+        "#667989",
+        "#263746"
+      ]
+    },
+    {
+      "id": "sunwashed-olive",
+      "nameKey": "illustratedPaletteSunwashedOliveName",
+      "descriptionKey": "illustratedPaletteSunwashedOliveDescription",
+      "colors": [
+        "#F3E7C7",
+        "#D8B96A",
+        "#8B8F58",
+        "#4F5A3F"
+      ]
+    }
+  ]
+}

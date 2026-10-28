@@ -1,0 +1,16 @@
+TintAtlas Illustrated Room starter palettes v1
+
+Copyright 2026 TintAtlas contributors.
+These six original combinations and their generic descriptive text were authored
+for TintAtlas. They use standard sRGB HEX color values, ordered as wall, ceiling,
+floor and furniture. No external shade catalogue, imagery, recommendations or
+article wording was used. The combinations are not calibrated paint matches.
+
+Palette data: assets/rooms/palettes/starter_palettes.v1.json
+Schema version: 1. Catalogue revision: 1.
+Palette IDs: soft-linen, quiet-sage, airy-slate, clay-and-cream, mist-and-ink,
+sunwashed-olive.
+
+Permission is granted to use, copy, modify and distribute this palette data and
+its original descriptions for any purpose, with or without fee, provided this
+notice is retained. This data is provided AS IS, without warranty of any kind.

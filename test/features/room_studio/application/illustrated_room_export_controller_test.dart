@@ -1,15 +1,23 @@
 import 'dart:async';
-import 'dart:typed_data';
+import 'dart:io';
 
 import 'package:color_lab/features/room_studio/application/illustrated_room_artwork_encoder.dart';
 import 'package:color_lab/features/room_studio/application/illustrated_room_export_controller.dart';
 import 'package:color_lab/features/room_studio/application/room_gallery_writer.dart';
+import 'package:color_lab/features/room_studio/application/room_image_export_service.dart';
+import 'package:color_lab/features/room_studio/application/illustrated_room_palette_card_encoder.dart';
 import 'package:color_lab/features/room_studio/domain/illustrated_room.dart';
 import 'package:color_lab/features/room_studio/domain/illustrated_room_draft.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
+import 'package:color_lab/features/room_studio/application/illustrated_room_export_request.dart';
+import '../../../support/room_png_fixtures.dart';
+import '../../../support/illustrated_room_test_export_service.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   final now = DateTime.utc(2026, 10, 25, 4, 0, 0, 123);
 
   ProviderContainer containerFor({
@@ -20,7 +28,9 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         illustratedRoomArtworkEncoderProvider.overrideWithValue(encoder),
-        roomGalleryWriterProvider.overrideWithValue(writer),
+        roomImageExportServiceProvider.overrideWithValue(
+          IllustratedRoomTestExportService(writer),
+        ),
         roomExportClockProvider.overrideWithValue(clock ?? () => now),
       ],
     );
@@ -29,10 +39,171 @@ void main() {
   }
 
   test(
+    'revoked request cannot hand off after a gated encoder completes',
+    () async {
+      var current = true;
+      final gate = Completer<Uint8List>();
+      final writer = _FakeWriter();
+      final container = containerFor(
+        encoder: _FakeEncoder((_) => gate.future),
+        writer: writer,
+      );
+      final pending = container
+          .read(illustratedRoomExportProvider.notifier)
+          .saveToGallery(_coloredDraft(), isCurrent: () => current);
+      current = false;
+      gate.complete(_png());
+      expect(_failure(await pending), IllustratedRoomExportFailure.interrupted);
+      expect(writer.calls, 0);
+    },
+  );
+
+  for (final stage in ['permission', 'gallery-temp', 'share-temp']) {
+    test(
+      'lifecycle revocation during $stage prevents terminal native handoff',
+      () async {
+        final root = await Directory.systemTemp.createTemp(
+          'illustrated-export-guard-',
+        );
+        addTearDown(() => root.delete(recursive: true));
+        final entered = Completer<void>();
+        final release = Completer<void>();
+        var nativeCalls = 0;
+        Future<Directory> temp() async {
+          if (stage != 'permission') {
+            entered.complete();
+            await release.future;
+          }
+          return root;
+        }
+
+        final gallery = GalRoomGalleryWriter(
+          platform: TargetPlatform.android,
+          isWeb: false,
+          temporaryRoot: temp,
+          requestAccess: () async {
+            if (stage == 'permission') {
+              entered.complete();
+              await release.future;
+            }
+            return true;
+          },
+          putImage: (_, {album}) async {
+            nativeCalls++;
+          },
+        );
+        const shareChannel = MethodChannel('dev.fluttercommunity.plus/share');
+        final messenger =
+            TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+        messenger.setMockMethodCallHandler(shareChannel, (_) async {
+          nativeCalls++;
+          return 'completed';
+        });
+        addTearDown(
+          () => messenger.setMockMethodCallHandler(shareChannel, null),
+        );
+        final container = ProviderContainer(
+          overrides: [
+            illustratedRoomArtworkEncoderProvider.overrideWithValue(
+              _FakeEncoder((_) async => _png()),
+            ),
+            roomImageExportServiceProvider.overrideWithValue(
+              PlatformRoomImageExportService(
+                gallery: gallery,
+                temporaryRoot: temp,
+              ),
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
+        final request = IllustratedRoomExportRequest(ownsRequest: () => true);
+        addTearDown(request.dispose);
+        final controller = container.read(
+          illustratedRoomExportProvider.notifier,
+        );
+        final pending = stage == 'share-temp'
+            ? controller.share(
+                _coloredDraft(),
+                origin: const Rect.fromLTWH(0, 0, 48, 48),
+                title: 'TintAtlas',
+                isCurrent: () => request.isCurrent,
+              )
+            : controller.saveToGallery(
+                _coloredDraft(),
+                isCurrent: () => request.isCurrent,
+              );
+        await entered.future;
+        request.didChangeAppLifecycleState(AppLifecycleState.paused);
+        request.didChangeAppLifecycleState(AppLifecycleState.resumed);
+        release.complete();
+        expect(
+          _failure(await pending),
+          IllustratedRoomExportFailure.interrupted,
+        );
+        expect(nativeCalls, 0);
+        expect(await root.list().toList(), isEmpty);
+      },
+    );
+  }
+
+  test(
+    'native Share completion remains authoritative after handoff lifecycle change',
+    () async {
+      final root = await Directory.systemTemp.createTemp(
+        'illustrated-share-handed-off-',
+      );
+      addTearDown(() => root.delete(recursive: true));
+      final entered = Completer<void>();
+      final release = Completer<String>();
+      const channel = MethodChannel('dev.fluttercommunity.plus/share');
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      messenger.setMockMethodCallHandler(channel, (_) {
+        entered.complete();
+        return release.future;
+      });
+      addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
+      final container = ProviderContainer(
+        overrides: [
+          illustratedRoomArtworkEncoderProvider.overrideWithValue(
+            _FakeEncoder((_) async => _png()),
+          ),
+          roomImageExportServiceProvider.overrideWithValue(
+            PlatformRoomImageExportService(temporaryRoot: () async => root),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      final request = IllustratedRoomExportRequest(ownsRequest: () => true);
+      addTearDown(request.dispose);
+      final pending = container
+          .read(illustratedRoomExportProvider.notifier)
+          .share(
+            _coloredDraft(),
+            origin: const Rect.fromLTWH(0, 0, 48, 48),
+            title: 'TintAtlas',
+            isCurrent: () => request.isCurrent,
+          );
+      await entered.future;
+      request.didChangeAppLifecycleState(AppLifecycleState.inactive);
+      release.complete('completed');
+      expect(
+        await pending,
+        isA<IllustratedRoomExportShared>().having(
+          (r) => r.result,
+          'native result',
+          RoomShareResult.completed,
+        ),
+      );
+    },
+  );
+
+  test(
     'coalesces calls and emits exact phases, filename and detached PNG',
     () async {
       final events = <String>[];
-      final encoded = Uint8List.fromList([137, 80, 78, 71, 13, 10, 26, 10, 7]);
+      final encoded = _png();
+      final expectedBytes = Uint8List.fromList(encoded);
       final encodeGate = Completer<Uint8List>();
       final encoder = _FakeEncoder((draft) {
         events.add('encode');
@@ -62,10 +233,13 @@ void main() {
       await writer.entered.future;
       expect(events, ['encode', 'write']);
       expect(phases.last, IllustratedRoomExportPhase.saving);
-      expect(writer.fileName, 'color-lab-study-20261025T040000123Z.png');
+      expect(
+        writer.fileName,
+        'tintatlas-room-study-artwork-20261025T040000123Z.png',
+      );
       expect(identical(writer.bytes, encoded), isFalse);
       encoded.fillRange(0, encoded.length, 0);
-      expect(writer.bytes, [137, 80, 78, 71, 13, 10, 26, 10, 7]);
+      expect(writer.bytes, expectedBytes);
 
       writer.release.complete();
       final result = await first;
@@ -74,7 +248,7 @@ void main() {
         isA<IllustratedRoomExportSuccess>().having(
           (value) => value.fileName,
           'fileName',
-          'color-lab-study-20261025T040000123Z.png',
+          'tintatlas-room-study-artwork-20261025T040000123Z.png',
         ),
       );
       expect(phases, [
@@ -87,7 +261,7 @@ void main() {
     },
   );
 
-  test('grayscale fails without encoder, writer or busy state', () async {
+  test('grayscale room exports the displayed view', () async {
     var clockCalls = 0;
     final encoder = _FakeEncoder((draft) async => _png());
     final writer = _FakeWriter();
@@ -112,11 +286,11 @@ void main() {
           IllustratedRoomDraft.grayscale(IllustratedRoomCatalog.study),
         );
 
-    expect(_failure(result), IllustratedRoomExportFailure.notColored);
-    expect(encoder.calls, 0);
-    expect(writer.calls, 0);
-    expect(clockCalls, 0);
-    expect(phases, [IllustratedRoomExportPhase.idle]);
+    expect(result, isA<IllustratedRoomExportSuccess>());
+    expect(encoder.calls, 1);
+    expect(writer.calls, 1);
+    expect(clockCalls, 1);
+    expect(phases.last, IllustratedRoomExportPhase.idle);
   });
 
   test('maps render failure without reaching Gallery', () async {
@@ -212,13 +386,150 @@ void main() {
       IllustratedRoomExportPhase.idle,
     );
   });
+
+  test('rejects unverified PNG before native Gallery handoff', () async {
+    final writer = _FakeWriter();
+    final container = containerFor(
+      encoder: _FakeEncoder((_) async => Uint8List.fromList([1, 2, 3])),
+      writer: writer,
+    );
+    final result = await container
+        .read(illustratedRoomExportProvider.notifier)
+        .saveToGallery(_coloredDraft());
+    expect(_failure(result), IllustratedRoomExportFailure.renderFailed);
+    expect(writer.calls, 0);
+  });
+
+  test(
+    'palette artifact uses captured card encoder and a separate filename',
+    () async {
+      final draft = _coloredDraft();
+      final card = IllustratedRoomPaletteCard.fromDraft(
+        draft,
+        labelFor: (id) => id,
+        limitation: 'Preview only',
+      );
+      final encoder = _FakeEncoder(
+        (_) async => throw StateError('Room encoder should not run'),
+      );
+      final writer = _FakeWriter();
+      final cardEncoder = _FakeCardEncoder();
+      final container = ProviderContainer(
+        overrides: [
+          illustratedRoomArtworkEncoderProvider.overrideWithValue(encoder),
+          illustratedRoomPaletteCardEncoderProvider.overrideWithValue(
+            cardEncoder,
+          ),
+          roomImageExportServiceProvider.overrideWithValue(
+            IllustratedRoomTestExportService(writer),
+          ),
+          roomExportClockProvider.overrideWithValue(() => now),
+        ],
+      );
+      addTearDown(container.dispose);
+      final result = await container
+          .read(illustratedRoomExportProvider.notifier)
+          .saveToGallery(draft, paletteCard: card);
+      expect(
+        result,
+        isA<IllustratedRoomExportSuccess>().having(
+          (r) => r.fileName,
+          'filename',
+          'tintatlas-room-study-palette-20261025T040000123Z.png',
+        ),
+      );
+      expect(identical(cardEncoder.card, card), isTrue);
+      expect(encoder.calls, 0);
+    },
+  );
+
+  for (final nativeResult in RoomShareResult.values) {
+    test(
+      'share maps $nativeResult and captures displayed grayscale without editing',
+      () async {
+        final draft = _coloredDraft().showTemporaryGrayscale();
+        final service = _FakeShareService(nativeResult);
+        final container = ProviderContainer(
+          overrides: [
+            illustratedRoomArtworkEncoderProvider.overrideWithValue(
+              _FakeEncoder((captured) async {
+                expect(captured.displayAssignments, isNull);
+                expect(captured.assignments, draft.assignments);
+                return _png();
+              }),
+            ),
+            roomImageExportServiceProvider.overrideWithValue(service),
+          ],
+        );
+        addTearDown(container.dispose);
+        final result = await container
+            .read(illustratedRoomExportProvider.notifier)
+            .share(
+              draft,
+              origin: const Rect.fromLTWH(10, 20, 48, 48),
+              title: 'TintAtlas room preview',
+            );
+        expect(
+          result,
+          isA<IllustratedRoomExportShared>().having(
+            (r) => r.result,
+            'native result',
+            nativeResult,
+          ),
+        );
+        expect(service.origin, const Rect.fromLTWH(10, 20, 48, 48));
+        expect(service.title, 'TintAtlas room preview');
+        expect(service.photoId, startsWith('study-artwork-'));
+      },
+    );
+  }
 }
 
 IllustratedRoomDraft _coloredDraft() => IllustratedRoomDraft.grayscale(
   IllustratedRoomCatalog.study,
-).applyPalette('soft-botanical');
+).applyPalette('quiet-sage');
 
-Uint8List _png() => Uint8List.fromList([137, 80, 78, 71, 13, 10, 26, 10]);
+Uint8List _png() => roomPng();
+
+final class _FakeCardEncoder implements IllustratedRoomPaletteCardEncoder {
+  IllustratedRoomPaletteCard? card;
+  @override
+  Future<Uint8List> encodePng(IllustratedRoomPaletteCard card) async {
+    this.card = card;
+    return _png();
+  }
+}
+
+final class _FakeShareService implements RoomImageExportService {
+  _FakeShareService(this.result);
+  final RoomShareResult result;
+  Rect? origin;
+  String? title, photoId;
+  @override
+  Future<void> prepareSave({required bool Function() isCurrent}) async {}
+  @override
+  Future<void> savePng({
+    required Uint8List pngBytes,
+    required String photoId,
+    required bool Function() isCurrent,
+    void Function()? onHandoff,
+  }) async => throw StateError('Unexpected save');
+  @override
+  Future<RoomShareResult> sharePng({
+    required Uint8List pngBytes,
+    required String photoId,
+    required Rect origin,
+    required String title,
+    required bool Function() isCurrent,
+    void Function()? onHandoff,
+  }) async {
+    this.origin = origin;
+    this.title = title;
+    this.photoId = photoId;
+    expect(isCurrent(), isTrue);
+    return result;
+  }
+}
 
 IllustratedRoomExportFailure _failure(IllustratedRoomExportResult result) =>
     (result as IllustratedRoomExportFailed).failure;

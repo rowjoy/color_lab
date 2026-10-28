@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/color/color_models.dart';
 import '../domain/illustrated_room.dart';
+import '../domain/illustrated_room_assignments.dart';
 import '../domain/illustrated_room_draft.dart';
 import '../domain/illustrated_room_session.dart';
 import '../domain/room_design_repository.dart';
@@ -33,11 +34,27 @@ class IllustratedRoomController extends Notifier<IllustratedRoomSession> {
       IllustratedRoomSession.empty().activate(IllustratedRoomCatalog.study);
 
   void openTemplate(IllustratedRoomTemplate template) {
+    if (state.activeTemplateId != template.id && state.activeDraft != null) {
+      clearComparison();
+    }
     state = state.activate(template);
   }
 
   void closeEditor() {
+    if (state.activeDraft != null) clearComparison();
     state = state.closeEditor();
+  }
+
+  /// Recovery may replace only the exact untouched instance observed at load.
+  bool resumeDraft(
+    IllustratedRoomDraft recovered, {
+    required IllustratedRoomDraft expected,
+  }) {
+    if (!identical(state.draftFor(recovered.template.id), expected)) {
+      return false;
+    }
+    state = state.putDraft(recovered, activate: false);
+    return true;
   }
 
   void discardActiveChanges() {
@@ -57,6 +74,43 @@ class IllustratedRoomController extends Notifier<IllustratedRoomSession> {
     _updateActive((draft) => draft.setSurfaceColor(surface, color));
   }
 
+  void applyCompleteLook(IllustratedRoomColors colors) {
+    _updateActive((draft) => draft.applyCompleteLook(colors));
+  }
+
+  void setRegionColor(String regionId, RgbColor color) {
+    _updateActive((draft) => draft.setRegionColor(regionId, color));
+  }
+
+  void setGroupColor(String groupId, RgbColor color) {
+    _updateActive((draft) => draft.setGroupColor(groupId, color));
+  }
+
+  void undo() => _updateActive((draft) => draft.undo());
+
+  void redo() => _updateActive((draft) => draft.redo());
+
+  void pinBaseline() => _updateActive((draft) => draft.pinBaseline());
+
+  void showPinnedBaseline() =>
+      _updateActive((draft) => draft.showPinnedBaseline());
+
+  void showTemporaryOriginal() =>
+      _updateActive((draft) => draft.showTemporaryOriginal());
+
+  void setComparisonVariant(IllustratedRoomAssignments snapshot) =>
+      _updateActive((draft) => draft.setComparisonVariant(snapshot));
+
+  void restoreSnapshot(IllustratedRoomAssignments? snapshot) {
+    _updateActive((draft) => draft.restoreSnapshot(snapshot));
+  }
+
+  void showTemporaryGrayscale() {
+    _updateActive((draft) => draft.showTemporaryGrayscale());
+  }
+
+  void clearComparison() => _updateActive((draft) => draft.clearComparison());
+
   void resetToGrayscale() {
     _updateActive((draft) => draft.resetToGrayscale());
   }
@@ -71,12 +125,27 @@ class IllustratedRoomController extends Notifier<IllustratedRoomSession> {
       );
     }
     _guardReplacement(template.id, replaceDirty: replaceDirty);
+    if (design.templateRevision != 1) {
+      throw ArgumentError('Unsupported template revision.');
+    }
+    final assignments = design.snapshot.materializeForTemplate(
+      template,
+      templateRevision: design.templateRevision,
+    );
+    if (state.activeDraft != null && state.activeTemplateId != template.id) {
+      clearComparison();
+    }
     state = state.putDraft(
-      IllustratedRoomDraft.saved(
+      IllustratedRoomDraft.recovered(
         template: template,
-        colors: design.colors,
-        id: design.id,
-        name: design.name,
+        assignments: assignments,
+        savedAssignments: assignments,
+        pinnedBaseline: design.activeBaseline?.materializeForTemplate(
+          template,
+          templateRevision: design.templateRevision,
+        ),
+        savedDesignId: design.id,
+        savedName: design.name,
       ),
     );
   }
@@ -89,7 +158,11 @@ class IllustratedRoomController extends Notifier<IllustratedRoomSession> {
     );
   }
 
-  Future<SavedRoomDesign> saveDesign(String name, {String? templateId}) async {
+  Future<SavedRoomDesign> saveDesign(
+    String name, {
+    String? templateId,
+    bool asCopy = false,
+  }) async {
     final targetId = templateId ?? state.activeTemplateId;
     if (targetId == null) {
       throw StateError('Open a room before saving.');
@@ -107,7 +180,7 @@ class IllustratedRoomController extends Notifier<IllustratedRoomSession> {
       throw StateError('Choose room colors before saving.');
     }
 
-    if (!captured.isDirty && captured.savedDesignId != null) {
+    if (!asCopy && !captured.isDirty && captured.savedDesignId != null) {
       final designs = await ref.read(savedRoomDesignsProvider.future);
       for (final design in designs) {
         if (design.id == captured.savedDesignId) return design;
@@ -115,17 +188,27 @@ class IllustratedRoomController extends Notifier<IllustratedRoomSession> {
       throw const RoomDesignStorageException();
     }
 
-    final saved = await ref
-        .read(savedRoomDesignsProvider.notifier)
-        .saveDesign(
-          existingId: captured.savedDesignId,
-          name: name,
-          templateId: captured.template.id,
-          colors: colors,
-        );
+    final library = ref.read(savedRoomDesignsProvider.notifier);
+    final snapshot = RoomDesignSnapshot.fromAssignments(captured.assignments!);
+    final activeBaseline = captured.pinnedBaseline == null
+        ? null
+        : RoomDesignSnapshot.fromAssignments(captured.pinnedBaseline!);
+    final saved = asCopy || captured.savedDesignId == null
+        ? await library.saveNew(
+            name: name,
+            templateId: captured.template.id,
+            snapshot: snapshot,
+            activeBaseline: activeBaseline,
+          )
+        : await library.updateDesign(
+            captured.savedDesignId!,
+            name: name,
+            snapshot: snapshot,
+            activeBaseline: activeBaseline,
+          );
     if (ref.mounted && state.draftFor(targetId) == captured) {
       state = state.putDraft(
-        captured.markSaved(id: saved.id, name: saved.name),
+        state.draftFor(targetId)!.markSaved(id: saved.id, name: saved.name),
         activate: false,
       );
     }

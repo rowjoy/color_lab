@@ -31,9 +31,9 @@ void main() {
 
       expect(draft.mode, IllustratedRoomVisualMode.colored);
       expect(draft.colors!.wall.hex, '#123456');
-      expect(draft.colors!.ceiling.hex, '#F8F4EB');
-      expect(draft.colors!.floor.hex, '#C6AC84');
-      expect(draft.colors!.furniture.hex, '#654A39');
+      expect(draft.colors!.ceiling.hex, '#B7C2A3');
+      expect(draft.colors!.floor.hex, '#78866B');
+      expect(draft.colors!.furniture.hex, '#4E5B4A');
       expect(draft.sourcePaletteId, isNull);
       expect(draft.visualStateLabel, 'Custom combination');
       expect(draft.isDirty, isTrue);
@@ -46,11 +46,11 @@ void main() {
     () {
       final look = IllustratedRoomDraft.grayscale(
         study,
-      ).applyPalette('cool-airy');
+      ).applyPalette('airy-slate');
 
-      expect(look.sourcePaletteId, 'cool-airy');
-      expect(look.visualStateLabel, 'Cool Airy');
-      expect(look.colors, study.palette('cool-airy').colors);
+      expect(look.sourcePaletteId, 'airy-slate');
+      expect(look.visualStateLabel, 'Airy Slate');
+      expect(look.colors, study.palette('airy-slate').colors);
 
       final custom = look.setSurfaceColor(
         IllustratedRoomSurface.furniture,
@@ -66,7 +66,7 @@ void main() {
     () {
       final saved = IllustratedRoomDraft.saved(
         template: study,
-        colors: study.palette('warm-natural').colors,
+        colors: study.palette('soft-linen').colors,
         id: 'saved-1',
         name: 'Warm study',
       );
@@ -85,7 +85,7 @@ void main() {
   test('manually restoring all baseline colors clears dirty state', () {
     final baseline = IllustratedRoomDraft.saved(
       template: study,
-      colors: study.palette('soft-botanical').colors,
+      colors: study.palette('quiet-sage').colors,
       id: 'saved-1',
       name: 'Botanical study',
     );
@@ -109,7 +109,7 @@ void main() {
     () {
       final edited = IllustratedRoomDraft.grayscale(
         study,
-      ).applyPalette('warm-natural');
+      ).applyPalette('soft-linen');
       final saved = edited.markSaved(id: 'study-1', name: '  Warm study  ');
       final renamed = saved.renameSavedDesign(
         id: 'study-1',
@@ -141,7 +141,7 @@ void main() {
     () {
       final saved = IllustratedRoomDraft.saved(
         template: study,
-        colors: study.palette('cool-airy').colors,
+        colors: study.palette('airy-slate').colors,
         id: 'saved-1',
         name: 'Cool study',
       );
@@ -175,16 +175,16 @@ void main() {
   test('wall handoff starts a detached complete recommended combination', () {
     final saved = IllustratedRoomDraft.saved(
       template: study,
-      colors: study.palette('warm-natural').colors,
+      colors: study.palette('soft-linen').colors,
       id: 'saved-1',
       name: 'Warm study',
     );
     final handedOff = saved.applyWallHandoff(RgbColor.fromHex('#00FFFF'));
 
     expect(handedOff.colors!.wall.hex, '#00FFFF');
-    expect(handedOff.colors!.ceiling.hex, '#F8F4EB');
-    expect(handedOff.colors!.floor.hex, '#C6AC84');
-    expect(handedOff.colors!.furniture.hex, '#654A39');
+    expect(handedOff.colors!.ceiling.hex, '#B7C2A3');
+    expect(handedOff.colors!.floor.hex, '#78866B');
+    expect(handedOff.colors!.furniture.hex, '#4E5B4A');
     expect(handedOff.savedDesignId, isNull);
     expect(handedOff.isDirty, isTrue);
   });
