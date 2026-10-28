@@ -462,3 +462,89 @@ TalkBack/VoiceOver/keyboard physical QA; product-owner approval of the measured
 feedback threshold (under 100 ms remains a target, not an approved claim).
 No smart-mask accuracy/proposal claim, native build, full-suite pass, device
 performance result, signing, release or publishing claim is made.
+
+## Plan 04 Task 1 — external smart-mask evidence gate (2026-10-28)
+
+Base: `d2f30e4`, branch `TintAtlas`. The immutable protocol v1 remains
+`9bb3b0f379054af42598deebb4cc8a90e1a3e3a3a5cb5821c9587fc1281c31fb`.
+[Decision](smart-mask-decision.md): `DISABLED_PENDING_EVIDENCE`;
+`humanAuditStatus: pending`. No real external corpus root, manifest/file hashes,
+verified people, adjudication, or signed attestation was supplied; none is
+invented or recorded as accepted. No real evidence freeze or baseline result
+is claimed. [Human checklist](smart-mask-evidence-checklist.md) remains unsigned.
+
+The verifier retains strict loader validation and reports every validated
+license/source/working/annotation/adjudication file hash plus per-photo decoded
+hashes, category/tag coverage, and separate human-audit status. Release mode
+(`--require-adjudicated`) now also requires `--human-audit` with approved,
+hash-bound redacted metadata and a detached signed-attestation checksum.
+Acquisition inspection cannot report a release PASS. Automated validation cannot
+prove provenance, identities, independence, blindness, or truthful permission;
+owner-held human review remains mandatory. No algorithm, thresholds, UI,
+enablement, or corpus acquisition/repair is part of this change.
+
+Validation: one focused RED run of
+`flutter test --no-pub test/tool/room_recolor/benchmark_test.dart test/tool/verify_room_recolor_benchmark_test.dart --reporter expanded`
+ended **63 passed / 16 failed** on the missing audit/report contract. The single
+GREEN run of the same command ended **79 passed / 0 failed**. Tests use synthetic
+OS-temporary inputs only, not release evidence. `dart run
+tool/verify_room_recolor_benchmark.dart --help` printed usage and exited **64**
+as expected. `git diff --check` passed. Changed Dart paths were formatted; the
+formatter then exited 1 on sandbox-denied SDK telemetry metadata (formatting
+itself completed). No full suite, analyzer-wide run, native build, stage, commit,
+push, publish, real-corpus verification, or production enablement was performed.
+
+## Plan 04 Tasks 4–6 — disabled/manual-only closure (2026-10-28)
+
+Task 4 outcome: **`DISABLED_PENDING_EVIDENCE`**. The product-owner-supplied lawful
+24-photo corpus, independent blind submissions/adjudication and signed human
+audit are unavailable. No absolute corpus/audit path is recorded because none
+was supplied. The guarded real-corpus verifier was **NOT RUN**; there is no real
+exit code, PASS, manifest/file hash or freeze result. `humanAuditStatus` stays
+`pending`, the [human checklist](smart-mask-evidence-checklist.md) is unsigned,
+and protocol v1 remains pinned to
+`9bb3b0f379054af42598deebb4cc8a90e1a3e3a3a5cb5821c9587fc1281c31fb`.
+
+Task 5: **SKIPPED / BLOCKED by Task 4**, with baseline human sessions also
+unavailable. No offline recorder, baseline study, participant, session, score,
+consent, signature or timing result is manufactured. Downloaded/AI/synthetic
+images, model maps, developer self-scoring and temporary test fixtures cannot
+substitute for lawful provenance, independent annotation/adjudication or actual
+human correction sessions. `DISABLED_PENDING_CORRECTION_STUDY` is reserved for a
+later genuine corpus freeze followed by missing study evidence; the current
+earlier disposition is `DISABLED_PENDING_EVIDENCE`.
+
+Task 6 outcome: **`disabled`**, manual-only smart-mask closure under the existing
+plan/spec fallback. Production remains `disabledByEvidence`; Manual
+Add/Erase/Undo/Redo remains the existing offline path. No algorithm amendment,
+candidate/threshold tuning, enable switch, dependency, smart accuracy/usefulness
+claim, or Conditional MASK-02/03/04/07/09/10/12 / EXTMASK-01 completion is recorded.
+This closure does not resolve separately open manual device/performance gates or
+claim a public release. See the [complete decision](smart-mask-decision.md) and
+[durable externally blocked backlog](../improve/plan-04-smart-mask-incomplete.md).
+
+One bounded repository source/copy scan checked `lib`, `assets`, `README.md` and
+`docs/release`; its only matches at scan time were release-gate documentation,
+with no Smart app/asset/README control or correction label. A path inventory
+found no actual repository store draft, marketing, screenshot or ad artifact to
+inspect. Log:
+`.superpowers/sdd/2026-10-27-tintatlas-smart-mask-conditional/task-4-6-source-claim-scan.log`.
+Task 3 changes were concurrent and use their own focused visibility tests; this
+scan does not certify later source, visual/external-store content or future ads.
+Release QA must inspect the exact eventual app/store/screenshots/ads and retain
+the no-smart-controls/claims disposition while disabled. No broad/repeated
+Flutter tests, full formatter/analyzer, Android/iOS build, stage, commit, push or
+publish was performed for Tasks 4–6 documentation closure, under the user's
+verification limits. No algorithm or app source was changed by this closure.
+
+To reopen, the product owner/acquisition reviewer must supply actual lawful
+corpus evidence and complete/sign the human audit; the verifier operator must
+record the absolute owner-supplied paths and run the guarded command documented
+in the checklist, including `--require-adjudicated --human-audit`. Only an actual
+release PASS plus approved hash-bound audit permits `FROZEN_FOR_AMENDMENT`. Study
+Operations must then conduct the preregistered 8 × 6 = 48 manual sessions (two
+independent sessions per photo), with signed operational evidence and frozen
+baseline quality/timing/device/build/hash records. Only after Tasks 4–5 pass may
+the owner approve an independently calibrated algorithm amendment; an assisted
+study and every safety/reversibility/device/usefulness gate must still pass
+before enablement. The backlog names owners, acceptance checks and likely files.

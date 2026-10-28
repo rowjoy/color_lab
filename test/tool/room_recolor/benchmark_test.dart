@@ -623,6 +623,45 @@ void main() {
     },
   );
 
+  test('requires a third adjudicator identity', () {
+    corpus.editEvidence((e) => e['adjudicator'] = 'test-annotator-a');
+    expect(corpus.load, throwsFormatException);
+  });
+  test('checks chronology of both submissions', () {
+    corpus.editEvidence(
+      (e) => e['annotators'][1]['submittedAt'] = '2026-10-22T10:00:00Z',
+    );
+    expect(corpus.load, throwsFormatException);
+  });
+  test('rejects repeated coverage of a disputed pixel', () {
+    corpus.replaceMap('annotator-b', 'ownership', [0, 4, 2, 3, 4, 0]);
+    corpus.editEvidence((e) {
+      e['annotators'][1]['submissionSha256'] = Corpus.hash([
+        0,
+        4,
+        2,
+        3,
+        4,
+        0,
+        255,
+        0,
+        0,
+        0,
+        0,
+        0,
+      ]);
+      e['disputes'] = [
+        {
+          'pixels': [1, 1],
+          'decision': 'TEST ONLY: final wall label.',
+          'ownershipLabel': 1,
+          'protectionValue': 0,
+        },
+      ];
+    });
+    expect(corpus.load, throwsFormatException);
+  });
+
   test(
     'verifier accepts controlled complete corpus and reports exactly 24 photos',
     () {
@@ -630,7 +669,7 @@ void main() {
       final errors = StringBuffer();
       expect(
         verifier.verifyRoomRecolorBenchmark(
-          ['--root', corpus.root.path, '--require-adjudicated'],
+          ['--root', corpus.root.path],
           out: output,
           err: errors,
         ),

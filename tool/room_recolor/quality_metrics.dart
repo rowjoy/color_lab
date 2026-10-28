@@ -10,6 +10,8 @@ final class RoomLayerQuality {
   const RoomLayerQuality({
     required this.intersectionPixels,
     required this.unionPixels,
+    required this.predictedPixels,
+    required this.groundTruthPixels,
     required this.predictedBoundaryPixels,
     required this.groundTruthBoundaryPixels,
     required this.boundaryTruePositive,
@@ -17,6 +19,25 @@ final class RoomLayerQuality {
   });
   final int intersectionPixels;
   final int unionPixels;
+  final int predictedPixels;
+  final int groundTruthPixels;
+  int get truePositive => intersectionPixels;
+  int get falsePositive => predictedPixels - intersectionPixels;
+  int get falseNegative => groundTruthPixels - intersectionPixels;
+  // Joint absence is undefined; either one-sided absence remains a zero score.
+  double? get precision => unionPixels == 0
+      ? null
+      : predictedPixels == 0
+      ? 0
+      : truePositive / predictedPixels;
+  double? get recall => unionPixels == 0
+      ? null
+      : groundTruthPixels == 0
+      ? 0
+      : truePositive / groundTruthPixels;
+  double? get dice => unionPixels == 0
+      ? null
+      : 2 * truePositive / (predictedPixels + groundTruthPixels);
   final int predictedBoundaryPixels;
   final int groundTruthBoundaryPixels;
   final int boundaryTruePositive;
@@ -40,6 +61,29 @@ final class RoomLayerQuality {
         ? 0
         : 2 * precision * recall / (precision + recall);
   }
+
+  Map<String, Object?> toJson() => {
+    'truePositive': truePositive,
+    'falsePositive': falsePositive,
+    'falseNegative': falseNegative,
+    'predictedPixels': predictedPixels,
+    'groundTruthPixels': groundTruthPixels,
+    'intersectionPixels': intersectionPixels,
+    'unionPixels': unionPixels,
+    'precision': precision,
+    'recall': recall,
+    'dice': dice,
+    'iou': iou,
+    'predictedBoundaryPixels': predictedBoundaryPixels,
+    'groundTruthBoundaryPixels': groundTruthBoundaryPixels,
+    'boundaryTruePositive': boundaryTruePositive,
+    'boundaryRecallMatches': boundaryRecallMatches,
+    'boundaryFalsePositive': boundaryFalsePositive,
+    'boundaryFalseNegative': boundaryFalseNegative,
+    'boundaryPrecision': boundaryPrecision,
+    'boundaryRecall': boundaryRecall,
+    'boundaryF1': boundaryF1,
+  };
 }
 
 final class RoomQualityMetrics {
@@ -47,20 +91,65 @@ final class RoomQualityMetrics {
     Map<RoomLayer, RoomLayerQuality> layers,
     this.protectedPixels,
     this.protectedColoredPixels,
+    this.genuineWallPixels,
+    this.retainedGenuineWallPixels,
   ) : layers = Map.unmodifiable(layers);
   final Map<RoomLayer, RoomLayerQuality> layers;
   final int protectedPixels;
   final int protectedColoredPixels;
+  final int genuineWallPixels;
+  final int retainedGenuineWallPixels;
+
+  /// Effective recolor coverage >= 1 on ground-truth wall, independent of
+  /// predicted ownership. Genuine wall must not include protected objects.
+  double? get genuineWallRetention => genuineWallPixels == 0
+      ? null
+      : retainedGenuineWallPixels / genuineWallPixels;
   double? get protectedLeakage =>
       protectedPixels == 0 ? null : protectedColoredPixels / protectedPixels;
   double? get macroIou => _mean(layers.values.map((v) => v.iou));
   double? get macroBoundaryF1 => _mean(layers.values.map((v) => v.boundaryF1));
+  double? get macroPrecision => _mean(layers.values.map((v) => v.precision));
+  double? get macroRecall => _mean(layers.values.map((v) => v.recall));
+  double? get macroDice => _mean(layers.values.map((v) => v.dice));
+  Map<String, Object?> toJson() => {
+    'layers': {
+      for (final layer in RoomLayer.values) layer.name: layers[layer]!.toJson(),
+    },
+    'macroPrecision': macroPrecision,
+    'macroRecall': macroRecall,
+    'macroDice': macroDice,
+    'macroIou': macroIou,
+    'macroBoundaryF1': macroBoundaryF1,
+    'protectedPixels': protectedPixels,
+    'protectedColoredPixels': protectedColoredPixels,
+    'protectedLeakage': protectedLeakage,
+    'genuineWallPixels': genuineWallPixels,
+    'retainedGenuineWallPixels': retainedGenuineWallPixels,
+    'genuineWallRetention': genuineWallRetention,
+  };
 }
 
 final class RoomLayerMacroQuality {
-  const RoomLayerMacroQuality(this.iou, this.boundaryF1);
+  const RoomLayerMacroQuality(
+    this.iou,
+    this.boundaryF1,
+    this.precision,
+    this.recall,
+    this.dice,
+  );
   final double? iou;
   final double? boundaryF1;
+  final double? precision;
+  final double? recall;
+  final double? dice;
+  Map<String, Object?> toJson() => {
+    'precision': precision,
+    'recall': recall,
+    'dice': dice,
+    'iou': iou,
+    'boundaryF1': boundaryF1,
+  };
 }
 
 final class RoomQualityAggregate {
@@ -70,6 +159,9 @@ final class RoomQualityAggregate {
           layer: RoomLayerMacroQuality(
             _mean(images.map((i) => i.layers[layer]!.iou)),
             _mean(images.map((i) => i.layers[layer]!.boundaryF1)),
+            _mean(images.map((i) => i.layers[layer]!.precision)),
+            _mean(images.map((i) => i.layers[layer]!.recall)),
+            _mean(images.map((i) => i.layers[layer]!.dice)),
           ),
       }),
       macroIou = _mean(images.expand((i) => i.layers.values.map((l) => l.iou))),
@@ -77,6 +169,23 @@ final class RoomQualityAggregate {
         images.expand((i) => i.layers.values.map((l) => l.boundaryF1)),
       ),
       macroProtectedLeakage = _mean(images.map((i) => i.protectedLeakage)),
+      macroPrecision = _mean(
+        images.expand((i) => i.layers.values.map((l) => l.precision)),
+      ),
+      macroRecall = _mean(
+        images.expand((i) => i.layers.values.map((l) => l.recall)),
+      ),
+      macroDice = _mean(
+        images.expand((i) => i.layers.values.map((l) => l.dice)),
+      ),
+      macroGenuineWallRetention = _mean(
+        images.map((i) => i.genuineWallRetention),
+      ),
+      genuineWallPixels = images.fold(0, (sum, i) => sum + i.genuineWallPixels),
+      retainedGenuineWallPixels = images.fold(
+        0,
+        (sum, i) => sum + i.retainedGenuineWallPixels,
+      ),
       protectedPixels = images.fold(0, (sum, i) => sum + i.protectedPixels),
       protectedColoredPixels = images.fold(
         0,
@@ -86,8 +195,30 @@ final class RoomQualityAggregate {
   final double? macroIou;
   final double? macroBoundaryF1;
   final double? macroProtectedLeakage;
+  final double? macroPrecision;
+  final double? macroRecall;
+  final double? macroDice;
+  final double? macroGenuineWallRetention;
+  final int genuineWallPixels;
+  final int retainedGenuineWallPixels;
   final int protectedPixels;
   final int protectedColoredPixels;
+  Map<String, Object?> toJson() => {
+    'layers': {
+      for (final layer in RoomLayer.values) layer.name: layers[layer]!.toJson(),
+    },
+    'macroPrecision': macroPrecision,
+    'macroRecall': macroRecall,
+    'macroDice': macroDice,
+    'macroIou': macroIou,
+    'macroBoundaryF1': macroBoundaryF1,
+    'macroProtectedLeakage': macroProtectedLeakage,
+    'protectedPixels': protectedPixels,
+    'protectedColoredPixels': protectedColoredPixels,
+    'macroGenuineWallRetention': macroGenuineWallRetention,
+    'genuineWallPixels': genuineWallPixels,
+    'retainedGenuineWallPixels': retainedGenuineWallPixels,
+  };
 }
 
 RoomQualityAggregate aggregateRoomQuality(Iterable<RoomQualityMetrics> images) {
@@ -131,10 +262,17 @@ RoomQualityMetrics scoreRoomQuality({
   }
   var protected = 0;
   var colored = 0;
+  var genuineWall = 0;
+  var retainedWall = 0;
   for (var i = 0; i < count; i++) {
     if (groundTruthProtection[i] == 255) {
       protected++;
       if (effectiveCoverage[i] >= 1) colored++;
+    }
+    if (groundTruthOwnership.labels[i] == RoomLayer.wall.label &&
+        groundTruthProtection[i] == 0) {
+      genuineWall++;
+      if (effectiveCoverage[i] >= 1) retainedWall++;
     }
   }
   final layers = <RoomLayer, RoomLayerQuality>{};
@@ -152,6 +290,8 @@ RoomQualityMetrics scoreRoomQuality({
     layers[layer] = RoomLayerQuality(
       intersectionPixels: intersection,
       unionPixels: union,
+      predictedPixels: predictedOwnership.count(layer),
+      groundTruthPixels: groundTruthOwnership.count(layer),
       predictedBoundaryPixels: pBoundary.where((b) => b).length,
       groundTruthBoundaryPixels: gBoundary.where((b) => b).length,
       boundaryTruePositive: _matches(
@@ -170,7 +310,13 @@ RoomQualityMetrics scoreRoomQuality({
       ),
     );
   }
-  return RoomQualityMetrics._(layers, protected, colored);
+  return RoomQualityMetrics._(
+    layers,
+    protected,
+    colored,
+    genuineWall,
+    retainedWall,
+  );
 }
 
 List<bool> _boundary(MaskBitmap mask, int label) {

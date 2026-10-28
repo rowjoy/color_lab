@@ -11,6 +11,7 @@ import 'room_mask_region_navigator.dart';
 import 'room_mask_review_panel.dart';
 import 'room_mask_surface_status.dart';
 import 'room_mask_viewport.dart';
+import 'smart_mask_proposal_controls.dart';
 import 'room_recolor_viewport.dart';
 
 class RoomMaskFullscreenEditor extends ConsumerStatefulWidget {
@@ -142,7 +143,9 @@ class _RoomMaskFullscreenEditorState extends ConsumerState<RoomMaskFullscreenEdi
                       editingEnabled: state.canEdit,
                       viewController: _view,
                       onStroke: (stroke) {
-                        if (_active) _editor.applyStroke(photoId: draft.photoId, maskRevision: draft.maskRevision, stroke: stroke);
+                        if (_active) {
+                          _editor.applyStroke(photoId: draft.photoId, maskRevision: draft.maskRevision, stroke: stroke);
+                        }
                       },
                     ),
                   PositionedDirectional(top: 4, start: 4, child: Material(
@@ -163,7 +166,7 @@ class _RoomMaskFullscreenEditorState extends ConsumerState<RoomMaskFullscreenEdi
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       RoomMaskReviewPanel(
-                        photoId: draft!.photoId,
+                        photoId: draft.photoId,
                         maskRevision: draft.maskRevision,
                         masks: draft.masks,
                         selectedLayer: state.selectedLayer,
@@ -178,6 +181,7 @@ class _RoomMaskFullscreenEditorState extends ConsumerState<RoomMaskFullscreenEdi
                           setState(() => _reviewView = view);
                         },
                       ),
+                      const SmartMaskProposalControls(),
                       Wrap(spacing: 6, runSpacing: 4, children: [
                         for (final layer in RoomLayer.values)
                           ChoiceChip(key: ValueKey('room-mask-fullscreen-layer-${layer.name}'),

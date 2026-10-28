@@ -32,6 +32,67 @@ RoomQualityMetrics score(
 );
 
 void main() {
+  test('pixel scores expose literal TP FP FN and effective wall retention', () {
+    final result = score(
+      [1, 1, 1, 0, 0],
+      [1, 1, 0, 1, 0],
+      protection: [0, 0, 255, 0, 0],
+      coverage: [1, 0, 255, 1, 0],
+      tolerance: 0,
+    );
+    final wall = result.layers[RoomLayer.wall]!;
+    expect(wall.truePositive, 2);
+    expect(wall.falsePositive, 1);
+    expect(wall.falseNegative, 1);
+    expect(wall.precision, closeTo(2 / 3, 1e-12));
+    expect(wall.recall, closeTo(2 / 3, 1e-12));
+    expect(wall.dice, closeTo(2 / 3, 1e-12));
+    expect(wall.iou, .5);
+    expect(wall.boundaryF1, closeTo(2 / 3, 1e-12));
+    expect(result.protectedLeakage, 1);
+    // Retention measures effective coverage of genuine wall, not ownership IoU.
+    expect(result.genuineWallPixels, 3);
+    expect(result.retainedGenuineWallPixels, 2);
+    expect(result.genuineWallRetention, closeTo(2 / 3, 1e-12));
+    expect(result.toJson()['genuineWallPixels'], 3);
+  });
+
+  test(
+    'pixel absence is null jointly and zero on either one-sided absence',
+    () {
+      for (final pair in [
+        ([1], [0]),
+        ([0], [1]),
+      ]) {
+        final wall = score(pair.$1, pair.$2).layers[RoomLayer.wall]!;
+        expect(wall.precision, 0);
+        expect(wall.recall, 0);
+        expect(wall.dice, 0);
+      }
+      final empty = score([0], [0]);
+      for (final layer in empty.layers.values) {
+        expect(layer.precision, isNull);
+        expect(layer.recall, isNull);
+        expect(layer.dice, isNull);
+      }
+      expect(empty.genuineWallRetention, isNull);
+      expect(aggregateRoomQuality([empty]).macroPrecision, isNull);
+    },
+  );
+
+  test('new corpus scores are unweighted eligible pairs and image ratios', () {
+    final first = score([1], [1], coverage: [1]);
+    final second = score([1, 2, 0, 0], [1, 1, 1, 0], coverage: [0, 0, 0, 0]);
+    final aggregate = aggregateRoomQuality([first, second]);
+    expect(aggregate.macroPrecision, closeTo(2 / 3, 1e-12));
+    expect(aggregate.macroRecall, closeTo(4 / 9, 1e-12));
+    expect(aggregate.macroDice, .5);
+    expect(aggregate.macroGenuineWallRetention, .5);
+    expect(aggregate.genuineWallPixels, 4);
+    expect(aggregate.retainedGenuineWallPixels, 1);
+    expect(aggregate.layers[RoomLayer.wall]!.recall, closeTo(2 / 3, 1e-12));
+    expect(aggregate.toJson()['macroDice'], .5);
+  });
   // Catches an exclusive (<5), squared-distance, or Manhattan match rule.
   test(
     'boundary match includes exactly five Euclidean pixels but excludes six',

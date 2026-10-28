@@ -862,15 +862,12 @@ class RoomMaskController extends Notifier<RoomMaskState> {
           !listEquals(exact.intent.bytes, result.intent.bytes)) {
         throw StateError('Incoherent refinement result.');
       }
-      final next = draft.copyWith(
-        masks: result.masks,
-        intent: result.intent,
-        history: draft.history.push(result.command!),
-        maskRevision: draft.maskRevision + 1,
+      _publishExactCommand(
+        draft,
+        result.command!,
+        MaskEditResult(masks: result.masks, intent: result.intent),
         changedFromAiCount: result.changedFromAiCount,
       );
-      state = state.copyWith(draft: next, editBusy: false);
-      _commitDraft();
       return true;
     } catch (_) {
       if (current()) _fail(RoomMaskFailureKind.processing);
@@ -884,6 +881,63 @@ class RoomMaskController extends Notifier<RoomMaskState> {
         state = state.copyWith(editBusy: false);
       }
     }
+  }
+
+  /// Commit one already-previewed command through the same history/autosave
+  /// path as a manual stroke. A reopened equal-key project is still stale.
+  bool applyExactCommand({
+    required String projectId,
+    required String photoId,
+    required int maskRevision,
+    required RoomLayer layer,
+    required Object sessionLifetime,
+    required MaskEditCommand command,
+  }) {
+    if (!_canMutate(photoId, maskRevision) ||
+        state.selectedLayer != layer ||
+        _pendingStroke != null) {
+      return false;
+    }
+    final session = ref.read(roomProjectSessionProvider);
+    if (session?.projectId != projectId ||
+        !identical(session?.lifetime, sessionLifetime) ||
+        session?.visible.photoId != photoId ||
+        session?.visible.maskRevision != maskRevision) {
+      return false;
+    }
+    final draft = state.draft!;
+    try {
+      final exact = command.applyForward(
+        masks: draft.masks,
+        intent: draft.intent,
+      );
+      _publishExactCommand(
+        draft,
+        command,
+        exact,
+        changedFromAiCount: countMaskDifferences(exact.masks, draft.aiMasks),
+      );
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  void _publishExactCommand(
+    RoomMaskDraft draft,
+    MaskEditCommand command,
+    MaskEditResult exact, {
+    required int changedFromAiCount,
+  }) {
+    final next = draft.copyWith(
+      masks: exact.masks,
+      intent: exact.intent,
+      history: draft.history.push(command),
+      maskRevision: draft.maskRevision + 1,
+      changedFromAiCount: changedFromAiCount,
+    );
+    state = state.copyWith(draft: next, editBusy: false);
+    _commitDraft();
   }
 
   Future<bool> undo({required String photoId, required int maskRevision}) =>

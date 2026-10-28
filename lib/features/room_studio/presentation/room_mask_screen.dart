@@ -26,6 +26,7 @@ import 'room_layer_color_controls.dart';
 import 'room_mask_dialogs.dart';
 import 'room_mask_fullscreen_editor.dart';
 import 'room_mask_viewport.dart';
+import 'smart_mask_proposal_controls.dart';
 import 'room_mask_review_panel.dart';
 import 'room_mask_surface_status.dart';
 import 'room_model_download_status.dart';
@@ -973,6 +974,7 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
                     ],
                   ),
                   const SizedBox(height: AppSpacing.md),
+                  const SmartMaskProposalControls(),
                   Wrap(
                     spacing: AppSpacing.sm,
                     runSpacing: AppSpacing.sm,
