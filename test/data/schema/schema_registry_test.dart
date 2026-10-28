@@ -83,6 +83,18 @@ void main() {
           1,
           LocalDataScope.cache,
         ),
+        'learning-library': (
+          'learning_library_v1',
+          StorageBackend.hiveBox,
+          1,
+          LocalDataScope.sharedLibrary,
+        ),
+        'coloring-projects': (
+          'coloring_projects_v1',
+          StorageBackend.hiveBox,
+          1,
+          LocalDataScope.sharedLibrary,
+        ),
       },
     );
   });
@@ -102,6 +114,8 @@ void main() {
       'photo_acquisition_v1',
       'game_profiles_v2',
       'game_progress_v1',
+      'learning_library_v1',
+      'coloring_projects_v1',
     });
     expect(hive['app_preferences_v1']!.currentVersion, 2);
     expect(hive['color_history_v1']!.currentVersion, 1);
@@ -110,6 +124,8 @@ void main() {
     expect(hive['photo_acquisition_v1']!.currentVersion, 1);
     expect(hive['game_profiles_v2']!.currentVersion, 2);
     expect(hive['game_progress_v1']!.currentVersion, 1);
+    expect(hive['learning_library_v1']!.currentVersion, 1);
+    expect(hive['coloring_projects_v1']!.currentVersion, 1);
   });
 
   test('file and cache storage are never mislabeled as Hive boxes', () {
@@ -141,6 +157,8 @@ void main() {
           'photo_acquisition_v1',
           'game_profiles_v2',
           'game_progress_v1',
+          'learning_library_v1',
+          'coloring_projects_v1',
         }),
       ),
     );
@@ -152,6 +170,8 @@ void main() {
       'saved-colors',
       'saved-palettes',
       'illustrated-rooms',
+      'learning-library',
+      'coloring-projects',
     };
     final shared = SchemaRegistry.all.where(
       (descriptor) => sharedIds.contains(descriptor.id),

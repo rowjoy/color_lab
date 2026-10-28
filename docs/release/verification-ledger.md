@@ -614,3 +614,35 @@ Gallery/Share, runtime palette-NOTICE registration and an independently
 verified room-artwork rights grant remain open. This entry does not establish
 release readiness, a native pass, or rights beyond the truthful repository
 history recorded in `asset-sources.md`.
+
+## Plan 06 Tasks 1–8 — Color Learning focused verification (2026-10-28)
+
+Branch `TintAtlas`; work is unstaged and uncommitted because the user owns
+commits. `lib/main.dart` was not edited. The implementation adds an offline
+six-lesson learning path, installation-local `learning_library_v1`, durable
+progress/practice/notebooks, exact typed capture/restore for five tools,
+canonical learning routes, My Work and Illustrated Room value-copy bridges,
+and optional non-diagnostic Vision boundaries. Coloring remains unavailable
+until its own Plan 07 contract consumes the frozen value-copy payload.
+
+The user required focused testing without repeating already-green suites.
+Consequently, initial focused batches plus only failed/new cases were run; no
+repository-wide test/analyzer/build claim is made here.
+
+| Gate | Result |
+| --- | --- |
+| Task 1 domain schemas | focused domain cases passed; one test-fixture issue was corrected and retried 1/1; later equality/hash and mixer-list immutability cases each passed 1/1 |
+| Task 2 repository/schema/local-data | exit 0, 21/21 passed |
+| Task 3 catalogue/localization | exit 0, 8/8 passed; `flutter gen-l10n` later reran successfully after final copy |
+| Task 4 controller | initial focused run exposed the question-ID completion predicate; exact failed case passed 1/1 after repair |
+| Task 5 UI | Learn 2/2 and Lesson/Notebook 3/3 passed after exact compile-scope fixes; later real-tool action, confirmed reset, failed-delete Retry and save-dialog cases passed at their focused scopes |
+| Task 6 restore/capture | restore plus existing five-tool controller gate passed 42/42; later all-five capture and user save/retained Retry passed 2/2 |
+| Task 7 route/bridge | value-copy/availability 3/3, canonical/deep-link/Back 2/2, My Work delete 1/1, Learn shell retention 1/1, stale dismissed-route guard 1/1 |
+| Task 8 accessibility/Vision | accessibility contract 3/3 and focused completed-result boundary 1/1 |
+| Fresh read-only review | Initial: 0 Critical, 5 Important. All five were corrected: reachable typed save, real manipulation detour, reset/delete retry UI, immutable mixer snapshot, and stale deep-link guard. Fresh post-fix re-review: 0 Critical/Important and no new regression. |
+
+The Plan 06 document records exact done/deferred status. Responsive manual
+matrix, scoped/repository analyzer, full repository tests, Android/iOS builds,
+physical keyboard/screen-reader/RTL/200%-text verification and native device
+evidence remain deferred under the user's Plans 01–08 verification budget.
+This focused evidence establishes neither release readiness nor a native pass.

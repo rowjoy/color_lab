@@ -22,12 +22,14 @@ class GamesScreen extends ConsumerStatefulWidget {
     this.onOpenMap,
     this.onOpenBadges,
     this.onOpenLeaderboard,
+    this.onOpenColoring,
   });
 
   final ValueChanged<GameLaunch>? onLaunchGame;
   final ValueChanged<GameId>? onOpenMap;
   final VoidCallback? onOpenBadges;
   final VoidCallback? onOpenLeaderboard;
+  final VoidCallback? onOpenColoring;
 
   @override
   ConsumerState<GamesScreen> createState() => _GamesScreenState();
@@ -102,6 +104,35 @@ final class _GamesScreenState extends ConsumerState<GamesScreen> {
           description:
               'Keep leveling up across five color games. Progress stays on this device for each player.',
         ),
+        StudioCard(
+          key: const ValueKey('games-coloring-studio-card'),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.draw_outlined, color: context.appColors.primary),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Text(
+                      context.l10n.coloringStudioTitle,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(context.l10n.coloringGamesEntryBody),
+              const SizedBox(height: AppSpacing.lg),
+              FilledButton.icon(
+                onPressed: widget.onOpenColoring,
+                icon: const Icon(Icons.palette_outlined),
+                label: Text(context.l10n.coloringOpenStudio),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xxl),
         profiles.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, stackTrace) => _LoadError(

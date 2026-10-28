@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:async';
 import 'package:color_lab/data/db/hive_game_profiles_repository.dart';
+import 'package:color_lab/data/db/hive_learning_repository.dart';
 import 'package:color_lab/data/files/file_room_project_repository.dart';
 import 'package:hive/hive.dart';
 // ignore: implementation_imports
@@ -10,6 +11,8 @@ import 'package:color_lab/data/db/hive_palette_repository.dart';
 import 'package:color_lab/data/storage/local_data_manager.dart';
 import 'package:color_lab/core/color/color_engine.dart';
 import 'package:color_lab/features/history/domain/saved_color.dart';
+import 'package:color_lab/features/learning/domain/learning_library.dart';
+import 'package:color_lab/features/learning/domain/learning_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../support/room_project_fixtures.dart';
@@ -189,6 +192,52 @@ void main() {
         expect(preview.estimatedBytes, greaterThan(100));
       } finally {
         await rooms.close();
+      }
+    },
+  );
+
+  test(
+    'learning deletion preserves every non-learning owner byte-for-byte',
+    () async {
+      final learning = await HiveLearningRepository.open(directory: root.path);
+      try {
+        await learning.transact(
+          (current) => LearningChange(
+            state: current.copyWith(
+              progressByLesson: {
+                'hue': LessonProgress(
+                  lessonId: 'hue',
+                  lessonRevision: 1,
+                  currentStepIndex: 0,
+                  completedStepIds: const {},
+                  answers: const {},
+                  completed: false,
+                  updatedAt: DateTime.utc(2026, 10, 28),
+                ),
+              },
+            ),
+            value: null,
+          ),
+        );
+        final colorBefore = (await colors.load()).single;
+        final paletteBefore = await palettes.load();
+        final data = ExactLocalDataManager(
+          owners: {
+            LocalDataCategory.learningProgress: () async => learning,
+            LocalDataCategory.savedColors: () async => colors,
+            LocalDataCategory.savedPalettes: () async => palettes,
+          },
+        );
+        final preview = await data.preview({
+          LocalDataCategory.learningProgress,
+        });
+        expect(preview.recordCount, greaterThanOrEqualTo(1));
+        await data.delete({LocalDataCategory.learningProgress});
+        expect((await learning.load()).library, LearningLibrary.empty());
+        expect((await colors.load()).single, colorBefore);
+        expect(await palettes.load(), paletteBefore);
+      } finally {
+        await learning.close();
       }
     },
   );

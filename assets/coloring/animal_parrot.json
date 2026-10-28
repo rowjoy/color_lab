@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "animal_parrot",
+  "revision": 1,
+  "width": 600,
+  "height": 400,
+  "regions": [
+    {"id":"parrot-red-head","labelKey":"coloringParrotRedHead","groupId":"animals","fillable":true,"paintOrder":0,"geometry":{"parts":[{"slot":0,"commands":[["M",254,52],["C",350,28,424,104,390,182],["L",286,196],["C",224,160,206,90,254,52],["Z"]]}]}},
+    {"id":"parrot-green-wing","labelKey":"coloringParrotGreenWing","groupId":"animals","fillable":true,"paintOrder":1,"geometry":{"parts":[{"slot":1,"commands":[["M",246,158],["C",144,170,136,300,244,324],["L",320,208],["Q",294,164,246,158],["Z"]]}]}},
+    {"id":"parrot-blue-tail","labelKey":"coloringParrotBlueTail","groupId":"animals","fillable":true,"paintOrder":2,"geometry":{"parts":[{"slot":2,"commands":[["M",242,294],["L",286,378],["L",320,290],["L",350,370],["L",370,240],["Z"]]}]}},
+    {"id":"parrot-yellow-chest","labelKey":"coloringParrotYellowChest","groupId":"animals","fillable":true,"paintOrder":3,"geometry":{"parts":[{"slot":3,"commands":[["M",292,180],["C",392,158,424,264,356,330],["L",276,302],["Q",324,248,292,180],["Z"]]}]}},
+    {"id":"parrot-orange-beak","labelKey":"coloringParrotOrangeBeak","groupId":"animals","fillable":true,"paintOrder":4,"geometry":{"parts":[{"slot":4,"commands":[["M",382,102],["Q",462,112,418,170],["L",374,150],["Z"]]}]}}
+  ]
+}

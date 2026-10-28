@@ -30,6 +30,9 @@ void main() {
     expect(l10n.gamePlayCurrentLevel(4), 'Play current level 4');
     expect(l10n.gamePlayLevel(4), 'Play Level 4');
     expect(l10n.gameBadgeEarned, 'Badge earned');
+    expect(l10n.learningLessonHueTitle, 'Hue: the color-family angle');
+    expect(l10n.learningStepCheckTitle, 'Check');
+    expect(l10n.learningRetryHint, 'Try again as often as you like.');
   });
 
   testWidgets('generated delegates mount and expose localized copy', (

@@ -7,6 +7,12 @@ import 'package:go_router/go_router.dart';
 import '../features/home/presentation/home_screen.dart';
 import '../features/lab/presentation/lab_screen.dart';
 import '../features/learning/presentation/learn_screen.dart';
+import '../features/learning/presentation/lesson_screen.dart';
+import '../features/learning/presentation/experiment_notebook_screen.dart';
+import '../features/learning/presentation/learning_experiment_route_screen.dart';
+import '../features/learning/presentation/learning_experiment_host.dart';
+import '../features/learning/data/color_foundations_catalog.dart';
+import '../features/learning/domain/experiment_snapshot.dart';
 import '../features/my_work/presentation/my_work_screen.dart';
 import '../features/palette/presentation/palette_screen.dart';
 import '../features/picker/presentation/capture_screen.dart';
@@ -45,6 +51,10 @@ import '../features/games/presentation/invalid_game_launch_screen.dart';
 import '../features/games/presentation/leaderboard_screen.dart';
 import '../features/games/presentation/rainbow_rings_screen.dart';
 import '../features/games/presentation/water_sort_screen.dart';
+import '../features/coloring/presentation/coloring_catalog_screen.dart';
+import '../features/coloring/presentation/coloring_workspace_screen.dart';
+import '../features/coloring/presentation/coloring_completion_screen.dart';
+import '../features/learning/domain/learning_palette_copy.dart';
 import '../l10n/l10n.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -154,6 +164,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const VisionScreen(),
       ),
       GoRoute(
+        path: '/lab',
+        redirect: (context, state) => '/learn/experiment/lab',
+      ),
+      GoRoute(
         path: '/matching',
         builder: (context, state) => state.extra == null
             ? const MatchingScreen()
@@ -205,6 +219,32 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/my-work',
         builder: (context, state) => const MyWorkScreen(),
+      ),
+      GoRoute(
+        path: '/coloring',
+        builder: (context, state) => ColoringCatalogScreen(
+          paletteCopy: state.extra is LearningPaletteCopy
+              ? state.extra as LearningPaletteCopy
+              : null,
+        ),
+      ),
+      GoRoute(
+        path: '/coloring/project/:projectId',
+        builder: (context, state) => ColoringWorkspaceScreen(
+          projectId: state.pathParameters['projectId']!,
+          paletteCopy: state.extra is LearningPaletteCopy
+              ? state.extra as LearningPaletteCopy
+              : null,
+        ),
+      ),
+      GoRoute(
+        path: '/coloring/complete/:projectId',
+        builder: (context, state) => ColoringCompletionScreen(
+          projectId: state.pathParameters['projectId']!,
+          paletteCopy: state.extra is LearningPaletteCopy
+              ? state.extra as LearningPaletteCopy
+              : null,
+        ),
       ),
       GoRoute(
         path: '/startup',
@@ -324,14 +364,78 @@ StatefulShellBranch _learnBranch(GlobalKey<NavigatorState> navigatorKey) =>
         GoRoute(
           path: '/learn',
           builder: (context, state) => const LearnScreen(),
+          routes: [
+            GoRoute(path: 'lesson/:lessonId', builder: _buildLearningLesson),
+            GoRoute(
+              path: 'notebook',
+              builder: (context, state) => const ExperimentNotebookScreen(),
+            ),
+            GoRoute(
+              path: 'experiment/:experimentId',
+              builder: _buildLearningExperiment,
+            ),
+          ],
         ),
         GoRoute(
           path: '/palette',
           builder: (context, state) => const PaletteScreen(),
         ),
-        GoRoute(path: '/lab', builder: (context, state) => const LabScreen()),
       ],
     );
+
+Widget _buildLearningLesson(BuildContext context, GoRouterState state) {
+  final lessonId = state.pathParameters['lessonId']!;
+  try {
+    ColorFoundationsCatalog.byId(lessonId);
+    return LessonScreen(lessonId: lessonId);
+  } on FormatException {
+    return const _RouteUnavailableScreen();
+  }
+}
+
+Widget _buildLearningExperiment(BuildContext context, GoRouterState state) {
+  final lessonId = _validLearningLessonId(state.uri.queryParameters['lesson']);
+  return switch (state.pathParameters['experimentId']!) {
+    'lab' => LearningExperimentHost(
+      tool: ExperimentTool.lab,
+      lessonId: lessonId,
+      child: const LabScreen(),
+    ),
+    'mixer' => LearningExperimentHost(
+      tool: ExperimentTool.mixer,
+      lessonId: lessonId,
+      child: const MixerScreen(),
+    ),
+    'harmonies' => LearningExperimentHost(
+      tool: ExperimentTool.harmonies,
+      lessonId: lessonId,
+      child: const HarmoniesScreen(),
+    ),
+    'formula' => LearningExperimentHost(
+      tool: ExperimentTool.formula,
+      lessonId: lessonId,
+      child: const FormulaScreen(),
+    ),
+    'matching' => LearningExperimentHost(
+      tool: ExperimentTool.matching,
+      lessonId: lessonId,
+      child: const MatchingScreen(),
+    ),
+    final experimentId => LearningExperimentRouteScreen(
+      experimentId: experimentId,
+    ),
+  };
+}
+
+String? _validLearningLessonId(String? lessonId) {
+  if (lessonId == null) return null;
+  try {
+    ColorFoundationsCatalog.byId(lessonId);
+    return lessonId;
+  } on FormatException {
+    return null;
+  }
+}
 
 StatefulShellBranch _gamesBranch(GlobalKey<NavigatorState> navigatorKey) =>
     StatefulShellBranch(
@@ -346,6 +450,7 @@ StatefulShellBranch _gamesBranch(GlobalKey<NavigatorState> navigatorKey) =>
             onOpenMap: (gameId) => _pushMap(context, gameId),
             onOpenBadges: () => _push(context, '/games/badges'),
             onOpenLeaderboard: () => _push(context, '/games/leaderboard'),
+            onOpenColoring: () => _push(context, '/coloring'),
           ),
         ),
       ],

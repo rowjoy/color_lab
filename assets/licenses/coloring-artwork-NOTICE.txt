@@ -1,0 +1,10 @@
+TintAtlas Coloring Studio launch artwork notice
+
+The twelve Coloring Studio drawings in assets/coloring were authored in this
+repository on 2026-10-28 by the TintAtlas project as original, code-native
+vector paths. No competitor, paint-manufacturer, color-by-number, or other
+third-party artwork was traced, copied, adapted, downloaded, or embedded.
+
+The artwork uses only the TintAtlas restricted local M/L/Q/C/Z JSON path
+format. All rights in these original compositions are retained by the
+TintAtlas project.

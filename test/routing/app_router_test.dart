@@ -9,6 +9,7 @@ import 'package:color_lab/features/history/application/history_providers.dart';
 import 'package:color_lab/features/home/presentation/home_screen.dart';
 import 'package:color_lab/features/lab/presentation/lab_screen.dart';
 import 'package:color_lab/features/learning/presentation/learn_screen.dart';
+import 'package:color_lab/features/learning/application/learning_providers.dart';
 import 'package:color_lab/features/my_work/presentation/my_work_screen.dart';
 import 'package:color_lab/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:color_lab/features/settings/domain/app_preferences.dart';
@@ -54,6 +55,7 @@ import '../support/controlled_room_recolor_worker.dart';
 import '../support/in_memory_app_preferences_repository.dart';
 import '../support/in_memory_color_history_repository.dart';
 import '../support/in_memory_game_profiles_repository.dart';
+import '../support/in_memory_learning_repository.dart';
 import '../support/in_memory_room_design_repository.dart';
 import '../support/in_memory_saved_palette_repository.dart';
 import '../support/in_memory_room_project_repository.dart';
@@ -835,6 +837,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('nav-learn')));
     await _pumpUntil(tester, find.byType(LearnScreen));
     final openLab = find.byKey(const ValueKey('learn-open-lab'));
+    await _pumpUntil(tester, openLab);
     await tester.ensureVisible(openLab);
     await tester.tap(openLab);
     await _pumpUntil(tester, find.byType(LabScreen));
@@ -852,7 +855,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('nav-learn')));
     await _pumpUntil(tester, find.byType(LabScreen));
-    expect(harness.router.state.uri.path, '/lab');
+    expect(harness.router.state.uri.path, '/learn/experiment/lab');
     expect(
       tester.widgetList<Slider>(find.byType(Slider)).first.value,
       closeTo(123, .01),
@@ -942,7 +945,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(LabScreen), findsOneWidget);
-      expect(harness.router.state.uri.path, '/lab');
+      expect(harness.router.state.uri.path, '/learn/experiment/lab');
       expect(
         tester.widgetList<Slider>(find.byType(Slider)).first.value,
         closeTo(123, .01),
@@ -985,7 +988,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('nav-learn')));
     await tester.pumpAndSettle();
     expect(find.byType(LabScreen), findsOneWidget);
-    expect(restored.router.state.uri.path, '/lab');
+    expect(restored.router.state.uri.path, '/learn/experiment/lab');
     expect(await tester.binding.handlePopRoute(), isTrue);
     await tester.pumpAndSettle();
     expect(find.byType(LearnScreen), findsOneWidget);
@@ -1149,6 +1152,9 @@ Future<_RouterHarness> _launch(
             legacyMigrationComplete: true,
           ),
         ),
+      ),
+      learningRepositoryProvider.overrideWith(
+        (ref) async => InMemoryLearningRepository(),
       ),
     ],
   );

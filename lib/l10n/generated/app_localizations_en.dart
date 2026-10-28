@@ -1441,4 +1441,1217 @@ class AppLocalizationsEn extends AppLocalizations {
   String illustratedPaletteRecommendedLabel(String name) {
     return '$name, Starting look';
   }
+
+  @override
+  String get learningStepPredictTitle => 'Predict';
+
+  @override
+  String get learningStepManipulateTitle => 'Manipulate';
+
+  @override
+  String get learningStepObserveTitle => 'Observe';
+
+  @override
+  String get learningStepExplainTitle => 'Explain';
+
+  @override
+  String get learningStepApplyTitle => 'Apply';
+
+  @override
+  String get learningStepCheckTitle => 'Check';
+
+  @override
+  String get learningNonVisualInstruction =>
+      'Use the labeled names, values, and controls; seeing a color difference is not required.';
+
+  @override
+  String get learningRetryHint => 'Try again as often as you like.';
+
+  @override
+  String get learningGlossaryHsl =>
+      'HSL: hue angle, saturation, and lightness coordinates for an RGB color.';
+
+  @override
+  String get learningGlossaryHsv =>
+      'HSV: hue, saturation, and value; value is the brightest RGB channel.';
+
+  @override
+  String get learningGlossaryRgb =>
+      'RGB: encoded red, green, and blue display channels.';
+
+  @override
+  String get learningGlossaryHex =>
+      'HEX: a compact written form of encoded RGB channel values.';
+
+  @override
+  String get learningGlossaryLab =>
+      'CIELAB: lightness and opponent-color coordinates computed here from sRGB.';
+
+  @override
+  String get learningGlossaryCmyk =>
+      'CMYK: a simplified digital conversion here, not a press or ink profile.';
+
+  @override
+  String get learningGlossaryDeltaE =>
+      'Delta-E: points of computed color difference, not diagnostic accuracy or a calibrated purchase match.';
+
+  @override
+  String get learningGlossaryHue =>
+      'Hue: a circular color-family angle; neutrals can have no visible hue.';
+
+  @override
+  String get learningGlossarySaturation =>
+      'Saturation: colorfulness relative to a gray at the same model coordinates.';
+
+  @override
+  String get learningGlossaryLightnessValue =>
+      'Lightness and value use different model definitions and are not interchangeable.';
+
+  @override
+  String get learningGlossaryDigitalInterpolation =>
+      'Digital interpolation averages numerical color coordinates; it does not simulate material pigments.';
+
+  @override
+  String get learningGlossaryHarmony =>
+      'Harmony: a repeatable hue relationship, not a guarantee that a palette is beautiful.';
+
+  @override
+  String get learningLessonCoordinatesTitle =>
+      'Color coordinates: several views of one color';
+
+  @override
+  String get learningLessonCoordinatesSummary =>
+      'Read one display color through HSL, RGB/HEX, LAB, and simplified CMYK coordinates.';
+
+  @override
+  String get learningCoordinatesPredictInstruction =>
+      'Predict which coordinates will change when you adjust one visible color.';
+
+  @override
+  String get learningCoordinatesManipulateInstruction =>
+      'Adjust hue, saturation, and lightness while reading the labeled HSL, RGB/HEX, LAB, and CMYK values.';
+
+  @override
+  String get learningCoordinatesObserveInstruction =>
+      'Compare the numbers. Delta-E points describe a computed difference; they do not diagnose vision or guarantee a physical match.';
+
+  @override
+  String get learningCoordinatesExplainInstruction =>
+      'RGB and HEX encode display channels; LAB and simplified CMYK describe the same digital color through different models.';
+
+  @override
+  String get learningCoordinatesApplyInstruction =>
+      'Save a labeled color experiment. A generated formula is not a paint recipe, and a screen preview is not a purchase match.';
+
+  @override
+  String get learningCoordinatesCheckInstruction =>
+      'Answer both questions, read each explanation, and retry freely.';
+
+  @override
+  String get learningCoordinatesManipulateNonVisual =>
+      'Enter or adjust the labeled HSL values and read every resulting coordinate as text.';
+
+  @override
+  String get learningCoordinatesQ1Prompt => 'What does a HEX color encode?';
+
+  @override
+  String get learningCoordinatesQ1ALabel => 'Encoded RGB display channels';
+
+  @override
+  String get learningCoordinatesQ1BLabel => 'A physical paint formula';
+
+  @override
+  String get learningCoordinatesQ1AExplanation =>
+      'Correct. HEX writes encoded red, green, and blue channel values.';
+
+  @override
+  String get learningCoordinatesQ1BExplanation =>
+      'Not quite. HEX describes display channels, not material ingredients.';
+
+  @override
+  String get learningCoordinatesQ2Prompt =>
+      'What do Delta-E points prove here?';
+
+  @override
+  String get learningCoordinatesQ2ALabel =>
+      'They certify exact paint and vision accuracy';
+
+  @override
+  String get learningCoordinatesQ2BLabel =>
+      'They describe a computed difference between color coordinates';
+
+  @override
+  String get learningCoordinatesQ2AExplanation =>
+      'Not quite. The number is not a diagnosis, calibration certificate, or purchase guarantee.';
+
+  @override
+  String get learningCoordinatesQ2BExplanation =>
+      'Correct. Delta-E is a model-based distance that needs context.';
+
+  @override
+  String get learningLessonHueTitle => 'Hue: the color-family angle';
+
+  @override
+  String get learningLessonHueSummary =>
+      'Change the circular hue coordinate while names and numbers keep the activity usable without color-only cues.';
+
+  @override
+  String get learningHuePredictInstruction =>
+      'Predict the named color family after moving the hue angle.';
+
+  @override
+  String get learningHueManipulateInstruction =>
+      'Adjust hue by slider, keyboard, or number and read its degree value and color-family label.';
+
+  @override
+  String get learningHueObserveInstruction =>
+      'Notice that the angle wraps around at 360 degrees and a neutral may show no visible hue.';
+
+  @override
+  String get learningHueExplainInstruction =>
+      'Hue is a circular coordinate; it is not a measure of brightness or saturation.';
+
+  @override
+  String get learningHueApplyInstruction =>
+      'Choose a hue for a labeled design intention and save the exact value.';
+
+  @override
+  String get learningHueCheckInstruction =>
+      'Answer both questions, read each explanation, and retry freely.';
+
+  @override
+  String get learningHueManipulateNonVisual =>
+      'Use the degree value and color-family label; no subtle visual comparison is required.';
+
+  @override
+  String get learningHueQ1Prompt => 'What happens after hue reaches 360°?';
+
+  @override
+  String get learningHueQ1ALabel => 'It wraps to 0° on the color circle';
+
+  @override
+  String get learningHueQ1BLabel => 'It becomes maximum brightness';
+
+  @override
+  String get learningHueQ1AExplanation =>
+      'Correct. Hue is circular, so 360° and 0° meet.';
+
+  @override
+  String get learningHueQ1BExplanation =>
+      'Not quite. Hue angle does not set brightness.';
+
+  @override
+  String get learningHueQ2Prompt => 'What does hue mainly identify?';
+
+  @override
+  String get learningHueQ2ALabel => 'How light a color is';
+
+  @override
+  String get learningHueQ2BLabel => 'Its position around a color-family circle';
+
+  @override
+  String get learningHueQ2AExplanation =>
+      'Not quite. Lightness is a separate coordinate.';
+
+  @override
+  String get learningHueQ2BExplanation =>
+      'Correct. Hue identifies a circular family position.';
+
+  @override
+  String get learningLessonSaturationTitle => 'Saturation: color versus gray';
+
+  @override
+  String get learningLessonSaturationSummary =>
+      'Explore saturation with labeled values while keeping hue and lightness separate.';
+
+  @override
+  String get learningSaturationPredictInstruction =>
+      'Predict whether lowering saturation moves the color toward a gray.';
+
+  @override
+  String get learningSaturationManipulateInstruction =>
+      'Adjust saturation with a labeled percentage while hue and lightness stay fixed.';
+
+  @override
+  String get learningSaturationObserveInstruction =>
+      'Read the same hue and lightness beside a changing saturation value.';
+
+  @override
+  String get learningSaturationExplainInstruction =>
+      'In HSL, saturation describes distance from a gray at that lightness; it is not brightness.';
+
+  @override
+  String get learningSaturationApplyInstruction =>
+      'Choose a saturation for a muted or vivid intention and record the percentage.';
+
+  @override
+  String get learningSaturationCheckInstruction =>
+      'Answer both questions, read each explanation, and retry freely.';
+
+  @override
+  String get learningSaturationManipulateNonVisual =>
+      'Use the saturation percentage and muted/vivid text labels instead of judging intensity by sight.';
+
+  @override
+  String get learningSaturationQ1Prompt =>
+      'At 0% HSL saturation, what remains visible?';
+
+  @override
+  String get learningSaturationQ1ALabel => 'The most vivid form of the hue';
+
+  @override
+  String get learningSaturationQ1BLabel => 'A gray determined by lightness';
+
+  @override
+  String get learningSaturationQ1AExplanation =>
+      'Not quite. Maximum vividness is not 0%.';
+
+  @override
+  String get learningSaturationQ1BExplanation =>
+      'Correct. Zero saturation removes visible hue in HSL.';
+
+  @override
+  String get learningSaturationQ2Prompt => 'Does saturation mean brightness?';
+
+  @override
+  String get learningSaturationQ2ALabel => 'Yes, they are the same coordinate';
+
+  @override
+  String get learningSaturationQ2BLabel =>
+      'No, lightness/value describe different model dimensions';
+
+  @override
+  String get learningSaturationQ2AExplanation =>
+      'Not quite. Saturation and brightness-like coordinates are separate.';
+
+  @override
+  String get learningSaturationQ2BExplanation =>
+      'Correct. The model keeps saturation separate from lightness or value.';
+
+  @override
+  String get learningLessonLightnessValueTitle =>
+      'Lightness and value: two different scales';
+
+  @override
+  String get learningLessonLightnessValueSummary =>
+      'Compare HSL lightness with HSV value without treating the terms as interchangeable.';
+
+  @override
+  String get learningLightnessValuePredictInstruction =>
+      'Predict how an HSL lightness change affects the labeled RGB result.';
+
+  @override
+  String get learningLightnessValueManipulateInstruction =>
+      'Adjust HSL lightness and read both HSL lightness and computed HSV value.';
+
+  @override
+  String get learningLightnessValueObserveInstruction =>
+      'Notice that HSL lightness and HSV value can show different numbers for one RGB color.';
+
+  @override
+  String get learningLightnessValueExplainInstruction =>
+      'HSL lightness averages channel extremes; HSV value uses the brightest channel.';
+
+  @override
+  String get learningLightnessValueApplyInstruction =>
+      'Record a lightness choice and its separate value reading for a design note.';
+
+  @override
+  String get learningLightnessValueCheckInstruction =>
+      'Answer both questions, read each explanation, and retry freely.';
+
+  @override
+  String get learningLightnessValueManipulateNonVisual =>
+      'Compare the printed HSL lightness and HSV value percentages rather than relying on appearance.';
+
+  @override
+  String get learningLightnessValueQ1Prompt =>
+      'Are HSL lightness and HSV value interchangeable?';
+
+  @override
+  String get learningLightnessValueQ1ALabel =>
+      'No; their model definitions differ';
+
+  @override
+  String get learningLightnessValueQ1BLabel =>
+      'Yes; they always have the same number';
+
+  @override
+  String get learningLightnessValueQ1AExplanation =>
+      'Correct. They can describe one RGB color with different numbers.';
+
+  @override
+  String get learningLightnessValueQ1BExplanation =>
+      'Not quite. The models calculate these coordinates differently.';
+
+  @override
+  String get learningLightnessValueQ2Prompt => 'What does HSV value use?';
+
+  @override
+  String get learningLightnessValueQ2ALabel =>
+      'The average of the lightest and darkest channel';
+
+  @override
+  String get learningLightnessValueQ2BLabel => 'The brightest RGB channel';
+
+  @override
+  String get learningLightnessValueQ2AExplanation =>
+      'Not quite. That resembles the HSL lightness calculation.';
+
+  @override
+  String get learningLightnessValueQ2BExplanation =>
+      'Correct. HSV value is based on the maximum RGB channel.';
+
+  @override
+  String get learningLessonDigitalMixingTitle =>
+      'Digital mixing: average coordinates';
+
+  @override
+  String get learningLessonDigitalMixingSummary =>
+      'Mix weighted RGB or LAB values while keeping the result distinct from real pigment behavior.';
+
+  @override
+  String get learningDigitalMixingPredictInstruction =>
+      'Predict which weighted input will pull the numerical result closer.';
+
+  @override
+  String get learningDigitalMixingManipulateInstruction =>
+      'Change labeled color stops, weights, and RGB/LAB interpolation mode.';
+
+  @override
+  String get learningDigitalMixingObserveInstruction =>
+      'Read normalized percentages and the resulting HEX value for each digital method.';
+
+  @override
+  String get learningDigitalMixingExplainInstruction =>
+      'Digital RGB/LAB interpolation is not pigment mixing; paint, ink, light, texture, and profiles can behave differently.';
+
+  @override
+  String get learningDigitalMixingApplyInstruction =>
+      'Save the exact stops, weights, mode, result, and an observation in the notebook.';
+
+  @override
+  String get learningDigitalMixingCheckInstruction =>
+      'Answer both questions, read each explanation, and retry freely.';
+
+  @override
+  String get learningDigitalMixingManipulateNonVisual =>
+      'Use stop names, HEX values, weights, normalized percentages, and the result text.';
+
+  @override
+  String get learningDigitalMixingQ1Prompt => 'What does this mixer simulate?';
+
+  @override
+  String get learningDigitalMixingQ1ALabel =>
+      'Exact physical pigment chemistry';
+
+  @override
+  String get learningDigitalMixingQ1BLabel =>
+      'Weighted interpolation of digital color coordinates';
+
+  @override
+  String get learningDigitalMixingQ1AExplanation =>
+      'Not quite. No material or spectral pigment model is used.';
+
+  @override
+  String get learningDigitalMixingQ1BExplanation =>
+      'Correct. It averages numerical RGB or LAB coordinates.';
+
+  @override
+  String get learningDigitalMixingQ2Prompt =>
+      'Does a heavier stop have more numerical influence?';
+
+  @override
+  String get learningDigitalMixingQ2ALabel => 'No; weights are ignored';
+
+  @override
+  String get learningDigitalMixingQ2BLabel =>
+      'Yes, after the weights are normalized';
+
+  @override
+  String get learningDigitalMixingQ2AExplanation =>
+      'Not quite. Positive weights control the interpolation.';
+
+  @override
+  String get learningDigitalMixingQ2BExplanation =>
+      'Correct. Normalized weights determine each stop\'s contribution.';
+
+  @override
+  String get learningLessonPaletteRelationshipsTitle =>
+      'Palette relationships: structured starting points';
+
+  @override
+  String get learningLessonPaletteRelationshipsSummary =>
+      'Explore named hue relationships without claiming that one rule guarantees a beautiful palette.';
+
+  @override
+  String get learningPaletteRelationshipsPredictInstruction =>
+      'Predict where a complementary, analogous, or triadic relationship places hues.';
+
+  @override
+  String get learningPaletteRelationshipsManipulateInstruction =>
+      'Choose a labeled base HEX value and harmony mode, then inspect the named swatches.';
+
+  @override
+  String get learningPaletteRelationshipsObserveInstruction =>
+      'Read each swatch\'s name, HEX value, role, and hue angle.';
+
+  @override
+  String get learningPaletteRelationshipsExplainInstruction =>
+      'A harmony scheme is a relationship rule, not a universal beauty rule; context, proportion, contrast, and culture still matter.';
+
+  @override
+  String get learningPaletteRelationshipsApplyInstruction =>
+      'Copy a palette by value into an experiment or supported project and note its intended context.';
+
+  @override
+  String get learningPaletteRelationshipsCheckInstruction =>
+      'Answer both questions, read each explanation, and retry freely.';
+
+  @override
+  String get learningPaletteRelationshipsManipulateNonVisual =>
+      'Use the harmony mode, swatch order, roles, names, HEX values, and angles as the complete alternative.';
+
+  @override
+  String get learningPaletteRelationshipsQ1Prompt =>
+      'What does a harmony mode provide?';
+
+  @override
+  String get learningPaletteRelationshipsQ1ALabel =>
+      'A repeatable hue relationship';
+
+  @override
+  String get learningPaletteRelationshipsQ1BLabel =>
+      'A guarantee that every design is beautiful';
+
+  @override
+  String get learningPaletteRelationshipsQ1AExplanation =>
+      'Correct. It is a structured relationship you can test in context.';
+
+  @override
+  String get learningPaletteRelationshipsQ1BExplanation =>
+      'Not quite. No palette rule can guarantee a universal judgment.';
+
+  @override
+  String get learningPaletteRelationshipsQ2Prompt =>
+      'What else affects a palette in use?';
+
+  @override
+  String get learningPaletteRelationshipsQ2ALabel =>
+      'Nothing; hue spacing is enough';
+
+  @override
+  String get learningPaletteRelationshipsQ2BLabel =>
+      'Context, proportion, contrast, material, and surrounding colors';
+
+  @override
+  String get learningPaletteRelationshipsQ2AExplanation =>
+      'Not quite. A hue rule is only a starting point.';
+
+  @override
+  String get learningPaletteRelationshipsQ2BExplanation =>
+      'Correct. Real use depends on context and more than hue spacing.';
+
+  @override
+  String get learningSectionLearn => 'Learn';
+
+  @override
+  String get learningSectionExperiment => 'Experiment';
+
+  @override
+  String get learningSectionMyWork => 'My Work';
+
+  @override
+  String get learningStartLesson => 'Start lesson';
+
+  @override
+  String learningResumeStage(String stage) {
+    return 'Resume · $stage';
+  }
+
+  @override
+  String get learningLessonComplete => 'Completed';
+
+  @override
+  String learningLessonProgress(int current, int total) {
+    return 'Step $current of $total';
+  }
+
+  @override
+  String get learningPrevious => 'Previous';
+
+  @override
+  String get learningNext => 'Next';
+
+  @override
+  String get learningFinish => 'Finish lesson';
+
+  @override
+  String get learningGlossary => 'Glossary';
+
+  @override
+  String get learningNonVisualAlternative => 'Text and controls alternative';
+
+  @override
+  String learningPracticeValue(int value) {
+    return 'Practice value: $value%';
+  }
+
+  @override
+  String get learningSaveError =>
+      'Couldn\'t save this change. Your visible work is kept.';
+
+  @override
+  String get learningRetrySave => 'Retry save';
+
+  @override
+  String get learningLoadingTitle => 'Opening Color Learning…';
+
+  @override
+  String get learningLoadingBody =>
+      'Your lessons and experiments stay on this device.';
+
+  @override
+  String get learningLoadErrorTitle => 'Color Learning is unavailable';
+
+  @override
+  String get learningLoadErrorBody =>
+      'Your saved data was not erased. Try opening it again.';
+
+  @override
+  String get learningNotebookTitle => 'Experiment Notebook';
+
+  @override
+  String get learningNotebookDescription =>
+      'Reopen exact tool settings and keep your own observations.';
+
+  @override
+  String get learningNotebookEmptyTitle => 'No saved experiments yet';
+
+  @override
+  String get learningNotebookEmptyBody =>
+      'Save a result from Lab, Mixer, Harmonies, Formula, or Matching.';
+
+  @override
+  String get learningOpenExperiment => 'Open an experiment';
+
+  @override
+  String get learningOpenNotebook => 'Open Experiment Notebook';
+
+  @override
+  String get learningDeleteExperiment => 'Delete experiment';
+
+  @override
+  String get learningUseInRoom => 'Use palette in Illustrated Room';
+
+  @override
+  String get learningSaveExperiment => 'Save to Notebook';
+
+  @override
+  String learningOpenPracticeTool(String tool) {
+    return 'Open $tool experiment';
+  }
+
+  @override
+  String get learningSaveExperimentTitle => 'Save this experiment';
+
+  @override
+  String get learningExperimentTitleLabel => 'Experiment title';
+
+  @override
+  String get learningExperimentObservationLabel =>
+      'What did you observe? (optional)';
+
+  @override
+  String get learningExperimentSaveFailed =>
+      'This experiment is still on screen but could not be saved. Try the same save again.';
+
+  @override
+  String get learningExperimentSaved => 'Experiment saved to your Notebook.';
+
+  @override
+  String get learningResetLesson => 'Reset lesson';
+
+  @override
+  String get learningResetLessonTitle => 'Reset this lesson?';
+
+  @override
+  String get learningResetLessonBody =>
+      'Your current steps and answers for this lesson will start again. Other lessons and saved experiments stay unchanged.';
+
+  @override
+  String get myWorkExperimentsTitle => 'Color learning experiments';
+
+  @override
+  String learningExperimentTool(String tool) {
+    return '$tool experiment';
+  }
+
+  @override
+  String get learningCompletedAnnouncement =>
+      'Lesson completed. You can revisit any stage.';
+
+  @override
+  String get coloringStudioTitle => 'Coloring Studio';
+
+  @override
+  String get coloringCatalogHeadline => 'Color at your pace.';
+
+  @override
+  String get coloringCatalogBody =>
+      'Twelve original offline drawings. Guided and Free projects stay separate, with no timer, score, or lives.';
+
+  @override
+  String get coloringGamesEntryBody =>
+      'Relax with 12 original offline drawings in Guided or Free Color. No timer, score, coins, or lives.';
+
+  @override
+  String get coloringCopiedPaletteReady =>
+      'Your copied Color Learning palette is ready in Free Color.';
+
+  @override
+  String get coloringCreateFailed =>
+      'The project could not be created. Try again.';
+
+  @override
+  String get coloringAllCategories => 'All categories';
+
+  @override
+  String get coloringCategoryFruit => 'Fruit';
+
+  @override
+  String get coloringCategoryAnimals => 'Animals';
+
+  @override
+  String get coloringCategoryNature => 'Trees & Nature';
+
+  @override
+  String get coloringCategoryRooms => 'Rooms';
+
+  @override
+  String get coloringAllModes => 'All modes';
+
+  @override
+  String get coloringGuidedMode => 'Guided Color';
+
+  @override
+  String get coloringFreeMode => 'Free Color';
+
+  @override
+  String get coloringContinue => 'Continue coloring';
+
+  @override
+  String get coloringRetryCatalog => 'Retry Coloring Studio';
+
+  @override
+  String get coloringCompletedUnavailable =>
+      'This completed artwork is unavailable.';
+
+  @override
+  String get coloringCompleteTitle => 'Artwork complete';
+
+  @override
+  String get coloringCompleteBody =>
+      'Your editable project stays in My Artwork. Exporting creates a separate clean PNG.';
+
+  @override
+  String get coloringExportPng => 'Export PNG';
+
+  @override
+  String get coloringShare => 'Share';
+
+  @override
+  String get coloringUseInRoom => 'Use colors in a room';
+
+  @override
+  String get coloringChooseAnother => 'Choose another drawing';
+
+  @override
+  String get coloringOpenArtwork => 'Open My Artwork';
+
+  @override
+  String get coloringReturnLearning => 'Return to Color Learning';
+
+  @override
+  String get coloringExportedComplete =>
+      'PNG exported. Your editable project is unchanged.';
+
+  @override
+  String get coloringShareCompleted => 'Share completed.';
+
+  @override
+  String get coloringShareDismissed => 'Share cancelled. Your project is safe.';
+
+  @override
+  String get coloringShareUnavailable =>
+      'Sharing is unavailable on this device.';
+
+  @override
+  String get coloringPngFailed =>
+      'The PNG could not be created. Your editable project is safe.';
+
+  @override
+  String get coloringChooseMode =>
+      'Choose how you want to color. Each mode keeps its own project.';
+
+  @override
+  String get coloringGuidedDescription =>
+      'Match each labeled region with its authored color. No timer or penalties.';
+
+  @override
+  String get coloringFreeDescription =>
+      'Use suggested colors, your saved colors, palettes, or a custom HEX.';
+
+  @override
+  String get coloringRegions => 'Regions';
+
+  @override
+  String get coloringNotColored => 'Not colored';
+
+  @override
+  String get coloringAssignTitle => 'Assign colors to room surfaces';
+
+  @override
+  String get coloringAssignBody =>
+      'Choose each surface explicitly. The room will not change until you confirm.';
+
+  @override
+  String get coloringSurfaceWall => 'Wall';
+
+  @override
+  String get coloringSurfaceCeiling => 'Ceiling';
+
+  @override
+  String get coloringSurfaceFloor => 'Floor';
+
+  @override
+  String get coloringSurfaceFurniture => 'Furniture';
+
+  @override
+  String get coloringCancel => 'Cancel';
+
+  @override
+  String get coloringApplyRoom => 'Apply to room';
+
+  @override
+  String get coloringOpenFailed =>
+      'Coloring Studio could not open this project.';
+
+  @override
+  String get coloringProjectMissing => 'This coloring project was not found.';
+
+  @override
+  String get coloringRevisionMissing => 'This drawing revision is unavailable.';
+
+  @override
+  String get coloringSaveDraft =>
+      'Your latest change is still visible but was not saved.';
+
+  @override
+  String get coloringRetry => 'Retry';
+
+  @override
+  String get coloringRegionSelected => 'Region selected.';
+
+  @override
+  String get coloringApplyGuided => 'Apply selected color to selected region';
+
+  @override
+  String get coloringUndo => 'Undo';
+
+  @override
+  String get coloringRedo => 'Redo';
+
+  @override
+  String get coloringAllColored => 'Every required region is colored.';
+
+  @override
+  String get coloringNextUnfilled => 'Moved to the next unfilled region.';
+
+  @override
+  String get coloringFindRegion => 'Find region';
+
+  @override
+  String get coloringFinish => 'Finish';
+
+  @override
+  String get coloringSaved => 'Saved';
+
+  @override
+  String get coloringSaving => 'Saving…';
+
+  @override
+  String get coloringNotSaved => 'Not saved';
+
+  @override
+  String get coloringChooseGuided => 'Choose one of the guided colors.';
+
+  @override
+  String get coloringNowChooseColor => 'Now choose a color for this region.';
+
+  @override
+  String get coloringChooseRegion => 'Choose a region first.';
+
+  @override
+  String get coloringChooseLabeledColor => 'Choose a labeled color first.';
+
+  @override
+  String get coloringAccepted => 'Nice match. The region is colored.';
+
+  @override
+  String get coloringWrongColor =>
+      'That color belongs to a different region. Try another labeled color.';
+
+  @override
+  String get coloringRetryBeforeFinish => 'Retry saving before finishing.';
+
+  @override
+  String get coloringFinishRemaining =>
+      'Color the remaining required regions first.';
+
+  @override
+  String get coloringChangeSaveFailed =>
+      'The change could not be saved. Retry is available.';
+
+  @override
+  String get coloringMyArtwork => 'My Artwork';
+
+  @override
+  String get coloringArtworkBody =>
+      'Editable Coloring Studio projects are separate from exported PNG files.';
+
+  @override
+  String get coloringRetryArtwork => 'Retry artwork';
+
+  @override
+  String get coloringDuplicateFailed => 'The project could not be duplicated.';
+
+  @override
+  String get coloringExported => 'PNG exported.';
+
+  @override
+  String get coloringExportFailed => 'Export failed. The project is safe.';
+
+  @override
+  String get coloringSharingFailed =>
+      'Sharing is unavailable. The project is safe.';
+
+  @override
+  String get coloringDeleteTitle => 'Delete editable artwork?';
+
+  @override
+  String get coloringDeleteBody => 'Exported PNG files are not deleted.';
+
+  @override
+  String get coloringDelete => 'Delete';
+
+  @override
+  String get coloringDeleteFailed => 'The artwork could not be deleted.';
+
+  @override
+  String get coloringEmptyArtwork => 'No coloring projects yet.';
+
+  @override
+  String get coloringOpenStudio => 'Open Coloring Studio';
+
+  @override
+  String get coloringResume => 'Resume';
+
+  @override
+  String get coloringDuplicate => 'Duplicate';
+
+  @override
+  String get coloringExport => 'Export';
+
+  @override
+  String get coloringSuggestedColors => 'Suggested colors';
+
+  @override
+  String get coloringFromLearning => 'From Color Learning';
+
+  @override
+  String get coloringMyColors => 'My Colors';
+
+  @override
+  String get coloringMyPalettes => 'My Palettes';
+
+  @override
+  String get coloringCustomHex => 'Custom HEX';
+
+  @override
+  String get coloringHexHint => '#336699';
+
+  @override
+  String get coloringUseCustom => 'Use custom color';
+
+  @override
+  String get coloringInvalidHex => 'Enter a six-digit HEX color.';
+
+  @override
+  String get coloringUnknownDrawing => 'Unknown drawing';
+
+  @override
+  String coloringProgress(int filled, int total) {
+    return '$filled of $total regions';
+  }
+
+  @override
+  String coloringSelectedColor(String label) {
+    return '$label selected.';
+  }
+
+  @override
+  String coloringAppliedColor(String hex) {
+    return '$hex applied.';
+  }
+
+  @override
+  String coloringRegionNeeds(String label) {
+    return 'Needs $label';
+  }
+
+  @override
+  String coloringRegionComplete(String label) {
+    return '$label complete';
+  }
+
+  @override
+  String coloringRegionSemantics(String label, String value) {
+    return '$label, $value';
+  }
+
+  @override
+  String coloringProjectSummary(String mode, int count) {
+    return '$mode · $count regions';
+  }
+
+  @override
+  String coloringNumberedSwatch(int number, String label, String hex) {
+    return '$number. $label $hex';
+  }
+
+  @override
+  String coloringNamedHex(String name, String hex) {
+    return '$name $hex';
+  }
+
+  @override
+  String coloringSwatchSemantics(String label, String hex) {
+    return '$label, $hex';
+  }
+
+  @override
+  String coloringSwatchTooltip(String label, String hex) {
+    return '$label · $hex';
+  }
+
+  @override
+  String coloringShareTitle(String title) {
+    return 'TintAtlas Coloring Studio — $title';
+  }
+
+  @override
+  String coloringDifficulty(String key) {
+    String _temp0 = intl.Intl.selectLogic(key, {
+      'easy': 'Easy',
+      'medium': 'Medium',
+      'hard': 'Hard',
+      'other': 'Unknown difficulty',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String coloringDifficultyBadge(String key) {
+    String _temp0 = intl.Intl.selectLogic(key, {
+      'easy': 'EASY',
+      'medium': 'MEDIUM',
+      'hard': 'HARD',
+      'other': 'UNKNOWN DIFFICULTY',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String coloringModeSummary(String key) {
+    String _temp0 = intl.Intl.selectLogic(key, {
+      'guided': 'guided',
+      'free': 'free',
+      'other': 'unknown mode',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String coloringDrawingTitle(String key) {
+    String _temp0 = intl.Intl.selectLogic(key, {
+      'coloringFruitRedAppleTitle': 'Red Apple',
+      'coloringFruitOrangeSliceTitle': 'Orange Slice',
+      'coloringFruitBerryBowlTitle': 'Berry Bowl',
+      'coloringAnimalButterflyTitle': 'Butterfly',
+      'coloringAnimalTropicalFishTitle': 'Tropical Fish',
+      'coloringAnimalParrotTitle': 'Parrot',
+      'coloringNatureLeafyTreeTitle': 'Leafy Tree',
+      'coloringNatureSunflowerTitle': 'Sunflower',
+      'coloringNatureMountainGroveTitle': 'Mountain Grove',
+      'coloringRoomCozyLivingTitle': 'Cozy Living Room',
+      'coloringRoomCalmBedroomTitle': 'Calm Bedroom',
+      'coloringRoomReadingCornerTitle': 'Reading Corner',
+      'other': 'Unknown drawing',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String coloringDrawingDescription(String key) {
+    String _temp0 = intl.Intl.selectLogic(key, {
+      'coloringFruitRedAppleDescription':
+          'A bright apple with a leaf, stem, and soft highlight.',
+      'coloringFruitOrangeSliceDescription':
+          'A cheerful citrus slice with peel, pith, and seed.',
+      'coloringFruitBerryBowlDescription':
+          'Red and blue berries gathered in a cool blue bowl.',
+      'coloringAnimalButterflyDescription':
+          'A balanced butterfly with warm wings and violet spots.',
+      'coloringAnimalTropicalFishDescription':
+          'A lively fish with bold stripes, fin, and bright body.',
+      'coloringAnimalParrotDescription':
+          'A five-color parrot perched in a friendly profile.',
+      'coloringNatureLeafyTreeDescription':
+          'A sturdy tree with layered leaves and warm ground.',
+      'coloringNatureSunflowerDescription':
+          'A tall sunflower against a clear blue sky.',
+      'coloringNatureMountainGroveDescription':
+          'Pines, snow, and slate peaks in a quiet landscape.',
+      'coloringRoomCozyLivingDescription':
+          'A calm sofa, rug, table, and wall composition.',
+      'coloringRoomCalmBedroomDescription':
+          'A restful bed with mist, cream, blue, and sage layers.',
+      'coloringRoomReadingCornerDescription':
+          'A warm chair, shelf, plant, and lamp for a quiet nook.',
+      'other': 'Drawing description unavailable.',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String coloringSlotLabel(String key) {
+    String _temp0 = intl.Intl.selectLogic(key, {
+      'coloringSlotAppleRed': 'Apple red',
+      'coloringSlotLeafGreen': 'Leaf green',
+      'coloringSlotStemBrown': 'Stem brown',
+      'coloringSlotHighlightCream': 'Highlight cream',
+      'coloringSlotPeelOrange': 'Peel orange',
+      'coloringSlotFleshOrange': 'Flesh orange',
+      'coloringSlotPithCream': 'Pith cream',
+      'coloringSlotSeedTan': 'Seed tan',
+      'coloringSlotBerryRed': 'Berry red',
+      'coloringSlotBerryBlue': 'Berry blue',
+      'coloringSlotBowlBlue': 'Bowl blue',
+      'coloringSlotRimCream': 'Rim cream',
+      'coloringSlotWingGold': 'Wing gold',
+      'coloringSlotWingCoral': 'Wing coral',
+      'coloringSlotBodyCharcoal': 'Body charcoal',
+      'coloringSlotSpotViolet': 'Spot violet',
+      'coloringSlotBodyTurquoise': 'Body turquoise',
+      'coloringSlotStripeYellow': 'Stripe yellow',
+      'coloringSlotStripeCoral': 'Stripe coral',
+      'coloringSlotFinBlue': 'Fin blue',
+      'coloringSlotEyeCharcoal': 'Eye charcoal',
+      'coloringSlotFeatherRed': 'Feather red',
+      'coloringSlotFeatherGreen': 'Feather green',
+      'coloringSlotFeatherBlue': 'Feather blue',
+      'coloringSlotChestYellow': 'Chest yellow',
+      'coloringSlotBeakOrange': 'Beak orange',
+      'coloringSlotLeafLightGreen': 'Leaf light green',
+      'coloringSlotTrunkBrown': 'Trunk brown',
+      'coloringSlotGroundTan': 'Ground tan',
+      'coloringSlotPetalYellow': 'Petal yellow',
+      'coloringSlotCenterBrown': 'Center brown',
+      'coloringSlotSkyBlue': 'Sky blue',
+      'coloringSlotMountainSlate': 'Mountain slate',
+      'coloringSlotPineGreen': 'Pine green',
+      'coloringSlotSnowWhite': 'Snow white',
+      'coloringSlotEarthGray': 'Earth gray',
+      'coloringSlotWallLinen': 'Wall linen',
+      'coloringSlotSofaSage': 'Sofa sage',
+      'coloringSlotWoodBrown': 'Wood brown',
+      'coloringSlotRugCoral': 'Rug coral',
+      'coloringSlotAccentSlate': 'Accent slate',
+      'coloringSlotWallMist': 'Wall mist',
+      'coloringSlotBeddingCream': 'Bedding cream',
+      'coloringSlotBlanketBlue': 'Blanket blue',
+      'coloringSlotWoodTan': 'Wood tan',
+      'coloringSlotAccentSage': 'Accent sage',
+      'coloringSlotChairClay': 'Chair clay',
+      'coloringSlotShelfBrown': 'Shelf brown',
+      'coloringSlotPlantGreen': 'Plant green',
+      'coloringSlotLampGold': 'Lamp gold',
+      'other': 'Color',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String coloringRegionLabel(String key) {
+    String _temp0 = intl.Intl.selectLogic(key, {
+      'coloringAppleBody': 'Apple Body',
+      'coloringAppleStem': 'Apple Stem',
+      'coloringAppleLeaf': 'Apple Leaf',
+      'coloringAppleHighlight': 'Apple Highlight',
+      'coloringOrangePeel': 'Orange Peel',
+      'coloringOrangeFlesh': 'Orange Flesh',
+      'coloringOrangePith': 'Orange Pith',
+      'coloringOrangeSeed': 'Orange Seed',
+      'coloringBerryBowlBody': 'Berry Bowl Body',
+      'coloringBerryBowlRim': 'Berry Bowl Rim',
+      'coloringBerryRedFruit': 'Berry Red Fruit',
+      'coloringBerryBlueFruit': 'Berry Blue Fruit',
+      'coloringBerryLeaf': 'Berry Leaf',
+      'coloringButterflyGoldWings': 'Butterfly Gold Wings',
+      'coloringButterflyCoralWings': 'Butterfly Coral Wings',
+      'coloringButterflyBody': 'Butterfly Body',
+      'coloringButterflySpots': 'Butterfly Spots',
+      'coloringFishBody': 'Fish Body',
+      'coloringFishTail': 'Fish Tail',
+      'coloringFishCoralStripe': 'Fish Coral Stripe',
+      'coloringFishYellowStripe': 'Fish Yellow Stripe',
+      'coloringFishEye': 'Fish Eye',
+      'coloringParrotRedHead': 'Parrot Red Head',
+      'coloringParrotGreenWing': 'Parrot Green Wing',
+      'coloringParrotBlueTail': 'Parrot Blue Tail',
+      'coloringParrotYellowChest': 'Parrot Yellow Chest',
+      'coloringParrotOrangeBeak': 'Parrot Orange Beak',
+      'coloringTreeGround': 'Tree Ground',
+      'coloringTreeTrunk': 'Tree Trunk',
+      'coloringTreeDarkLeaves': 'Tree Dark Leaves',
+      'coloringTreeLightLeaves': 'Tree Light Leaves',
+      'coloringSunflowerSky': 'Sunflower Sky',
+      'coloringSunflowerStemLeaf': 'Sunflower Stem Leaf',
+      'coloringSunflowerPetals': 'Sunflower Petals',
+      'coloringSunflowerCenter': 'Sunflower Center',
+      'coloringMountainSky': 'Mountain Sky',
+      'coloringMountainEarth': 'Mountain Earth',
+      'coloringMountainSlate': 'Mountain Slate',
+      'coloringMountainSnow': 'Mountain Snow',
+      'coloringMountainPines': 'Mountain Pines',
+      'coloringLivingWall': 'Living Wall',
+      'coloringLivingRug': 'Living Rug',
+      'coloringLivingSofa': 'Living Sofa',
+      'coloringLivingWood': 'Living Wood',
+      'coloringLivingAccent': 'Living Accent',
+      'coloringBedroomWall': 'Bedroom Wall',
+      'coloringBedroomWood': 'Bedroom Wood',
+      'coloringBedroomBedding': 'Bedroom Bedding',
+      'coloringBedroomBlanket': 'Bedroom Blanket',
+      'coloringBedroomAccent': 'Bedroom Accent',
+      'coloringReadingWall': 'Reading Wall',
+      'coloringReadingShelf': 'Reading Shelf',
+      'coloringReadingChair': 'Reading Chair',
+      'coloringReadingPlant': 'Reading Plant',
+      'coloringReadingLamp': 'Reading Lamp',
+      'other': 'Region',
+    });
+    return '$_temp0';
+  }
 }

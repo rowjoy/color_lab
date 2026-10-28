@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "animal_tropical_fish",
+  "revision": 1,
+  "width": 600,
+  "height": 400,
+  "regions": [
+    {"id":"fish-body","labelKey":"coloringFishBody","groupId":"animals","fillable":true,"paintOrder":0,"geometry":{"parts":[{"slot":0,"commands":[["M",116,206],["C",190,96,384,88,468,190],["C",390,314,192,306,116,206],["Z"]]}]}},
+    {"id":"fish-tail","labelKey":"coloringFishTail","groupId":"animals","fillable":true,"paintOrder":1,"geometry":{"parts":[{"slot":1,"commands":[["M",126,204],["L",42,116],["L",58,210],["L",42,304],["L",130,220],["Z"]]}]}},
+    {"id":"fish-coral-stripe","labelKey":"coloringFishCoralStripe","groupId":"animals","fillable":true,"paintOrder":2,"geometry":{"parts":[{"slot":2,"commands":[["M",246,112],["Q",284,102,318,112],["L",292,296],["Q",256,292,226,278],["Z"]]}]}},
+    {"id":"fish-yellow-stripe","labelKey":"coloringFishYellowStripe","groupId":"animals","fillable":true,"paintOrder":3,"geometry":{"parts":[{"slot":3,"commands":[["M",354,118],["Q",390,126,418,148],["L",382,272],["Q",350,288,326,292],["Z"]]}]}},
+    {"id":"fish-eye","labelKey":"coloringFishEye","groupId":"animals","fillable":true,"paintOrder":4,"geometry":{"parts":[{"slot":4,"commands":[["M",420,176],["C",442,160,466,178,454,200],["C",438,216,414,202,420,176],["Z"]]}]}}
+  ]
+}

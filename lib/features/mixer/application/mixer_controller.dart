@@ -16,7 +16,10 @@ class MixerController extends Notifier<MixerState> {
   MixerState build() => MixerState.initial();
 
   void addColor(RgbColor color) {
-    final id = 'color-${_nextColorId++}';
+    late String id;
+    do {
+      id = 'color-${_nextColorId++}';
+    } while (state.ingredients.any((item) => item.id == id));
     state = state.copyWith(
       ingredients: [
         ...state.ingredients,
@@ -53,6 +56,19 @@ class MixerController extends Notifier<MixerState> {
   }
 
   void setSpace(MixingSpace space) => state = state.copyWith(space: space);
+
+  void restore(MixerState draft) {
+    state = draft;
+    var next = 0;
+    for (final ingredient in draft.ingredients) {
+      final match = RegExp(r'^color-(\d+)$').firstMatch(ingredient.id);
+      if (match != null) {
+        final candidate = int.parse(match.group(1)!) + 1;
+        if (candidate > next) next = candidate;
+      }
+    }
+    _nextColorId = next;
+  }
 
   void reset() => state = MixerState.initial();
 }

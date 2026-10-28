@@ -96,6 +96,20 @@ abstract final class SchemaRegistry {
     currentVersion: 1,
     scope: LocalDataScope.cache,
   );
+  static const learningLibrary = SchemaDescriptor(
+    id: 'learning-library',
+    storageName: 'learning_library_v1',
+    backend: StorageBackend.hiveBox,
+    currentVersion: 1,
+    scope: LocalDataScope.sharedLibrary,
+  );
+  static const coloringProjects = SchemaDescriptor(
+    id: 'coloring-projects',
+    storageName: 'coloring_projects_v1',
+    backend: StorageBackend.hiveBox,
+    currentVersion: 1,
+    scope: LocalDataScope.sharedLibrary,
+  );
 
   static const List<SchemaDescriptor> all = [
     appPreferences,
@@ -107,6 +121,8 @@ abstract final class SchemaRegistry {
     legacyGameProgress,
     roomProjects,
     roomModelCache,
+    learningLibrary,
+    coloringProjects,
   ];
 
   static const Map<LocalDataCategory, LocalDataScope> categoryScopes = {

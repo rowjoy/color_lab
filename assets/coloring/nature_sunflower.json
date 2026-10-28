@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "nature_sunflower",
+  "revision": 1,
+  "width": 600,
+  "height": 400,
+  "regions": [
+    {"id":"sunflower-sky","labelKey":"coloringSunflowerSky","groupId":"treesNature","fillable":true,"paintOrder":0,"geometry":{"parts":[{"slot":0,"commands":[["M",28,28],["L",572,28],["L",572,372],["L",28,372],["Z"]]}]}},
+    {"id":"sunflower-stem-leaf","labelKey":"coloringSunflowerStemLeaf","groupId":"treesNature","fillable":true,"paintOrder":1,"geometry":{"parts":[{"slot":1,"commands":[["M",288,184],["L",312,184],["L",324,370],["L",276,370],["Z"],["M",296,260],["Q",214,218,176,280],["Q",232,312,298,286],["Z"]]}]}},
+    {"id":"sunflower-petals","labelKey":"coloringSunflowerPetals","groupId":"treesNature","fillable":true,"paintOrder":2,"geometry":{"parts":[{"slot":2,"commands":[["M",300,42],["L",324,102],["L",378,66],["L",366,130],["L",432,126],["L",378,170],["L",426,208],["L",360,202],["L",368,270],["L",320,220],["L",296,282],["L",278,218],["L",226,264],["L",238,198],["L",172,204],["L",224,166],["L",170,122],["L",238,128],["L",228,62],["L",278,104],["Z"]]}]}},
+    {"id":"sunflower-center","labelKey":"coloringSunflowerCenter","groupId":"treesNature","fillable":true,"paintOrder":3,"geometry":{"parts":[{"slot":3,"commands":[["M",300,112],["C",374,112,394,194,340,226],["C",280,260,210,210,222,154],["C",232,122,260,112,300,112],["Z"]]}]}}
+  ]
+}

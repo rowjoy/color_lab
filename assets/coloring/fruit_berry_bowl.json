@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "fruit_berry_bowl",
+  "revision": 1,
+  "width": 600,
+  "height": 400,
+  "regions": [
+    {"id":"bowl-body","labelKey":"coloringBerryBowlBody","groupId":"fruit","fillable":true,"paintOrder":0,"geometry":{"parts":[{"slot":0,"commands":[["M",112,216],["L",488,216],["Q",458,350,300,356],["Q",142,350,112,216],["Z"]]}]}},
+    {"id":"bowl-rim","labelKey":"coloringBerryBowlRim","groupId":"fruit","fillable":true,"paintOrder":1,"geometry":{"parts":[{"slot":1,"commands":[["M",100,202],["Q",300,174,500,202],["L",488,230],["Q",300,204,112,230],["Z"]]}]}},
+    {"id":"red-berries","labelKey":"coloringBerryRedFruit","groupId":"fruit","fillable":true,"paintOrder":2,"geometry":{"parts":[{"slot":2,"commands":[["M",172,186],["C",142,144,178,104,220,126],["C",248,158,222,204,172,186],["Z"],["M",282,172],["C",254,126,298,92,336,124],["C",358,162,328,198,282,172],["Z"]]}]}},
+    {"id":"blue-berries","labelKey":"coloringBerryBlueFruit","groupId":"fruit","fillable":true,"paintOrder":3,"geometry":{"parts":[{"slot":3,"commands":[["M",222,202],["C",196,160,238,126,274,154],["C",302,188,270,220,222,202],["Z"],["M",358,200],["C",330,156,376,122,414,154],["C",438,190,404,220,358,200],["Z"]]}]}},
+    {"id":"berry-leaf","labelKey":"coloringBerryLeaf","groupId":"fruit","fillable":true,"paintOrder":4,"geometry":{"parts":[{"slot":4,"commands":[["M",290,126],["Q",300,62,366,70],["Q",350,122,300,142],["Q",268,84,226,94],["Q",244,132,290,126],["Z"]]}]}}
+  ]
+}

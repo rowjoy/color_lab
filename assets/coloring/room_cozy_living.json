@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "room_cozy_living",
+  "revision": 1,
+  "width": 600,
+  "height": 400,
+  "regions": [
+    {"id":"living-wall","labelKey":"coloringLivingWall","groupId":"rooms","fillable":true,"paintOrder":0,"geometry":{"parts":[{"slot":0,"commands":[["M",22,22],["L",578,22],["L",578,314],["L",22,314],["Z"]]}]}},
+    {"id":"living-rug","labelKey":"coloringLivingRug","groupId":"rooms","fillable":true,"paintOrder":1,"geometry":{"parts":[{"slot":1,"commands":[["M",116,300],["L",480,300],["L",550,378],["L",48,378],["Z"]]}]}},
+    {"id":"living-sofa","labelKey":"coloringLivingSofa","groupId":"rooms","fillable":true,"paintOrder":2,"geometry":{"parts":[{"slot":2,"commands":[["M",126,196],["Q",130,164,164,164],["L",436,164],["Q",470,164,474,196],["L",486,326],["L",114,326],["Z"]]}]}},
+    {"id":"living-wood","labelKey":"coloringLivingWood","groupId":"rooms","fillable":true,"paintOrder":3,"geometry":{"parts":[{"slot":3,"commands":[["M",248,242],["L",352,242],["L",376,298],["L",224,298],["Z"],["M",144,326],["L",168,326],["L",158,364],["L",136,364],["Z"],["M",432,326],["L",456,326],["L",464,364],["L",442,364],["Z"]]}]}},
+    {"id":"living-accent","labelKey":"coloringLivingAccent","groupId":"rooms","fillable":true,"paintOrder":4,"geometry":{"parts":[{"slot":4,"commands":[["M",168,188],["L",246,188],["L",246,246],["L",168,246],["Z"],["M",354,188],["L",432,188],["L",432,246],["L",354,246],["Z"]]}]}}
+  ]
+}

@@ -373,7 +373,7 @@ void main() {
             .value
             .uri
             .path,
-        '/lab',
+        '/learn/experiment/lab',
       );
       expect(container.read(visionSessionProvider), same(draft));
       expect(find.byKey(const ValueKey('open-vision')), findsOneWidget);
@@ -393,7 +393,7 @@ void main() {
       await answer(tester, '8');
       expect(container.read(visionSessionProvider).stage, VisionStage.complete);
       expect(find.byKey(const ValueKey('vision-results')), findsOneWidget);
-      expect(find.text('4 of 6 pattern matches'), findsOneWidget);
+      expect(find.text('Review your 6 recorded responses'), findsOneWidget);
       expect(find.text('Not sure: 1'), findsOneWidget);
       const generated = ['2', '3', '4', '5', '6', '8'];
       const recorded = ['2', '0', '4', 'Not sure', '6', '8'];
@@ -581,7 +581,10 @@ void main() {
         await press(tester, 'vision-not-sure');
       }
       expect(offset(tester), 0);
-      expect(find.text('0 of 6 pattern matches').hitTestable(), findsOneWidget);
+      expect(
+        find.text('Review your 6 recorded responses').hitTestable(),
+        findsOneWidget,
+      );
       await press(tester, 'vision-try-again');
       expect(offset(tester), 0);
       expect(find.text('Plate 1 of 6').hitTestable(), findsOneWidget);
@@ -662,7 +665,10 @@ void main() {
       for (var i = 0; i < 6; i++) {
         await press(tester, 'vision-not-sure');
       }
-      expect(find.text('0 of 6 pattern matches').hitTestable(), findsOneWidget);
+      expect(
+        find.text('Review your 6 recorded responses').hitTestable(),
+        findsOneWidget,
+      );
       expect(find.text(caveat), findsOneWidget);
       await press(tester, 'vision-try-again');
       expect(find.text('Plate 1 of 6').hitTestable(), findsOneWidget);

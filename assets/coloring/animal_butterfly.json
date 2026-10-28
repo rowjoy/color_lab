@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "animal_butterfly",
+  "revision": 1,
+  "width": 600,
+  "height": 400,
+  "regions": [
+    {"id":"butterfly-gold-wings","labelKey":"coloringButterflyGoldWings","groupId":"animals","fillable":true,"paintOrder":0,"geometry":{"parts":[{"slot":0,"commands":[["M",286,184],["C",226,70,98,62,96,156],["C",94,224,210,242,286,214],["Z"],["M",314,184],["C",374,70,502,62,504,156],["C",506,224,390,242,314,214],["Z"]]}]}},
+    {"id":"butterfly-coral-wings","labelKey":"coloringButterflyCoralWings","groupId":"animals","fillable":true,"paintOrder":1,"geometry":{"parts":[{"slot":1,"commands":[["M",286,222],["C",210,214,136,260,168,326],["C",202,370,266,302,290,248],["Z"],["M",314,222],["C",390,214,464,260,432,326],["C",398,370,334,302,310,248],["Z"]]}]}},
+    {"id":"butterfly-body","labelKey":"coloringButterflyBody","groupId":"animals","fillable":true,"paintOrder":2,"geometry":{"parts":[{"slot":2,"commands":[["M",284,136],["Q",300,116,316,136],["L",320,288],["Q",300,326,280,288],["Z"]]}]}},
+    {"id":"butterfly-spots","labelKey":"coloringButterflySpots","groupId":"animals","fillable":true,"paintOrder":3,"geometry":{"parts":[{"slot":3,"commands":[["M",170,142],["C",190,112,228,126,224,160],["C",218,190,180,188,170,142],["Z"],["M",430,142],["C",410,112,372,126,376,160],["C",382,190,420,188,430,142],["Z"]]}]}}
+  ]
+}

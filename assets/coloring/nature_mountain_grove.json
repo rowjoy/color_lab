@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "nature_mountain_grove",
+  "revision": 1,
+  "width": 600,
+  "height": 400,
+  "regions": [
+    {"id":"mountain-sky","labelKey":"coloringMountainSky","groupId":"treesNature","fillable":true,"paintOrder":0,"geometry":{"parts":[{"slot":0,"commands":[["M",20,20],["L",580,20],["L",580,380],["L",20,380],["Z"]]}]}},
+    {"id":"mountain-earth","labelKey":"coloringMountainEarth","groupId":"treesNature","fillable":true,"paintOrder":1,"geometry":{"parts":[{"slot":1,"commands":[["M",20,286],["Q",300,246,580,286],["L",580,380],["L",20,380],["Z"]]}]}},
+    {"id":"mountain-slate","labelKey":"coloringMountainSlate","groupId":"treesNature","fillable":true,"paintOrder":2,"geometry":{"parts":[{"slot":2,"commands":[["M",66,294],["L",226,86],["L",326,214],["L",400,120],["L",548,298],["Z"]]}]}},
+    {"id":"mountain-snow","labelKey":"coloringMountainSnow","groupId":"treesNature","fillable":true,"paintOrder":3,"geometry":{"parts":[{"slot":3,"commands":[["M",176,150],["L",226,86],["L",280,154],["L",246,140],["L",220,168],["L",198,144],["Z"],["M",366,164],["L",400,120],["L",438,166],["L",412,154],["L",396,176],["Z"]]}]}},
+    {"id":"mountain-pines","labelKey":"coloringMountainPines","groupId":"treesNature","fillable":true,"paintOrder":4,"geometry":{"parts":[{"slot":4,"commands":[["M",118,214],["L",70,326],["L",104,314],["L",86,360],["L",150,360],["L",132,314],["L",166,326],["Z"],["M",492,210],["L",446,320],["L",478,310],["L",462,354],["L",522,354],["L",506,310],["L",538,320],["Z"]]}]}}
+  ]
+}

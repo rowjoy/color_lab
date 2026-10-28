@@ -1,0 +1,735 @@
+{
+  "schemaVersion": 1,
+  "drawings": [
+    {
+      "id": "fruit_red_apple",
+      "revision": 1,
+      "asset": "assets/coloring/fruit_red_apple.json",
+      "title": "coloringFruitRedAppleTitle",
+      "description": "coloringFruitRedAppleDescription",
+      "category": "fruit",
+      "difficulty": "easy",
+      "sourceNote": "Original TintAtlas code-native vector artwork, 2026-10-28.",
+      "contentHash": "418bdb074a8a520c4fd232e731a32aa5983ea301f523fb804cda3b8b73cc5f3e",
+      "slots": [
+        {
+          "id": "apple-red",
+          "label": "coloringSlotAppleRed",
+          "hex": "#D94B45"
+        },
+        {
+          "id": "leaf-green",
+          "label": "coloringSlotLeafGreen",
+          "hex": "#4F8A4C"
+        },
+        {
+          "id": "stem-brown",
+          "label": "coloringSlotStemBrown",
+          "hex": "#7A5230"
+        },
+        {
+          "id": "highlight-cream",
+          "label": "coloringSlotHighlightCream",
+          "hex": "#F7D7C4"
+        }
+      ],
+      "regionRules": [
+        {
+          "regionId": "apple-body",
+          "targetSlotId": "apple-red",
+          "required": true
+        },
+        {
+          "regionId": "apple-stem",
+          "targetSlotId": "stem-brown",
+          "required": true
+        },
+        {
+          "regionId": "apple-leaf",
+          "targetSlotId": "leaf-green",
+          "required": true
+        },
+        {
+          "regionId": "apple-highlight",
+          "targetSlotId": "highlight-cream",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "fruit_orange_slice",
+      "revision": 1,
+      "asset": "assets/coloring/fruit_orange_slice.json",
+      "title": "coloringFruitOrangeSliceTitle",
+      "description": "coloringFruitOrangeSliceDescription",
+      "category": "fruit",
+      "difficulty": "easy",
+      "sourceNote": "Original TintAtlas code-native vector artwork, 2026-10-28.",
+      "contentHash": "8fa36d95d6763a194b0a17c7bc0ae27fde284554342515bbd331de0b6789317c",
+      "slots": [
+        {
+          "id": "peel-orange",
+          "label": "coloringSlotPeelOrange",
+          "hex": "#F28C28"
+        },
+        {
+          "id": "flesh-orange",
+          "label": "coloringSlotFleshOrange",
+          "hex": "#FFB347"
+        },
+        {
+          "id": "pith-cream",
+          "label": "coloringSlotPithCream",
+          "hex": "#FFF1D0"
+        },
+        {
+          "id": "seed-tan",
+          "label": "coloringSlotSeedTan",
+          "hex": "#C9914B"
+        }
+      ],
+      "regionRules": [
+        {
+          "regionId": "orange-peel",
+          "targetSlotId": "peel-orange",
+          "required": true
+        },
+        {
+          "regionId": "orange-flesh",
+          "targetSlotId": "flesh-orange",
+          "required": true
+        },
+        {
+          "regionId": "orange-pith",
+          "targetSlotId": "pith-cream",
+          "required": true
+        },
+        {
+          "regionId": "orange-seed",
+          "targetSlotId": "seed-tan",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "fruit_berry_bowl",
+      "revision": 1,
+      "asset": "assets/coloring/fruit_berry_bowl.json",
+      "title": "coloringFruitBerryBowlTitle",
+      "description": "coloringFruitBerryBowlDescription",
+      "category": "fruit",
+      "difficulty": "medium",
+      "sourceNote": "Original TintAtlas code-native vector artwork, 2026-10-28.",
+      "contentHash": "f2dde049795772a8b561566e6bd10381f230377e7082eaa38c874e5b6dbb1f36",
+      "slots": [
+        {
+          "id": "berry-red",
+          "label": "coloringSlotBerryRed",
+          "hex": "#D94B45"
+        },
+        {
+          "id": "berry-blue",
+          "label": "coloringSlotBerryBlue",
+          "hex": "#4F5FA8"
+        },
+        {
+          "id": "leaf-green",
+          "label": "coloringSlotLeafGreen",
+          "hex": "#4F8A4C"
+        },
+        {
+          "id": "bowl-blue",
+          "label": "coloringSlotBowlBlue",
+          "hex": "#6FA8C9"
+        },
+        {
+          "id": "rim-cream",
+          "label": "coloringSlotRimCream",
+          "hex": "#E8E1D5"
+        }
+      ],
+      "regionRules": [
+        {
+          "regionId": "bowl-body",
+          "targetSlotId": "bowl-blue",
+          "required": true
+        },
+        {
+          "regionId": "bowl-rim",
+          "targetSlotId": "rim-cream",
+          "required": true
+        },
+        {
+          "regionId": "red-berries",
+          "targetSlotId": "berry-red",
+          "required": true
+        },
+        {
+          "regionId": "blue-berries",
+          "targetSlotId": "berry-blue",
+          "required": true
+        },
+        {
+          "regionId": "berry-leaf",
+          "targetSlotId": "leaf-green",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "animal_butterfly",
+      "revision": 1,
+      "asset": "assets/coloring/animal_butterfly.json",
+      "title": "coloringAnimalButterflyTitle",
+      "description": "coloringAnimalButterflyDescription",
+      "category": "animals",
+      "difficulty": "easy",
+      "sourceNote": "Original TintAtlas code-native vector artwork, 2026-10-28.",
+      "contentHash": "66c2b870a11a7d9829c2465fa9f1176b6fd188838bb9026929ac8a7d800d7ee0",
+      "slots": [
+        {
+          "id": "wing-gold",
+          "label": "coloringSlotWingGold",
+          "hex": "#F4B942"
+        },
+        {
+          "id": "wing-coral",
+          "label": "coloringSlotWingCoral",
+          "hex": "#E76F51"
+        },
+        {
+          "id": "body-charcoal",
+          "label": "coloringSlotBodyCharcoal",
+          "hex": "#4A4A4A"
+        },
+        {
+          "id": "spot-violet",
+          "label": "coloringSlotSpotViolet",
+          "hex": "#5B5F97"
+        }
+      ],
+      "regionRules": [
+        {
+          "regionId": "butterfly-gold-wings",
+          "targetSlotId": "wing-gold",
+          "required": true
+        },
+        {
+          "regionId": "butterfly-coral-wings",
+          "targetSlotId": "wing-coral",
+          "required": true
+        },
+        {
+          "regionId": "butterfly-body",
+          "targetSlotId": "body-charcoal",
+          "required": true
+        },
+        {
+          "regionId": "butterfly-spots",
+          "targetSlotId": "spot-violet",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "animal_tropical_fish",
+      "revision": 1,
+      "asset": "assets/coloring/animal_tropical_fish.json",
+      "title": "coloringAnimalTropicalFishTitle",
+      "description": "coloringAnimalTropicalFishDescription",
+      "category": "animals",
+      "difficulty": "medium",
+      "sourceNote": "Original TintAtlas code-native vector artwork, 2026-10-28.",
+      "contentHash": "7182ccd87d394d6f4102b77c47e38983be23d135f66d421a471c74c2681e7881",
+      "slots": [
+        {
+          "id": "body-turquoise",
+          "label": "coloringSlotBodyTurquoise",
+          "hex": "#2A9D8F"
+        },
+        {
+          "id": "stripe-yellow",
+          "label": "coloringSlotStripeYellow",
+          "hex": "#F4D35E"
+        },
+        {
+          "id": "stripe-coral",
+          "label": "coloringSlotStripeCoral",
+          "hex": "#F28C6B"
+        },
+        {
+          "id": "fin-blue",
+          "label": "coloringSlotFinBlue",
+          "hex": "#3D5A80"
+        },
+        {
+          "id": "eye-charcoal",
+          "label": "coloringSlotEyeCharcoal",
+          "hex": "#1F2933"
+        }
+      ],
+      "regionRules": [
+        {
+          "regionId": "fish-body",
+          "targetSlotId": "body-turquoise",
+          "required": true
+        },
+        {
+          "regionId": "fish-tail",
+          "targetSlotId": "fin-blue",
+          "required": true
+        },
+        {
+          "regionId": "fish-coral-stripe",
+          "targetSlotId": "stripe-coral",
+          "required": true
+        },
+        {
+          "regionId": "fish-yellow-stripe",
+          "targetSlotId": "stripe-yellow",
+          "required": true
+        },
+        {
+          "regionId": "fish-eye",
+          "targetSlotId": "eye-charcoal",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "animal_parrot",
+      "revision": 1,
+      "asset": "assets/coloring/animal_parrot.json",
+      "title": "coloringAnimalParrotTitle",
+      "description": "coloringAnimalParrotDescription",
+      "category": "animals",
+      "difficulty": "hard",
+      "sourceNote": "Original TintAtlas code-native vector artwork, 2026-10-28.",
+      "contentHash": "fb9933028936df776eab382471e50eab6aa198989be1c9ff6cfc27ab2790492a",
+      "slots": [
+        {
+          "id": "feather-red",
+          "label": "coloringSlotFeatherRed",
+          "hex": "#D64545"
+        },
+        {
+          "id": "feather-green",
+          "label": "coloringSlotFeatherGreen",
+          "hex": "#4F8A4C"
+        },
+        {
+          "id": "feather-blue",
+          "label": "coloringSlotFeatherBlue",
+          "hex": "#3D7EA6"
+        },
+        {
+          "id": "chest-yellow",
+          "label": "coloringSlotChestYellow",
+          "hex": "#F2C94C"
+        },
+        {
+          "id": "beak-orange",
+          "label": "coloringSlotBeakOrange",
+          "hex": "#D9822B"
+        }
+      ],
+      "regionRules": [
+        {
+          "regionId": "parrot-red-head",
+          "targetSlotId": "feather-red",
+          "required": true
+        },
+        {
+          "regionId": "parrot-green-wing",
+          "targetSlotId": "feather-green",
+          "required": true
+        },
+        {
+          "regionId": "parrot-blue-tail",
+          "targetSlotId": "feather-blue",
+          "required": true
+        },
+        {
+          "regionId": "parrot-yellow-chest",
+          "targetSlotId": "chest-yellow",
+          "required": true
+        },
+        {
+          "regionId": "parrot-orange-beak",
+          "targetSlotId": "beak-orange",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "nature_leafy_tree",
+      "revision": 1,
+      "asset": "assets/coloring/nature_leafy_tree.json",
+      "title": "coloringNatureLeafyTreeTitle",
+      "description": "coloringNatureLeafyTreeDescription",
+      "category": "treesNature",
+      "difficulty": "easy",
+      "sourceNote": "Original TintAtlas code-native vector artwork, 2026-10-28.",
+      "contentHash": "072ccbaf7021b1c66a06c51cc6987173328237744da71236d8116deb8dc4aaf0",
+      "slots": [
+        {
+          "id": "leaf-green",
+          "label": "coloringSlotLeafGreen",
+          "hex": "#4F8A4C"
+        },
+        {
+          "id": "leaf-light-green",
+          "label": "coloringSlotLeafLightGreen",
+          "hex": "#8FBF5F"
+        },
+        {
+          "id": "trunk-brown",
+          "label": "coloringSlotTrunkBrown",
+          "hex": "#7A5230"
+        },
+        {
+          "id": "ground-tan",
+          "label": "coloringSlotGroundTan",
+          "hex": "#C9A66B"
+        }
+      ],
+      "regionRules": [
+        {
+          "regionId": "tree-ground",
+          "targetSlotId": "ground-tan",
+          "required": true
+        },
+        {
+          "regionId": "tree-trunk",
+          "targetSlotId": "trunk-brown",
+          "required": true
+        },
+        {
+          "regionId": "tree-dark-leaves",
+          "targetSlotId": "leaf-green",
+          "required": true
+        },
+        {
+          "regionId": "tree-light-leaves",
+          "targetSlotId": "leaf-light-green",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "nature_sunflower",
+      "revision": 1,
+      "asset": "assets/coloring/nature_sunflower.json",
+      "title": "coloringNatureSunflowerTitle",
+      "description": "coloringNatureSunflowerDescription",
+      "category": "treesNature",
+      "difficulty": "medium",
+      "sourceNote": "Original TintAtlas code-native vector artwork, 2026-10-28.",
+      "contentHash": "1273f42f668d4af744480bab428f08fc8f88a4bf060fd2b565061a8bf10ceeb2",
+      "slots": [
+        {
+          "id": "petal-yellow",
+          "label": "coloringSlotPetalYellow",
+          "hex": "#F2C94C"
+        },
+        {
+          "id": "center-brown",
+          "label": "coloringSlotCenterBrown",
+          "hex": "#6B4423"
+        },
+        {
+          "id": "leaf-green",
+          "label": "coloringSlotLeafGreen",
+          "hex": "#4F8A4C"
+        },
+        {
+          "id": "sky-blue",
+          "label": "coloringSlotSkyBlue",
+          "hex": "#A7D8F0"
+        }
+      ],
+      "regionRules": [
+        {
+          "regionId": "sunflower-sky",
+          "targetSlotId": "sky-blue",
+          "required": true
+        },
+        {
+          "regionId": "sunflower-stem-leaf",
+          "targetSlotId": "leaf-green",
+          "required": true
+        },
+        {
+          "regionId": "sunflower-petals",
+          "targetSlotId": "petal-yellow",
+          "required": true
+        },
+        {
+          "regionId": "sunflower-center",
+          "targetSlotId": "center-brown",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "nature_mountain_grove",
+      "revision": 1,
+      "asset": "assets/coloring/nature_mountain_grove.json",
+      "title": "coloringNatureMountainGroveTitle",
+      "description": "coloringNatureMountainGroveDescription",
+      "category": "treesNature",
+      "difficulty": "hard",
+      "sourceNote": "Original TintAtlas code-native vector artwork, 2026-10-28.",
+      "contentHash": "915dd13b85c3d2f5046f96b8b647dbcfd67f90f874caea15366e18a8dca3c7e3",
+      "slots": [
+        {
+          "id": "mountain-slate",
+          "label": "coloringSlotMountainSlate",
+          "hex": "#768692"
+        },
+        {
+          "id": "pine-green",
+          "label": "coloringSlotPineGreen",
+          "hex": "#365C45"
+        },
+        {
+          "id": "sky-blue",
+          "label": "coloringSlotSkyBlue",
+          "hex": "#A7D8F0"
+        },
+        {
+          "id": "snow-white",
+          "label": "coloringSlotSnowWhite",
+          "hex": "#F2F4F3"
+        },
+        {
+          "id": "earth-gray",
+          "label": "coloringSlotEarthGray",
+          "hex": "#8A7F68"
+        }
+      ],
+      "regionRules": [
+        {
+          "regionId": "mountain-sky",
+          "targetSlotId": "sky-blue",
+          "required": true
+        },
+        {
+          "regionId": "mountain-earth",
+          "targetSlotId": "earth-gray",
+          "required": true
+        },
+        {
+          "regionId": "mountain-slate",
+          "targetSlotId": "mountain-slate",
+          "required": true
+        },
+        {
+          "regionId": "mountain-snow",
+          "targetSlotId": "snow-white",
+          "required": true
+        },
+        {
+          "regionId": "mountain-pines",
+          "targetSlotId": "pine-green",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "room_cozy_living",
+      "revision": 1,
+      "asset": "assets/coloring/room_cozy_living.json",
+      "title": "coloringRoomCozyLivingTitle",
+      "description": "coloringRoomCozyLivingDescription",
+      "category": "rooms",
+      "difficulty": "medium",
+      "sourceNote": "Original TintAtlas code-native vector artwork, 2026-10-28.",
+      "contentHash": "50f32a5ca22fc597230bb143434edc431d53425963a4cda9c113892ab6bbb960",
+      "slots": [
+        {
+          "id": "wall-linen",
+          "label": "coloringSlotWallLinen",
+          "hex": "#D8C7AC"
+        },
+        {
+          "id": "sofa-sage",
+          "label": "coloringSlotSofaSage",
+          "hex": "#78866B"
+        },
+        {
+          "id": "wood-brown",
+          "label": "coloringSlotWoodBrown",
+          "hex": "#7A5230"
+        },
+        {
+          "id": "rug-coral",
+          "label": "coloringSlotRugCoral",
+          "hex": "#C9826B"
+        },
+        {
+          "id": "accent-slate",
+          "label": "coloringSlotAccentSlate",
+          "hex": "#3F5362"
+        }
+      ],
+      "regionRules": [
+        {
+          "regionId": "living-wall",
+          "targetSlotId": "wall-linen",
+          "required": true
+        },
+        {
+          "regionId": "living-rug",
+          "targetSlotId": "rug-coral",
+          "required": true
+        },
+        {
+          "regionId": "living-sofa",
+          "targetSlotId": "sofa-sage",
+          "required": true
+        },
+        {
+          "regionId": "living-wood",
+          "targetSlotId": "wood-brown",
+          "required": true
+        },
+        {
+          "regionId": "living-accent",
+          "targetSlotId": "accent-slate",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "room_calm_bedroom",
+      "revision": 1,
+      "asset": "assets/coloring/room_calm_bedroom.json",
+      "title": "coloringRoomCalmBedroomTitle",
+      "description": "coloringRoomCalmBedroomDescription",
+      "category": "rooms",
+      "difficulty": "medium",
+      "sourceNote": "Original TintAtlas code-native vector artwork, 2026-10-28.",
+      "contentHash": "1d3fe866b1dcfa353aadd7436121e87003518a5a42e32afc720a4f7a5cf8075f",
+      "slots": [
+        {
+          "id": "wall-mist",
+          "label": "coloringSlotWallMist",
+          "hex": "#C9D3D8"
+        },
+        {
+          "id": "bedding-cream",
+          "label": "coloringSlotBeddingCream",
+          "hex": "#ECE9DF"
+        },
+        {
+          "id": "blanket-blue",
+          "label": "coloringSlotBlanketBlue",
+          "hex": "#667989"
+        },
+        {
+          "id": "wood-tan",
+          "label": "coloringSlotWoodTan",
+          "hex": "#A89073"
+        },
+        {
+          "id": "accent-sage",
+          "label": "coloringSlotAccentSage",
+          "hex": "#B7C2A3"
+        }
+      ],
+      "regionRules": [
+        {
+          "regionId": "bedroom-wall",
+          "targetSlotId": "wall-mist",
+          "required": true
+        },
+        {
+          "regionId": "bedroom-wood",
+          "targetSlotId": "wood-tan",
+          "required": true
+        },
+        {
+          "regionId": "bedroom-bedding",
+          "targetSlotId": "bedding-cream",
+          "required": true
+        },
+        {
+          "regionId": "bedroom-blanket",
+          "targetSlotId": "blanket-blue",
+          "required": true
+        },
+        {
+          "regionId": "bedroom-accent",
+          "targetSlotId": "accent-sage",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "room_reading_corner",
+      "revision": 1,
+      "asset": "assets/coloring/room_reading_corner.json",
+      "title": "coloringRoomReadingCornerTitle",
+      "description": "coloringRoomReadingCornerDescription",
+      "category": "rooms",
+      "difficulty": "hard",
+      "sourceNote": "Original TintAtlas code-native vector artwork, 2026-10-28.",
+      "contentHash": "e1a46a9aecb9a3e17945fd74c8f74fe6cc7b61b1bfec26d774e68f4379e4649c",
+      "slots": [
+        {
+          "id": "wall-linen",
+          "label": "coloringSlotWallLinen",
+          "hex": "#F2E9DA"
+        },
+        {
+          "id": "chair-clay",
+          "label": "coloringSlotChairClay",
+          "hex": "#9B6553"
+        },
+        {
+          "id": "shelf-brown",
+          "label": "coloringSlotShelfBrown",
+          "hex": "#5C554D"
+        },
+        {
+          "id": "plant-green",
+          "label": "coloringSlotPlantGreen",
+          "hex": "#4F8A4C"
+        },
+        {
+          "id": "lamp-gold",
+          "label": "coloringSlotLampGold",
+          "hex": "#D8B96A"
+        }
+      ],
+      "regionRules": [
+        {
+          "regionId": "reading-wall",
+          "targetSlotId": "wall-linen",
+          "required": true
+        },
+        {
+          "regionId": "reading-shelf",
+          "targetSlotId": "shelf-brown",
+          "required": true
+        },
+        {
+          "regionId": "reading-chair",
+          "targetSlotId": "chair-clay",
+          "required": true
+        },
+        {
+          "regionId": "reading-plant",
+          "targetSlotId": "plant-green",
+          "required": true
+        },
+        {
+          "regionId": "reading-lamp",
+          "targetSlotId": "lamp-gold",
+          "required": true
+        }
+      ]
+    }
+  ]
+}

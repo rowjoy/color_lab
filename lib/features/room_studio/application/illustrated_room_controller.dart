@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/color/color_models.dart';
+import '../../learning/domain/learning_palette_copy.dart';
 import '../domain/illustrated_room.dart';
 import '../domain/illustrated_room_assignments.dart';
 import '../domain/illustrated_room_draft.dart';
@@ -155,6 +156,29 @@ class IllustratedRoomController extends Notifier<IllustratedRoomSession> {
     _guardReplacement(template.id, replaceDirty: replaceDirty);
     state = state.putDraft(
       IllustratedRoomDraft.grayscale(template).applyWallHandoff(color),
+    );
+  }
+
+  void applyLearningPalette(
+    LearningPaletteCopy payload, {
+    bool replaceDirty = false,
+  }) {
+    final template = IllustratedRoomCatalog.study;
+    _guardReplacement(template.id, replaceDirty: replaceDirty);
+    RgbColor at(int index) {
+      final color = payload.colors[index % payload.colors.length];
+      return RgbColor(color.red, color.green, color.blue);
+    }
+
+    state = state.putDraft(
+      IllustratedRoomDraft.grayscale(template).applyCompleteLook(
+        IllustratedRoomColors(
+          wall: at(0),
+          ceiling: at(1),
+          floor: at(2),
+          furniture: at(3),
+        ),
+      ),
     );
   }
 

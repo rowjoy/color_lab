@@ -89,6 +89,25 @@ class MatchingGameController extends Notifier<MatchingGame>
     state = _newGame(difficulty);
   }
 
+  void restorePractice({
+    required RgbColor target,
+    required RgbColor guess,
+    required double hue,
+    required double saturation,
+    required double lightness,
+    required double expectedDeltaE,
+  }) {
+    final restored = MatchingGame.restorePractice(
+      target: target,
+      guess: guess,
+      hue: hue,
+      saturation: saturation,
+      lightness: lightness,
+      expectedDeltaE: expectedDeltaE,
+    );
+    state = restored;
+  }
+
   MatchingGame _newGame(GameDifficulty difficulty, {MatchingRules? rules}) {
     final effectiveRules = rules ?? MatchingRules.fromDifficulty(difficulty);
     final targets =

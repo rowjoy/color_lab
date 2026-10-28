@@ -20,6 +20,7 @@ Durable data uses Hive and the Room project file tree beneath the application-do
 | `game_profiles_v2` | key `state` | root `schemaVersion: 2`; `activeProfileId`, `profiles`, `pendingLegacySnapshot`, `legacyMigrationComplete`; nested game/profile records remain v1 | Games-only profiles/progress/rewards/preferences. Profile deletion must not delete or hide shared My Work. |
 | `game_progress_v1` | key `progress` | legacy aggregate schema v1 | Read as the migration source for `game_profiles_v2`; retain until migration/rollback evidence explicitly retires it. |
 | `room_projects` (`room-projects`) | `projects/<projectId>/current` | file-tree schema v2 (strict v1 read migration); project/photo IDs, name, storage revision, prepared PNG/dimensions, AI/current masks, explicit intent, mask/color revisions, named color variants, active and nullable comparison-baseline IDs, thumbnail, UTC timestamps | Installation-local shared Room library. Its serialized `LocalDataOwner` owns this tree only; external exports and game data are excluded. |
+| `learning_library_v1` (`learning-library`) | `@library`; `progress:<lessonId>`; `practice:<attemptId>`; `experiment:<experimentId>` | strict schema v1 rows for topics-to-revisit, lesson progress/answer history, practice explanations, and typed experiment records | Installation-local shared Color Learning library. Learning reset/delete cannot touch colors, palettes, rooms, or game profiles; games cannot own or delete learning records. |
 
 Immutable serialization details include root keys, enum storage strings, stable `GameId` values, UTC timestamp encoding, uppercase canonical `#RRGGBB`, and nested record versions. Corrupt-record handling must isolate the bad record and retain recoverable bytes; it must not reset an entire healthy box silently.
 
@@ -63,9 +64,24 @@ flush/close-reopen contract, not an atomic device-power-loss guarantee during a
 failed write and rollback. The draft store exposes `saved`, `saving`, `failed`
 and retains both the visible attempt and last acknowledged draft.
 
+### Learning library v1
+
+`learning_library_v1` stores independent strict rows so one corrupt progress,
+practice, or experiment record is reported without hiding healthy learning
+data. All experiment colors are canonical uppercase `#RRGGBB` value copies;
+timestamps are canonical UTC; tool payloads are versioned and typed for Lab,
+Mixer, Harmonies, Formula, and Matching. Unknown versions are retained and
+reported rather than coerced. Serialized writes flush before success and
+restore the last acknowledged rows after a failed write. Data-management
+preview/delete is limited to this box and refreshes only Learning state.
+
 ### Future schema ownership reserved by the approved design
 
-Coloring projects, Learning progress/notebooks, and the unified My Work index do not yet have persisted launch schemas. Their implementations must choose independent versioned names, add old/current/future fixtures, and update this registry before writing production data. `game_profiles_v2` must never become the owner of those shared records.
+Coloring projects and the unified My Work index do not yet have persisted
+launch schemas. Their implementations must choose independent versioned names,
+add old/current/future fixtures, and update this registry before writing
+production data. `game_profiles_v2` must never become the owner of those shared
+records.
 
 ### Room project schema v2 and frozen v1 reads
 
@@ -129,18 +145,18 @@ Routes are currently path-addressed; no GoRouter `name:` contracts exist. Preser
 | --- | --- |
 | Current indexed roots | `/home`, `/rooms`, `/learn`, `/games` |
 | My Work and settings | `/my-work`, `/settings/privacy`, `/settings/data`, `/settings/models`, `/settings/licenses` |
-| Nested/compatible tools | `/capture`, `/palette`, `/lab`, `/room` (redirect to `/rooms`) |
+| Nested/compatible tools | `/capture`, `/palette`, `/lab` (redirect to `/learn/experiment/lab`), `/room` (redirect to `/rooms`) |
 | Startup/onboarding | `/startup`, `/onboarding`, `/welcome` |
 | Photo acquisition | `/camera`, `/photo` |
 | Real/illustrated rooms | `/room/study` (redirect), `/room/illustrated`, `/room/illustrated/:templateId`, `/room/masks`, `/rooms/projects`, `/rooms/project/:projectId` |
-| Color learning/tools | `/vision`, `/matching`, `/harmonies`, `/palettes`, `/formula`, `/mixer` |
+| Color learning/tools | `/learn/lesson/:lessonId`, `/learn/notebook`, `/learn/experiment/:experimentId`, `/vision`, `/matching`, `/harmonies`, `/palettes`, `/formula`, `/mixer` |
 | Games | `/bubble-shooter`, `/rainbow-rings`, `/water-sort`, `/fruit-pop`, `/games/badges`, `/games/leaderboard`, `/games/:gameId/map` |
 
 The initial location is `/home`. Startup/onboarding guards can redirect to `/startup` and `/onboarding`. Settings pages return to their pushed caller or fall back to Home for direct entry.
 
 ### Explicit local data controls
 
-Data controls use the active repositories' serialized maintenance operations. A preview freezes exact record keys and content fingerprints; deletion consumes that authorization, requires the same categories, and validates every selected owner before writing. Room-photo projects are active: preview records count projects with a current pointer (including corrupt pointers), not files; stored revision directories and aggregate owned bytes are separate detail. Coloring-project and Learning-progress categories remain disabled. User exports and acquisition metadata are excluded. All-game deletion explicitly covers both game boxes and leaves the Games section empty until the person creates a new named player. Shared libraries stay independent.
+Data controls use the active repositories' serialized maintenance operations. A preview freezes exact record keys and content fingerprints; deletion consumes that authorization, requires the same categories, and validates every selected owner before writing. Room-photo projects are active: preview records count projects with a current pointer (including corrupt pointers), not files; stored revision directories and aggregate owned bytes are separate detail. Learning-progress controls are active and own only `learning_library_v1`; Coloring projects remain disabled. User exports and acquisition metadata are excluded. All-game deletion explicitly covers both game boxes and leaves the Games section empty until the person creates a new named player. Shared libraries stay independent.
 
 Model inventory is read-only. Model removal cancels and drains active work, blocks new preparation during removal, and touches only pinned model files and partials beneath `room_models`; directory symlinks are rejected. Data-management preview fails safely while a model download is active, leaving explicit cancellation/removal to Model storage. No repository is closed/reopened to perform deletion. Storage I/O failures can leave partially removed selected data across independent owners; the UI retains its selection and last preview, reports failure, and requires a fresh review.
 

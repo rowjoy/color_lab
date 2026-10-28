@@ -10,6 +10,9 @@ import '../../../core/widgets/widgets.dart';
 import '../../../l10n/l10n.dart';
 import '../../history/application/history_providers.dart';
 import '../../history/domain/saved_color.dart';
+import '../../learning/application/learning_providers.dart';
+import '../../learning/domain/learning_palette_copy.dart';
+import '../../learning/presentation/learning_work_section.dart';
 import '../../palette/application/saved_palettes_providers.dart';
 import '../../palette/domain/saved_palette.dart';
 import '../../picker/presentation/color_explorer.dart';
@@ -18,6 +21,8 @@ import '../../room_studio/domain/illustrated_room.dart';
 import '../../room_studio/domain/saved_room_design.dart';
 import '../../room_studio/presentation/illustrated_room_navigation.dart';
 import '../../shell/presentation/studio_page.dart';
+import '../../coloring/presentation/my_artwork_section.dart';
+import '../../coloring/presentation/coloring_navigation.dart';
 
 class MyWorkScreen extends ConsumerWidget {
   const MyWorkScreen({super.key});
@@ -47,6 +52,8 @@ class MyWorkScreen extends ConsumerWidget {
         title: context.l10n.myWorkTitle,
         description: context.l10n.myWorkDescription,
       ),
+      const MyArtworkSection(),
+      const SizedBox(height: AppSpacing.xxl),
       _LibrarySection(
         key: const ValueKey('my-work-room-projects'),
         title: context.l10n.roomProjectsTitle,
@@ -63,6 +70,12 @@ class MyWorkScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+      const SizedBox(height: AppSpacing.xxl),
+      _LibrarySection(
+        key: const ValueKey('my-work-learning-experiments'),
+        title: context.l10n.myWorkExperimentsTitle,
+        child: _experiments(context, ref),
       ),
       const SizedBox(height: AppSpacing.xxl),
       _LibrarySection(
@@ -84,6 +97,89 @@ class MyWorkScreen extends ConsumerWidget {
       ),
     ],
   );
+
+  Widget _experiments(BuildContext context, WidgetRef ref) => ref
+      .watch(learningSessionProvider)
+      .when(
+        data: (session) {
+          final records = session.visible.experiments;
+          final content = records.isEmpty
+              ? EmptyState(
+                  key: const ValueKey('my-work-experiments-empty'),
+                  icon: Icons.science_outlined,
+                  title: context.l10n.learningNotebookEmptyTitle,
+                  message: context.l10n.learningNotebookEmptyBody,
+                  action: SecondaryButton(
+                    label: context.l10n.learningOpenNotebook,
+                    onPressed: () => context.push('/learn/notebook'),
+                  ),
+                )
+              : LearningWorkSection(
+                  records: records,
+                  onOpen: (record) =>
+                      context.push('/learn/experiment/${record.id}'),
+                  onDelete: ref
+                      .read(learningSessionProvider.notifier)
+                      .deleteExperiment,
+                  onUseInRoom: (record) => openLearningPaletteInIllustratedRoom(
+                    context,
+                    LearningPaletteCopy(
+                      colors: record.resultHexes.map(RgbColor.fromHex),
+                      returnLocation: '/my-work',
+                    ),
+                  ),
+                  onUseInColoring: (record) => openLearningPaletteInColoring(
+                    context,
+                    LearningPaletteCopy(
+                      colors: record.resultHexes.map(RgbColor.fromHex),
+                      returnLocation: '/my-work',
+                    ),
+                  ),
+                );
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (session.saveError != null) ...[
+                ErrorState(
+                  key: const ValueKey('my-work-experiments-save-error'),
+                  title: context.l10n.learningSaveError,
+                  message: context.l10n.learningExperimentSaveFailed,
+                  action: SecondaryButton(
+                    label: context.l10n.learningRetrySave,
+                    onPressed: session.saving
+                        ? null
+                        : () async {
+                            try {
+                              await ref
+                                  .read(learningSessionProvider.notifier)
+                                  .retryVisible();
+                            } on Object {
+                              // The controller retains the retryable error.
+                            }
+                          },
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+              ],
+              content,
+            ],
+          );
+        },
+        error: (error, stackTrace) => ErrorState(
+          key: const ValueKey('my-work-experiments-error'),
+          title: context.l10n.learningLoadErrorTitle,
+          message: context.l10n.learningLoadErrorBody,
+          action: SecondaryButton(
+            label: context.l10n.tryAgain,
+            onPressed: () => ref.invalidate(learningSessionProvider),
+          ),
+        ),
+        loading: () => LoadingState(
+          key: const ValueKey('my-work-experiments-loading'),
+          title: context.l10n.learningLoadingTitle,
+          message: context.l10n.learningLoadingBody,
+        ),
+      );
 
   Widget _colors(BuildContext context, WidgetRef ref) => ref
       .watch(colorHistoryProvider)

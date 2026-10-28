@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "room_reading_corner",
+  "revision": 1,
+  "width": 600,
+  "height": 400,
+  "regions": [
+    {"id":"reading-wall","labelKey":"coloringReadingWall","groupId":"rooms","fillable":true,"paintOrder":0,"geometry":{"parts":[{"slot":0,"commands":[["M",22,22],["L",578,22],["L",578,378],["L",22,378],["Z"]]}]}},
+    {"id":"reading-shelf","labelKey":"coloringReadingShelf","groupId":"rooms","fillable":true,"paintOrder":1,"geometry":{"parts":[{"slot":1,"commands":[["M",54,84],["L",230,84],["L",230,336],["L",54,336],["Z"],["M",42,144],["L",242,144],["L",242,160],["L",42,160],["Z"],["M",42,224],["L",242,224],["L",242,240],["L",42,240],["Z"]]}]}},
+    {"id":"reading-chair","labelKey":"coloringReadingChair","groupId":"rooms","fillable":true,"paintOrder":2,"geometry":{"parts":[{"slot":2,"commands":[["M",318,176],["Q",414,142,474,214],["L",460,326],["L",292,326],["Q",276,232,318,176],["Z"]]}]}},
+    {"id":"reading-plant","labelKey":"coloringReadingPlant","groupId":"rooms","fillable":true,"paintOrder":3,"geometry":{"parts":[{"slot":3,"commands":[["M",504,182],["Q",450,126,484,84],["Q",524,116,514,180],["Q",544,112,572,142],["Q",564,186,520,204],["L",548,316],["L",474,316],["Z"]]}]}},
+    {"id":"reading-lamp","labelKey":"coloringReadingLamp","groupId":"rooms","fillable":true,"paintOrder":4,"geometry":{"parts":[{"slot":4,"commands":[["M",284,68],["L",374,68],["L",396,142],["L",262,142],["Z"],["M",322,142],["L",338,142],["L",338,292],["L",322,292],["Z"]]}]}}
+  ]
+}

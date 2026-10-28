@@ -14,6 +14,8 @@ const _caveat =
     'Generated patterns for exploration only. This is not a validated screening test or medical diagnosis and cannot rule out a condition.';
 const _professional =
     'If you have concerns about your color vision, talk to an eye care professional.';
+const _learningBoundary =
+    'This optional activity does not affect lessons or completion and does not evaluate accessibility.';
 
 class VisionScreen extends ConsumerStatefulWidget {
   const VisionScreen({super.key});
@@ -167,6 +169,11 @@ class _VisionScreenState extends ConsumerState<VisionScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  const Text(
+                    _learningBoundary,
+                    key: ValueKey('vision-learning-boundary'),
+                  ),
+                  const SizedBox(height: AppSpacing.xxl),
                   if (session.stage == VisionStage.introduction) ...[
                     const StudioHeading(
                       eyebrow: 'An original color study',
@@ -278,7 +285,7 @@ class _VisionResults extends StatelessWidget {
       Text('Your responses', style: Theme.of(context).textTheme.headlineMedium),
       const SizedBox(height: AppSpacing.md),
       Text(
-        '${session.matchedCount} of 6 pattern matches',
+        'Review your ${session.responses.length} recorded responses',
         style: Theme.of(context).textTheme.titleLarge,
       ),
       const SizedBox(height: AppSpacing.sm),

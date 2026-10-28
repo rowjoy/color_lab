@@ -1,17 +1,37 @@
 import 'dart:convert';
 import 'dart:ui';
+import 'vector_path_json_validator.dart';
 import '../domain/vector_region_geometry.dart';
 
 /// Schema 1 is data, never an SVG/HTML/script language. Unknown fields fail closed.
 final class VectorRegionJsonCodec {
-  static const _groups = {'walls', 'ceiling', 'floor', 'furniture'};
-  static const _labels = {
-    'roomSurfaceWall',
-    'roomSurfaceCeiling',
-    'roomSurfaceFloor',
-    'roomSurfaceFurniture',
+  VectorRegionJsonCodec({
+    Map<String, Set<String>> allowedLabelsByGroup = _roomLabelsByGroup,
+  }) : _allowedLabelsByGroup = Map.unmodifiable({
+         for (final entry in allowedLabelsByGroup.entries)
+           entry.key: Set.unmodifiable(entry.value),
+       }) {
+    if (_allowedLabelsByGroup.isEmpty ||
+        _allowedLabelsByGroup.entries.any(
+          (entry) =>
+              !_stableMetadata.hasMatch(entry.key) ||
+              entry.value.isEmpty ||
+              entry.value.any((label) => !_stableMetadata.hasMatch(label)),
+        )) {
+      throw ArgumentError('Stable region groups and labels are required.');
+    }
+  }
+
+  static const _roomLabelsByGroup = {
+    'walls': {'roomSurfaceWall'},
+    'ceiling': {'roomSurfaceCeiling'},
+    'floor': {'roomSurfaceFloor'},
+    'furniture': {'roomSurfaceFurniture'},
   };
-  static final _id = RegExp(r'^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$');
+  static final _id = RegExp(r'^[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*$');
+  static final _stableMetadata = RegExp(r'^[a-z][A-Za-z0-9]*$');
+
+  final Map<String, Set<String>> _allowedLabelsByGroup;
 
   VectorArtworkDefinition decode(String source) {
     try {
@@ -45,17 +65,15 @@ final class VectorRegionJsonCodec {
         if (!ids.add(id) || !orders.add(order)) {
           _fail('Duplicate identity/order');
         }
-        if (!_groups.contains(r['groupId']) ||
-            !_labels.contains(r['labelKey'])) {
+        final groupId = r['groupId'];
+        final labelKey = r['labelKey'];
+        if (groupId is! String ||
+            labelKey is! String ||
+            !_allowedLabelsByGroup.containsKey(groupId) ||
+            !_allowedLabelsByGroup[groupId]!.contains(labelKey)) {
           _fail('Unknown group/label');
         }
-        final expectedLabel = switch (r['groupId']) {
-          'walls' => 'roomSurfaceWall',
-          'ceiling' => 'roomSurfaceCeiling',
-          'floor' => 'roomSurfaceFloor',
-          _ => 'roomSurfaceFurniture',
-        };
-        if (r['labelKey'] != expectedLabel || r['fillable'] is! bool) {
+        if (r['fillable'] is! bool) {
           _fail('Invalid region metadata');
         }
         final fillable = r['fillable'] as bool;
@@ -69,40 +87,12 @@ final class VectorRegionJsonCodec {
           );
           final slot = _integer(part['slot'], allowZero: true);
           if (!slots.add(slot)) _fail('Duplicate paint slot');
-          final commands = <List<Object>>[];
-          var started = false;
-          var closed = true;
-          for (final rawCommand in _list(part['commands'])) {
-            if (rawCommand is! List || rawCommand.isEmpty) {
-              _fail('Invalid command');
-            }
-            final arity = const {
-              'M': 2,
-              'L': 2,
-              'Q': 4,
-              'C': 6,
-              'Z': 0,
-            }[rawCommand[0]];
-            if (arity == null || rawCommand.length != arity + 1) {
-              _fail('Unsupported command/arity');
-            }
-            final op = rawCommand[0] as String;
-            if (!started && op != 'M') _fail('Path must start with M');
-            if (op == 'M') {
-              if (fillable && !closed) _fail('Unclosed contour');
-              started = true;
-              closed = false;
-            } else if (closed) {
-              _fail('Command after Z needs M');
-            }
-            final command = <Object>[op];
-            for (var i = 1; i < rawCommand.length; i++) {
-              command.add(_number(rawCommand[i], i.isOdd ? width : height));
-            }
-            if (op == 'Z') closed = true;
-            commands.add(command);
-          }
-          if (!started || (fillable && !closed)) _fail('Empty/unclosed fill');
+          final commands = validateVectorPathCommands(
+            part['commands'],
+            width: width,
+            height: height,
+            fillable: fillable,
+          );
           parts.add(
             VectorRegionPart(
               slot: slot,
@@ -120,8 +110,8 @@ final class VectorRegionJsonCodec {
         regions.add(
           VectorRegionDefinition(
             id: id,
-            labelKey: r['labelKey'] as String,
-            groupId: r['groupId'] as String,
+            labelKey: labelKey,
+            groupId: groupId,
             fillable: fillable,
             paintOrder: order,
             geometry: VectorRegionGeometry(parts: parts),

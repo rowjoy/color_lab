@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/storage/local_data_manager.dart';
 import '../../history/application/history_providers.dart';
+import '../../coloring/application/coloring_project_providers.dart';
+import '../../learning/application/learning_providers.dart';
 import '../../palette/application/saved_palettes_providers.dart';
 import '../../room_studio/application/room_designs_providers.dart';
 import '../../room_studio/application/room_model_download_providers.dart';
@@ -27,6 +29,10 @@ final localDataManagerProvider = Provider<LocalDataManager>((ref) {
           owner(ref.read(roomDesignRepositoryProvider.future)),
       LocalDataCategory.roomProjects: () =>
           owner(ref.read(roomProjectRepositoryProvider.future)),
+      LocalDataCategory.coloringProjects: () =>
+          owner(ref.read(coloringProjectRepositoryProvider.future)),
+      LocalDataCategory.learningProgress: () =>
+          owner(ref.read(learningRepositoryProvider.future)),
       LocalDataCategory.gameProfiles: () =>
           owner(ref.read(gameProfilesRepositoryProvider.future)),
       LocalDataCategory.modelCache: () async =>
@@ -47,10 +53,14 @@ void refreshDeletedData(WidgetRef ref, Set<LocalDataCategory> categories) {
         ref.invalidate(savedRoomDesignsProvider);
       case LocalDataCategory.roomProjects:
         ref.invalidate(roomProjectsProvider);
+      case LocalDataCategory.coloringProjects:
+        ref.invalidate(coloringProjectsProvider);
       case LocalDataCategory.gameProfiles:
         ref.invalidate(gameProfilesProvider);
       case LocalDataCategory.preferences:
         ref.invalidate(appPreferencesProvider);
+      case LocalDataCategory.learningProgress:
+        ref.invalidate(learningSessionProvider);
       default:
         break;
     }

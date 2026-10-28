@@ -67,6 +67,11 @@ final class MixerState {
     ],
   );
 
+  factory MixerState.restored({
+    required Iterable<MixerIngredient> ingredients,
+    required MixingSpace space,
+  }) => MixerState(ingredients: ingredients, space: space);
+
   final List<MixerIngredient> ingredients;
   final MixingSpace space;
 

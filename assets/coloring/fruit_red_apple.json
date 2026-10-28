@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "fruit_red_apple",
+  "revision": 1,
+  "width": 600,
+  "height": 400,
+  "regions": [
+    {"id":"apple-body","labelKey":"coloringAppleBody","groupId":"fruit","fillable":true,"paintOrder":0,"geometry":{"parts":[{"slot":0,"commands":[["M",184,128],["C",222,92,270,108,300,140],["C",330,108,378,92,416,128],["C",470,180,444,306,350,338],["C",326,346,308,326,300,310],["C",292,326,274,346,250,338],["C",156,306,130,180,184,128],["Z"]]}]}},
+    {"id":"apple-stem","labelKey":"coloringAppleStem","groupId":"fruit","fillable":true,"paintOrder":1,"geometry":{"parts":[{"slot":1,"commands":[["M",286,142],["L",296,70],["Q",304,58,316,66],["L",312,144],["Z"]]}]}},
+    {"id":"apple-leaf","labelKey":"coloringAppleLeaf","groupId":"fruit","fillable":true,"paintOrder":2,"geometry":{"parts":[{"slot":2,"commands":[["M",308,94],["Q",354,42,410,78],["Q",364,130,312,110],["Z"]]}]}},
+    {"id":"apple-highlight","labelKey":"coloringAppleHighlight","groupId":"fruit","fillable":true,"paintOrder":3,"geometry":{"parts":[{"slot":3,"commands":[["M",210,166],["Q",232,142,250,158],["Q",222,188,214,230],["Q",194,214,210,166],["Z"]]}]}}
+  ]
+}

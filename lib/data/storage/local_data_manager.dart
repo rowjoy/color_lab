@@ -3,10 +3,7 @@ import '../schema/schema_registry.dart';
 export '../schema/schema_registry.dart' show LocalDataCategory;
 
 extension LocalDataAvailability on LocalDataCategory {
-  bool get available => !const {
-    LocalDataCategory.coloringProjects,
-    LocalDataCategory.learningProgress,
-  }.contains(this);
+  bool get available => true;
 }
 
 final class LocalDataException implements Exception {

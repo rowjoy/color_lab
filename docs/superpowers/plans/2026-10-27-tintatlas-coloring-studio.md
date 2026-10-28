@@ -10,6 +10,41 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-27-tintatlas-full-product-design.md` (COLOR-01–12)
 
+## Execution status — 2026-10-28
+
+Implementation is on branch `TintAtlas`. The approved coding and focused automated scope is complete. Android/iOS builds and the full repository suite remain deferred until Plans 01–08 are ready together. The user owns the commit. No separate Plan 07 progress document was created; this is the authoritative execution record. The detailed checkboxes below retain the original implementation procedure, including commit and external-review steps, so this table records the actual result.
+
+| Task | Status | Implemented / verified | Still open |
+|---|---|---|---|
+| 1. Shared schema | **Automated scope done** | Added immutable drawing/slot/rule types on the shared vector contract. Runtime and standalone validation share strict path rules for initial move, command arity/order, closed contours, finite in-bounds coordinates, IDs, labels, slots, and paint order. Domain and malformed-fixture tests pass. | Independent release review only. |
+| 2. Shared geometry | **Automated scope done** | Paint, reverse hit testing, focus semantics, thumbnails, and clean export use the same paths/transform. Covered fit, pan, zoom, resize, overlap, holes, tiny regions, clipping, second-pointer cancellation, and export parity. | Real-device gesture and assistive-technology checks. |
+| 3. Pilot art | **Automated scope done** | Added original Apple and Cozy Living assets, strict localized manifest metadata/hash loading, artwork notice, exact file-set validation, and recursive forbidden manufacturer/shade metadata checks. | Independent human light/dark/high-contrast and rights acceptance. |
+| 4. Durable projects | **Automated scope done** | Added independent Guided/Free projects, bounded history, schema/local-data registration, corrupt-row isolation, and dual-slot generation commits. Local Data now reports logical project IDs while retaining every physical commit/slot row for exact deletion and invalidation. | Real process-death/storage-pressure evidence. |
+| 5. Save-aware controller | **Done** | Added visible/durable state, serialized saves, retry, acknowledgement publishing, authoritative reopen, and revision-bound Finish. Controller/provider focused tests pass. | Full lifecycle/process-death device evidence. |
+| 6. Guided Color | **Automated scope done** | Added adaptive workspace, exact authored-color acceptance, labeled/numbered swatches, region list, explicit no-canvas Apply, progress, Find, Undo/Redo, save failure/retry, and compact-landscape handling. Automated compact, 200% text, RTL, and semantics checks pass. | Manual keyboard, TalkBack/VoiceOver, reduced-motion, and real-device matrix. |
+| 7. Free Color | **Automated scope done** | Added suggested, copied Learning, My Colors, My Palettes, and validated custom HEX sources with region-first interaction and Undo/Redo. Tests prove invalid HEX is rejected and copied RGB/HEX values remain unchanged after source color/palette deletion. | Manual exploratory input/accessibility checks. |
+| 8. Catalog/library/export | **Automated scope done** | Added `/coloring` routes, All/Guided/Free catalog filter, direct selected-mode start, separate IDs, retained filters after Back, responsive content-driven compact cards, completion, My Artwork actions, metadata-clean PNG export, and shared canonical linework. Real-provider route tests cover export/save failure, dismissed/unavailable share, invalid projects, and project preservation. | Native gallery/share permission denial and low-space checks on devices. |
+| 9. Twelve-drawing pack | **Automated scope done** | Added exactly 12 original JSON drawings, three per category, with locked slots, hashes, localization keys, and rights notice. Validator passes. A 96-render matrix covers every drawing in four states at compact and tablet sizes; the agent review found no obvious missing regions or seams. | Independent human art/interaction acceptance and release-ledger sign-off. |
+| 10. Accessibility/bridges | **Automated scope done** | Externalized 112 Coloring messages with safe fallbacks and locale-aware canvas semantics. Tests cover RTL, Learning payload/return navigation, source deletion, explicit room assignment/cancel preservation, catalog Back behavior, responsive layouts, and semantics. | Real TalkBack/VoiceOver, keyboard, and RTL-device checks. |
+| 11. Verification close | **Focused automated gate complete** | Catalog validation reports 12 drawings/4 balanced categories; scoped analysis is clean; the final integrated focused suite passed 142/142. A fresh read-only review found no Critical issue; its two Important and two Minor findings were fixed, four focused regressions passed, and re-review found no remaining Critical/Important issue. | Full repository suite, Android/iOS builds, device/process-death/low-storage/native-share checks, independent rights/visual acceptance, and the user-owned commit. |
+
+### Focused evidence retained for this execution
+
+- Catalog validator: `Coloring catalog valid: 12 original drawings, 4 balanced categories.`
+- Final integrated command: `flutter test --no-pub test/core/vector_regions test/features/coloring test/data/db/hive_coloring_project_repository_test.dart test/tool/validate_coloring_catalog_test.dart test/l10n/localization_contract_test.dart --reporter compact` — **142/142 passed**.
+- Scoped final analysis of the Plan 07 production, validator, localization, storage, and test paths reported **No issues found** after two info-only style corrections.
+- Localization generation produced 112 Coloring messages; translated RTL catalog/canvas coverage and safe unknown-key fallbacks pass.
+- Render evidence: 12 drawings × 4 project states × 2 viewport sizes = 96 renders, plus overlap/hole/tiny-region/pan/zoom/resize parity checks.
+- Local Data repository, manager, and settings verification passed with logical project counts and physical-row deletion coverage.
+- Post-review regressions pass for delayed save after Back, compact 320×568 catalog at 200% text, generated Games entry copy, and unavailable My Artwork sharing; affected-path analysis is clean and read-only re-review reports no remaining Critical/Important issue.
+
+### Deliberately deferred, not silently marked complete
+
+- Full repository suite and Android/iOS builds, per the approved Plans 01–08 workflow.
+- Real-device process death, low storage, native gallery/share permission, keyboard, TalkBack/VoiceOver, reduced-motion, and RTL checks.
+- Independent human artwork/rights review in light, dark, and high-contrast modes at phone and tablet sizes.
+- Release-ledger sign-off and commit; the user owns the commit.
+
 ## Global Constraints
 
 - Read the master, Foundation, and Illustrated Rooms v2 plans first; consume the shared vector-region contract frozen by the Illustrated pilot instead of creating a second geometry model.

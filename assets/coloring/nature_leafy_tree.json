@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "nature_leafy_tree",
+  "revision": 1,
+  "width": 600,
+  "height": 400,
+  "regions": [
+    {"id":"tree-ground","labelKey":"coloringTreeGround","groupId":"treesNature","fillable":true,"paintOrder":0,"geometry":{"parts":[{"slot":0,"commands":[["M",54,332],["Q",300,298,546,332],["L",546,382],["L",54,382],["Z"]]}]}},
+    {"id":"tree-trunk","labelKey":"coloringTreeTrunk","groupId":"treesNature","fillable":true,"paintOrder":1,"geometry":{"parts":[{"slot":1,"commands":[["M",262,164],["L",338,164],["L",360,342],["L",236,342],["Z"]]}]}},
+    {"id":"tree-dark-leaves","labelKey":"coloringTreeDarkLeaves","groupId":"treesNature","fillable":true,"paintOrder":2,"geometry":{"parts":[{"slot":2,"commands":[["M",112,186],["C",82,104,178,70,230,112],["C",242,40,354,38,374,106],["C",458,62,522,150,476,218],["C",410,264,164,266,112,186],["Z"]]}]}},
+    {"id":"tree-light-leaves","labelKey":"coloringTreeLightLeaves","groupId":"treesNature","fillable":true,"paintOrder":3,"geometry":{"parts":[{"slot":3,"commands":[["M",176,142],["C",210,86,284,102,292,154],["C",314,92,398,100,418,156],["C",392,216,208,222,176,142],["Z"]]}]}}
+  ]
+}

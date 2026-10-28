@@ -82,6 +82,7 @@ flutter:
     - assets/rooms/
     - assets/rooms/regions/
     - assets/rooms/palettes/
+    - assets/coloring/
     - assets/licenses/
   fonts:
     - family: PlusJakartaSans

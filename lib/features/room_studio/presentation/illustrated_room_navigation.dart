@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/color/color_models.dart';
+import '../../learning/domain/learning_palette_copy.dart';
 import '../application/illustrated_room_controller.dart';
 import '../application/room_color_provider.dart';
 import '../domain/illustrated_room.dart';
@@ -47,6 +48,29 @@ Future<bool> openStudyWallHandoff(BuildContext context, RgbColor color) async {
   );
   if (!accepted || !context.mounted) return false;
   container.read(roomColorProvider.notifier).setColor(color);
+  _openEditorRoute(context, IllustratedRoomCatalog.study.id);
+  return true;
+}
+
+Future<bool> openLearningPaletteInIllustratedRoom(
+  BuildContext context,
+  LearningPaletteCopy payload,
+) async {
+  if (!context.mounted ||
+      !isLearningPaletteDestinationAvailable(
+        LearningPaletteDestination.illustratedRoom,
+      )) {
+    return false;
+  }
+  final container = ProviderScope.containerOf(context, listen: false);
+  final controller = container.read(illustratedRoomProvider.notifier);
+  final accepted = await _replaceRetainedDraft(
+    context,
+    templateId: IllustratedRoomCatalog.study.id,
+    replace: ({required replaceDirty, savedCurrent}) =>
+        controller.applyLearningPalette(payload, replaceDirty: replaceDirty),
+  );
+  if (!accepted || !context.mounted) return false;
   _openEditorRoute(context, IllustratedRoomCatalog.study.id);
   return true;
 }

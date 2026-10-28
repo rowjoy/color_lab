@@ -456,7 +456,7 @@ void main() {
                 find.byKey(const ValueKey('category-coloringProjects')),
               )
               .onChanged,
-          isNull,
+          isNotNull,
         );
       },
     );

@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "fruit_orange_slice",
+  "revision": 1,
+  "width": 600,
+  "height": 400,
+  "regions": [
+    {"id":"orange-peel","labelKey":"coloringOrangePeel","groupId":"fruit","fillable":true,"paintOrder":0,"geometry":{"parts":[{"slot":0,"commands":[["M",300,42],["C",430,42,510,126,510,226],["C",510,326,430,370,300,370],["C",170,370,90,326,90,226],["C",90,126,170,42,300,42],["Z"]]}]}},
+    {"id":"orange-flesh","labelKey":"coloringOrangeFlesh","groupId":"fruit","fillable":true,"paintOrder":1,"geometry":{"parts":[{"slot":1,"commands":[["M",300,76],["C",405,76,470,142,470,226],["C",470,310,405,338,300,338],["C",195,338,130,310,130,226],["C",130,142,195,76,300,76],["Z"]]}]}},
+    {"id":"orange-pith","labelKey":"coloringOrangePith","groupId":"fruit","fillable":true,"paintOrder":2,"geometry":{"parts":[{"slot":2,"commands":[["M",294,84],["L",306,84],["L",306,330],["L",294,330],["Z"],["M",138,220],["L",462,220],["L",462,232],["L",138,232],["Z"]]}]}},
+    {"id":"orange-seed","labelKey":"coloringOrangeSeed","groupId":"fruit","fillable":true,"paintOrder":3,"geometry":{"parts":[{"slot":3,"commands":[["M",354,168],["Q",382,178,364,204],["Q",340,194,354,168],["Z"],["M",220,256],["Q",246,266,226,290],["Q",202,278,220,256],["Z"]]}]}}
+  ]
+}

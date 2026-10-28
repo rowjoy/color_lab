@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/color/color_engine.dart';
@@ -7,24 +8,16 @@ import '../../../core/widgets/widgets.dart';
 import '../../picker/presentation/color_explorer.dart';
 import '../../history/domain/saved_color.dart';
 import '../../shell/presentation/studio_page.dart';
+import '../application/lab_controller.dart';
 
-class LabScreen extends StatefulWidget {
+class LabScreen extends ConsumerWidget {
   const LabScreen({super.key});
 
   @override
-  State<LabScreen> createState() => _LabScreenState();
-}
-
-class _LabScreenState extends State<LabScreen> {
-  final _initial = RgbColor.fromHex('#B2A4D4').toHsl();
-  late double _hue = _initial.hue;
-  late double _saturation = _initial.saturation;
-  late double _lightness = _initial.lightness;
-
-  @override
-  Widget build(BuildContext context) {
-    // Keep the editing coordinates even when an achromatic result has no hue.
-    final color = HslColor(_hue, _saturation, _lightness).toRgb();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final draft = ref.watch(labProvider);
+    final controller = ref.read(labProvider.notifier);
+    final color = draft.color;
     return StudioPage(
       name: 'Lab',
       children: [
@@ -81,26 +74,26 @@ class _LabScreenState extends State<LabScreen> {
               const SectionHeader(title: 'Fine-tune the mood'),
               LabeledSlider(
                 label: 'Hue',
-                value: _hue,
+                value: draft.hue,
                 min: 0,
                 max: 359.999,
-                valueLabel: '${_hue.round()}°',
+                valueLabel: '${draft.hue.round()}°',
                 valueFormatter: (value) => '${value.round()}°',
-                onChanged: (value) => setState(() => _hue = value),
+                onChanged: controller.setHue,
               ),
               LabeledSlider(
                 label: 'Saturation',
-                value: _saturation,
-                valueLabel: '${(_saturation * 100).round()}%',
+                value: draft.saturation,
+                valueLabel: '${(draft.saturation * 100).round()}%',
                 valueFormatter: (value) => '${(value * 100).round()}%',
-                onChanged: (value) => setState(() => _saturation = value),
+                onChanged: controller.setSaturation,
               ),
               LabeledSlider(
                 label: 'Lightness',
-                value: _lightness,
-                valueLabel: '${(_lightness * 100).round()}%',
+                value: draft.lightness,
+                valueLabel: '${(draft.lightness * 100).round()}%',
                 valueFormatter: (value) => '${(value * 100).round()}%',
-                onChanged: (value) => setState(() => _lightness = value),
+                onChanged: controller.setLightness,
               ),
             ],
           ),

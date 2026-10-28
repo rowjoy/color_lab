@@ -1088,5 +1088,921 @@
         "type": "String"
       }
     }
+  },
+  "learningStepPredictTitle": "Predict",
+  "@learningStepPredictTitle": {"description": "Color Foundations learning copy."},
+  "learningStepManipulateTitle": "Manipulate",
+  "@learningStepManipulateTitle": {"description": "Color Foundations learning copy."},
+  "learningStepObserveTitle": "Observe",
+  "@learningStepObserveTitle": {"description": "Color Foundations learning copy."},
+  "learningStepExplainTitle": "Explain",
+  "@learningStepExplainTitle": {"description": "Color Foundations learning copy."},
+  "learningStepApplyTitle": "Apply",
+  "@learningStepApplyTitle": {"description": "Color Foundations learning copy."},
+  "learningStepCheckTitle": "Check",
+  "@learningStepCheckTitle": {"description": "Color Foundations learning copy."},
+  "learningNonVisualInstruction": "Use the labeled names, values, and controls; seeing a color difference is not required.",
+  "@learningNonVisualInstruction": {"description": "Color Foundations learning copy."},
+  "learningRetryHint": "Try again as often as you like.",
+  "@learningRetryHint": {"description": "Color Foundations learning copy."},
+  "learningGlossaryHsl": "HSL: hue angle, saturation, and lightness coordinates for an RGB color.",
+  "@learningGlossaryHsl": {"description": "Color Foundations learning copy."},
+  "learningGlossaryHsv": "HSV: hue, saturation, and value; value is the brightest RGB channel.",
+  "@learningGlossaryHsv": {"description": "Color Foundations learning copy."},
+  "learningGlossaryRgb": "RGB: encoded red, green, and blue display channels.",
+  "@learningGlossaryRgb": {"description": "Color Foundations learning copy."},
+  "learningGlossaryHex": "HEX: a compact written form of encoded RGB channel values.",
+  "@learningGlossaryHex": {"description": "Color Foundations learning copy."},
+  "learningGlossaryLab": "CIELAB: lightness and opponent-color coordinates computed here from sRGB.",
+  "@learningGlossaryLab": {"description": "Color Foundations learning copy."},
+  "learningGlossaryCmyk": "CMYK: a simplified digital conversion here, not a press or ink profile.",
+  "@learningGlossaryCmyk": {"description": "Color Foundations learning copy."},
+  "learningGlossaryDeltaE": "Delta-E: points of computed color difference, not diagnostic accuracy or a calibrated purchase match.",
+  "@learningGlossaryDeltaE": {"description": "Color Foundations learning copy."},
+  "learningGlossaryHue": "Hue: a circular color-family angle; neutrals can have no visible hue.",
+  "@learningGlossaryHue": {"description": "Color Foundations learning copy."},
+  "learningGlossarySaturation": "Saturation: colorfulness relative to a gray at the same model coordinates.",
+  "@learningGlossarySaturation": {"description": "Color Foundations learning copy."},
+  "learningGlossaryLightnessValue": "Lightness and value use different model definitions and are not interchangeable.",
+  "@learningGlossaryLightnessValue": {"description": "Color Foundations learning copy."},
+  "learningGlossaryDigitalInterpolation": "Digital interpolation averages numerical color coordinates; it does not simulate material pigments.",
+  "@learningGlossaryDigitalInterpolation": {"description": "Color Foundations learning copy."},
+  "learningGlossaryHarmony": "Harmony: a repeatable hue relationship, not a guarantee that a palette is beautiful.",
+  "@learningGlossaryHarmony": {"description": "Color Foundations learning copy."},
+  "learningLessonCoordinatesTitle": "Color coordinates: several views of one color",
+  "@learningLessonCoordinatesTitle": {"description": "Color Foundations learning copy."},
+  "learningLessonCoordinatesSummary": "Read one display color through HSL, RGB/HEX, LAB, and simplified CMYK coordinates.",
+  "@learningLessonCoordinatesSummary": {"description": "Color Foundations learning copy."},
+  "learningCoordinatesPredictInstruction": "Predict which coordinates will change when you adjust one visible color.",
+  "@learningCoordinatesPredictInstruction": {"description": "Color Foundations learning copy."},
+  "learningCoordinatesManipulateInstruction": "Adjust hue, saturation, and lightness while reading the labeled HSL, RGB/HEX, LAB, and CMYK values.",
+  "@learningCoordinatesManipulateInstruction": {"description": "Color Foundations learning copy."},
+  "learningCoordinatesObserveInstruction": "Compare the numbers. Delta-E points describe a computed difference; they do not diagnose vision or guarantee a physical match.",
+  "@learningCoordinatesObserveInstruction": {"description": "Color Foundations learning copy."},
+  "learningCoordinatesExplainInstruction": "RGB and HEX encode display channels; LAB and simplified CMYK describe the same digital color through different models.",
+  "@learningCoordinatesExplainInstruction": {"description": "Color Foundations learning copy."},
+  "learningCoordinatesApplyInstruction": "Save a labeled color experiment. A generated formula is not a paint recipe, and a screen preview is not a purchase match.",
+  "@learningCoordinatesApplyInstruction": {"description": "Color Foundations learning copy."},
+  "learningCoordinatesCheckInstruction": "Answer both questions, read each explanation, and retry freely.",
+  "@learningCoordinatesCheckInstruction": {"description": "Color Foundations learning copy."},
+  "learningCoordinatesManipulateNonVisual": "Enter or adjust the labeled HSL values and read every resulting coordinate as text.",
+  "@learningCoordinatesManipulateNonVisual": {"description": "Color Foundations learning copy."},
+  "learningCoordinatesQ1Prompt": "What does a HEX color encode?",
+  "@learningCoordinatesQ1Prompt": {"description": "Color Foundations learning copy."},
+  "learningCoordinatesQ1ALabel": "Encoded RGB display channels",
+  "@learningCoordinatesQ1ALabel": {"description": "Color Foundations learning copy."},
+  "learningCoordinatesQ1BLabel": "A physical paint formula",
+  "@learningCoordinatesQ1BLabel": {"description": "Color Foundations learning copy."},
+  "learningCoordinatesQ1AExplanation": "Correct. HEX writes encoded red, green, and blue channel values.",
+  "@learningCoordinatesQ1AExplanation": {"description": "Color Foundations learning copy."},
+  "learningCoordinatesQ1BExplanation": "Not quite. HEX describes display channels, not material ingredients.",
+  "@learningCoordinatesQ1BExplanation": {"description": "Color Foundations learning copy."},
+  "learningCoordinatesQ2Prompt": "What do Delta-E points prove here?",
+  "@learningCoordinatesQ2Prompt": {"description": "Color Foundations learning copy."},
+  "learningCoordinatesQ2ALabel": "They certify exact paint and vision accuracy",
+  "@learningCoordinatesQ2ALabel": {"description": "Color Foundations learning copy."},
+  "learningCoordinatesQ2BLabel": "They describe a computed difference between color coordinates",
+  "@learningCoordinatesQ2BLabel": {"description": "Color Foundations learning copy."},
+  "learningCoordinatesQ2AExplanation": "Not quite. The number is not a diagnosis, calibration certificate, or purchase guarantee.",
+  "@learningCoordinatesQ2AExplanation": {"description": "Color Foundations learning copy."},
+  "learningCoordinatesQ2BExplanation": "Correct. Delta-E is a model-based distance that needs context.",
+  "@learningCoordinatesQ2BExplanation": {"description": "Color Foundations learning copy."},
+  "learningLessonHueTitle": "Hue: the color-family angle",
+  "@learningLessonHueTitle": {"description": "Color Foundations learning copy."},
+  "learningLessonHueSummary": "Change the circular hue coordinate while names and numbers keep the activity usable without color-only cues.",
+  "@learningLessonHueSummary": {"description": "Color Foundations learning copy."},
+  "learningHuePredictInstruction": "Predict the named color family after moving the hue angle.",
+  "@learningHuePredictInstruction": {"description": "Color Foundations learning copy."},
+  "learningHueManipulateInstruction": "Adjust hue by slider, keyboard, or number and read its degree value and color-family label.",
+  "@learningHueManipulateInstruction": {"description": "Color Foundations learning copy."},
+  "learningHueObserveInstruction": "Notice that the angle wraps around at 360 degrees and a neutral may show no visible hue.",
+  "@learningHueObserveInstruction": {"description": "Color Foundations learning copy."},
+  "learningHueExplainInstruction": "Hue is a circular coordinate; it is not a measure of brightness or saturation.",
+  "@learningHueExplainInstruction": {"description": "Color Foundations learning copy."},
+  "learningHueApplyInstruction": "Choose a hue for a labeled design intention and save the exact value.",
+  "@learningHueApplyInstruction": {"description": "Color Foundations learning copy."},
+  "learningHueCheckInstruction": "Answer both questions, read each explanation, and retry freely.",
+  "@learningHueCheckInstruction": {"description": "Color Foundations learning copy."},
+  "learningHueManipulateNonVisual": "Use the degree value and color-family label; no subtle visual comparison is required.",
+  "@learningHueManipulateNonVisual": {"description": "Color Foundations learning copy."},
+  "learningHueQ1Prompt": "What happens after hue reaches 360°?",
+  "@learningHueQ1Prompt": {"description": "Color Foundations learning copy."},
+  "learningHueQ1ALabel": "It wraps to 0° on the color circle",
+  "@learningHueQ1ALabel": {"description": "Color Foundations learning copy."},
+  "learningHueQ1BLabel": "It becomes maximum brightness",
+  "@learningHueQ1BLabel": {"description": "Color Foundations learning copy."},
+  "learningHueQ1AExplanation": "Correct. Hue is circular, so 360° and 0° meet.",
+  "@learningHueQ1AExplanation": {"description": "Color Foundations learning copy."},
+  "learningHueQ1BExplanation": "Not quite. Hue angle does not set brightness.",
+  "@learningHueQ1BExplanation": {"description": "Color Foundations learning copy."},
+  "learningHueQ2Prompt": "What does hue mainly identify?",
+  "@learningHueQ2Prompt": {"description": "Color Foundations learning copy."},
+  "learningHueQ2ALabel": "How light a color is",
+  "@learningHueQ2ALabel": {"description": "Color Foundations learning copy."},
+  "learningHueQ2BLabel": "Its position around a color-family circle",
+  "@learningHueQ2BLabel": {"description": "Color Foundations learning copy."},
+  "learningHueQ2AExplanation": "Not quite. Lightness is a separate coordinate.",
+  "@learningHueQ2AExplanation": {"description": "Color Foundations learning copy."},
+  "learningHueQ2BExplanation": "Correct. Hue identifies a circular family position.",
+  "@learningHueQ2BExplanation": {"description": "Color Foundations learning copy."},
+  "learningLessonSaturationTitle": "Saturation: color versus gray",
+  "@learningLessonSaturationTitle": {"description": "Color Foundations learning copy."},
+  "learningLessonSaturationSummary": "Explore saturation with labeled values while keeping hue and lightness separate.",
+  "@learningLessonSaturationSummary": {"description": "Color Foundations learning copy."},
+  "learningSaturationPredictInstruction": "Predict whether lowering saturation moves the color toward a gray.",
+  "@learningSaturationPredictInstruction": {"description": "Color Foundations learning copy."},
+  "learningSaturationManipulateInstruction": "Adjust saturation with a labeled percentage while hue and lightness stay fixed.",
+  "@learningSaturationManipulateInstruction": {"description": "Color Foundations learning copy."},
+  "learningSaturationObserveInstruction": "Read the same hue and lightness beside a changing saturation value.",
+  "@learningSaturationObserveInstruction": {"description": "Color Foundations learning copy."},
+  "learningSaturationExplainInstruction": "In HSL, saturation describes distance from a gray at that lightness; it is not brightness.",
+  "@learningSaturationExplainInstruction": {"description": "Color Foundations learning copy."},
+  "learningSaturationApplyInstruction": "Choose a saturation for a muted or vivid intention and record the percentage.",
+  "@learningSaturationApplyInstruction": {"description": "Color Foundations learning copy."},
+  "learningSaturationCheckInstruction": "Answer both questions, read each explanation, and retry freely.",
+  "@learningSaturationCheckInstruction": {"description": "Color Foundations learning copy."},
+  "learningSaturationManipulateNonVisual": "Use the saturation percentage and muted/vivid text labels instead of judging intensity by sight.",
+  "@learningSaturationManipulateNonVisual": {"description": "Color Foundations learning copy."},
+  "learningSaturationQ1Prompt": "At 0% HSL saturation, what remains visible?",
+  "@learningSaturationQ1Prompt": {"description": "Color Foundations learning copy."},
+  "learningSaturationQ1ALabel": "The most vivid form of the hue",
+  "@learningSaturationQ1ALabel": {"description": "Color Foundations learning copy."},
+  "learningSaturationQ1BLabel": "A gray determined by lightness",
+  "@learningSaturationQ1BLabel": {"description": "Color Foundations learning copy."},
+  "learningSaturationQ1AExplanation": "Not quite. Maximum vividness is not 0%.",
+  "@learningSaturationQ1AExplanation": {"description": "Color Foundations learning copy."},
+  "learningSaturationQ1BExplanation": "Correct. Zero saturation removes visible hue in HSL.",
+  "@learningSaturationQ1BExplanation": {"description": "Color Foundations learning copy."},
+  "learningSaturationQ2Prompt": "Does saturation mean brightness?",
+  "@learningSaturationQ2Prompt": {"description": "Color Foundations learning copy."},
+  "learningSaturationQ2ALabel": "Yes, they are the same coordinate",
+  "@learningSaturationQ2ALabel": {"description": "Color Foundations learning copy."},
+  "learningSaturationQ2BLabel": "No, lightness/value describe different model dimensions",
+  "@learningSaturationQ2BLabel": {"description": "Color Foundations learning copy."},
+  "learningSaturationQ2AExplanation": "Not quite. Saturation and brightness-like coordinates are separate.",
+  "@learningSaturationQ2AExplanation": {"description": "Color Foundations learning copy."},
+  "learningSaturationQ2BExplanation": "Correct. The model keeps saturation separate from lightness or value.",
+  "@learningSaturationQ2BExplanation": {"description": "Color Foundations learning copy."},
+  "learningLessonLightnessValueTitle": "Lightness and value: two different scales",
+  "@learningLessonLightnessValueTitle": {"description": "Color Foundations learning copy."},
+  "learningLessonLightnessValueSummary": "Compare HSL lightness with HSV value without treating the terms as interchangeable.",
+  "@learningLessonLightnessValueSummary": {"description": "Color Foundations learning copy."},
+  "learningLightnessValuePredictInstruction": "Predict how an HSL lightness change affects the labeled RGB result.",
+  "@learningLightnessValuePredictInstruction": {"description": "Color Foundations learning copy."},
+  "learningLightnessValueManipulateInstruction": "Adjust HSL lightness and read both HSL lightness and computed HSV value.",
+  "@learningLightnessValueManipulateInstruction": {"description": "Color Foundations learning copy."},
+  "learningLightnessValueObserveInstruction": "Notice that HSL lightness and HSV value can show different numbers for one RGB color.",
+  "@learningLightnessValueObserveInstruction": {"description": "Color Foundations learning copy."},
+  "learningLightnessValueExplainInstruction": "HSL lightness averages channel extremes; HSV value uses the brightest channel.",
+  "@learningLightnessValueExplainInstruction": {"description": "Color Foundations learning copy."},
+  "learningLightnessValueApplyInstruction": "Record a lightness choice and its separate value reading for a design note.",
+  "@learningLightnessValueApplyInstruction": {"description": "Color Foundations learning copy."},
+  "learningLightnessValueCheckInstruction": "Answer both questions, read each explanation, and retry freely.",
+  "@learningLightnessValueCheckInstruction": {"description": "Color Foundations learning copy."},
+  "learningLightnessValueManipulateNonVisual": "Compare the printed HSL lightness and HSV value percentages rather than relying on appearance.",
+  "@learningLightnessValueManipulateNonVisual": {"description": "Color Foundations learning copy."},
+  "learningLightnessValueQ1Prompt": "Are HSL lightness and HSV value interchangeable?",
+  "@learningLightnessValueQ1Prompt": {"description": "Color Foundations learning copy."},
+  "learningLightnessValueQ1ALabel": "No; their model definitions differ",
+  "@learningLightnessValueQ1ALabel": {"description": "Color Foundations learning copy."},
+  "learningLightnessValueQ1BLabel": "Yes; they always have the same number",
+  "@learningLightnessValueQ1BLabel": {"description": "Color Foundations learning copy."},
+  "learningLightnessValueQ1AExplanation": "Correct. They can describe one RGB color with different numbers.",
+  "@learningLightnessValueQ1AExplanation": {"description": "Color Foundations learning copy."},
+  "learningLightnessValueQ1BExplanation": "Not quite. The models calculate these coordinates differently.",
+  "@learningLightnessValueQ1BExplanation": {"description": "Color Foundations learning copy."},
+  "learningLightnessValueQ2Prompt": "What does HSV value use?",
+  "@learningLightnessValueQ2Prompt": {"description": "Color Foundations learning copy."},
+  "learningLightnessValueQ2ALabel": "The average of the lightest and darkest channel",
+  "@learningLightnessValueQ2ALabel": {"description": "Color Foundations learning copy."},
+  "learningLightnessValueQ2BLabel": "The brightest RGB channel",
+  "@learningLightnessValueQ2BLabel": {"description": "Color Foundations learning copy."},
+  "learningLightnessValueQ2AExplanation": "Not quite. That resembles the HSL lightness calculation.",
+  "@learningLightnessValueQ2AExplanation": {"description": "Color Foundations learning copy."},
+  "learningLightnessValueQ2BExplanation": "Correct. HSV value is based on the maximum RGB channel.",
+  "@learningLightnessValueQ2BExplanation": {"description": "Color Foundations learning copy."},
+  "learningLessonDigitalMixingTitle": "Digital mixing: average coordinates",
+  "@learningLessonDigitalMixingTitle": {"description": "Color Foundations learning copy."},
+  "learningLessonDigitalMixingSummary": "Mix weighted RGB or LAB values while keeping the result distinct from real pigment behavior.",
+  "@learningLessonDigitalMixingSummary": {"description": "Color Foundations learning copy."},
+  "learningDigitalMixingPredictInstruction": "Predict which weighted input will pull the numerical result closer.",
+  "@learningDigitalMixingPredictInstruction": {"description": "Color Foundations learning copy."},
+  "learningDigitalMixingManipulateInstruction": "Change labeled color stops, weights, and RGB/LAB interpolation mode.",
+  "@learningDigitalMixingManipulateInstruction": {"description": "Color Foundations learning copy."},
+  "learningDigitalMixingObserveInstruction": "Read normalized percentages and the resulting HEX value for each digital method.",
+  "@learningDigitalMixingObserveInstruction": {"description": "Color Foundations learning copy."},
+  "learningDigitalMixingExplainInstruction": "Digital RGB/LAB interpolation is not pigment mixing; paint, ink, light, texture, and profiles can behave differently.",
+  "@learningDigitalMixingExplainInstruction": {"description": "Color Foundations learning copy."},
+  "learningDigitalMixingApplyInstruction": "Save the exact stops, weights, mode, result, and an observation in the notebook.",
+  "@learningDigitalMixingApplyInstruction": {"description": "Color Foundations learning copy."},
+  "learningDigitalMixingCheckInstruction": "Answer both questions, read each explanation, and retry freely.",
+  "@learningDigitalMixingCheckInstruction": {"description": "Color Foundations learning copy."},
+  "learningDigitalMixingManipulateNonVisual": "Use stop names, HEX values, weights, normalized percentages, and the result text.",
+  "@learningDigitalMixingManipulateNonVisual": {"description": "Color Foundations learning copy."},
+  "learningDigitalMixingQ1Prompt": "What does this mixer simulate?",
+  "@learningDigitalMixingQ1Prompt": {"description": "Color Foundations learning copy."},
+  "learningDigitalMixingQ1ALabel": "Exact physical pigment chemistry",
+  "@learningDigitalMixingQ1ALabel": {"description": "Color Foundations learning copy."},
+  "learningDigitalMixingQ1BLabel": "Weighted interpolation of digital color coordinates",
+  "@learningDigitalMixingQ1BLabel": {"description": "Color Foundations learning copy."},
+  "learningDigitalMixingQ1AExplanation": "Not quite. No material or spectral pigment model is used.",
+  "@learningDigitalMixingQ1AExplanation": {"description": "Color Foundations learning copy."},
+  "learningDigitalMixingQ1BExplanation": "Correct. It averages numerical RGB or LAB coordinates.",
+  "@learningDigitalMixingQ1BExplanation": {"description": "Color Foundations learning copy."},
+  "learningDigitalMixingQ2Prompt": "Does a heavier stop have more numerical influence?",
+  "@learningDigitalMixingQ2Prompt": {"description": "Color Foundations learning copy."},
+  "learningDigitalMixingQ2ALabel": "No; weights are ignored",
+  "@learningDigitalMixingQ2ALabel": {"description": "Color Foundations learning copy."},
+  "learningDigitalMixingQ2BLabel": "Yes, after the weights are normalized",
+  "@learningDigitalMixingQ2BLabel": {"description": "Color Foundations learning copy."},
+  "learningDigitalMixingQ2AExplanation": "Not quite. Positive weights control the interpolation.",
+  "@learningDigitalMixingQ2AExplanation": {"description": "Color Foundations learning copy."},
+  "learningDigitalMixingQ2BExplanation": "Correct. Normalized weights determine each stop's contribution.",
+  "@learningDigitalMixingQ2BExplanation": {"description": "Color Foundations learning copy."},
+  "learningLessonPaletteRelationshipsTitle": "Palette relationships: structured starting points",
+  "@learningLessonPaletteRelationshipsTitle": {"description": "Color Foundations learning copy."},
+  "learningLessonPaletteRelationshipsSummary": "Explore named hue relationships without claiming that one rule guarantees a beautiful palette.",
+  "@learningLessonPaletteRelationshipsSummary": {"description": "Color Foundations learning copy."},
+  "learningPaletteRelationshipsPredictInstruction": "Predict where a complementary, analogous, or triadic relationship places hues.",
+  "@learningPaletteRelationshipsPredictInstruction": {"description": "Color Foundations learning copy."},
+  "learningPaletteRelationshipsManipulateInstruction": "Choose a labeled base HEX value and harmony mode, then inspect the named swatches.",
+  "@learningPaletteRelationshipsManipulateInstruction": {"description": "Color Foundations learning copy."},
+  "learningPaletteRelationshipsObserveInstruction": "Read each swatch's name, HEX value, role, and hue angle.",
+  "@learningPaletteRelationshipsObserveInstruction": {"description": "Color Foundations learning copy."},
+  "learningPaletteRelationshipsExplainInstruction": "A harmony scheme is a relationship rule, not a universal beauty rule; context, proportion, contrast, and culture still matter.",
+  "@learningPaletteRelationshipsExplainInstruction": {"description": "Color Foundations learning copy."},
+  "learningPaletteRelationshipsApplyInstruction": "Copy a palette by value into an experiment or supported project and note its intended context.",
+  "@learningPaletteRelationshipsApplyInstruction": {"description": "Color Foundations learning copy."},
+  "learningPaletteRelationshipsCheckInstruction": "Answer both questions, read each explanation, and retry freely.",
+  "@learningPaletteRelationshipsCheckInstruction": {"description": "Color Foundations learning copy."},
+  "learningPaletteRelationshipsManipulateNonVisual": "Use the harmony mode, swatch order, roles, names, HEX values, and angles as the complete alternative.",
+  "@learningPaletteRelationshipsManipulateNonVisual": {"description": "Color Foundations learning copy."},
+  "learningPaletteRelationshipsQ1Prompt": "What does a harmony mode provide?",
+  "@learningPaletteRelationshipsQ1Prompt": {"description": "Color Foundations learning copy."},
+  "learningPaletteRelationshipsQ1ALabel": "A repeatable hue relationship",
+  "@learningPaletteRelationshipsQ1ALabel": {"description": "Color Foundations learning copy."},
+  "learningPaletteRelationshipsQ1BLabel": "A guarantee that every design is beautiful",
+  "@learningPaletteRelationshipsQ1BLabel": {"description": "Color Foundations learning copy."},
+  "learningPaletteRelationshipsQ1AExplanation": "Correct. It is a structured relationship you can test in context.",
+  "@learningPaletteRelationshipsQ1AExplanation": {"description": "Color Foundations learning copy."},
+  "learningPaletteRelationshipsQ1BExplanation": "Not quite. No palette rule can guarantee a universal judgment.",
+  "@learningPaletteRelationshipsQ1BExplanation": {"description": "Color Foundations learning copy."},
+  "learningPaletteRelationshipsQ2Prompt": "What else affects a palette in use?",
+  "@learningPaletteRelationshipsQ2Prompt": {"description": "Color Foundations learning copy."},
+  "learningPaletteRelationshipsQ2ALabel": "Nothing; hue spacing is enough",
+  "@learningPaletteRelationshipsQ2ALabel": {"description": "Color Foundations learning copy."},
+  "learningPaletteRelationshipsQ2BLabel": "Context, proportion, contrast, material, and surrounding colors",
+  "@learningPaletteRelationshipsQ2BLabel": {"description": "Color Foundations learning copy."},
+  "learningPaletteRelationshipsQ2AExplanation": "Not quite. A hue rule is only a starting point.",
+  "@learningPaletteRelationshipsQ2AExplanation": {"description": "Color Foundations learning copy."},
+  "learningPaletteRelationshipsQ2BExplanation": "Correct. Real use depends on context and more than hue spacing.",
+  "@learningPaletteRelationshipsQ2BExplanation": {"description": "Color Foundations learning copy."},
+  "learningSectionLearn": "Learn",
+  "@learningSectionLearn": {"description": "Color Learning main curriculum section."},
+  "learningSectionExperiment": "Experiment",
+  "@learningSectionExperiment": {"description": "Color Learning tools section."},
+  "learningSectionMyWork": "My Work",
+  "@learningSectionMyWork": {"description": "Color Learning saved-work section."},
+  "learningStartLesson": "Start lesson",
+  "@learningStartLesson": {"description": "Start an untouched lesson."},
+  "learningResumeStage": "Resume · {stage}",
+  "@learningResumeStage": {"description": "Resume a lesson at its durable stage.", "placeholders": {"stage": {"type": "String"}}},
+  "learningLessonComplete": "Completed",
+  "@learningLessonComplete": {"description": "Completed lesson status."},
+  "learningLessonProgress": "Step {current} of {total}",
+  "@learningLessonProgress": {"description": "Current lesson step.", "placeholders": {"current": {"type": "int"}, "total": {"type": "int"}}},
+  "learningPrevious": "Previous",
+  "@learningPrevious": {"description": "Move to the previous lesson step."},
+  "learningNext": "Next",
+  "@learningNext": {"description": "Move to the next lesson step."},
+  "learningFinish": "Finish lesson",
+  "@learningFinish": {"description": "Mark a lesson complete after its checks."},
+  "learningGlossary": "Glossary",
+  "@learningGlossary": {"description": "Open contextual color definitions."},
+  "learningNonVisualAlternative": "Text and controls alternative",
+  "@learningNonVisualAlternative": {"description": "Heading for a non-color-only activity route."},
+  "learningPracticeValue": "Practice value: {value}%",
+  "@learningPracticeValue": {"description": "Labeled manipulation value.", "placeholders": {"value": {"type": "int"}}},
+  "learningSaveError": "Couldn't save this change. Your visible work is kept.",
+  "@learningSaveError": {"description": "Learning write failure that retains visible state."},
+  "learningRetrySave": "Retry save",
+  "@learningRetrySave": {"description": "Retry the retained learning draft."},
+  "learningLoadingTitle": "Opening Color Learning…",
+  "@learningLoadingTitle": {"description": "Learning library loading title."},
+  "learningLoadingBody": "Your lessons and experiments stay on this device.",
+  "@learningLoadingBody": {"description": "Learning library loading body."},
+  "learningLoadErrorTitle": "Color Learning is unavailable",
+  "@learningLoadErrorTitle": {"description": "Learning library load error title."},
+  "learningLoadErrorBody": "Your saved data was not erased. Try opening it again.",
+  "@learningLoadErrorBody": {"description": "Learning library load error body."},
+  "learningNotebookTitle": "Experiment Notebook",
+  "@learningNotebookTitle": {"description": "Saved color experiment screen title."},
+  "learningNotebookDescription": "Reopen exact tool settings and keep your own observations.",
+  "@learningNotebookDescription": {"description": "Saved color experiment screen description."},
+  "learningNotebookEmptyTitle": "No saved experiments yet",
+  "@learningNotebookEmptyTitle": {"description": "Empty experiment notebook title."},
+  "learningNotebookEmptyBody": "Save a result from Lab, Mixer, Harmonies, Formula, or Matching.",
+  "@learningNotebookEmptyBody": {"description": "Empty experiment notebook explanation."},
+  "learningOpenExperiment": "Open an experiment",
+  "@learningOpenExperiment": {"description": "Open the experiment tools."},
+  "learningOpenNotebook": "Open Experiment Notebook",
+  "@learningOpenNotebook": {"description": "Open saved learning work."},
+  "learningDeleteExperiment": "Delete experiment",
+  "@learningDeleteExperiment": {"description": "Delete one saved experiment."},
+  "learningUseInRoom": "Use palette in Illustrated Room",
+  "@learningUseInRoom": {"description": "Copies experiment result colors into Illustrated Room."},
+  "learningSaveExperiment": "Save to Notebook",
+  "@learningSaveExperiment": {"description": "Save the current typed experiment state."},
+  "learningOpenPracticeTool": "Open {tool} experiment",
+  "@learningOpenPracticeTool": {"description": "Open the authored manipulation tool from a lesson.", "placeholders": {"tool": {"type": "String"}}},
+  "learningSaveExperimentTitle": "Save this experiment",
+  "@learningSaveExperimentTitle": {"description": "Experiment save dialog title."},
+  "learningExperimentTitleLabel": "Experiment title",
+  "@learningExperimentTitleLabel": {"description": "Experiment title field label."},
+  "learningExperimentObservationLabel": "What did you observe? (optional)",
+  "@learningExperimentObservationLabel": {"description": "Experiment observation field label."},
+  "learningExperimentSaveFailed": "This experiment is still on screen but could not be saved. Try the same save again.",
+  "@learningExperimentSaveFailed": {"description": "Recoverable experiment write failure."},
+  "learningExperimentSaved": "Experiment saved to your Notebook.",
+  "@learningExperimentSaved": {"description": "Experiment save confirmation."},
+  "learningResetLesson": "Reset lesson",
+  "@learningResetLesson": {"description": "Intentional lesson reset action."},
+  "learningResetLessonTitle": "Reset this lesson?",
+  "@learningResetLessonTitle": {"description": "Lesson reset confirmation title."},
+  "learningResetLessonBody": "Your current steps and answers for this lesson will start again. Other lessons and saved experiments stay unchanged.",
+  "@learningResetLessonBody": {"description": "Lesson reset confirmation explanation."},
+  "myWorkExperimentsTitle": "Color learning experiments",
+  "@myWorkExperimentsTitle": {"description": "My Work learning notebook section title."},
+  "learningExperimentTool": "{tool} experiment",
+  "@learningExperimentTool": {"description": "Accessible experiment tool label.", "placeholders": {"tool": {"type": "String"}}},
+  "learningCompletedAnnouncement": "Lesson completed. You can revisit any stage.",
+  "@learningCompletedAnnouncement": {"description": "Lesson completion confirmation."},
+  "coloringStudioTitle": "Coloring Studio",
+  "@coloringStudioTitle": {
+    "description": "Coloring Studio: StudioTitle."
+  },
+  "coloringCatalogHeadline": "Color at your pace.",
+  "@coloringCatalogHeadline": {
+    "description": "Coloring Studio: CatalogHeadline."
+  },
+  "coloringCatalogBody": "Twelve original offline drawings. Guided and Free projects stay separate, with no timer, score, or lives.",
+  "@coloringCatalogBody": {
+    "description": "Coloring Studio: CatalogBody."
+  },
+  "coloringGamesEntryBody": "Relax with 12 original offline drawings in Guided or Free Color. No timer, score, coins, or lives.",
+  "@coloringGamesEntryBody": {
+    "description": "Coloring Studio entry shown in the Games hub."
+  },
+  "coloringCopiedPaletteReady": "Your copied Color Learning palette is ready in Free Color.",
+  "@coloringCopiedPaletteReady": {
+    "description": "Coloring Studio: CopiedPaletteReady."
+  },
+  "coloringCreateFailed": "The project could not be created. Try again.",
+  "@coloringCreateFailed": {
+    "description": "Coloring Studio: CreateFailed."
+  },
+  "coloringAllCategories": "All categories",
+  "@coloringAllCategories": {
+    "description": "Coloring Studio: AllCategories."
+  },
+  "coloringCategoryFruit": "Fruit",
+  "@coloringCategoryFruit": {
+    "description": "Coloring Studio: CategoryFruit."
+  },
+  "coloringCategoryAnimals": "Animals",
+  "@coloringCategoryAnimals": {
+    "description": "Coloring Studio: CategoryAnimals."
+  },
+  "coloringCategoryNature": "Trees & Nature",
+  "@coloringCategoryNature": {
+    "description": "Coloring Studio: CategoryNature."
+  },
+  "coloringCategoryRooms": "Rooms",
+  "@coloringCategoryRooms": {
+    "description": "Coloring Studio: CategoryRooms."
+  },
+  "coloringAllModes": "All modes",
+  "@coloringAllModes": {
+    "description": "Coloring Studio: AllModes."
+  },
+  "coloringGuidedMode": "Guided Color",
+  "@coloringGuidedMode": {
+    "description": "Coloring Studio: GuidedMode."
+  },
+  "coloringFreeMode": "Free Color",
+  "@coloringFreeMode": {
+    "description": "Coloring Studio: FreeMode."
+  },
+  "coloringContinue": "Continue coloring",
+  "@coloringContinue": {
+    "description": "Coloring Studio: Continue."
+  },
+  "coloringRetryCatalog": "Retry Coloring Studio",
+  "@coloringRetryCatalog": {
+    "description": "Coloring Studio: RetryCatalog."
+  },
+  "coloringCompletedUnavailable": "This completed artwork is unavailable.",
+  "@coloringCompletedUnavailable": {
+    "description": "Coloring Studio: CompletedUnavailable."
+  },
+  "coloringCompleteTitle": "Artwork complete",
+  "@coloringCompleteTitle": {
+    "description": "Coloring Studio: CompleteTitle."
+  },
+  "coloringCompleteBody": "Your editable project stays in My Artwork. Exporting creates a separate clean PNG.",
+  "@coloringCompleteBody": {
+    "description": "Coloring Studio: CompleteBody."
+  },
+  "coloringExportPng": "Export PNG",
+  "@coloringExportPng": {
+    "description": "Coloring Studio: ExportPng."
+  },
+  "coloringShare": "Share",
+  "@coloringShare": {
+    "description": "Coloring Studio: Share."
+  },
+  "coloringUseInRoom": "Use colors in a room",
+  "@coloringUseInRoom": {
+    "description": "Coloring Studio: UseInRoom."
+  },
+  "coloringChooseAnother": "Choose another drawing",
+  "@coloringChooseAnother": {
+    "description": "Coloring Studio: ChooseAnother."
+  },
+  "coloringOpenArtwork": "Open My Artwork",
+  "@coloringOpenArtwork": {
+    "description": "Coloring Studio: OpenArtwork."
+  },
+  "coloringReturnLearning": "Return to Color Learning",
+  "@coloringReturnLearning": {
+    "description": "Coloring Studio: ReturnLearning."
+  },
+  "coloringExportedComplete": "PNG exported. Your editable project is unchanged.",
+  "@coloringExportedComplete": {
+    "description": "Coloring Studio: ExportedComplete."
+  },
+  "coloringShareCompleted": "Share completed.",
+  "@coloringShareCompleted": {
+    "description": "Coloring Studio: ShareCompleted."
+  },
+  "coloringShareDismissed": "Share cancelled. Your project is safe.",
+  "@coloringShareDismissed": {
+    "description": "Coloring Studio: ShareDismissed."
+  },
+  "coloringShareUnavailable": "Sharing is unavailable on this device.",
+  "@coloringShareUnavailable": {
+    "description": "Coloring Studio: ShareUnavailable."
+  },
+  "coloringPngFailed": "The PNG could not be created. Your editable project is safe.",
+  "@coloringPngFailed": {
+    "description": "Coloring Studio: PngFailed."
+  },
+  "coloringChooseMode": "Choose how you want to color. Each mode keeps its own project.",
+  "@coloringChooseMode": {
+    "description": "Coloring Studio: ChooseMode."
+  },
+  "coloringGuidedDescription": "Match each labeled region with its authored color. No timer or penalties.",
+  "@coloringGuidedDescription": {
+    "description": "Coloring Studio: GuidedDescription."
+  },
+  "coloringFreeDescription": "Use suggested colors, your saved colors, palettes, or a custom HEX.",
+  "@coloringFreeDescription": {
+    "description": "Coloring Studio: FreeDescription."
+  },
+  "coloringRegions": "Regions",
+  "@coloringRegions": {
+    "description": "Coloring Studio: Regions."
+  },
+  "coloringNotColored": "Not colored",
+  "@coloringNotColored": {
+    "description": "Coloring Studio: NotColored."
+  },
+  "coloringAssignTitle": "Assign colors to room surfaces",
+  "@coloringAssignTitle": {
+    "description": "Coloring Studio: AssignTitle."
+  },
+  "coloringAssignBody": "Choose each surface explicitly. The room will not change until you confirm.",
+  "@coloringAssignBody": {
+    "description": "Coloring Studio: AssignBody."
+  },
+  "coloringSurfaceWall": "Wall",
+  "@coloringSurfaceWall": {
+    "description": "Coloring Studio: SurfaceWall."
+  },
+  "coloringSurfaceCeiling": "Ceiling",
+  "@coloringSurfaceCeiling": {
+    "description": "Coloring Studio: SurfaceCeiling."
+  },
+  "coloringSurfaceFloor": "Floor",
+  "@coloringSurfaceFloor": {
+    "description": "Coloring Studio: SurfaceFloor."
+  },
+  "coloringSurfaceFurniture": "Furniture",
+  "@coloringSurfaceFurniture": {
+    "description": "Coloring Studio: SurfaceFurniture."
+  },
+  "coloringCancel": "Cancel",
+  "@coloringCancel": {
+    "description": "Coloring Studio: Cancel."
+  },
+  "coloringApplyRoom": "Apply to room",
+  "@coloringApplyRoom": {
+    "description": "Coloring Studio: ApplyRoom."
+  },
+  "coloringOpenFailed": "Coloring Studio could not open this project.",
+  "@coloringOpenFailed": {
+    "description": "Coloring Studio: OpenFailed."
+  },
+  "coloringProjectMissing": "This coloring project was not found.",
+  "@coloringProjectMissing": {
+    "description": "Coloring Studio: ProjectMissing."
+  },
+  "coloringRevisionMissing": "This drawing revision is unavailable.",
+  "@coloringRevisionMissing": {
+    "description": "Coloring Studio: RevisionMissing."
+  },
+  "coloringSaveDraft": "Your latest change is still visible but was not saved.",
+  "@coloringSaveDraft": {
+    "description": "Coloring Studio: SaveDraft."
+  },
+  "coloringRetry": "Retry",
+  "@coloringRetry": {
+    "description": "Coloring Studio: Retry."
+  },
+  "coloringRegionSelected": "Region selected.",
+  "@coloringRegionSelected": {
+    "description": "Coloring Studio: RegionSelected."
+  },
+  "coloringApplyGuided": "Apply selected color to selected region",
+  "@coloringApplyGuided": {
+    "description": "Coloring Studio: ApplyGuided."
+  },
+  "coloringUndo": "Undo",
+  "@coloringUndo": {
+    "description": "Coloring Studio: Undo."
+  },
+  "coloringRedo": "Redo",
+  "@coloringRedo": {
+    "description": "Coloring Studio: Redo."
+  },
+  "coloringAllColored": "Every required region is colored.",
+  "@coloringAllColored": {
+    "description": "Coloring Studio: AllColored."
+  },
+  "coloringNextUnfilled": "Moved to the next unfilled region.",
+  "@coloringNextUnfilled": {
+    "description": "Coloring Studio: NextUnfilled."
+  },
+  "coloringFindRegion": "Find region",
+  "@coloringFindRegion": {
+    "description": "Coloring Studio: FindRegion."
+  },
+  "coloringFinish": "Finish",
+  "@coloringFinish": {
+    "description": "Coloring Studio: Finish."
+  },
+  "coloringSaved": "Saved",
+  "@coloringSaved": {
+    "description": "Coloring Studio: Saved."
+  },
+  "coloringSaving": "Saving…",
+  "@coloringSaving": {
+    "description": "Coloring Studio: Saving."
+  },
+  "coloringNotSaved": "Not saved",
+  "@coloringNotSaved": {
+    "description": "Coloring Studio: NotSaved."
+  },
+  "coloringChooseGuided": "Choose one of the guided colors.",
+  "@coloringChooseGuided": {
+    "description": "Coloring Studio: ChooseGuided."
+  },
+  "coloringNowChooseColor": "Now choose a color for this region.",
+  "@coloringNowChooseColor": {
+    "description": "Coloring Studio: NowChooseColor."
+  },
+  "coloringChooseRegion": "Choose a region first.",
+  "@coloringChooseRegion": {
+    "description": "Coloring Studio: ChooseRegion."
+  },
+  "coloringChooseLabeledColor": "Choose a labeled color first.",
+  "@coloringChooseLabeledColor": {
+    "description": "Coloring Studio: ChooseLabeledColor."
+  },
+  "coloringAccepted": "Nice match. The region is colored.",
+  "@coloringAccepted": {
+    "description": "Coloring Studio: Accepted."
+  },
+  "coloringWrongColor": "That color belongs to a different region. Try another labeled color.",
+  "@coloringWrongColor": {
+    "description": "Coloring Studio: WrongColor."
+  },
+  "coloringRetryBeforeFinish": "Retry saving before finishing.",
+  "@coloringRetryBeforeFinish": {
+    "description": "Coloring Studio: RetryBeforeFinish."
+  },
+  "coloringFinishRemaining": "Color the remaining required regions first.",
+  "@coloringFinishRemaining": {
+    "description": "Coloring Studio: FinishRemaining."
+  },
+  "coloringChangeSaveFailed": "The change could not be saved. Retry is available.",
+  "@coloringChangeSaveFailed": {
+    "description": "Coloring Studio: ChangeSaveFailed."
+  },
+  "coloringMyArtwork": "My Artwork",
+  "@coloringMyArtwork": {
+    "description": "Coloring Studio: MyArtwork."
+  },
+  "coloringArtworkBody": "Editable Coloring Studio projects are separate from exported PNG files.",
+  "@coloringArtworkBody": {
+    "description": "Coloring Studio: ArtworkBody."
+  },
+  "coloringRetryArtwork": "Retry artwork",
+  "@coloringRetryArtwork": {
+    "description": "Coloring Studio: RetryArtwork."
+  },
+  "coloringDuplicateFailed": "The project could not be duplicated.",
+  "@coloringDuplicateFailed": {
+    "description": "Coloring Studio: DuplicateFailed."
+  },
+  "coloringExported": "PNG exported.",
+  "@coloringExported": {
+    "description": "Coloring Studio: Exported."
+  },
+  "coloringExportFailed": "Export failed. The project is safe.",
+  "@coloringExportFailed": {
+    "description": "Coloring Studio: ExportFailed."
+  },
+  "coloringSharingFailed": "Sharing is unavailable. The project is safe.",
+  "@coloringSharingFailed": {
+    "description": "Coloring Studio: SharingFailed."
+  },
+  "coloringDeleteTitle": "Delete editable artwork?",
+  "@coloringDeleteTitle": {
+    "description": "Coloring Studio: DeleteTitle."
+  },
+  "coloringDeleteBody": "Exported PNG files are not deleted.",
+  "@coloringDeleteBody": {
+    "description": "Coloring Studio: DeleteBody."
+  },
+  "coloringDelete": "Delete",
+  "@coloringDelete": {
+    "description": "Coloring Studio: Delete."
+  },
+  "coloringDeleteFailed": "The artwork could not be deleted.",
+  "@coloringDeleteFailed": {
+    "description": "Coloring Studio: DeleteFailed."
+  },
+  "coloringEmptyArtwork": "No coloring projects yet.",
+  "@coloringEmptyArtwork": {
+    "description": "Coloring Studio: EmptyArtwork."
+  },
+  "coloringOpenStudio": "Open Coloring Studio",
+  "@coloringOpenStudio": {
+    "description": "Coloring Studio: OpenStudio."
+  },
+  "coloringResume": "Resume",
+  "@coloringResume": {
+    "description": "Coloring Studio: Resume."
+  },
+  "coloringDuplicate": "Duplicate",
+  "@coloringDuplicate": {
+    "description": "Coloring Studio: Duplicate."
+  },
+  "coloringExport": "Export",
+  "@coloringExport": {
+    "description": "Coloring Studio: Export."
+  },
+  "coloringSuggestedColors": "Suggested colors",
+  "@coloringSuggestedColors": {
+    "description": "Coloring Studio: SuggestedColors."
+  },
+  "coloringFromLearning": "From Color Learning",
+  "@coloringFromLearning": {
+    "description": "Coloring Studio: FromLearning."
+  },
+  "coloringMyColors": "My Colors",
+  "@coloringMyColors": {
+    "description": "Coloring Studio: MyColors."
+  },
+  "coloringMyPalettes": "My Palettes",
+  "@coloringMyPalettes": {
+    "description": "Coloring Studio: MyPalettes."
+  },
+  "coloringCustomHex": "Custom HEX",
+  "@coloringCustomHex": {
+    "description": "Coloring Studio: CustomHex."
+  },
+  "coloringHexHint": "#336699",
+  "@coloringHexHint": {
+    "description": "Coloring Studio: HexHint."
+  },
+  "coloringUseCustom": "Use custom color",
+  "@coloringUseCustom": {
+    "description": "Coloring Studio: UseCustom."
+  },
+  "coloringInvalidHex": "Enter a six-digit HEX color.",
+  "@coloringInvalidHex": {
+    "description": "Coloring Studio: InvalidHex."
+  },
+  "coloringUnknownDrawing": "Unknown drawing",
+  "@coloringUnknownDrawing": {
+    "description": "Coloring Studio: UnknownDrawing."
+  },
+  "coloringProgress": "{filled} of {total} regions",
+  "@coloringProgress": {
+    "description": "Coloring Studio: Progress.",
+    "placeholders": {
+      "filled": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "coloringSelectedColor": "{label} selected.",
+  "@coloringSelectedColor": {
+    "description": "Coloring Studio: SelectedColor.",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "coloringAppliedColor": "{hex} applied.",
+  "@coloringAppliedColor": {
+    "description": "Coloring Studio: AppliedColor.",
+    "placeholders": {
+      "hex": {
+        "type": "String"
+      }
+    }
+  },
+  "coloringRegionNeeds": "Needs {label}",
+  "@coloringRegionNeeds": {
+    "description": "Coloring Studio: RegionNeeds.",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "coloringRegionComplete": "{label} complete",
+  "@coloringRegionComplete": {
+    "description": "Coloring Studio: RegionComplete.",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "coloringRegionSemantics": "{label}, {value}",
+  "@coloringRegionSemantics": {
+    "description": "Coloring Studio: RegionSemantics.",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "coloringProjectSummary": "{mode} · {count} regions",
+  "@coloringProjectSummary": {
+    "description": "Coloring Studio: ProjectSummary.",
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "coloringNumberedSwatch": "{number}. {label} {hex}",
+  "@coloringNumberedSwatch": {
+    "description": "Coloring Studio: NumberedSwatch.",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      },
+      "label": {
+        "type": "String"
+      },
+      "hex": {
+        "type": "String"
+      }
+    }
+  },
+  "coloringNamedHex": "{name} {hex}",
+  "@coloringNamedHex": {
+    "description": "Coloring Studio: NamedHex.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "hex": {
+        "type": "String"
+      }
+    }
+  },
+  "coloringSwatchSemantics": "{label}, {hex}",
+  "@coloringSwatchSemantics": {
+    "description": "Coloring Studio: SwatchSemantics.",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "hex": {
+        "type": "String"
+      }
+    }
+  },
+  "coloringSwatchTooltip": "{label} · {hex}",
+  "@coloringSwatchTooltip": {
+    "description": "Coloring Studio: SwatchTooltip.",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "hex": {
+        "type": "String"
+      }
+    }
+  },
+  "coloringShareTitle": "TintAtlas Coloring Studio — {title}",
+  "@coloringShareTitle": {
+    "description": "Coloring Studio: ShareTitle.",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "coloringDifficulty": "{key, select, easy{Easy} medium{Medium} hard{Hard} other{Unknown difficulty}}",
+  "@coloringDifficulty": {
+    "description": "Coloring Studio: Difficulty.",
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "coloringDifficultyBadge": "{key, select, easy{EASY} medium{MEDIUM} hard{HARD} other{UNKNOWN DIFFICULTY}}",
+  "@coloringDifficultyBadge": {
+    "description": "Coloring Studio: DifficultyBadge.",
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "coloringModeSummary": "{key, select, guided{guided} free{free} other{unknown mode}}",
+  "@coloringModeSummary": {
+    "description": "Coloring Studio: ModeSummary.",
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "coloringDrawingTitle": "{key, select, coloringFruitRedAppleTitle{Red Apple} coloringFruitOrangeSliceTitle{Orange Slice} coloringFruitBerryBowlTitle{Berry Bowl} coloringAnimalButterflyTitle{Butterfly} coloringAnimalTropicalFishTitle{Tropical Fish} coloringAnimalParrotTitle{Parrot} coloringNatureLeafyTreeTitle{Leafy Tree} coloringNatureSunflowerTitle{Sunflower} coloringNatureMountainGroveTitle{Mountain Grove} coloringRoomCozyLivingTitle{Cozy Living Room} coloringRoomCalmBedroomTitle{Calm Bedroom} coloringRoomReadingCornerTitle{Reading Corner} other{Unknown drawing}}",
+  "@coloringDrawingTitle": {
+    "description": "Resolves stable Coloring artwork keys; translate every select branch and keep keys unchanged.",
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "coloringDrawingDescription": "{key, select, coloringFruitRedAppleDescription{A bright apple with a leaf, stem, and soft highlight.} coloringFruitOrangeSliceDescription{A cheerful citrus slice with peel, pith, and seed.} coloringFruitBerryBowlDescription{Red and blue berries gathered in a cool blue bowl.} coloringAnimalButterflyDescription{A balanced butterfly with warm wings and violet spots.} coloringAnimalTropicalFishDescription{A lively fish with bold stripes, fin, and bright body.} coloringAnimalParrotDescription{A five-color parrot perched in a friendly profile.} coloringNatureLeafyTreeDescription{A sturdy tree with layered leaves and warm ground.} coloringNatureSunflowerDescription{A tall sunflower against a clear blue sky.} coloringNatureMountainGroveDescription{Pines, snow, and slate peaks in a quiet landscape.} coloringRoomCozyLivingDescription{A calm sofa, rug, table, and wall composition.} coloringRoomCalmBedroomDescription{A restful bed with mist, cream, blue, and sage layers.} coloringRoomReadingCornerDescription{A warm chair, shelf, plant, and lamp for a quiet nook.} other{Drawing description unavailable.}}",
+  "@coloringDrawingDescription": {
+    "description": "Resolves stable Coloring artwork keys; translate every select branch and keep keys unchanged.",
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "coloringSlotLabel": "{key, select, coloringSlotAppleRed{Apple red} coloringSlotLeafGreen{Leaf green} coloringSlotStemBrown{Stem brown} coloringSlotHighlightCream{Highlight cream} coloringSlotPeelOrange{Peel orange} coloringSlotFleshOrange{Flesh orange} coloringSlotPithCream{Pith cream} coloringSlotSeedTan{Seed tan} coloringSlotBerryRed{Berry red} coloringSlotBerryBlue{Berry blue} coloringSlotBowlBlue{Bowl blue} coloringSlotRimCream{Rim cream} coloringSlotWingGold{Wing gold} coloringSlotWingCoral{Wing coral} coloringSlotBodyCharcoal{Body charcoal} coloringSlotSpotViolet{Spot violet} coloringSlotBodyTurquoise{Body turquoise} coloringSlotStripeYellow{Stripe yellow} coloringSlotStripeCoral{Stripe coral} coloringSlotFinBlue{Fin blue} coloringSlotEyeCharcoal{Eye charcoal} coloringSlotFeatherRed{Feather red} coloringSlotFeatherGreen{Feather green} coloringSlotFeatherBlue{Feather blue} coloringSlotChestYellow{Chest yellow} coloringSlotBeakOrange{Beak orange} coloringSlotLeafLightGreen{Leaf light green} coloringSlotTrunkBrown{Trunk brown} coloringSlotGroundTan{Ground tan} coloringSlotPetalYellow{Petal yellow} coloringSlotCenterBrown{Center brown} coloringSlotSkyBlue{Sky blue} coloringSlotMountainSlate{Mountain slate} coloringSlotPineGreen{Pine green} coloringSlotSnowWhite{Snow white} coloringSlotEarthGray{Earth gray} coloringSlotWallLinen{Wall linen} coloringSlotSofaSage{Sofa sage} coloringSlotWoodBrown{Wood brown} coloringSlotRugCoral{Rug coral} coloringSlotAccentSlate{Accent slate} coloringSlotWallMist{Wall mist} coloringSlotBeddingCream{Bedding cream} coloringSlotBlanketBlue{Blanket blue} coloringSlotWoodTan{Wood tan} coloringSlotAccentSage{Accent sage} coloringSlotChairClay{Chair clay} coloringSlotShelfBrown{Shelf brown} coloringSlotPlantGreen{Plant green} coloringSlotLampGold{Lamp gold} other{Color}}",
+  "@coloringSlotLabel": {
+    "description": "Resolves stable Coloring artwork keys; translate every select branch and keep keys unchanged.",
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "coloringRegionLabel": "{key, select, coloringAppleBody{Apple Body} coloringAppleStem{Apple Stem} coloringAppleLeaf{Apple Leaf} coloringAppleHighlight{Apple Highlight} coloringOrangePeel{Orange Peel} coloringOrangeFlesh{Orange Flesh} coloringOrangePith{Orange Pith} coloringOrangeSeed{Orange Seed} coloringBerryBowlBody{Berry Bowl Body} coloringBerryBowlRim{Berry Bowl Rim} coloringBerryRedFruit{Berry Red Fruit} coloringBerryBlueFruit{Berry Blue Fruit} coloringBerryLeaf{Berry Leaf} coloringButterflyGoldWings{Butterfly Gold Wings} coloringButterflyCoralWings{Butterfly Coral Wings} coloringButterflyBody{Butterfly Body} coloringButterflySpots{Butterfly Spots} coloringFishBody{Fish Body} coloringFishTail{Fish Tail} coloringFishCoralStripe{Fish Coral Stripe} coloringFishYellowStripe{Fish Yellow Stripe} coloringFishEye{Fish Eye} coloringParrotRedHead{Parrot Red Head} coloringParrotGreenWing{Parrot Green Wing} coloringParrotBlueTail{Parrot Blue Tail} coloringParrotYellowChest{Parrot Yellow Chest} coloringParrotOrangeBeak{Parrot Orange Beak} coloringTreeGround{Tree Ground} coloringTreeTrunk{Tree Trunk} coloringTreeDarkLeaves{Tree Dark Leaves} coloringTreeLightLeaves{Tree Light Leaves} coloringSunflowerSky{Sunflower Sky} coloringSunflowerStemLeaf{Sunflower Stem Leaf} coloringSunflowerPetals{Sunflower Petals} coloringSunflowerCenter{Sunflower Center} coloringMountainSky{Mountain Sky} coloringMountainEarth{Mountain Earth} coloringMountainSlate{Mountain Slate} coloringMountainSnow{Mountain Snow} coloringMountainPines{Mountain Pines} coloringLivingWall{Living Wall} coloringLivingRug{Living Rug} coloringLivingSofa{Living Sofa} coloringLivingWood{Living Wood} coloringLivingAccent{Living Accent} coloringBedroomWall{Bedroom Wall} coloringBedroomWood{Bedroom Wood} coloringBedroomBedding{Bedroom Bedding} coloringBedroomBlanket{Bedroom Blanket} coloringBedroomAccent{Bedroom Accent} coloringReadingWall{Reading Wall} coloringReadingShelf{Reading Shelf} coloringReadingChair{Reading Chair} coloringReadingPlant{Reading Plant} coloringReadingLamp{Reading Lamp} other{Region}}",
+  "@coloringRegionLabel": {
+    "description": "Resolves stable Coloring artwork keys; translate every select branch and keep keys unchanged.",
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
   }
+
 }

@@ -6,6 +6,9 @@ import 'package:color_lab/features/games/application/game_profiles_provider.dart
 import 'package:color_lab/features/history/application/history_providers.dart';
 import 'package:color_lab/features/history/domain/color_history_repository.dart';
 import 'package:color_lab/features/history/domain/saved_color.dart';
+import 'package:color_lab/features/learning/application/learning_providers.dart';
+import 'package:color_lab/features/learning/domain/experiment_snapshot.dart';
+import 'package:color_lab/features/learning/domain/learning_library.dart';
 import 'package:color_lab/features/my_work/presentation/my_work_screen.dart';
 import 'package:color_lab/features/palette/application/saved_palettes_providers.dart';
 import 'package:color_lab/features/palette/domain/saved_palette.dart';
@@ -18,6 +21,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../support/in_memory_color_history_repository.dart';
+import '../../support/in_memory_learning_repository.dart';
 import '../../support/in_memory_room_design_repository.dart';
 import '../../support/in_memory_saved_palette_repository.dart';
 
@@ -61,6 +65,33 @@ void main() {
     ]) {
       expect(find.byKey(ValueKey(key)), findsOneWidget, reason: key);
     }
+  });
+
+  testWidgets('My Work lists and deletes a learning experiment independently', (
+    tester,
+  ) async {
+    final learning = InMemoryLearningRepository(
+      initial: LearningLibrary.empty().copyWith(experiments: [_experiment]),
+    );
+    final harness = await _pumpMyWork(
+      tester,
+      history: InMemoryColorHistoryRepository(),
+      palettes: InMemorySavedPaletteRepository(),
+      designs: InMemoryRoomDesignRepository(),
+      learning: learning,
+    );
+    addTearDown(harness.dispose);
+
+    expect(find.text('Warm violet'), findsOneWidget);
+    final delete = find.byTooltip('Delete experiment');
+    await tester.ensureVisible(delete);
+    await tester.tap(delete);
+    await tester.pumpAndSettle();
+    expect(find.text('Warm violet'), findsNothing);
+    expect(
+      find.byKey(const ValueKey('my-work-experiments-empty')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('one failed library leaves healthy work visible and retries', (
@@ -165,6 +196,18 @@ final _savedDesign = SavedRoomDesign(
   updatedAt: DateTime.utc(2026, 10, 23),
 );
 
+final _experiment = ExperimentRecord(
+  id: 'experiment-one',
+  title: 'Warm violet',
+  lessonId: 'hue',
+  inputHexes: const ['#112233'],
+  resultHexes: const ['#AABBCC'],
+  snapshot: const FormulaExperimentSnapshot(targetHex: '#112233'),
+  observation: 'More blue than red.',
+  createdAt: DateTime.utc(2026, 10, 28),
+  updatedAt: DateTime.utc(2026, 10, 28),
+);
+
 final class _MyWorkHarness {
   const _MyWorkHarness(this.container);
 
@@ -179,6 +222,7 @@ Future<_MyWorkHarness> _pumpMyWork(
   Future<ColorHistoryRepository>? pendingHistory,
   required InMemorySavedPaletteRepository palettes,
   required InMemoryRoomDesignRepository designs,
+  InMemoryLearningRepository? learning,
   VoidCallback? onGameProfileRead,
 }) async {
   assert((history == null) != (pendingHistory == null));
@@ -193,6 +237,9 @@ Future<_MyWorkHarness> _pumpMyWork(
         onGameProfileRead?.call();
         throw StateError('Game profiles must not own My Work.');
       }),
+      learningRepositoryProvider.overrideWith(
+        (ref) async => learning ?? InMemoryLearningRepository(),
+      ),
     ],
   );
   await tester.pumpWidget(

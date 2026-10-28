@@ -84,6 +84,35 @@ final class MatchingGame {
     );
   }
 
+  factory MatchingGame.restorePractice({
+    required RgbColor target,
+    required RgbColor guess,
+    required double hue,
+    required double saturation,
+    required double lightness,
+    required double expectedDeltaE,
+  }) {
+    final reconstructed = HslColor(hue, saturation, lightness).toRgb();
+    final computedDelta = deltaE76(target.toLab(), reconstructed.toLab());
+    if (reconstructed != guess ||
+        !expectedDeltaE.isFinite ||
+        (computedDelta - expectedDeltaE).abs() > 1e-9) {
+      throw ArgumentError('Inconsistent matching experiment payload.');
+    }
+    final fillers = [
+      RgbColor(0, 0, 0),
+      RgbColor(255, 255, 255),
+      RgbColor(255, 0, 0),
+      RgbColor(0, 255, 0),
+      RgbColor(0, 0, 255),
+    ].where((color) => color != target).take(2).toList(growable: false);
+    return MatchingGame.start(
+      [target, ...fillers],
+      difficulty: GameDifficulty.easy,
+      rules: const MatchingRules(roundCount: 3, winningAverage: 55),
+    ).setHue(hue).setSaturation(saturation).setLightness(lightness).submit();
+  }
+
   const MatchingGame._({
     required this.targets,
     required this.difficulty,

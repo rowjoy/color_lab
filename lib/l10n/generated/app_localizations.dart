@@ -2572,6 +2572,1722 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{name}, Starting look'**
   String illustratedPaletteRecommendedLabel(String name);
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Predict'**
+  String get learningStepPredictTitle;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Manipulate'**
+  String get learningStepManipulateTitle;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Observe'**
+  String get learningStepObserveTitle;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Explain'**
+  String get learningStepExplainTitle;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get learningStepApplyTitle;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Check'**
+  String get learningStepCheckTitle;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the labeled names, values, and controls; seeing a color difference is not required.'**
+  String get learningNonVisualInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again as often as you like.'**
+  String get learningRetryHint;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'HSL: hue angle, saturation, and lightness coordinates for an RGB color.'**
+  String get learningGlossaryHsl;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'HSV: hue, saturation, and value; value is the brightest RGB channel.'**
+  String get learningGlossaryHsv;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'RGB: encoded red, green, and blue display channels.'**
+  String get learningGlossaryRgb;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'HEX: a compact written form of encoded RGB channel values.'**
+  String get learningGlossaryHex;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'CIELAB: lightness and opponent-color coordinates computed here from sRGB.'**
+  String get learningGlossaryLab;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'CMYK: a simplified digital conversion here, not a press or ink profile.'**
+  String get learningGlossaryCmyk;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Delta-E: points of computed color difference, not diagnostic accuracy or a calibrated purchase match.'**
+  String get learningGlossaryDeltaE;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Hue: a circular color-family angle; neutrals can have no visible hue.'**
+  String get learningGlossaryHue;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Saturation: colorfulness relative to a gray at the same model coordinates.'**
+  String get learningGlossarySaturation;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Lightness and value use different model definitions and are not interchangeable.'**
+  String get learningGlossaryLightnessValue;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Digital interpolation averages numerical color coordinates; it does not simulate material pigments.'**
+  String get learningGlossaryDigitalInterpolation;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Harmony: a repeatable hue relationship, not a guarantee that a palette is beautiful.'**
+  String get learningGlossaryHarmony;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Color coordinates: several views of one color'**
+  String get learningLessonCoordinatesTitle;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Read one display color through HSL, RGB/HEX, LAB, and simplified CMYK coordinates.'**
+  String get learningLessonCoordinatesSummary;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Predict which coordinates will change when you adjust one visible color.'**
+  String get learningCoordinatesPredictInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust hue, saturation, and lightness while reading the labeled HSL, RGB/HEX, LAB, and CMYK values.'**
+  String get learningCoordinatesManipulateInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare the numbers. Delta-E points describe a computed difference; they do not diagnose vision or guarantee a physical match.'**
+  String get learningCoordinatesObserveInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'RGB and HEX encode display channels; LAB and simplified CMYK describe the same digital color through different models.'**
+  String get learningCoordinatesExplainInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Save a labeled color experiment. A generated formula is not a paint recipe, and a screen preview is not a purchase match.'**
+  String get learningCoordinatesApplyInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer both questions, read each explanation, and retry freely.'**
+  String get learningCoordinatesCheckInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter or adjust the labeled HSL values and read every resulting coordinate as text.'**
+  String get learningCoordinatesManipulateNonVisual;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'What does a HEX color encode?'**
+  String get learningCoordinatesQ1Prompt;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Encoded RGB display channels'**
+  String get learningCoordinatesQ1ALabel;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'A physical paint formula'**
+  String get learningCoordinatesQ1BLabel;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Correct. HEX writes encoded red, green, and blue channel values.'**
+  String get learningCoordinatesQ1AExplanation;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Not quite. HEX describes display channels, not material ingredients.'**
+  String get learningCoordinatesQ1BExplanation;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'What do Delta-E points prove here?'**
+  String get learningCoordinatesQ2Prompt;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'They certify exact paint and vision accuracy'**
+  String get learningCoordinatesQ2ALabel;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'They describe a computed difference between color coordinates'**
+  String get learningCoordinatesQ2BLabel;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Not quite. The number is not a diagnosis, calibration certificate, or purchase guarantee.'**
+  String get learningCoordinatesQ2AExplanation;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Correct. Delta-E is a model-based distance that needs context.'**
+  String get learningCoordinatesQ2BExplanation;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Hue: the color-family angle'**
+  String get learningLessonHueTitle;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Change the circular hue coordinate while names and numbers keep the activity usable without color-only cues.'**
+  String get learningLessonHueSummary;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Predict the named color family after moving the hue angle.'**
+  String get learningHuePredictInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust hue by slider, keyboard, or number and read its degree value and color-family label.'**
+  String get learningHueManipulateInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Notice that the angle wraps around at 360 degrees and a neutral may show no visible hue.'**
+  String get learningHueObserveInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Hue is a circular coordinate; it is not a measure of brightness or saturation.'**
+  String get learningHueExplainInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a hue for a labeled design intention and save the exact value.'**
+  String get learningHueApplyInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer both questions, read each explanation, and retry freely.'**
+  String get learningHueCheckInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the degree value and color-family label; no subtle visual comparison is required.'**
+  String get learningHueManipulateNonVisual;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'What happens after hue reaches 360°?'**
+  String get learningHueQ1Prompt;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'It wraps to 0° on the color circle'**
+  String get learningHueQ1ALabel;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'It becomes maximum brightness'**
+  String get learningHueQ1BLabel;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Correct. Hue is circular, so 360° and 0° meet.'**
+  String get learningHueQ1AExplanation;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Not quite. Hue angle does not set brightness.'**
+  String get learningHueQ1BExplanation;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'What does hue mainly identify?'**
+  String get learningHueQ2Prompt;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'How light a color is'**
+  String get learningHueQ2ALabel;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Its position around a color-family circle'**
+  String get learningHueQ2BLabel;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Not quite. Lightness is a separate coordinate.'**
+  String get learningHueQ2AExplanation;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Correct. Hue identifies a circular family position.'**
+  String get learningHueQ2BExplanation;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Saturation: color versus gray'**
+  String get learningLessonSaturationTitle;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore saturation with labeled values while keeping hue and lightness separate.'**
+  String get learningLessonSaturationSummary;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Predict whether lowering saturation moves the color toward a gray.'**
+  String get learningSaturationPredictInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust saturation with a labeled percentage while hue and lightness stay fixed.'**
+  String get learningSaturationManipulateInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Read the same hue and lightness beside a changing saturation value.'**
+  String get learningSaturationObserveInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'In HSL, saturation describes distance from a gray at that lightness; it is not brightness.'**
+  String get learningSaturationExplainInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a saturation for a muted or vivid intention and record the percentage.'**
+  String get learningSaturationApplyInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer both questions, read each explanation, and retry freely.'**
+  String get learningSaturationCheckInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the saturation percentage and muted/vivid text labels instead of judging intensity by sight.'**
+  String get learningSaturationManipulateNonVisual;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'At 0% HSL saturation, what remains visible?'**
+  String get learningSaturationQ1Prompt;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'The most vivid form of the hue'**
+  String get learningSaturationQ1ALabel;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'A gray determined by lightness'**
+  String get learningSaturationQ1BLabel;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Not quite. Maximum vividness is not 0%.'**
+  String get learningSaturationQ1AExplanation;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Correct. Zero saturation removes visible hue in HSL.'**
+  String get learningSaturationQ1BExplanation;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Does saturation mean brightness?'**
+  String get learningSaturationQ2Prompt;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, they are the same coordinate'**
+  String get learningSaturationQ2ALabel;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'No, lightness/value describe different model dimensions'**
+  String get learningSaturationQ2BLabel;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Not quite. Saturation and brightness-like coordinates are separate.'**
+  String get learningSaturationQ2AExplanation;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Correct. The model keeps saturation separate from lightness or value.'**
+  String get learningSaturationQ2BExplanation;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Lightness and value: two different scales'**
+  String get learningLessonLightnessValueTitle;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare HSL lightness with HSV value without treating the terms as interchangeable.'**
+  String get learningLessonLightnessValueSummary;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Predict how an HSL lightness change affects the labeled RGB result.'**
+  String get learningLightnessValuePredictInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust HSL lightness and read both HSL lightness and computed HSV value.'**
+  String get learningLightnessValueManipulateInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Notice that HSL lightness and HSV value can show different numbers for one RGB color.'**
+  String get learningLightnessValueObserveInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'HSL lightness averages channel extremes; HSV value uses the brightest channel.'**
+  String get learningLightnessValueExplainInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Record a lightness choice and its separate value reading for a design note.'**
+  String get learningLightnessValueApplyInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer both questions, read each explanation, and retry freely.'**
+  String get learningLightnessValueCheckInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare the printed HSL lightness and HSV value percentages rather than relying on appearance.'**
+  String get learningLightnessValueManipulateNonVisual;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Are HSL lightness and HSV value interchangeable?'**
+  String get learningLightnessValueQ1Prompt;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'No; their model definitions differ'**
+  String get learningLightnessValueQ1ALabel;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes; they always have the same number'**
+  String get learningLightnessValueQ1BLabel;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Correct. They can describe one RGB color with different numbers.'**
+  String get learningLightnessValueQ1AExplanation;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Not quite. The models calculate these coordinates differently.'**
+  String get learningLightnessValueQ1BExplanation;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'What does HSV value use?'**
+  String get learningLightnessValueQ2Prompt;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'The average of the lightest and darkest channel'**
+  String get learningLightnessValueQ2ALabel;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'The brightest RGB channel'**
+  String get learningLightnessValueQ2BLabel;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Not quite. That resembles the HSL lightness calculation.'**
+  String get learningLightnessValueQ2AExplanation;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Correct. HSV value is based on the maximum RGB channel.'**
+  String get learningLightnessValueQ2BExplanation;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Digital mixing: average coordinates'**
+  String get learningLessonDigitalMixingTitle;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Mix weighted RGB or LAB values while keeping the result distinct from real pigment behavior.'**
+  String get learningLessonDigitalMixingSummary;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Predict which weighted input will pull the numerical result closer.'**
+  String get learningDigitalMixingPredictInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Change labeled color stops, weights, and RGB/LAB interpolation mode.'**
+  String get learningDigitalMixingManipulateInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Read normalized percentages and the resulting HEX value for each digital method.'**
+  String get learningDigitalMixingObserveInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Digital RGB/LAB interpolation is not pigment mixing; paint, ink, light, texture, and profiles can behave differently.'**
+  String get learningDigitalMixingExplainInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Save the exact stops, weights, mode, result, and an observation in the notebook.'**
+  String get learningDigitalMixingApplyInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer both questions, read each explanation, and retry freely.'**
+  String get learningDigitalMixingCheckInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Use stop names, HEX values, weights, normalized percentages, and the result text.'**
+  String get learningDigitalMixingManipulateNonVisual;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'What does this mixer simulate?'**
+  String get learningDigitalMixingQ1Prompt;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Exact physical pigment chemistry'**
+  String get learningDigitalMixingQ1ALabel;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Weighted interpolation of digital color coordinates'**
+  String get learningDigitalMixingQ1BLabel;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Not quite. No material or spectral pigment model is used.'**
+  String get learningDigitalMixingQ1AExplanation;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Correct. It averages numerical RGB or LAB coordinates.'**
+  String get learningDigitalMixingQ1BExplanation;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Does a heavier stop have more numerical influence?'**
+  String get learningDigitalMixingQ2Prompt;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'No; weights are ignored'**
+  String get learningDigitalMixingQ2ALabel;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, after the weights are normalized'**
+  String get learningDigitalMixingQ2BLabel;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Not quite. Positive weights control the interpolation.'**
+  String get learningDigitalMixingQ2AExplanation;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Correct. Normalized weights determine each stop\'s contribution.'**
+  String get learningDigitalMixingQ2BExplanation;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Palette relationships: structured starting points'**
+  String get learningLessonPaletteRelationshipsTitle;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore named hue relationships without claiming that one rule guarantees a beautiful palette.'**
+  String get learningLessonPaletteRelationshipsSummary;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Predict where a complementary, analogous, or triadic relationship places hues.'**
+  String get learningPaletteRelationshipsPredictInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a labeled base HEX value and harmony mode, then inspect the named swatches.'**
+  String get learningPaletteRelationshipsManipulateInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Read each swatch\'s name, HEX value, role, and hue angle.'**
+  String get learningPaletteRelationshipsObserveInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'A harmony scheme is a relationship rule, not a universal beauty rule; context, proportion, contrast, and culture still matter.'**
+  String get learningPaletteRelationshipsExplainInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy a palette by value into an experiment or supported project and note its intended context.'**
+  String get learningPaletteRelationshipsApplyInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer both questions, read each explanation, and retry freely.'**
+  String get learningPaletteRelationshipsCheckInstruction;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the harmony mode, swatch order, roles, names, HEX values, and angles as the complete alternative.'**
+  String get learningPaletteRelationshipsManipulateNonVisual;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'What does a harmony mode provide?'**
+  String get learningPaletteRelationshipsQ1Prompt;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'A repeatable hue relationship'**
+  String get learningPaletteRelationshipsQ1ALabel;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'A guarantee that every design is beautiful'**
+  String get learningPaletteRelationshipsQ1BLabel;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Correct. It is a structured relationship you can test in context.'**
+  String get learningPaletteRelationshipsQ1AExplanation;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Not quite. No palette rule can guarantee a universal judgment.'**
+  String get learningPaletteRelationshipsQ1BExplanation;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'What else affects a palette in use?'**
+  String get learningPaletteRelationshipsQ2Prompt;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing; hue spacing is enough'**
+  String get learningPaletteRelationshipsQ2ALabel;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Context, proportion, contrast, material, and surrounding colors'**
+  String get learningPaletteRelationshipsQ2BLabel;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Not quite. A hue rule is only a starting point.'**
+  String get learningPaletteRelationshipsQ2AExplanation;
+
+  /// Color Foundations learning copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Correct. Real use depends on context and more than hue spacing.'**
+  String get learningPaletteRelationshipsQ2BExplanation;
+
+  /// Color Learning main curriculum section.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn'**
+  String get learningSectionLearn;
+
+  /// Color Learning tools section.
+  ///
+  /// In en, this message translates to:
+  /// **'Experiment'**
+  String get learningSectionExperiment;
+
+  /// Color Learning saved-work section.
+  ///
+  /// In en, this message translates to:
+  /// **'My Work'**
+  String get learningSectionMyWork;
+
+  /// Start an untouched lesson.
+  ///
+  /// In en, this message translates to:
+  /// **'Start lesson'**
+  String get learningStartLesson;
+
+  /// Resume a lesson at its durable stage.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume · {stage}'**
+  String learningResumeStage(String stage);
+
+  /// Completed lesson status.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get learningLessonComplete;
+
+  /// Current lesson step.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {current} of {total}'**
+  String learningLessonProgress(int current, int total);
+
+  /// Move to the previous lesson step.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous'**
+  String get learningPrevious;
+
+  /// Move to the next lesson step.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get learningNext;
+
+  /// Mark a lesson complete after its checks.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish lesson'**
+  String get learningFinish;
+
+  /// Open contextual color definitions.
+  ///
+  /// In en, this message translates to:
+  /// **'Glossary'**
+  String get learningGlossary;
+
+  /// Heading for a non-color-only activity route.
+  ///
+  /// In en, this message translates to:
+  /// **'Text and controls alternative'**
+  String get learningNonVisualAlternative;
+
+  /// Labeled manipulation value.
+  ///
+  /// In en, this message translates to:
+  /// **'Practice value: {value}%'**
+  String learningPracticeValue(int value);
+
+  /// Learning write failure that retains visible state.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save this change. Your visible work is kept.'**
+  String get learningSaveError;
+
+  /// Retry the retained learning draft.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry save'**
+  String get learningRetrySave;
+
+  /// Learning library loading title.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening Color Learning…'**
+  String get learningLoadingTitle;
+
+  /// Learning library loading body.
+  ///
+  /// In en, this message translates to:
+  /// **'Your lessons and experiments stay on this device.'**
+  String get learningLoadingBody;
+
+  /// Learning library load error title.
+  ///
+  /// In en, this message translates to:
+  /// **'Color Learning is unavailable'**
+  String get learningLoadErrorTitle;
+
+  /// Learning library load error body.
+  ///
+  /// In en, this message translates to:
+  /// **'Your saved data was not erased. Try opening it again.'**
+  String get learningLoadErrorBody;
+
+  /// Saved color experiment screen title.
+  ///
+  /// In en, this message translates to:
+  /// **'Experiment Notebook'**
+  String get learningNotebookTitle;
+
+  /// Saved color experiment screen description.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopen exact tool settings and keep your own observations.'**
+  String get learningNotebookDescription;
+
+  /// Empty experiment notebook title.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved experiments yet'**
+  String get learningNotebookEmptyTitle;
+
+  /// Empty experiment notebook explanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Save a result from Lab, Mixer, Harmonies, Formula, or Matching.'**
+  String get learningNotebookEmptyBody;
+
+  /// Open the experiment tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Open an experiment'**
+  String get learningOpenExperiment;
+
+  /// Open saved learning work.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Experiment Notebook'**
+  String get learningOpenNotebook;
+
+  /// Delete one saved experiment.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete experiment'**
+  String get learningDeleteExperiment;
+
+  /// Copies experiment result colors into Illustrated Room.
+  ///
+  /// In en, this message translates to:
+  /// **'Use palette in Illustrated Room'**
+  String get learningUseInRoom;
+
+  /// Save the current typed experiment state.
+  ///
+  /// In en, this message translates to:
+  /// **'Save to Notebook'**
+  String get learningSaveExperiment;
+
+  /// Open the authored manipulation tool from a lesson.
+  ///
+  /// In en, this message translates to:
+  /// **'Open {tool} experiment'**
+  String learningOpenPracticeTool(String tool);
+
+  /// Experiment save dialog title.
+  ///
+  /// In en, this message translates to:
+  /// **'Save this experiment'**
+  String get learningSaveExperimentTitle;
+
+  /// Experiment title field label.
+  ///
+  /// In en, this message translates to:
+  /// **'Experiment title'**
+  String get learningExperimentTitleLabel;
+
+  /// Experiment observation field label.
+  ///
+  /// In en, this message translates to:
+  /// **'What did you observe? (optional)'**
+  String get learningExperimentObservationLabel;
+
+  /// Recoverable experiment write failure.
+  ///
+  /// In en, this message translates to:
+  /// **'This experiment is still on screen but could not be saved. Try the same save again.'**
+  String get learningExperimentSaveFailed;
+
+  /// Experiment save confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Experiment saved to your Notebook.'**
+  String get learningExperimentSaved;
+
+  /// Intentional lesson reset action.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset lesson'**
+  String get learningResetLesson;
+
+  /// Lesson reset confirmation title.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset this lesson?'**
+  String get learningResetLessonTitle;
+
+  /// Lesson reset confirmation explanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Your current steps and answers for this lesson will start again. Other lessons and saved experiments stay unchanged.'**
+  String get learningResetLessonBody;
+
+  /// My Work learning notebook section title.
+  ///
+  /// In en, this message translates to:
+  /// **'Color learning experiments'**
+  String get myWorkExperimentsTitle;
+
+  /// Accessible experiment tool label.
+  ///
+  /// In en, this message translates to:
+  /// **'{tool} experiment'**
+  String learningExperimentTool(String tool);
+
+  /// Lesson completion confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Lesson completed. You can revisit any stage.'**
+  String get learningCompletedAnnouncement;
+
+  /// Coloring Studio: StudioTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Coloring Studio'**
+  String get coloringStudioTitle;
+
+  /// Coloring Studio: CatalogHeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Color at your pace.'**
+  String get coloringCatalogHeadline;
+
+  /// Coloring Studio: CatalogBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Twelve original offline drawings. Guided and Free projects stay separate, with no timer, score, or lives.'**
+  String get coloringCatalogBody;
+
+  /// Coloring Studio entry shown in the Games hub.
+  ///
+  /// In en, this message translates to:
+  /// **'Relax with 12 original offline drawings in Guided or Free Color. No timer, score, coins, or lives.'**
+  String get coloringGamesEntryBody;
+
+  /// Coloring Studio: CopiedPaletteReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Your copied Color Learning palette is ready in Free Color.'**
+  String get coloringCopiedPaletteReady;
+
+  /// Coloring Studio: CreateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The project could not be created. Try again.'**
+  String get coloringCreateFailed;
+
+  /// Coloring Studio: AllCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'All categories'**
+  String get coloringAllCategories;
+
+  /// Coloring Studio: CategoryFruit.
+  ///
+  /// In en, this message translates to:
+  /// **'Fruit'**
+  String get coloringCategoryFruit;
+
+  /// Coloring Studio: CategoryAnimals.
+  ///
+  /// In en, this message translates to:
+  /// **'Animals'**
+  String get coloringCategoryAnimals;
+
+  /// Coloring Studio: CategoryNature.
+  ///
+  /// In en, this message translates to:
+  /// **'Trees & Nature'**
+  String get coloringCategoryNature;
+
+  /// Coloring Studio: CategoryRooms.
+  ///
+  /// In en, this message translates to:
+  /// **'Rooms'**
+  String get coloringCategoryRooms;
+
+  /// Coloring Studio: AllModes.
+  ///
+  /// In en, this message translates to:
+  /// **'All modes'**
+  String get coloringAllModes;
+
+  /// Coloring Studio: GuidedMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Guided Color'**
+  String get coloringGuidedMode;
+
+  /// Coloring Studio: FreeMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Free Color'**
+  String get coloringFreeMode;
+
+  /// Coloring Studio: Continue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue coloring'**
+  String get coloringContinue;
+
+  /// Coloring Studio: RetryCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry Coloring Studio'**
+  String get coloringRetryCatalog;
+
+  /// Coloring Studio: CompletedUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This completed artwork is unavailable.'**
+  String get coloringCompletedUnavailable;
+
+  /// Coloring Studio: CompleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Artwork complete'**
+  String get coloringCompleteTitle;
+
+  /// Coloring Studio: CompleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your editable project stays in My Artwork. Exporting creates a separate clean PNG.'**
+  String get coloringCompleteBody;
+
+  /// Coloring Studio: ExportPng.
+  ///
+  /// In en, this message translates to:
+  /// **'Export PNG'**
+  String get coloringExportPng;
+
+  /// Coloring Studio: Share.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get coloringShare;
+
+  /// Coloring Studio: UseInRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Use colors in a room'**
+  String get coloringUseInRoom;
+
+  /// Coloring Studio: ChooseAnother.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose another drawing'**
+  String get coloringChooseAnother;
+
+  /// Coloring Studio: OpenArtwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Open My Artwork'**
+  String get coloringOpenArtwork;
+
+  /// Coloring Studio: ReturnLearning.
+  ///
+  /// In en, this message translates to:
+  /// **'Return to Color Learning'**
+  String get coloringReturnLearning;
+
+  /// Coloring Studio: ExportedComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'PNG exported. Your editable project is unchanged.'**
+  String get coloringExportedComplete;
+
+  /// Coloring Studio: ShareCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Share completed.'**
+  String get coloringShareCompleted;
+
+  /// Coloring Studio: ShareDismissed.
+  ///
+  /// In en, this message translates to:
+  /// **'Share cancelled. Your project is safe.'**
+  String get coloringShareDismissed;
+
+  /// Coloring Studio: ShareUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing is unavailable on this device.'**
+  String get coloringShareUnavailable;
+
+  /// Coloring Studio: PngFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The PNG could not be created. Your editable project is safe.'**
+  String get coloringPngFailed;
+
+  /// Coloring Studio: ChooseMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose how you want to color. Each mode keeps its own project.'**
+  String get coloringChooseMode;
+
+  /// Coloring Studio: GuidedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Match each labeled region with its authored color. No timer or penalties.'**
+  String get coloringGuidedDescription;
+
+  /// Coloring Studio: FreeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Use suggested colors, your saved colors, palettes, or a custom HEX.'**
+  String get coloringFreeDescription;
+
+  /// Coloring Studio: Regions.
+  ///
+  /// In en, this message translates to:
+  /// **'Regions'**
+  String get coloringRegions;
+
+  /// Coloring Studio: NotColored.
+  ///
+  /// In en, this message translates to:
+  /// **'Not colored'**
+  String get coloringNotColored;
+
+  /// Coloring Studio: AssignTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Assign colors to room surfaces'**
+  String get coloringAssignTitle;
+
+  /// Coloring Studio: AssignBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose each surface explicitly. The room will not change until you confirm.'**
+  String get coloringAssignBody;
+
+  /// Coloring Studio: SurfaceWall.
+  ///
+  /// In en, this message translates to:
+  /// **'Wall'**
+  String get coloringSurfaceWall;
+
+  /// Coloring Studio: SurfaceCeiling.
+  ///
+  /// In en, this message translates to:
+  /// **'Ceiling'**
+  String get coloringSurfaceCeiling;
+
+  /// Coloring Studio: SurfaceFloor.
+  ///
+  /// In en, this message translates to:
+  /// **'Floor'**
+  String get coloringSurfaceFloor;
+
+  /// Coloring Studio: SurfaceFurniture.
+  ///
+  /// In en, this message translates to:
+  /// **'Furniture'**
+  String get coloringSurfaceFurniture;
+
+  /// Coloring Studio: Cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get coloringCancel;
+
+  /// Coloring Studio: ApplyRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply to room'**
+  String get coloringApplyRoom;
+
+  /// Coloring Studio: OpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Coloring Studio could not open this project.'**
+  String get coloringOpenFailed;
+
+  /// Coloring Studio: ProjectMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'This coloring project was not found.'**
+  String get coloringProjectMissing;
+
+  /// Coloring Studio: RevisionMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'This drawing revision is unavailable.'**
+  String get coloringRevisionMissing;
+
+  /// Coloring Studio: SaveDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Your latest change is still visible but was not saved.'**
+  String get coloringSaveDraft;
+
+  /// Coloring Studio: Retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get coloringRetry;
+
+  /// Coloring Studio: RegionSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Region selected.'**
+  String get coloringRegionSelected;
+
+  /// Coloring Studio: ApplyGuided.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply selected color to selected region'**
+  String get coloringApplyGuided;
+
+  /// Coloring Studio: Undo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get coloringUndo;
+
+  /// Coloring Studio: Redo.
+  ///
+  /// In en, this message translates to:
+  /// **'Redo'**
+  String get coloringRedo;
+
+  /// Coloring Studio: AllColored.
+  ///
+  /// In en, this message translates to:
+  /// **'Every required region is colored.'**
+  String get coloringAllColored;
+
+  /// Coloring Studio: NextUnfilled.
+  ///
+  /// In en, this message translates to:
+  /// **'Moved to the next unfilled region.'**
+  String get coloringNextUnfilled;
+
+  /// Coloring Studio: FindRegion.
+  ///
+  /// In en, this message translates to:
+  /// **'Find region'**
+  String get coloringFindRegion;
+
+  /// Coloring Studio: Finish.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish'**
+  String get coloringFinish;
+
+  /// Coloring Studio: Saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get coloringSaved;
+
+  /// Coloring Studio: Saving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get coloringSaving;
+
+  /// Coloring Studio: NotSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Not saved'**
+  String get coloringNotSaved;
+
+  /// Coloring Studio: ChooseGuided.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose one of the guided colors.'**
+  String get coloringChooseGuided;
+
+  /// Coloring Studio: NowChooseColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Now choose a color for this region.'**
+  String get coloringNowChooseColor;
+
+  /// Coloring Studio: ChooseRegion.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a region first.'**
+  String get coloringChooseRegion;
+
+  /// Coloring Studio: ChooseLabeledColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a labeled color first.'**
+  String get coloringChooseLabeledColor;
+
+  /// Coloring Studio: Accepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Nice match. The region is colored.'**
+  String get coloringAccepted;
+
+  /// Coloring Studio: WrongColor.
+  ///
+  /// In en, this message translates to:
+  /// **'That color belongs to a different region. Try another labeled color.'**
+  String get coloringWrongColor;
+
+  /// Coloring Studio: RetryBeforeFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry saving before finishing.'**
+  String get coloringRetryBeforeFinish;
+
+  /// Coloring Studio: FinishRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Color the remaining required regions first.'**
+  String get coloringFinishRemaining;
+
+  /// Coloring Studio: ChangeSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The change could not be saved. Retry is available.'**
+  String get coloringChangeSaveFailed;
+
+  /// Coloring Studio: MyArtwork.
+  ///
+  /// In en, this message translates to:
+  /// **'My Artwork'**
+  String get coloringMyArtwork;
+
+  /// Coloring Studio: ArtworkBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Editable Coloring Studio projects are separate from exported PNG files.'**
+  String get coloringArtworkBody;
+
+  /// Coloring Studio: RetryArtwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry artwork'**
+  String get coloringRetryArtwork;
+
+  /// Coloring Studio: DuplicateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The project could not be duplicated.'**
+  String get coloringDuplicateFailed;
+
+  /// Coloring Studio: Exported.
+  ///
+  /// In en, this message translates to:
+  /// **'PNG exported.'**
+  String get coloringExported;
+
+  /// Coloring Studio: ExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed. The project is safe.'**
+  String get coloringExportFailed;
+
+  /// Coloring Studio: SharingFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing is unavailable. The project is safe.'**
+  String get coloringSharingFailed;
+
+  /// Coloring Studio: DeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete editable artwork?'**
+  String get coloringDeleteTitle;
+
+  /// Coloring Studio: DeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Exported PNG files are not deleted.'**
+  String get coloringDeleteBody;
+
+  /// Coloring Studio: Delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get coloringDelete;
+
+  /// Coloring Studio: DeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The artwork could not be deleted.'**
+  String get coloringDeleteFailed;
+
+  /// Coloring Studio: EmptyArtwork.
+  ///
+  /// In en, this message translates to:
+  /// **'No coloring projects yet.'**
+  String get coloringEmptyArtwork;
+
+  /// Coloring Studio: OpenStudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Coloring Studio'**
+  String get coloringOpenStudio;
+
+  /// Coloring Studio: Resume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get coloringResume;
+
+  /// Coloring Studio: Duplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate'**
+  String get coloringDuplicate;
+
+  /// Coloring Studio: Export.
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get coloringExport;
+
+  /// Coloring Studio: SuggestedColors.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested colors'**
+  String get coloringSuggestedColors;
+
+  /// Coloring Studio: FromLearning.
+  ///
+  /// In en, this message translates to:
+  /// **'From Color Learning'**
+  String get coloringFromLearning;
+
+  /// Coloring Studio: MyColors.
+  ///
+  /// In en, this message translates to:
+  /// **'My Colors'**
+  String get coloringMyColors;
+
+  /// Coloring Studio: MyPalettes.
+  ///
+  /// In en, this message translates to:
+  /// **'My Palettes'**
+  String get coloringMyPalettes;
+
+  /// Coloring Studio: CustomHex.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom HEX'**
+  String get coloringCustomHex;
+
+  /// Coloring Studio: HexHint.
+  ///
+  /// In en, this message translates to:
+  /// **'#336699'**
+  String get coloringHexHint;
+
+  /// Coloring Studio: UseCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Use custom color'**
+  String get coloringUseCustom;
+
+  /// Coloring Studio: InvalidHex.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a six-digit HEX color.'**
+  String get coloringInvalidHex;
+
+  /// Coloring Studio: UnknownDrawing.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown drawing'**
+  String get coloringUnknownDrawing;
+
+  /// Coloring Studio: Progress.
+  ///
+  /// In en, this message translates to:
+  /// **'{filled} of {total} regions'**
+  String coloringProgress(int filled, int total);
+
+  /// Coloring Studio: SelectedColor.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} selected.'**
+  String coloringSelectedColor(String label);
+
+  /// Coloring Studio: AppliedColor.
+  ///
+  /// In en, this message translates to:
+  /// **'{hex} applied.'**
+  String coloringAppliedColor(String hex);
+
+  /// Coloring Studio: RegionNeeds.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs {label}'**
+  String coloringRegionNeeds(String label);
+
+  /// Coloring Studio: RegionComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} complete'**
+  String coloringRegionComplete(String label);
+
+  /// Coloring Studio: RegionSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{label}, {value}'**
+  String coloringRegionSemantics(String label, String value);
+
+  /// Coloring Studio: ProjectSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{mode} · {count} regions'**
+  String coloringProjectSummary(String mode, int count);
+
+  /// Coloring Studio: NumberedSwatch.
+  ///
+  /// In en, this message translates to:
+  /// **'{number}. {label} {hex}'**
+  String coloringNumberedSwatch(int number, String label, String hex);
+
+  /// Coloring Studio: NamedHex.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} {hex}'**
+  String coloringNamedHex(String name, String hex);
+
+  /// Coloring Studio: SwatchSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{label}, {hex}'**
+  String coloringSwatchSemantics(String label, String hex);
+
+  /// Coloring Studio: SwatchTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} · {hex}'**
+  String coloringSwatchTooltip(String label, String hex);
+
+  /// Coloring Studio: ShareTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'TintAtlas Coloring Studio — {title}'**
+  String coloringShareTitle(String title);
+
+  /// Coloring Studio: Difficulty.
+  ///
+  /// In en, this message translates to:
+  /// **'{key, select, easy{Easy} medium{Medium} hard{Hard} other{Unknown difficulty}}'**
+  String coloringDifficulty(String key);
+
+  /// Coloring Studio: DifficultyBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'{key, select, easy{EASY} medium{MEDIUM} hard{HARD} other{UNKNOWN DIFFICULTY}}'**
+  String coloringDifficultyBadge(String key);
+
+  /// Coloring Studio: ModeSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{key, select, guided{guided} free{free} other{unknown mode}}'**
+  String coloringModeSummary(String key);
+
+  /// Resolves stable Coloring artwork keys; translate every select branch and keep keys unchanged.
+  ///
+  /// In en, this message translates to:
+  /// **'{key, select, coloringFruitRedAppleTitle{Red Apple} coloringFruitOrangeSliceTitle{Orange Slice} coloringFruitBerryBowlTitle{Berry Bowl} coloringAnimalButterflyTitle{Butterfly} coloringAnimalTropicalFishTitle{Tropical Fish} coloringAnimalParrotTitle{Parrot} coloringNatureLeafyTreeTitle{Leafy Tree} coloringNatureSunflowerTitle{Sunflower} coloringNatureMountainGroveTitle{Mountain Grove} coloringRoomCozyLivingTitle{Cozy Living Room} coloringRoomCalmBedroomTitle{Calm Bedroom} coloringRoomReadingCornerTitle{Reading Corner} other{Unknown drawing}}'**
+  String coloringDrawingTitle(String key);
+
+  /// Resolves stable Coloring artwork keys; translate every select branch and keep keys unchanged.
+  ///
+  /// In en, this message translates to:
+  /// **'{key, select, coloringFruitRedAppleDescription{A bright apple with a leaf, stem, and soft highlight.} coloringFruitOrangeSliceDescription{A cheerful citrus slice with peel, pith, and seed.} coloringFruitBerryBowlDescription{Red and blue berries gathered in a cool blue bowl.} coloringAnimalButterflyDescription{A balanced butterfly with warm wings and violet spots.} coloringAnimalTropicalFishDescription{A lively fish with bold stripes, fin, and bright body.} coloringAnimalParrotDescription{A five-color parrot perched in a friendly profile.} coloringNatureLeafyTreeDescription{A sturdy tree with layered leaves and warm ground.} coloringNatureSunflowerDescription{A tall sunflower against a clear blue sky.} coloringNatureMountainGroveDescription{Pines, snow, and slate peaks in a quiet landscape.} coloringRoomCozyLivingDescription{A calm sofa, rug, table, and wall composition.} coloringRoomCalmBedroomDescription{A restful bed with mist, cream, blue, and sage layers.} coloringRoomReadingCornerDescription{A warm chair, shelf, plant, and lamp for a quiet nook.} other{Drawing description unavailable.}}'**
+  String coloringDrawingDescription(String key);
+
+  /// Resolves stable Coloring artwork keys; translate every select branch and keep keys unchanged.
+  ///
+  /// In en, this message translates to:
+  /// **'{key, select, coloringSlotAppleRed{Apple red} coloringSlotLeafGreen{Leaf green} coloringSlotStemBrown{Stem brown} coloringSlotHighlightCream{Highlight cream} coloringSlotPeelOrange{Peel orange} coloringSlotFleshOrange{Flesh orange} coloringSlotPithCream{Pith cream} coloringSlotSeedTan{Seed tan} coloringSlotBerryRed{Berry red} coloringSlotBerryBlue{Berry blue} coloringSlotBowlBlue{Bowl blue} coloringSlotRimCream{Rim cream} coloringSlotWingGold{Wing gold} coloringSlotWingCoral{Wing coral} coloringSlotBodyCharcoal{Body charcoal} coloringSlotSpotViolet{Spot violet} coloringSlotBodyTurquoise{Body turquoise} coloringSlotStripeYellow{Stripe yellow} coloringSlotStripeCoral{Stripe coral} coloringSlotFinBlue{Fin blue} coloringSlotEyeCharcoal{Eye charcoal} coloringSlotFeatherRed{Feather red} coloringSlotFeatherGreen{Feather green} coloringSlotFeatherBlue{Feather blue} coloringSlotChestYellow{Chest yellow} coloringSlotBeakOrange{Beak orange} coloringSlotLeafLightGreen{Leaf light green} coloringSlotTrunkBrown{Trunk brown} coloringSlotGroundTan{Ground tan} coloringSlotPetalYellow{Petal yellow} coloringSlotCenterBrown{Center brown} coloringSlotSkyBlue{Sky blue} coloringSlotMountainSlate{Mountain slate} coloringSlotPineGreen{Pine green} coloringSlotSnowWhite{Snow white} coloringSlotEarthGray{Earth gray} coloringSlotWallLinen{Wall linen} coloringSlotSofaSage{Sofa sage} coloringSlotWoodBrown{Wood brown} coloringSlotRugCoral{Rug coral} coloringSlotAccentSlate{Accent slate} coloringSlotWallMist{Wall mist} coloringSlotBeddingCream{Bedding cream} coloringSlotBlanketBlue{Blanket blue} coloringSlotWoodTan{Wood tan} coloringSlotAccentSage{Accent sage} coloringSlotChairClay{Chair clay} coloringSlotShelfBrown{Shelf brown} coloringSlotPlantGreen{Plant green} coloringSlotLampGold{Lamp gold} other{Color}}'**
+  String coloringSlotLabel(String key);
+
+  /// Resolves stable Coloring artwork keys; translate every select branch and keep keys unchanged.
+  ///
+  /// In en, this message translates to:
+  /// **'{key, select, coloringAppleBody{Apple Body} coloringAppleStem{Apple Stem} coloringAppleLeaf{Apple Leaf} coloringAppleHighlight{Apple Highlight} coloringOrangePeel{Orange Peel} coloringOrangeFlesh{Orange Flesh} coloringOrangePith{Orange Pith} coloringOrangeSeed{Orange Seed} coloringBerryBowlBody{Berry Bowl Body} coloringBerryBowlRim{Berry Bowl Rim} coloringBerryRedFruit{Berry Red Fruit} coloringBerryBlueFruit{Berry Blue Fruit} coloringBerryLeaf{Berry Leaf} coloringButterflyGoldWings{Butterfly Gold Wings} coloringButterflyCoralWings{Butterfly Coral Wings} coloringButterflyBody{Butterfly Body} coloringButterflySpots{Butterfly Spots} coloringFishBody{Fish Body} coloringFishTail{Fish Tail} coloringFishCoralStripe{Fish Coral Stripe} coloringFishYellowStripe{Fish Yellow Stripe} coloringFishEye{Fish Eye} coloringParrotRedHead{Parrot Red Head} coloringParrotGreenWing{Parrot Green Wing} coloringParrotBlueTail{Parrot Blue Tail} coloringParrotYellowChest{Parrot Yellow Chest} coloringParrotOrangeBeak{Parrot Orange Beak} coloringTreeGround{Tree Ground} coloringTreeTrunk{Tree Trunk} coloringTreeDarkLeaves{Tree Dark Leaves} coloringTreeLightLeaves{Tree Light Leaves} coloringSunflowerSky{Sunflower Sky} coloringSunflowerStemLeaf{Sunflower Stem Leaf} coloringSunflowerPetals{Sunflower Petals} coloringSunflowerCenter{Sunflower Center} coloringMountainSky{Mountain Sky} coloringMountainEarth{Mountain Earth} coloringMountainSlate{Mountain Slate} coloringMountainSnow{Mountain Snow} coloringMountainPines{Mountain Pines} coloringLivingWall{Living Wall} coloringLivingRug{Living Rug} coloringLivingSofa{Living Sofa} coloringLivingWood{Living Wood} coloringLivingAccent{Living Accent} coloringBedroomWall{Bedroom Wall} coloringBedroomWood{Bedroom Wood} coloringBedroomBedding{Bedroom Bedding} coloringBedroomBlanket{Bedroom Blanket} coloringBedroomAccent{Bedroom Accent} coloringReadingWall{Reading Wall} coloringReadingShelf{Reading Shelf} coloringReadingChair{Reading Chair} coloringReadingPlant{Reading Plant} coloringReadingLamp{Reading Lamp} other{Region}}'**
+  String coloringRegionLabel(String key);
 }
 
 class _AppLocalizationsDelegate

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "room_calm_bedroom",
+  "revision": 1,
+  "width": 600,
+  "height": 400,
+  "regions": [
+    {"id":"bedroom-wall","labelKey":"coloringBedroomWall","groupId":"rooms","fillable":true,"paintOrder":0,"geometry":{"parts":[{"slot":0,"commands":[["M",22,22],["L",578,22],["L",578,320],["L",22,320],["Z"]]}]}},
+    {"id":"bedroom-wood","labelKey":"coloringBedroomWood","groupId":"rooms","fillable":true,"paintOrder":1,"geometry":{"parts":[{"slot":1,"commands":[["M",102,142],["L",498,142],["L",498,342],["L",102,342],["Z"]]}]}},
+    {"id":"bedroom-bedding","labelKey":"coloringBedroomBedding","groupId":"rooms","fillable":true,"paintOrder":2,"geometry":{"parts":[{"slot":2,"commands":[["M",118,212],["Q",300,174,482,212],["L",482,330],["L",118,330],["Z"]]}]}},
+    {"id":"bedroom-blanket","labelKey":"coloringBedroomBlanket","groupId":"rooms","fillable":true,"paintOrder":3,"geometry":{"parts":[{"slot":3,"commands":[["M",282,198],["Q",382,188,482,216],["L",482,330],["L",300,330],["Z"]]}]}},
+    {"id":"bedroom-accent","labelKey":"coloringBedroomAccent","groupId":"rooms","fillable":true,"paintOrder":4,"geometry":{"parts":[{"slot":4,"commands":[["M",148,176],["Q",202,154,252,180],["L",246,236],["L",144,236],["Z"],["M",416,64],["L",522,64],["L",522,132],["L",416,132],["Z"]]}]}}
+  ]
+}
