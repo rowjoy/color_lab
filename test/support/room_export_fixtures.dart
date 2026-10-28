@@ -4,7 +4,7 @@ import 'package:color_lab/features/room_studio/application/room_export_controlle
 import 'package:color_lab/features/room_studio/application/room_project_session_controller.dart';
 import 'package:color_lab/features/room_studio/application/room_recolor_provider.dart';
 import 'package:color_lab/features/room_studio/domain/mask_bitmap.dart';
-import 'package:color_lab/features/room_studio/domain/mask_undo.dart';
+import 'package:color_lab/features/room_studio/domain/mask_edit_history.dart';
 import 'package:color_lab/features/room_studio/domain/room_mask_state.dart';
 import 'package:color_lab/features/room_studio/domain/room_project.dart';
 import 'package:color_lab/features/room_studio/recolor/room_recolor_frame.dart';
@@ -35,7 +35,7 @@ RoomExportSource source({
     photo: photo,
     aiMasks: masks,
     masks: masks,
-    history: MaskUndoHistory(),
+    history: MaskEditHistory.empty(width: width, height: 1),
     maskRevision: mask,
     changedFromAiCount: 0,
     colorRevision: color,

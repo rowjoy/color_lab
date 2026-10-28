@@ -9,7 +9,7 @@ import 'package:color_lab/features/room_studio/application/room_project_session_
 import 'package:color_lab/features/room_studio/application/room_projects_providers.dart';
 import 'package:color_lab/features/room_studio/data/room_project_codec.dart';
 import 'package:color_lab/features/room_studio/domain/mask_bitmap.dart';
-import 'package:color_lab/features/room_studio/domain/mask_undo.dart';
+import 'package:color_lab/features/room_studio/domain/mask_edit_history.dart';
 import 'package:color_lab/features/room_studio/domain/room_layer_colors.dart';
 import 'package:color_lab/features/room_studio/domain/room_mask_state.dart';
 import 'package:color_lab/features/room_studio/domain/room_project.dart';
@@ -46,7 +46,7 @@ RoomMaskDraft _draft({int revision = 0, int colorRevision = 0}) =>
         height: 2,
         labels: Uint8List.fromList([revision == 0 ? 1 : 0, 1, 0, 3, 4, 2]),
       ),
-      history: MaskUndoHistory(),
+      history: MaskEditHistory.empty(width: 3, height: 2),
       maskRevision: revision,
       colorRevision: colorRevision,
       changedFromAiCount: revision == 0 ? 0 : 1,

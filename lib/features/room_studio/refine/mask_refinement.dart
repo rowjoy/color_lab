@@ -3,27 +3,43 @@ import 'dart:typed_data';
 
 import '../domain/mask_bitmap.dart';
 import '../domain/mask_stroke.dart';
-import '../domain/mask_undo.dart';
+import '../domain/mask_edit_command.dart';
+import '../domain/mask_intent_bitmap.dart';
 
-final class MaskEditResult {
-  const MaskEditResult({
+final class MaskRefinementResult {
+  const MaskRefinementResult({
     required this.masks,
-    required this.undo,
+    required this.intent,
+    required this.command,
     required this.changedFromAiCount,
   });
-
   final MaskBitmap masks;
-  final MaskUndoCommand? undo;
+  final MaskIntentBitmap intent;
+  final MaskEditCommand? command;
   final int changedFromAiCount;
 }
 
+int countMaskDifferences(MaskBitmap current, MaskBitmap ai) {
+  _requireSameDimensions(current, ai);
+  var count = 0;
+  for (var i = 0; i < current.pixelCount; i++) {
+    if (current.labels[i] != ai.labels[i]) count++;
+  }
+  return count;
+}
+
 /// Pure worker operation. The service runs rasterization and scans off the UI.
-MaskEditResult applyMaskStroke({
+MaskRefinementResult applyMaskStroke({
   required MaskBitmap current,
   required MaskBitmap ai,
+  required MaskIntentBitmap intent,
   required MaskStroke stroke,
 }) {
   _requireSameDimensions(current, ai);
+  if (intent.width != current.width || intent.height != current.height) {
+    throw ArgumentError('Intent must match current ownership.');
+  }
+  final intents = Uint8List.fromList(intent.bytes);
   final labels = Uint8List.fromList(current.labels);
   final radius =
       stroke.diameterFraction * math.min(current.width, current.height) / 2;
@@ -33,6 +49,7 @@ MaskEditResult applyMaskStroke({
       final end = segment.length == 1 ? start : segment[i + 1];
       _paintSegment(
         labels: labels,
+        intents: intents,
         width: current.width,
         height: current.height,
         start: start,
@@ -46,61 +63,51 @@ MaskEditResult applyMaskStroke({
   var changedCount = 0;
   var changedFromAiCount = 0;
   for (var i = 0; i < labels.length; i++) {
-    if (labels[i] != current.labels[i]) changedCount++;
+    if (labels[i] != current.labels[i] || intents[i] != intent.intentAt(i)) {
+      changedCount++;
+    }
     if (labels[i] != ai.labels[i]) changedFromAiCount++;
   }
-  MaskUndoCommand? undo;
+  MaskEditCommand? command;
   if (changedCount > 0) {
     final indices = Uint32List(changedCount);
-    final previousLabels = Uint8List(changedCount);
+    final beforeLabels = Uint8List(changedCount);
+    final afterLabels = Uint8List(changedCount);
+    final beforeIntent = Uint8List(changedCount);
+    final afterIntent = Uint8List(changedCount);
     var position = 0;
     for (var i = 0; i < labels.length; i++) {
-      if (labels[i] == current.labels[i]) continue;
+      if (labels[i] == current.labels[i] && intents[i] == intent.intentAt(i)) {
+        continue;
+      }
       indices[position] = i;
-      previousLabels[position++] = current.labels[i];
+      beforeLabels[position] = current.labels[i];
+      afterLabels[position] = labels[i];
+      beforeIntent[position] = intent.intentAt(i);
+      afterIntent[position++] = intents[i];
     }
-    undo = MaskUndoCommand(
+    command = MaskEditCommand(
       width: current.width,
       height: current.height,
       indices: indices,
-      previousLabels: previousLabels,
+      beforeLabels: beforeLabels,
+      afterLabels: afterLabels,
+      beforeIntent: beforeIntent,
+      afterIntent: afterIntent,
     );
   }
-  return MaskEditResult(
+  return MaskRefinementResult(
     masks: MaskBitmap(
       width: current.width,
       height: current.height,
       labels: labels,
     ),
-    undo: undo,
-    changedFromAiCount: changedFromAiCount,
-  );
-}
-
-MaskEditResult undoMaskStroke({
-  required MaskBitmap current,
-  required MaskBitmap ai,
-  required MaskUndoCommand command,
-}) {
-  _requireSameDimensions(current, ai);
-  if (command.width != current.width || command.height != current.height) {
-    throw ArgumentError('Undo dimensions must match the ownership map');
-  }
-  final labels = Uint8List.fromList(current.labels);
-  for (var i = 0; i < command.indices.length; i++) {
-    labels[command.indices[i]] = command.previousLabels[i];
-  }
-  var changedFromAiCount = 0;
-  for (var i = 0; i < labels.length; i++) {
-    if (labels[i] != ai.labels[i]) changedFromAiCount++;
-  }
-  return MaskEditResult(
-    masks: MaskBitmap(
+    intent: MaskIntentBitmap.fromBytes(
       width: current.width,
       height: current.height,
-      labels: labels,
+      bytes: intents,
     ),
-    undo: null,
+    command: command,
     changedFromAiCount: changedFromAiCount,
   );
 }
@@ -113,6 +120,7 @@ void _requireSameDimensions(MaskBitmap current, MaskBitmap ai) {
 
 void _paintSegment({
   required Uint8List labels,
+  required Uint8List intents,
   required int width,
   required int height,
   required MaskPoint start,
@@ -147,8 +155,10 @@ void _paintSegment({
       final index = y * width + x;
       if (stroke.mode == MaskEditMode.add) {
         labels[index] = stroke.layer.label;
+        intents[index] = stroke.layer.index + 2;
       } else if (labels[index] == stroke.layer.label) {
         labels[index] = 0;
+        intents[index] = 1;
       }
     }
   }

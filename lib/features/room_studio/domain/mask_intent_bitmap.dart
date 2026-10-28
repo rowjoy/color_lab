@@ -27,11 +27,13 @@ final class MaskIntentBitmap {
   }
 
   MaskIntentBitmap._(this.width, this.height, Uint8List bytes)
-    : bytes = bytes.asUnmodifiableView();
+    : bytes = bytes.asUnmodifiableView(),
+      hasExplicitIntent = bytes.any((value) => value != 0);
 
   final int width;
   final int height;
   final Uint8List bytes;
+  final bool hasExplicitIntent;
 
   static void _dimensions(int width, int height) {
     // Bound each axis before multiplying, including on fixed-width runtimes.

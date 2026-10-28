@@ -1,6 +1,5 @@
-// ignore_for_file: deprecated_member_use_from_same_package
-
 import 'dart:async';
+import 'dart:ui' show Offset;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,7 +9,9 @@ import '../../picker/application/photo_acquisition_controller.dart';
 import '../../picker/domain/photo_acquisition.dart';
 import '../domain/mask_bitmap.dart';
 import '../domain/mask_stroke.dart';
-import '../domain/mask_undo.dart';
+import '../domain/mask_edit_command.dart';
+import '../domain/mask_edit_history.dart';
+import '../domain/mask_intent_bitmap.dart';
 import '../domain/room_layer.dart';
 import '../domain/room_mask_state.dart';
 import '../refine/mask_refinement.dart';
@@ -51,6 +52,7 @@ class RoomMaskController extends Notifier<RoomMaskState> {
   int? _claimOperation;
   int _editSelection = 0;
   bool _refining = false;
+  _PendingStroke? _pendingStroke;
   RoomProjectSessionController? _projectSession;
   _PhotoStorageError? _photoStorageError;
 
@@ -67,7 +69,8 @@ class RoomMaskController extends Notifier<RoomMaskState> {
       photoAcquisitionProvider,
       (_, next) => _reconcilePhotoStorage(next),
     );
-    ref.listen(roomProjectSessionProvider, (_, next) {
+    ref.listen(roomProjectSessionProvider, (previous, next) {
+      if (!identical(previous?.lifetime, next?.lifetime)) cancelStroke();
       final error = _photoStorageError;
       if (error != null &&
           (!identical(error.sessionLifetime, next?.lifetime) ||
@@ -76,8 +79,10 @@ class RoomMaskController extends Notifier<RoomMaskState> {
       }
     });
     ref.onDispose(() {
+      cancelStroke();
       _alive = false;
       _photoStorageError = null;
+      cancelStroke();
       _operation++;
       unawaited(
         _projectSession?.closeProject(deferNotification: true) ??
@@ -100,6 +105,7 @@ class RoomMaskController extends Notifier<RoomMaskState> {
   }
 
   int _startImport() {
+    cancelStroke();
     final operation = ++_operation;
     _photoStorageError = null;
     state = state.copyWith(
@@ -299,6 +305,7 @@ class RoomMaskController extends Notifier<RoomMaskState> {
       return;
     }
     final candidate = state.candidate!;
+    cancelStroke();
     final operation = ++_operation;
     state = state.copyWith(
       stage: RoomMaskStage.analyzing,
@@ -326,7 +333,10 @@ class RoomMaskController extends Notifier<RoomMaskState> {
           photo: candidate.photo,
           aiMasks: result.masks,
           masks: result.masks,
-          history: MaskUndoHistory(),
+          history: MaskEditHistory.empty(
+            width: candidate.photo.width,
+            height: candidate.photo.height,
+          ),
           maskRevision: 0,
           changedFromAiCount: 0,
         ),
@@ -373,6 +383,7 @@ class RoomMaskController extends Notifier<RoomMaskState> {
             state.stage != RoomMaskStage.acquiring)) {
       return false;
     }
+    cancelStroke();
     _operation++;
     final session = _session;
     unawaited(session.createManualFallback(state.candidate!));
@@ -395,6 +406,7 @@ class RoomMaskController extends Notifier<RoomMaskState> {
     if (session == null || session.projectId != projectId) return false;
     if (state.draft?.photoId == session.visible.photoId) return true;
     if (state.candidate != null || state.editBusy || _refining) return false;
+    cancelStroke();
     _operation++;
     state = state.copyWith(
       stage: RoomMaskStage.ready,
@@ -418,6 +430,7 @@ class RoomMaskController extends Notifier<RoomMaskState> {
       return false;
     }
     final captured = state.draft;
+    cancelStroke();
     final operation = ++_operation;
     bool current() =>
         _current(operation) &&
@@ -444,6 +457,7 @@ class RoomMaskController extends Notifier<RoomMaskState> {
 
   Future<void> closeProject() {
     if (!_live) return Future.value();
+    cancelStroke();
     _operation++;
     _photoStorageError = null;
     state = const RoomMaskState.initial();
@@ -454,44 +468,36 @@ class RoomMaskController extends Notifier<RoomMaskState> {
     unawaited(_session.commitVisibleDraft(state.draft!));
   }
 
-  /// Re-runs the current photo without replacing its colors or manual edits.
+  bool _canRefresh() =>
+      _live &&
+      !_refining &&
+      !state.editBusy &&
+      state.stage == RoomMaskStage.ready &&
+      state.candidate == null &&
+      state.draft != null;
+
+  /// Re-analysis captures selection and session ownership before its async work.
   Future<bool> reanalyzeCurrentPhoto() async {
-    if (!_live ||
-        _refining ||
-        state.editBusy ||
-        state.stage != RoomMaskStage.ready ||
-        state.candidate != null ||
-        state.draft == null) {
-      return false;
-    }
+    if (!_canRefresh()) return false;
+    cancelStroke();
     final draft = state.draft!;
-    // Task 3 owns exact refresh rebasing. The temporary legacy adapter cannot
-    // round-trip redo or intent deltas, so reject before publishing or saving.
-    if (draft.history.canRedo) return false;
-    for (final command in draft.history.undoStack) {
-      for (var i = 0; i < command.indices.length; i++) {
-        if (command.beforeIntent[i] != command.afterIntent[i]) return false;
-      }
-    }
-    final revision = draft.maskRevision;
+    final selection = _editSelection;
     final operation = ++_operation;
     state = state.copyWith(
       stage: RoomMaskStage.analyzing,
       editBusy: true,
       failure: null,
     );
-    bool currentDraft() =>
+    bool current() =>
         _current(operation) &&
-        identical(state.draft, draft) &&
-        state.draft!.maskRevision == revision;
+        selection == _editSelection &&
+        identical(state.draft, draft);
     try {
-      // The service caches by PreparedPhoto identity. Explicit refresh must
-      // initialize a new worker rather than reuse that photo's earlier result.
       ref.invalidate(roomSegmentationServiceProvider);
       final result = await ref
           .read(roomSegmentationServiceProvider)
           .analyze(photoId: draft.photoId, photo: draft.photo);
-      if (!currentDraft()) return false;
+      if (!current()) return false;
       if (result.photoId != draft.photoId ||
           result.masks.width != draft.photo.width ||
           result.masks.height != draft.photo.height) {
@@ -499,57 +505,107 @@ class RoomMaskController extends Notifier<RoomMaskState> {
           RoomSegmentationFailureKind.invalidOutput,
         );
       }
-      final merged = await compute(_mergeRefreshedMasks, (
-        oldAi: draft.aiMasks,
-        current: draft.masks,
-        nextAi: result.masks,
-        history: draft.legacyHistory,
-      ));
-      if (!currentDraft()) return false;
-      state = state.copyWith(
-        stage: RoomMaskStage.ready,
-        failure: null,
-        editBusy: false,
-        draft: RoomMaskDraft(
-          photoId: draft.photoId,
-          photo: draft.photo,
-          aiMasks: result.masks,
-          masks: merged.masks,
-          intent: draft.intent,
-          history: merged.history,
-          maskRevision: revision + 1,
-          changedFromAiCount: merged.changedFromAiCount,
-          colors: draft.colors,
-          colorRevision: draft.colorRevision,
-        ),
-      );
-      _commitDraft();
-      return true;
+      return await _publishRefresh(draft, result.masks, operation, selection);
     } catch (error) {
-      if (!currentDraft()) return false;
-      state = state.copyWith(
-        stage: RoomMaskStage.ready,
-        editBusy: false,
-        failure: error is RoomSegmentationException
-            ? switch (error.kind) {
-                RoomSegmentationFailureKind.modelUnavailable =>
-                  RoomMaskFailureKind.modelUnavailable,
-                RoomSegmentationFailureKind.incompatibleModel =>
-                  RoomMaskFailureKind.incompatibleModel,
-                RoomSegmentationFailureKind.invalidOutput =>
-                  RoomMaskFailureKind.invalidOutput,
-                RoomSegmentationFailureKind.processing =>
-                  RoomMaskFailureKind.processing,
-              }
-            : RoomMaskFailureKind.processing,
-      );
+      if (current()) {
+        state = state.copyWith(
+          failure: error is RoomSegmentationException
+              ? switch (error.kind) {
+                  RoomSegmentationFailureKind.modelUnavailable =>
+                    RoomMaskFailureKind.modelUnavailable,
+                  RoomSegmentationFailureKind.incompatibleModel =>
+                    RoomMaskFailureKind.incompatibleModel,
+                  RoomSegmentationFailureKind.invalidOutput =>
+                    RoomMaskFailureKind.invalidOutput,
+                  RoomSegmentationFailureKind.processing =>
+                    RoomMaskFailureKind.processing,
+                }
+              : RoomMaskFailureKind.processing,
+        );
+      }
+      return false;
+    } finally {
+      if (_current(operation) && identical(state.draft, draft)) {
+        state = state.copyWith(stage: RoomMaskStage.ready, editBusy: false);
+      }
+    }
+  }
+
+  Future<bool> refreshAiMasks(
+    MaskBitmap refreshedAi, {
+    String? photoId,
+    int? maskRevision,
+  }) async {
+    if (!_canRefresh()) return false;
+    final draft = state.draft!;
+    if ((photoId != null && photoId != draft.photoId) ||
+        (maskRevision != null && maskRevision != draft.maskRevision) ||
+        refreshedAi.width != draft.photo.width ||
+        refreshedAi.height != draft.photo.height) {
       return false;
     }
+    cancelStroke();
+    final selection = _editSelection;
+    final operation = ++_operation;
+    state = state.copyWith(
+      stage: RoomMaskStage.analyzing,
+      editBusy: true,
+      failure: null,
+    );
+    try {
+      return await _publishRefresh(draft, refreshedAi, operation, selection);
+    } catch (_) {
+      if (_current(operation) &&
+          selection == _editSelection &&
+          identical(state.draft, draft)) {
+        state = state.copyWith(failure: RoomMaskFailureKind.processing);
+      }
+      return false;
+    } finally {
+      if (_current(operation) && identical(state.draft, draft)) {
+        state = state.copyWith(stage: RoomMaskStage.ready, editBusy: false);
+      }
+    }
+  }
+
+  Future<bool> _publishRefresh(
+    RoomMaskDraft draft,
+    MaskBitmap refreshedAi,
+    int operation,
+    int selection,
+  ) async {
+    final result = await compute(_mergeRefreshedMasks, (
+      nextAi: refreshedAi,
+      intent: draft.intent,
+      history: draft.history,
+    ));
+    if (!_current(operation) ||
+        selection != _editSelection ||
+        !identical(state.draft, draft)) {
+      return false;
+    }
+    final next = draft.copyWith(
+      aiMasks: refreshedAi,
+      masks: result.masks,
+      history: result.history,
+      maskRevision: draft.maskRevision + 1,
+      changedFromAiCount: result.changedFromAiCount,
+      manualMode: false,
+    );
+    state = state.copyWith(
+      stage: RoomMaskStage.ready,
+      editBusy: false,
+      failure: null,
+      draft: next,
+    );
+    _commitDraft();
+    return true;
   }
 
   /// Stop inference while retaining prepared pixels for Analyze/Edit manually.
   void cancelAnalysis() {
     if (!_live || state.stage != RoomMaskStage.analyzing) return;
+    cancelStroke();
     _operation++;
     if (state.candidate == null) {
       _returnToDraft();
@@ -565,6 +621,7 @@ class RoomMaskController extends Notifier<RoomMaskState> {
   /// Explicitly discard an import candidate and restore the previous draft.
   void cancelCandidate() {
     if (!_live) return;
+    cancelStroke();
     _operation++;
     _returnToDraft();
   }
@@ -590,7 +647,7 @@ class RoomMaskController extends Notifier<RoomMaskState> {
 
   void setLayer(RoomLayer layer) {
     if (!_live || state.selectedLayer == layer) return;
-    _editSelection++;
+    cancelStroke();
     state = state.copyWith(selectedLayer: layer);
   }
 
@@ -640,7 +697,7 @@ class RoomMaskController extends Notifier<RoomMaskState> {
     if (!_live) return;
     final next = state.showOverlay ? tool : RoomMaskTool.move;
     if (state.tool == next) return;
-    _editSelection++;
+    cancelStroke();
     state = state.copyWith(tool: next);
   }
 
@@ -648,13 +705,13 @@ class RoomMaskController extends Notifier<RoomMaskState> {
     if (!_live || !fraction.isFinite) return;
     final next = fraction.clamp(.01, .20);
     if (state.brushFraction == next) return;
-    _editSelection++;
+    cancelStroke();
     state = state.copyWith(brushFraction: next);
   }
 
   void setShowOverlay(bool visible) {
     if (!_live || state.showOverlay == visible) return;
-    _editSelection++;
+    cancelStroke();
     state = state.copyWith(
       showOverlay: visible,
       tool: visible ? state.tool : RoomMaskTool.move,
@@ -667,6 +724,97 @@ class RoomMaskController extends Notifier<RoomMaskState> {
       state.canEdit &&
       state.draft!.photoId == photoId &&
       state.draft!.maskRevision == maskRevision;
+
+  bool beginStroke(Offset sourcePoint) {
+    if (_pendingStroke != null || _refining) {
+      cancelStroke();
+      return false;
+    }
+    if (!_live ||
+        !_canMutate(
+          state.draft?.photoId ?? '',
+          state.draft?.maskRevision ?? -1,
+        ) ||
+        state.tool == RoomMaskTool.move) {
+      return false;
+    }
+    final draft = state.draft!;
+    final point = _sourcePoint(sourcePoint, draft);
+    if (point == null) return false;
+    _pendingStroke = _PendingStroke(
+      draft,
+      _operation,
+      _editSelection,
+      ref.read(roomProjectSessionProvider)?.lifetime,
+      state.selectedLayer,
+      state.tool,
+      state.brushFraction,
+      point,
+    );
+    return true;
+  }
+
+  MaskPoint? _sourcePoint(Offset point, RoomMaskDraft draft) =>
+      !point.dx.isFinite ||
+          !point.dy.isFinite ||
+          point.dx < 0 ||
+          point.dy < 0 ||
+          point.dx >= draft.photo.width ||
+          point.dy >= draft.photo.height
+      ? null
+      : MaskPoint(point.dx / draft.photo.width, point.dy / draft.photo.height);
+
+  bool _ownsStroke(_PendingStroke stroke) =>
+      _current(stroke.operation) &&
+      stroke.selection == _editSelection &&
+      identical(state.draft, stroke.draft) &&
+      identical(
+        ref.read(roomProjectSessionProvider)?.lifetime,
+        stroke.lifetime,
+      );
+
+  bool extendStroke(Offset sourcePoint) {
+    final pending = _pendingStroke;
+    if (pending == null || !_ownsStroke(pending)) {
+      cancelStroke();
+      return false;
+    }
+    final point = _sourcePoint(sourcePoint, pending.draft);
+    if (point == null) {
+      pending.breakSegment = true;
+      return false;
+    }
+    if (pending.breakSegment) {
+      pending.segments.add([point]);
+      pending.breakSegment = false;
+    } else {
+      pending.segments.last.add(point);
+    }
+    return true;
+  }
+
+  Future<bool> commitStroke() async {
+    final pending = _pendingStroke;
+    _pendingStroke = null;
+    if (pending == null || !_ownsStroke(pending)) return false;
+    return applyStroke(
+      photoId: pending.draft.photoId,
+      maskRevision: pending.draft.maskRevision,
+      stroke: MaskStroke(
+        layer: pending.layer,
+        mode: pending.tool == RoomMaskTool.add
+            ? MaskEditMode.add
+            : MaskEditMode.erase,
+        diameterFraction: pending.brush,
+        segments: pending.segments,
+      ),
+    );
+  }
+
+  void cancelStroke() {
+    _pendingStroke = null;
+    _editSelection++;
+  }
 
   Future<bool> applyStroke({
     required String photoId,
@@ -681,100 +829,101 @@ class RoomMaskController extends Notifier<RoomMaskState> {
                 : RoomMaskTool.erase)) {
       return false;
     }
-    final draft = state.draft!;
-    return _refine(
-      draft,
-      undo: false,
-      work: () => ref
-          .read(maskRefinementServiceProvider)
-          .apply(current: draft.masks, ai: draft.aiMasks, stroke: stroke),
-    );
-  }
-
-  Future<bool> undo({
-    required String photoId,
-    required int maskRevision,
-  }) async {
-    if (!_canMutate(photoId, maskRevision) || !state.draft!.history.canUndo) {
+    if (_pendingStroke != null) {
+      cancelStroke();
       return false;
     }
     final draft = state.draft!;
-    return _refine(
-      draft,
-      undo: true,
-      work: () => ref
-          .read(maskRefinementServiceProvider)
-          .undo(
-            current: draft.masks,
-            ai: draft.aiMasks,
-            command: draft.legacyHistory.last!,
-          ),
-    );
-  }
-
-  Future<bool> _refine(
-    RoomMaskDraft draft, {
-    required bool undo,
-    required Future<MaskEditResult> Function() work,
-  }) async {
     final operation = _operation;
     final selection = _editSelection;
+    final lifetime = ref.read(roomProjectSessionProvider)?.lifetime;
     _refining = true;
     state = state.copyWith(editBusy: true, failure: null);
-    bool currentDraft() => _current(operation) && identical(state.draft, draft);
+    bool current() =>
+        _current(operation) &&
+        selection == _editSelection &&
+        identical(state.draft, draft) &&
+        identical(ref.read(roomProjectSessionProvider)?.lifetime, lifetime);
     try {
-      final result = await work();
-      if (!currentDraft() || selection != _editSelection) return false;
-      if (!undo && result.undo == null) return false;
-      final transition = undo
-          ? draft.history.undo(masks: draft.masks, intent: draft.intent)
-          : null;
-      final next = RoomMaskDraft(
-        photoId: draft.photoId,
-        photo: draft.photo,
-        aiMasks: draft.aiMasks,
+      final result = await ref
+          .read(maskRefinementServiceProvider)
+          .apply(
+            current: draft.masks,
+            ai: draft.aiMasks,
+            intent: draft.intent,
+            stroke: stroke,
+          );
+      if (!current() || result.command == null) return false;
+      final exact = result.command!.applyForward(
+        masks: draft.masks,
+        intent: draft.intent,
+      );
+      if (!listEquals(exact.masks.labels, result.masks.labels) ||
+          !listEquals(exact.intent.bytes, result.intent.bytes)) {
+        throw StateError('Incoherent refinement result.');
+      }
+      final next = draft.copyWith(
         masks: result.masks,
-        intent: transition?.result.intent ?? draft.intent,
-        history:
-            transition?.history ??
-            draft.history.push(
-              completeLegacyMaskUndo(
-                command: result.undo!,
-                before: draft.masks,
-                after: result.masks,
-                intent: draft.intent,
-              ),
-            ),
+        intent: result.intent,
+        history: draft.history.push(result.command!),
         maskRevision: draft.maskRevision + 1,
         changedFromAiCount: result.changedFromAiCount,
-        colors: draft.colors,
-        colorRevision: draft.colorRevision,
-        manualMode: draft.manualMode,
       );
       state = state.copyWith(draft: next, editBusy: false);
       _commitDraft();
       return true;
     } catch (_) {
-      if (currentDraft() && selection == _editSelection) {
-        _fail(RoomMaskFailureKind.processing);
-      }
+      if (current()) _fail(RoomMaskFailureKind.processing);
       return false;
     } finally {
-      // No other refinement can start until this physical gate is released.
-      // A replacement/cancelled ready draft also waits on this same gate;
-      // release it without publishing any of the old worker's result.
       _refining = false;
       if (_live &&
           state.editBusy &&
-          (currentDraft() || state.stage == RoomMaskStage.ready)) {
+          (identical(state.draft, draft) ||
+              state.stage == RoomMaskStage.ready)) {
         state = state.copyWith(editBusy: false);
       }
+    }
+  }
+
+  Future<bool> undo({required String photoId, required int maskRevision}) =>
+      _historyAction(photoId, maskRevision, false);
+  Future<bool> redo({required String photoId, required int maskRevision}) =>
+      _historyAction(photoId, maskRevision, true);
+
+  Future<bool> _historyAction(String photoId, int revision, bool redo) async {
+    if (!_canMutate(photoId, revision)) return false;
+    cancelStroke();
+    final draft = state.draft!;
+    if (redo ? !draft.history.canRedo : !draft.history.canUndo) return false;
+    try {
+      final transition = redo
+          ? draft.history.redo(masks: draft.masks, intent: draft.intent)
+          : draft.history.undo(masks: draft.masks, intent: draft.intent);
+      state = state.copyWith(
+        draft: draft.copyWith(
+          masks: transition.result.masks,
+          intent: transition.result.intent,
+          history: transition.history,
+          maskRevision: draft.maskRevision + 1,
+          changedFromAiCount: countMaskDifferences(
+            transition.result.masks,
+            draft.aiMasks,
+          ),
+        ),
+        failure: null,
+      );
+      _commitDraft();
+      return true;
+    } catch (_) {
+      return false;
     }
   }
 
   /// UI obtains confirmation before invoking this captured revision action.
   bool restoreAiMasks({required String photoId, required int maskRevision}) {
     if (!_canMutate(photoId, maskRevision)) return false;
+    cancelStroke();
     final draft = state.draft!;
     state = state.copyWith(
       draft: RoomMaskDraft(
@@ -782,7 +931,14 @@ class RoomMaskController extends Notifier<RoomMaskState> {
         photo: draft.photo,
         aiMasks: draft.aiMasks,
         masks: draft.aiMasks,
-        history: MaskUndoHistory(),
+        intent: MaskIntentBitmap.untouched(
+          width: draft.photo.width,
+          height: draft.photo.height,
+        ),
+        history: MaskEditHistory.empty(
+          width: draft.photo.width,
+          height: draft.photo.height,
+        ),
         maskRevision: draft.maskRevision + 1,
         changedFromAiCount: 0,
         colors: draft.colors,
@@ -812,51 +968,73 @@ class RoomMaskController extends Notifier<RoomMaskState> {
 }
 
 typedef _RefreshInput = ({
-  MaskBitmap oldAi,
-  MaskBitmap current,
   MaskBitmap nextAi,
-  MaskUndoHistory history,
+  MaskIntentBitmap intent,
+  MaskEditHistory history,
 });
-
 typedef _RefreshResult = ({
   MaskBitmap masks,
-  MaskUndoHistory history,
+  MaskEditHistory history,
   int changedFromAiCount,
 });
 
-/// Apply the same baseline substitution to the current mask and saved undo
-/// values, so undo returns to the refreshed AI rather than obsolete labels.
 _RefreshResult _mergeRefreshedMasks(_RefreshInput input) {
-  int rebase(int index, int label) =>
-      label == input.oldAi.labels[index] ? input.nextAi.labels[index] : label;
-  final labels = Uint8List(input.current.pixelCount);
-  var changedFromAiCount = 0;
-  for (var i = 0; i < labels.length; i++) {
-    labels[i] = rebase(i, input.current.labels[i]);
-    if (labels[i] != input.nextAi.labels[i]) changedFromAiCount++;
-  }
-  var history = MaskUndoHistory();
-  for (final command in input.history.commands) {
-    final previousLabels = Uint8List(command.previousLabels.length);
-    for (var i = 0; i < previousLabels.length; i++) {
-      previousLabels[i] = rebase(command.indices[i], command.previousLabels[i]);
-    }
-    history = history.push(
-      MaskUndoCommand(
-        width: command.width,
-        height: command.height,
-        indices: command.indices,
-        previousLabels: previousLabels,
-      ),
+  final masks = mergeAiWithIntent(
+    refreshedAi: input.nextAi,
+    intent: input.intent,
+  );
+  MaskEditCommand rebase(MaskEditCommand command) {
+    Uint8List side(Uint8List intents) => Uint8List.fromList([
+      for (var i = 0; i < command.indices.length; i++)
+        intents[i] == 0
+            ? input.nextAi.labels[command.indices[i]]
+            : intents[i] - 1,
+    ]);
+    return MaskEditCommand(
+      width: command.width,
+      height: command.height,
+      indices: command.indices,
+      beforeLabels: side(command.beforeIntent),
+      afterLabels: side(command.afterIntent),
+      beforeIntent: command.beforeIntent,
+      afterIntent: command.afterIntent,
     );
   }
-  return (
-    masks: MaskBitmap(
-      width: input.current.width,
-      height: input.current.height,
-      labels: labels,
-    ),
-    history: history,
-    changedFromAiCount: changedFromAiCount,
+
+  final history = MaskEditHistory.fromStacks(
+    width: masks.width,
+    height: masks.height,
+    undoStack: input.history.undoStack.map(rebase).toList(),
+    redoStack: input.history.redoStack.map(rebase).toList(),
   );
+  history.validateAgainst(masks: masks, intent: input.intent);
+  return (
+    masks: masks,
+    history: history,
+    changedFromAiCount: countMaskDifferences(masks, input.nextAi),
+  );
+}
+
+final class _PendingStroke {
+  _PendingStroke(
+    this.draft,
+    this.operation,
+    this.selection,
+    this.lifetime,
+    this.layer,
+    this.tool,
+    this.brush,
+    MaskPoint first,
+  ) : segments = [
+        [first],
+      ];
+  final RoomMaskDraft draft;
+  final int operation;
+  final int selection;
+  final Object? lifetime;
+  final RoomLayer layer;
+  final RoomMaskTool tool;
+  final double brush;
+  final List<List<MaskPoint>> segments;
+  bool breakSegment = false;
 }

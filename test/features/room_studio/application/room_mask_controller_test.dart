@@ -1,5 +1,3 @@
-// ignore_for_file: deprecated_member_use_from_same_package
-
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -25,7 +23,6 @@ import 'package:color_lab/features/room_studio/domain/mask_edit_command.dart'
 import 'package:color_lab/features/room_studio/domain/mask_edit_history.dart';
 import 'package:color_lab/features/room_studio/domain/mask_intent_bitmap.dart';
 import 'package:color_lab/features/room_studio/domain/mask_stroke.dart';
-import 'package:color_lab/features/room_studio/domain/mask_undo.dart';
 import 'package:color_lab/features/room_studio/domain/room_layer.dart';
 import 'package:color_lab/features/room_studio/domain/room_layer_colors.dart';
 import 'package:color_lab/features/room_studio/domain/room_mask_state.dart';
@@ -176,27 +173,21 @@ class Refiner implements MaskRefinementService {
   bool fail = false;
   int calls = 0;
   @override
-  Future<MaskEditResult> apply({
+  Future<MaskRefinementResult> apply({
     required MaskBitmap current,
     required MaskBitmap ai,
+    required MaskIntentBitmap intent,
     required MaskStroke stroke,
   }) async {
     calls++;
     await gate?.future;
     if (fail) throw StateError('worker failed');
-    return applyMaskStroke(current: current, ai: ai, stroke: stroke);
-  }
-
-  @override
-  Future<MaskEditResult> undo({
-    required MaskBitmap current,
-    required MaskBitmap ai,
-    required MaskUndoCommand command,
-  }) async {
-    calls++;
-    await gate?.future;
-    if (fail) throw StateError('worker failed');
-    return undoMaskStroke(current: current, ai: ai, command: command);
+    return applyMaskStroke(
+      current: current,
+      ai: ai,
+      intent: intent,
+      stroke: stroke,
+    );
   }
 }
 
@@ -288,6 +279,369 @@ class ProjectStore extends InMemoryRoomProjectRepository {
 }
 
 void main() {
+  test(
+    'intent-equal Add commits explicit intent once instead of being a no-op',
+    () async {
+      final h = Harness();
+      await h.ready(1);
+      await h.saved();
+      h.controller.setTool(RoomMaskTool.add);
+      var saves = 0;
+      h.projects.beforeSave = () async {
+        saves++;
+      };
+      expect(await h.paint(), isTrue);
+      await h.saved();
+      expect(h.state.draft!.intent.intentAt(55), 2);
+      expect(h.state.draft!.changedFromAiCount, 0);
+      expect(h.state.draft!.hasEdits, isTrue);
+      expect(saves, 1);
+    },
+  );
+
+  test(
+    'completed lifecycle stroke and direct undo redo each save exactly once',
+    () async {
+      final h = Harness();
+      await h.ready();
+      await h.saved();
+      var saves = 0;
+      h.projects.beforeSave = () async {
+        saves++;
+      };
+      h.controller.setLayer(RoomLayer.floor);
+      h.controller.setTool(RoomMaskTool.add);
+      final before = h.state.draft!;
+      expect(h.controller.beginStroke(const Offset(1.5, 1.5)), isTrue);
+      expect(h.controller.extendStroke(const Offset(8.5, 1.5)), isTrue);
+      expect(h.state.draft, same(before));
+      expect(saves, 0);
+      expect(await h.controller.commitStroke(), isTrue);
+      await h.saved();
+      final painted = h.state.draft!;
+      expect(painted.history.undoStack, hasLength(1));
+      expect(painted.intent.intentAt(11), 4);
+      expect(painted.maskRevision, 1);
+      expect(saves, 1);
+      h.refiner.fail = true;
+      final calls = h.refiner.calls;
+      expect(
+        await h.controller.undo(photoId: painted.photoId, maskRevision: 1),
+        isTrue,
+      );
+      await h.saved();
+      expect(h.state.draft!.intent.bytes, List.filled(100, 0));
+      expect(saves, 2);
+      expect(
+        await h.controller.redo(photoId: painted.photoId, maskRevision: 2),
+        isTrue,
+      );
+      await h.saved();
+      expect(h.state.draft!.masks.labels, painted.masks.labels);
+      expect(h.state.draft!.intent.bytes, painted.intent.bytes);
+      expect(h.refiner.calls, calls);
+      expect(saves, 3);
+      h.refiner.fail = false;
+      expect(
+        await h.controller.undo(photoId: painted.photoId, maskRevision: 3),
+        isTrue,
+      );
+      await h.saved();
+      expect(await h.paint(value: stroke(layer: RoomLayer.floor)), isTrue);
+      await h.saved();
+      expect(h.state.draft!.history.redoStack, isEmpty);
+      expect(saves, 5);
+    },
+  );
+
+  for (final action in [
+    'cancel',
+    'second begin',
+    'layer',
+    'tool',
+    'brush',
+    'close',
+    'dispose',
+  ]) {
+    test(
+      'incomplete stroke $action changes no visible or durable bytes',
+      () async {
+        final h = Harness();
+        await h.ready();
+        await h.saved();
+        final original = h.state.draft!;
+        final session = h.container.read(roomProjectSessionProvider)!;
+        var saves = 0;
+        h.projects.beforeSave = () async {
+          saves++;
+        };
+        h.controller.setTool(RoomMaskTool.add);
+        final controller = h.controller;
+        expect(controller.beginStroke(const Offset(5.5, 5.5)), isTrue);
+        expect(controller.extendStroke(const Offset(6.5, 5.5)), isTrue);
+        switch (action) {
+          case 'cancel':
+            controller.cancelStroke();
+          case 'second begin':
+            expect(controller.beginStroke(const Offset(3.5, 3.5)), isFalse);
+          case 'layer':
+            controller.setLayer(RoomLayer.floor);
+          case 'tool':
+            controller.setTool(RoomMaskTool.erase);
+          case 'brush':
+            controller.setBrushFraction(.10);
+          case 'close':
+            await controller.closeProject();
+          case 'dispose':
+            h.container.invalidate(roomMaskProvider);
+        }
+        expect(await controller.commitStroke(), isFalse);
+        await tick();
+        if (action != 'close' && action != 'dispose') {
+          expect(h.state.draft, same(original));
+        }
+        expect(saves, 0);
+        expect(
+          (await h.projects.read(session.projectId))!.snapshot.maskBytes,
+          original.masks.labels,
+        );
+        expect(
+          (await h.projects.read(session.projectId))!.snapshot.intent.bytes,
+          List.filled(100, 0),
+        );
+      },
+    );
+  }
+
+  test(
+    'cancelled in-flight stroke and stale selection discard complete worker result',
+    () async {
+      final h = Harness();
+      await h.ready();
+      await h.saved();
+      h.controller.setTool(RoomMaskTool.add);
+      var saves = 0;
+      h.projects.beforeSave = () async {
+        saves++;
+      };
+      for (final cancel in [true, false]) {
+        final before = h.state.draft!;
+        h.refiner.gate = Completer<void>();
+        expect(h.controller.beginStroke(const Offset(5.5, 5.5)), isTrue);
+        final completing = h.controller.commitStroke();
+        if (cancel) {
+          h.controller.cancelStroke();
+        } else {
+          h.controller.setLayer(RoomLayer.floor);
+        }
+        h.refiner.gate!.complete();
+        expect(await completing, isFalse);
+        expect(h.state.draft, same(before));
+        expect(saves, 0);
+      }
+    },
+  );
+
+  test(
+    'source edge excursion breaks stroke segments and Move cannot paint',
+    () async {
+      final h = Harness();
+      await h.ready();
+      await h.saved();
+      expect(h.controller.beginStroke(const Offset(5.5, 5.5)), isFalse);
+      h.controller.setTool(RoomMaskTool.add);
+      for (final point in [
+        const Offset(-1, 0),
+        const Offset(10, 5),
+        Offset(double.nan, 0),
+      ]) {
+        expect(h.controller.beginStroke(point), isFalse);
+      }
+      expect(h.controller.beginStroke(const Offset(1.5, 1.5)), isTrue);
+      expect(h.controller.extendStroke(const Offset(-1, 3)), isFalse);
+      expect(h.controller.extendStroke(const Offset(8.5, 8.5)), isTrue);
+      expect(await h.controller.commitStroke(), isTrue);
+      expect(h.state.draft!.masks.labels[11], 1);
+      expect(h.state.draft!.masks.labels[88], 1);
+      expect(h.state.draft!.masks.labels[55], 0);
+    },
+  );
+
+  test(
+    'refresh protects intent and rebases both stacks with one save and honest baseline',
+    () async {
+      final h = Harness();
+      await h.ready(1);
+      await h.saved();
+      var saves = 0;
+      h.projects.beforeSave = () async {
+        saves++;
+      };
+      h.controller.setTool(RoomMaskTool.add);
+      expect(await h.paint(), isTrue);
+      await h.saved();
+      h.controller.setLayer(RoomLayer.floor);
+      expect(
+        await h.paint(
+          value: MaskStroke(
+            layer: RoomLayer.floor,
+            mode: MaskEditMode.add,
+            segments: [
+              [MaskPoint(.15, .15)],
+            ],
+          ),
+        ),
+        isTrue,
+      );
+      await h.saved();
+      var draft = h.state.draft!;
+      expect(
+        await h.controller.undo(
+          photoId: draft.photoId,
+          maskRevision: draft.maskRevision,
+        ),
+        isTrue,
+      );
+      await h.saved();
+      expect(await h.controller.refreshAiMasks(masks(4)), isTrue);
+      await h.saved();
+      draft = h.state.draft!;
+      expect(saves, 4);
+      expect(draft.aiMasks.labels, List.filled(100, 4));
+      expect(draft.masks.labels[55], 1);
+      expect(draft.masks.labels[11], 4);
+      expect(draft.history.undoStack.single.beforeLabels, [4]);
+      expect(draft.history.undoStack.single.afterLabels, [1]);
+      expect(draft.history.undoStack.single.afterIntent, [2]);
+      expect(draft.history.redoStack.single.beforeLabels, [4]);
+      expect(draft.history.redoStack.single.afterLabels, [3]);
+      expect(
+        await h.controller.redo(
+          photoId: draft.photoId,
+          maskRevision: draft.maskRevision,
+        ),
+        isTrue,
+      );
+      await h.saved();
+      expect(h.state.draft!.masks.labels[11], 3);
+      expect(h.state.draft!.intent.intentAt(11), 4);
+      expect(saves, 5);
+      final before = h.state.draft!;
+      expect(
+        await h.controller.refreshAiMasks(
+          MaskBitmap(width: 1, height: 100, labels: Uint8List(100)),
+        ),
+        isFalse,
+      );
+      expect(
+        await h.controller.refreshAiMasks(masks(2), photoId: 'wrong'),
+        isFalse,
+      );
+      expect(
+        await h.controller.refreshAiMasks(masks(2), maskRevision: 0),
+        isFalse,
+      );
+      expect(h.state.draft, same(before));
+      expect(saves, 5);
+      expect(
+        h.controller.restoreAiMasks(
+          photoId: before.photoId,
+          maskRevision: before.maskRevision,
+        ),
+        isTrue,
+      );
+      await h.saved();
+      expect(h.state.draft!.intent.bytes, List.filled(100, 0));
+      expect(h.state.draft!.history.byteLength, 0);
+      expect(h.state.draft!.hasEdits, isFalse);
+      expect(saves, 6);
+    },
+  );
+
+  test(
+    'invalid no-op refresh rebase rejects atomically without dropping a command',
+    () async {
+      final h = Harness();
+      await h.ready();
+      await h.saved();
+      final original = h.container.read(roomProjectSessionProvider)!.durable!;
+      await h.controller.closeProject();
+      final edit = exact.MaskEditCommand(
+        width: 10,
+        height: 10,
+        indices: Uint32List.fromList([0]),
+        beforeLabels: Uint8List.fromList([0]),
+        afterLabels: Uint8List.fromList([1]),
+        beforeIntent: Uint8List(1),
+        afterIntent: Uint8List(1),
+      );
+      final stored = await h.projects.save(
+        original.copyWith(
+          maskBytes: Uint8List(100)..[0] = 1,
+          history: MaskEditHistory.fromStacks(
+            width: 10,
+            height: 10,
+            undoStack: [edit],
+          ),
+        ),
+        expectedRevision: original.revision,
+      );
+      expect(await h.controller.openProject(stored.projectId), isTrue);
+      final before = h.state.draft!;
+      final session = h.container.read(roomProjectSessionProvider);
+      var saves = 0;
+      h.projects.beforeSave = () async {
+        saves++;
+      };
+      expect(await h.controller.refreshAiMasks(masks(1)), isFalse);
+      expect(h.state.draft, same(before));
+      expect(h.container.read(roomProjectSessionProvider), same(session));
+      expect(saves, 0);
+    },
+  );
+
+  test(
+    'session replacement cancels incomplete stroke and stale AI result',
+    () async {
+      final h = Harness();
+      await h.ready(1);
+      await h.saved();
+      h.controller.setTool(RoomMaskTool.add);
+      expect(h.controller.beginStroke(const Offset(5.5, 5.5)), isTrue);
+      await h.container
+          .read(roomProjectSessionProvider.notifier)
+          .closeProject();
+      expect(await h.controller.commitStroke(), isFalse);
+      final before = h.state.draft!;
+      final refresh = h.controller.reanalyzeCurrentPhoto();
+      await h.container
+          .read(roomProjectSessionProvider.notifier)
+          .createFromAnalysis(before);
+      h.segmenter.requests.last.succeed(masks(4));
+      expect(await refresh, isFalse);
+      expect(h.state.draft, same(before));
+      await h.saved();
+    },
+  );
+
+  test('AI completion after selection change cannot publish or save', () async {
+    final h = Harness();
+    await h.ready(1);
+    await h.saved();
+    var saves = 0;
+    h.projects.beforeSave = () async {
+      saves++;
+    };
+    final before = h.state.draft!;
+    final refresh = h.controller.reanalyzeCurrentPhoto();
+    h.controller.setLayer(RoomLayer.floor);
+    h.segmenter.requests.last.succeed(masks(4));
+    expect(await refresh, isFalse);
+    expect(h.state.draft, same(before));
+    expect(saves, 0);
+    expect(h.state.editBusy, isFalse);
+  });
+
   for (final lateFailure in [false, true]) {
     test(
       'stopping analysis retains the prepared photo for manual fallback despite late ${lateFailure ? 'failure' : 'success'}',
@@ -519,7 +873,7 @@ void main() {
   );
 
   test(
-    'controller reopen restores persisted edits with empty undo and no extra save',
+    'controller reopen restores persisted exact history and no extra save',
     () async {
       final h = Harness();
       await h.ready(3);
@@ -532,7 +886,8 @@ void main() {
       expect(h.state.draft, isNull);
       expect(await h.controller.openProject(saved.projectId), isTrue);
       expect(h.state.canEdit, isTrue);
-      expect(h.state.draft!.history.canUndo, isFalse);
+      expect(h.state.draft!.history.canUndo, isTrue);
+      expect(h.state.draft!.intent.bytes, saved.intent.bytes);
       expect(h.state.draft!.masks.labels, saved.maskBytes);
       expect(h.state.draft!.colors.floor, RgbColor(4, 5, 6));
       expect((await h.projects.read(saved.projectId))!.snapshot.revision, 3);
@@ -543,7 +898,7 @@ void main() {
     'label and intent undo',
     'nonempty redo',
   ]) {
-    test('refresh rejects lossy exact history: $kind', () async {
+    test('refresh rebases exact history: $kind', () async {
       final h = Harness();
       await h.ready(1);
       await h.saved();
@@ -553,7 +908,7 @@ void main() {
       final intentOnly = kind == 'intent-only undo';
       final beforeIntent = kind == 'label and intent undo' ? 2 : 0;
       final afterIntent = redo
-          ? 0
+          ? 5
           : intentOnly
           ? 2
           : 5;
@@ -591,26 +946,23 @@ void main() {
       h.projects.beforeSave = () async {
         saves++;
       };
-      final state = h.state;
-      final draft = state.draft!;
-      final session = h.container.read(roomProjectSessionProvider)!;
-      final requests = h.segmenter.requests.length;
+      final before = h.state.draft!;
       final refresh = h.controller.reanalyzeCurrentPhoto();
-      // Complete the old implementation's dispatched request so RED is a clean
-      // assertion failure, while the fixed path rejects before dispatch.
-      if (h.segmenter.requests.length > requests) {
-        h.segmenter.requests.last.succeed(masks(4));
-      }
-      expect(await refresh, isFalse);
-      await tick();
-      expect(h.state, same(state));
-      expect(h.state.draft, same(draft));
-      expect(h.state.draft!.history, same(draft.history));
-      expect(h.state.draft!.intent.bytes, intent);
-      expect(h.container.read(roomProjectSessionProvider), same(session));
-      expect(h.segmenter.requests.length, requests);
-      expect(saves, 0);
-      expect((await h.projects.read(stored.projectId))!.snapshot, same(stored));
+      h.segmenter.requests.last.succeed(masks(4));
+      expect(await refresh, isTrue);
+      await h.saved();
+      final after = h.state.draft!;
+      expect(after.intent.bytes, intent);
+      expect(after.history.undoStack.length, before.history.undoStack.length);
+      expect(after.history.redoStack.length, before.history.redoStack.length);
+      final rebased = redo
+          ? after.history.redoStack.single
+          : after.history.undoStack.single;
+      expect(rebased.beforeIntent, [beforeIntent]);
+      expect(rebased.afterIntent, [afterIntent]);
+      expect(rebased.beforeLabels, [beforeIntent == 0 ? 4 : beforeIntent - 1]);
+      expect(rebased.afterLabels, [afterIntent - 1]);
+      expect(saves, 1);
     });
   }
 
@@ -1478,7 +1830,7 @@ void main() {
   );
 
   test(
-    'no-op stroke keeps revision/history; erase back to AI clears dirty despite history',
+    'no-op stroke keeps revision/history; erase back to AI keeps explicit intent',
     () async {
       final h = Harness();
       await h.ready();
@@ -1489,13 +1841,14 @@ void main() {
       expect(h.state.draft, same(edited));
       h.controller.setTool(RoomMaskTool.erase);
       expect(await h.paint(value: stroke(erase: true)), isTrue);
-      expect(h.state.draft!.hasEdits, isFalse);
+      expect(h.state.draft!.hasEdits, isTrue);
+      expect(h.state.draft!.intent.intentAt(55), 1);
       expect(h.state.draft!.history.commands.length, 2);
     },
   );
 
   test(
-    'late undo after cancel, failed refinement and dispose never mutate draft',
+    'direct undo ignores legacy worker gates and rejects stale or disposed ownership',
     () async {
       final h = Harness();
       await h.ready();
@@ -1503,30 +1856,27 @@ void main() {
       await h.paint();
       final edited = h.state.draft!;
       h.refiner.gate = Completer<void>();
-      final undo = h.controller.undo(photoId: edited.photoId, maskRevision: 1);
-      h.controller.cancelCandidate();
-      expect(h.state.editBusy, isTrue);
-      expect(h.state.canEdit, isFalse);
-      h.refiner.gate!.complete();
-      expect(await undo, isFalse);
-      expect(h.state.draft, same(edited));
-      h.refiner.gate = null;
       h.refiner.fail = true;
+      final calls = h.refiner.calls;
       expect(
-        await h.controller.undo(photoId: edited.photoId, maskRevision: 1),
+        await h.controller.undo(photoId: edited.photoId, maskRevision: 0),
         isFalse,
       );
       expect(h.state.draft, same(edited));
-      expect(h.state.editBusy, isFalse);
-      expect(h.state.failure, RoomMaskFailureKind.processing);
-      h.controller.cancelCandidate();
-      h.refiner.fail = false;
-      h.refiner.gate = Completer<void>();
-      final late = h.controller.undo(photoId: edited.photoId, maskRevision: 1);
+      expect(
+        await h.controller.undo(photoId: edited.photoId, maskRevision: 1),
+        isTrue,
+      );
+      expect(h.refiner.calls, calls);
+      expect(h.state.draft!.intent.bytes, List.filled(100, 0));
+      final controller = h.controller;
       h.container.invalidate(roomMaskProvider);
-      h.refiner.gate!.complete();
-      expect(await late, isFalse);
+      expect(
+        await controller.redo(photoId: edited.photoId, maskRevision: 2),
+        isFalse,
+      );
       expect(h.state.draft, isNull);
+      h.refiner.gate!.complete();
     },
   );
 
@@ -1804,7 +2154,7 @@ void main() {
         photo: p,
         aiMasks: ai ?? masks(),
         masks: masks(),
-        history: MaskUndoHistory(),
+        history: MaskEditHistory.empty(width: 10, height: 10),
         maskRevision: revision,
         colorRevision: colorRevision,
         changedFromAiCount: dirty,
