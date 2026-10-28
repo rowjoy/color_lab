@@ -44,6 +44,27 @@ class PhotoViewport {
     );
   }
 
+  /// Source pixels and screen positions share the same contain/pan/zoom map.
+  double get scale => imageRect.width / imageSize.width;
+
+  Offset? sourceAt(Offset point) {
+    if (!(Offset.zero & size).contains(point)) return null;
+    final normalized = normalizedAt(point);
+    if (normalized == null) return null;
+    return Offset(
+      (normalized.dx * imageSize.width).clamp(0.0, imageSize.width - .000001),
+      (normalized.dy * imageSize.height).clamp(0.0, imageSize.height - .000001),
+    );
+  }
+
+  Offset sourcePositionOf(Offset source) => positionOf(Offset(
+    source.dx / imageSize.width,
+    source.dy / imageSize.height,
+  ));
+
+  double brushRadius(double fraction) =>
+      math.min(imageSize.width, imageSize.height) * fraction * scale / 2;
+
   Offset positionOf(Offset normalized) => Offset(
     imageRect.left + normalized.dx * imageRect.width,
     imageRect.top + normalized.dy * imageRect.height,

@@ -8,6 +8,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
 
 void main() {
+  test('manual overlay patterns distinguish all surfaces without changing ownership', () {
+    final marks = [for (final layer in RoomLayer.values)
+      [for (var y = 0; y < 13; y++) for (var x = 0; x < 13; x++) roomMaskPatternAt(layer, x, y)]];
+    expect(marks.map((mark) => mark.join()).toSet(), hasLength(4));
+  });
+
   for (final radius in [1, 2]) {
     test(
       'preview radius$radius never tints another owner or an erased pixel',

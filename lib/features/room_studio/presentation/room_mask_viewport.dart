@@ -15,12 +15,20 @@ import '../domain/mask_bitmap.dart';
 import '../domain/mask_stroke.dart';
 import '../domain/room_layer.dart';
 import '../domain/room_mask_state.dart';
+import 'room_mask_magnifier.dart';
 
 /// View controls share the very same transform used to place brush strokes.
 class RoomMaskViewportController extends ChangeNotifier {
   _RoomMaskViewportState? _viewport;
 
   double get zoom => _viewport?._zoom ?? 1;
+  Offset? get sourceCursor => _viewport?._cursorSource;
+  PhotoViewport? get transform => _viewport?._viewport;
+  void nudgeCursor(Offset delta) => _viewport?._nudgeCursor(delta);
+  void selectRegion(int row, int column) => _viewport?._selectRegion(row, column);
+  void panBy(Offset delta) => _viewport?._panBy(delta);
+  void paintCursor(MaskEditMode mode) => _viewport?._paintCursor(mode);
+  void cancelStroke() => _viewport?._abortStroke();
 
   void zoomIn() => _viewport?._changeZoom(zoom * 1.5);
   void zoomOut() => _viewport?._changeZoom(zoom / 1.5);
@@ -80,6 +88,8 @@ class _RoomMaskViewportState extends ConsumerState<RoomMaskViewport> {
   Color _tint = AppColors.light.primary;
   bool _overlayFailed = false;
   Size _size = Size.zero;
+  Offset? _cursorSource;
+  bool _showCursor = false;
   double _zoom = 1;
   Offset _pan = Offset.zero;
   final _pointers = <int, Offset>{};
@@ -141,6 +151,8 @@ class _RoomMaskViewportState extends ConsumerState<RoomMaskViewport> {
       _blocked = _pointers.isNotEmpty;
     }
     if (newPhoto) {
+      _cursorSource = null;
+      _showCursor = false;
       _zoom = 1;
       _pan = Offset.zero;
       _loadPhoto();
@@ -226,9 +238,12 @@ class _RoomMaskViewportState extends ConsumerState<RoomMaskViewport> {
   void _append(Offset position) {
     // The image can extend beyond the visible clip after zooming. Invisible
     // pointer travel is a disconnected gap, just like travel in a letterbox.
-    final normalized = (Offset.zero & _size).contains(position)
-        ? _viewport.normalizedAt(position)
-        : null;
+    final source = _viewport.sourceAt(position);
+    final normalized = source == null ? null : Offset(
+      source.dx / widget.photo.width,
+      source.dy / widget.photo.height,
+    );
+    if (source != null) { _cursorSource = source; _showCursor = true; }
     if (normalized == null) {
       _gap = true;
       return;
@@ -241,6 +256,63 @@ class _RoomMaskViewportState extends ConsumerState<RoomMaskViewport> {
         segment.last.y != normalized.dy) {
       segment.add(MaskPoint(normalized.dx, normalized.dy));
     }
+  }
+
+  void _abortStroke() {
+    setState(() {
+      _cancelStroke();
+      _blocked = _pointers.isNotEmpty;
+      _showCursor = false;
+    });
+  }
+
+  void _nudgeCursor(Offset delta) {
+    setState(() {
+      _showCursor = true;
+      final start = _cursorSource ?? Offset(widget.photo.width / 2, widget.photo.height / 2);
+      _cursorSource = Offset(
+        (start.dx + delta.dx).clamp(.5, widget.photo.width - .5),
+        (start.dy + delta.dy).clamp(.5, widget.photo.height - .5),
+      );
+      _cancelStroke();
+      final displayed = _viewport.sourcePositionOf(_cursorSource!);
+      if (!(Offset.zero & _size).contains(displayed)) {
+        _pan += _size.center(Offset.zero) - displayed;
+        _clampPan();
+      }
+    });
+    widget.viewController?._changed();
+  }
+
+  void _selectRegion(int row, int column) {
+    if (row < 0 || row > 2 || column < 0 || column > 2) return;
+    _cursorSource = Offset(
+      (column + .5) * widget.photo.width / 3,
+      (row + .5) * widget.photo.height / 3,
+    );
+    _nudgeCursor(Offset.zero);
+  }
+
+  void _panBy(Offset delta) {
+    setState(() {
+      _cancelStroke();
+      _blocked = _pointers.isNotEmpty;
+      _pan += delta;
+      _clampPan();
+    });
+    widget.viewController?._changed();
+  }
+
+  void _paintCursor(MaskEditMode mode) {
+    if (!widget.editingEnabled || !widget.showOverlay || _pointers.isNotEmpty) return;
+    _nudgeCursor(Offset.zero);
+    final point = _cursorSource!;
+    widget.onStroke(MaskStroke(
+      layer: widget.layer,
+      mode: mode,
+      diameterFraction: widget.brushFraction,
+      segments: [[MaskPoint(point.dx / widget.photo.width, point.dy / widget.photo.height)]],
+    ));
   }
 
   void _anchorMove() {
@@ -364,6 +436,7 @@ class _RoomMaskViewportState extends ConsumerState<RoomMaskViewport> {
       _cancelStroke();
       _pointers.remove(event.pointer);
       if (_pointers.isEmpty) {
+        _showCursor = false;
         _blocked = false;
       } else if (_pointers.length > 1 || widget.tool == RoomMaskTool.move) {
         _anchorMove();
@@ -378,6 +451,7 @@ class _RoomMaskViewportState extends ConsumerState<RoomMaskViewport> {
       _cancelStroke();
       _pointers.remove(event.pointer);
       _blocked = _pointers.isNotEmpty;
+      _showCursor = false;
       if (_pointers.isNotEmpty) _anchorMove();
     });
   }
@@ -429,11 +503,20 @@ class _RoomMaskViewportState extends ConsumerState<RoomMaskViewport> {
               },
               child: Listener(
                 behavior: HitTestBehavior.opaque,
+                onPointerHover: (event) {
+                  final source = _viewport.sourceAt(event.localPosition);
+                  if (source != null && _pointers.isEmpty) {
+                    setState(() { _cursorSource = source; _showCursor = true; });
+                  }
+                },
                 onPointerDown: _down,
                 onPointerMove: _move,
                 onPointerUp: _up,
                 onPointerCancel: _cancel,
-                child: CustomPaint(
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                  CustomPaint(
                   size: size,
                   painter: _MaskPainter(
                     viewport: _viewport,
@@ -446,7 +529,25 @@ class _RoomMaskViewportState extends ConsumerState<RoomMaskViewport> {
                         .toList(),
                     diameter: _strokeDiameter,
                     erase: _strokeMode == MaskEditMode.erase,
+                    sample: !_showCursor || _cursorSource == null ? null : RoomMaskSample(
+                      viewport: _viewport,
+                      source: _cursorSource!,
+                      brushFraction: widget.brushFraction,
+                    ),
                   ),
+                ),
+                if (_showCursor && _cursorSource != null && widget.showOverlay)
+                  PositionedDirectional(
+                    top: 8,
+                    end: 8,
+                    child: IgnorePointer(child: RoomMaskMagnifier(
+                      key: const ValueKey('room-mask-magnifier'),
+                      sample: RoomMaskSample(viewport: _viewport, source: _cursorSource!, brushFraction: widget.brushFraction),
+                      image: _photo,
+                      overlay: _overlay,
+                    )),
+                  ),
+                ],
                 ),
               ),
             ),
@@ -467,6 +568,7 @@ class _MaskPainter extends CustomPainter {
     required this.segments,
     required this.diameter,
     required this.erase,
+    required this.sample,
   });
 
   final PhotoViewport viewport;
@@ -477,6 +579,7 @@ class _MaskPainter extends CustomPainter {
   final List<List<MaskPoint>> segments;
   final double diameter;
   final bool erase;
+  final RoomMaskSample? sample;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -517,6 +620,14 @@ class _MaskPainter extends CustomPainter {
       }
     }
     canvas.restore();
+    if (sample != null) {
+      final center = viewport.sourcePositionOf(sample!.source);
+      final radius = sample!.screenRadius;
+      canvas.drawCircle(center, radius, Paint()
+        ..color = Colors.white ..style = PaintingStyle.stroke ..strokeWidth = 3);
+      canvas.drawCircle(center, radius, Paint()
+        ..color = Colors.black ..style = PaintingStyle.stroke ..strokeWidth = 1);
+    }
   }
 
   @override

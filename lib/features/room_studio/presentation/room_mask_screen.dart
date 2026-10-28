@@ -26,6 +26,8 @@ import 'room_layer_color_controls.dart';
 import 'room_mask_dialogs.dart';
 import 'room_mask_fullscreen_editor.dart';
 import 'room_mask_viewport.dart';
+import 'room_mask_review_panel.dart';
+import 'room_mask_surface_status.dart';
 import 'room_model_download_status.dart';
 import 'room_recolor_viewport.dart';
 import 'room_project_save_status.dart';
@@ -50,6 +52,7 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
   bool _confirming = false;
   Object? _importOperation;
   bool _showAfter = true;
+  RoomMaskReviewView _reviewView = RoomMaskReviewView.overlay;
   late final RoomExportController _exports;
   PhotoSource _lastSource = PhotoSource.gallery;
   bool _recoveryObserved = false;
@@ -833,6 +836,27 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
                   const SizedBox(height: AppSpacing.xl),
                   if (session != null) _exportPanel(session, canShare),
                   const SizedBox(height: AppSpacing.xxl),
+                  RoomMaskReviewPanel(
+                    photoId: draft.photoId,
+                    maskRevision: draft.maskRevision,
+                    masks: draft.masks,
+                    selectedLayer: state.selectedLayer,
+                    busy: state.editBusy || _confirming,
+                    view: _reviewView,
+                    onSelect: controller.setLayer,
+                    onViewChanged: (view) {
+                      controller.setShowOverlay(view == RoomMaskReviewView.overlay);
+                      setState(() {
+                        _reviewView = view;
+                        _showAfter = view == RoomMaskReviewView.recolored;
+                      });
+                    },
+                    onCancel: () {
+                      controller.cancelStroke();
+                      controller.setTool(RoomMaskTool.move);
+                    },
+                  ),
+                  const SizedBox(height: AppSpacing.md),
                   Text(
                     'Refine masks',
                     style: Theme.of(context).textTheme.titleLarge,
@@ -886,7 +910,17 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
                     key: ValueKey((draft.photoId, _restoreView)),
                     child: SizedBox(
                       height: 300,
-                      child: RoomMaskViewport(
+                      child: _reviewView == RoomMaskReviewView.recolored && recolorKey != null
+                          ? SingleChildScrollView(child: RoomRecolorViewport(
+                              sourcePngBytes: draft.photo.previewBytes,
+                              width: draft.photo.width,
+                              height: draft.photo.height,
+                              currentKey: recolorKey,
+                              frame: displayFrame,
+                              showAfter: true,
+                              updating: preview.isLoading,
+                            ))
+                          : RoomMaskViewport(
                         key: const ValueKey('room-mask-viewport'),
                         photoId: draft.photoId,
                         maskRevision: draft.maskRevision,
@@ -930,7 +964,7 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
                             key: ValueKey('room-mask-layer-${layer.name}'),
                             materialTapTargetSize: MaterialTapTargetSize.padded,
                             label: Text(
-                              '${_title(layer.name)} · ${draft.masks.count(layer) == 0 ? 'Not detected' : '${(100 * draft.masks.count(layer) / draft.masks.pixelCount).toStringAsFixed(1)}%'}',
+                              '${_title(layer.name)} · ${draft.masks.count(layer) == 0 ? '0 pixels' : '${(100 * draft.masks.count(layer) / draft.masks.pixelCount).toStringAsFixed(1)}%'}',
                             ),
                             selected: state.selectedLayer == layer,
                             onSelected: (_) => controller.setLayer(layer),
@@ -958,14 +992,14 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
                   ),
                   const SizedBox(height: AppSpacing.md),
                   Text(
-                    'Brush size · ${(state.brushFraction * 100).round()}% of photo',
+                    'Brush size · ${(state.brushFraction * 100).toStringAsFixed(1)}% of photo',
                   ),
                   Slider(
                     key: const ValueKey('room-mask-brush'),
                     value: state.brushFraction,
-                    min: .01,
+                    min: .005,
                     max: .20,
-                    label: '${(state.brushFraction * 100).round()}%',
+                    label: '${(state.brushFraction * 100).toStringAsFixed(1)}%',
                     onChanged: state.canEdit
                         ? controller.setBrushFraction
                         : null,
@@ -975,7 +1009,11 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
                     contentPadding: EdgeInsets.zero,
                     title: const Text('Show original'),
                     value: !state.showOverlay,
-                    onChanged: (value) => controller.setShowOverlay(!value),
+                    onChanged: (value) {
+                      controller.setShowOverlay(!value);
+                      setState(() => _reviewView = value
+                          ? RoomMaskReviewView.original : RoomMaskReviewView.overlay);
+                    },
                   ),
                   SecondaryButton(
                     key: const ValueKey('room-mask-undo'),
@@ -987,6 +1025,15 @@ class _RoomMaskScreenState extends ConsumerState<RoomMaskScreen>
                             photoId: draft.photoId,
                             maskRevision: draft.maskRevision,
                           )
+                        : null,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  SecondaryButton(
+                    key: const ValueKey('room-mask-redo'),
+                    label: 'Redo',
+                    icon: Icons.redo_rounded,
+                    onPressed: state.canEdit && draft.history.canRedo && !_confirming
+                        ? () => controller.redo(photoId: draft.photoId, maskRevision: draft.maskRevision)
                         : null,
                   ),
                   const SizedBox(height: AppSpacing.md),

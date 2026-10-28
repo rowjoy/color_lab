@@ -23,9 +23,9 @@ final class MaskStroke {
     this.diameterFraction = .05,
   }) : segments = _snapshot(segments) {
     if (!diameterFraction.isFinite ||
-        diameterFraction < .01 ||
+        diameterFraction < .005 ||
         diameterFraction > .20) {
-      throw ArgumentError('Brush diameter must be 1–20% of the shorter side');
+      throw ArgumentError('Brush diameter must be 0.5–20% of the shorter side');
     }
   }
 

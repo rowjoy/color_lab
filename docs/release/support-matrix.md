@@ -68,3 +68,26 @@ Automated/widget and manual checks must cover 320×568, 360×800, 390×844, 568�
 - iOS public release is allowed only after shared gates, archive verification, and every required iPhone/iPad row pass.
 - A support-floor increase requires measured evidence, impact notes, and explicit product-owner approval.
 - A plugin, model, or toolchain upgrade that changes OS/ABI support reopens this matrix.
+
+## Plan 03 manual correction gate — open physical evidence
+
+The Tasks 4–6 coding batch adds responsive review/precision controls and writes
+focused checks for 320×568, 568×320, expanded widths, RTL, high contrast, 200%
+text, source-coordinate/DPR consistency, gesture cancellation and resize.
+These new tests have not been executed during coding; a parent-owned combined
+focused run is planned with an overall 60-second bound. Layout/unit checks
+cannot establish physical-device support or assistive-technology usability.
+
+| Required evidence | Current status |
+| --- | --- |
+| Named minimum + representative Android devices: pointer-event→visible feedback p50/p95, command commit, autosave acknowledgment, peak history/memory, reopen recovery | OPEN; no device run or measured threshold approval |
+| iPhone/iPad measurements and independent iOS gate | OPEN; no physical iOS result |
+| Rotation/background kill, keyboard/pan/zoom, TalkBack/VoiceOver, high contrast and 200% text on physical hardware | OPEN; focused recovery/layout tests written only |
+| Feedback acceptance threshold | OPEN; under 100 ms is a design target, not a frozen or achieved gate |
+| Full tests, analyzer/formatter and native builds | Not run in this coding batch at user direction; broader/native checks remain deferred to approved Plan 08 completion |
+
+The synthetic manual-mask benchmark labels default host/simulator output
+`non-release`; UI feedback stays unmeasured unless an actual trace is supplied.
+Synthetic command correctness does not establish mask accuracy or replace the
+separate external smart-mask evidence gate. Existing platform floors, native
+configuration, dependencies and permissions are unchanged.

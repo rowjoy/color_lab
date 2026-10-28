@@ -4,6 +4,7 @@ import '../../../core/theme/theme.dart';
 import '../../../core/widgets/widgets.dart';
 import '../domain/room_layer.dart';
 import '../domain/room_layer_colors.dart';
+import 'room_mask_surface_status.dart';
 
 class RoomLayerColorControls extends StatelessWidget {
   const RoomLayerColorControls({
@@ -50,7 +51,7 @@ class RoomLayerColorControls extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(_title(layer.name)),
+                    Text('${_title(layer.name)} · ${roomSurfacePattern(layer)}'),
                     Text(
                       colors.colorFor(layer)?.hex ?? 'Not set',
                       style: AppTypography.mono,

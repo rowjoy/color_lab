@@ -11,6 +11,7 @@ import 'package:color_lab/features/room_studio/domain/mask_stroke.dart';
 import 'package:color_lab/features/room_studio/domain/room_layer.dart';
 import 'package:color_lab/features/room_studio/domain/room_mask_state.dart';
 import 'package:color_lab/features/room_studio/presentation/room_mask_viewport.dart';
+import 'package:color_lab/features/room_studio/presentation/room_mask_magnifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -71,6 +72,7 @@ class Harness {
   double height = 320;
   double brush = .05;
   ScrollController? scroll;
+  RoomMaskViewportController? view;
   Color? tint;
 
   Future<void> mount(WidgetTester tester) async {
@@ -104,6 +106,7 @@ class Harness {
                         width: width,
                         height: height,
                         child: RoomMaskViewport(
+                          viewController: view,
                           photoId: id,
                           maskRevision: revision,
                           photo: image,
@@ -169,6 +172,35 @@ Future<List<int>> pixel(WidgetTester tester, Harness h, int x, int y) async =>
     }))!;
 
 void main() {
+  testWidgets('manual precision cursor magnifier and smallest brush share one source sample', (tester) async {
+    final h = Harness(service: PendingOverlay());
+    final view = RoomMaskViewportController(); h.view = view; h.brush = .005;
+    addTearDown(view.dispose); await h.mount(tester);
+    view.selectRegion(1, 1); view.nudgeCursor(const Offset(1000, 1000)); await tester.pump();
+    expect(view.sourceCursor, const Offset(15.5, 7.5));
+    final magnifier = tester.widget<RoomMaskMagnifier>(find.byKey(const ValueKey('room-mask-magnifier')));
+    expect(magnifier.sample.source, view.sourceCursor);
+    expect(magnifier.sample.screenRadius, view.transform!.brushRadius(.005));
+    view.paintCursor(MaskEditMode.add); await tester.pump();
+    expect(h.strokes, hasLength(1)); expect(h.strokes.single.diameterFraction, .005);
+    expect(h.strokes.single.segments.single.single.x, 15.5 / 16);
+    expect(h.strokes.single.segments.single.single.y, 7.5 / 8);
+  });
+
+  testWidgets('manual precision two pointers cancellation and reorientation commit no partial stroke', (tester) async {
+    final h = Harness(service: PendingOverlay()); final view = RoomMaskViewportController(); h.view = view;
+    addTearDown(view.dispose); await h.mount(tester);
+    final center = tester.getCenter(find.byType(RoomMaskViewport));
+    final one = await tester.startGesture(center, pointer: 11);
+    final two = await tester.startGesture(center + const Offset(20, 0), pointer: 12);
+    await two.moveBy(const Offset(30, 0)); await two.up(); await one.cancel(); await tester.pump();
+    expect(h.strokes, isEmpty); expect(view.zoom, greaterThan(1));
+    view.reset(); await tester.pump();
+    final painting = await tester.startGesture(center, pointer: 13);
+    await painting.moveBy(const Offset(10, 0)); h.width = 280; h.height = 200; await h.mount(tester);
+    await painting.up(); await tester.pump(); expect(h.strokes, isEmpty);
+  });
+
   testWidgets(
     'raster completion waits for output slower than eighty milliseconds',
     (tester) async {

@@ -139,7 +139,7 @@ void main() {
         double.nan,
         double.infinity,
         0,
-        .009,
+        .004,
         .201,
       ]) {
         expect(

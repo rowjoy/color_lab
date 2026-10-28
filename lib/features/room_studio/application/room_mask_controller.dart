@@ -703,7 +703,7 @@ class RoomMaskController extends Notifier<RoomMaskState> {
 
   void setBrushFraction(double fraction) {
     if (!_live || !fraction.isFinite) return;
-    final next = fraction.clamp(.01, .20);
+    final next = fraction.clamp(.005, .20);
     if (state.brushFraction == next) return;
     cancelStroke();
     state = state.copyWith(brushFraction: next);

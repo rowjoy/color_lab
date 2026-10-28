@@ -1893,7 +1893,7 @@ void main() {
       expect(h.state.tool, RoomMaskTool.move);
       expect(await h.paint(), isFalse);
       h.controller.setBrushFraction(.001);
-      expect(h.state.brushFraction, .01);
+      expect(h.state.brushFraction, .005);
       h.controller.setBrushFraction(1);
       expect(h.state.brushFraction, .20);
       h.controller.setBrushFraction(double.nan);

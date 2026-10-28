@@ -425,3 +425,40 @@ pass; only the eight explicit fix/evidence paths are committed. Protected
 `lib/main.dart` retains diff SHA-256
 `c9bd56e83824d1dff5f750092e3d751bbb1841ad9377380c057bdffb4aacf437`; dependency/native
 configuration/signing/advertising files are unchanged.
+
+## Plan 03 Tasks 4–6 — manual review and precision coding batch
+
+Baseline: `f2ab92e18eb58014aeda998574ce92d28d214653` on `TintAtlas`.
+The user committed the previously protected `lib/main.dart` change in that
+baseline; this batch does not edit it and leaves its work uncommitted.
+
+Implemented guided all-surface review (including explicit Absent), literal
+working-pixel coverage, original/recolored/overlay navigation, distinct pattern
+and text identities, source-aligned cursor/outline/magnifier, keyboard/button
+alternatives, and the 0.5–20% brush range. Review checks are transient and reset
+on a pixel revision; switching surface/view changes no pixel/history data.
+Small/large, RTL, high-contrast, 200% text, cancelled/two-pointer gestures and
+resize cases have focused tests written. No test, analyzer, formatter or build
+was executed during this coding batch, as explicitly requested. The parent
+will record the one combined focused run under an overall 60-second bound;
+no passing result is claimed here.
+
+`tool/room_recolor/manual_mask_benchmark.dart` provides deterministic synthetic
+commands/checksums, injected monotonic timing/device metadata, whole-command
+history accounting, optional real acknowledgment/reopen callbacks and optional
+UI feedback traces. Its default CLI is unverified host evidence only. Missing
+UI feedback, autosave or reopen measurements are null, not synthetic zeroes.
+A command microbenchmark is not pointer-to-visible-brush feedback. The harness
+never marks the release gate satisfied or supplies an approved threshold.
+Recovery tests cover an interrupted unacknowledged edit, Retry, corrupt newest
+history with acknowledged fallback, healthy-project isolation, eviction and
+fresh-controller AI refresh. Existing Task 3 durability coverage supplies
+serialized action/save and failed-save process-reopen cases.
+
+**OPEN external gates:** named minimum/representative Android physical-device
+p50/p95 feedback, commit/ack/reopen timing, peak memory, thermal/background and
+rotation QA; independent iPhone/iPad evidence when that platform gate is active;
+TalkBack/VoiceOver/keyboard physical QA; product-owner approval of the measured
+feedback threshold (under 100 ms remains a target, not an approved claim).
+No smart-mask accuracy/proposal claim, native build, full-suite pass, device
+performance result, signing, release or publishing claim is made.
